@@ -1,4 +1,4 @@
-export type TerrainType = 'grass' | 'stone' | 'dirt' | 'water' | 'wood';
+export type TerrainType = 'grass' | 'stone' | 'dirt' | 'water' | 'wood' | 'swamp' | 'parapet';
 
 export type FacingDirection = 'N' | 'E' | 'S' | 'W';
 
@@ -6,7 +6,14 @@ export type Team = 'player' | 'enemy';
 
 export type AbilityType = 'action' | 'reaction' | 'support' | 'movement';
 
-export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark';
+export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark' | 'time';
+
+export type StatusEffectType = 'haste' | 'slow' | 'protect' | 'immobilize' | 'poison';
+
+export interface ActiveStatus {
+  type: StatusEffectType;
+  duration: number; // in turns
+}
 
 export interface TileData {
   x: number;
@@ -29,14 +36,16 @@ export interface Ability {
   aoe: number;
   power: number;
   element: Element;
-  castTime?: number; // CT required if cast time
+  appliesStatus?: StatusEffectType;
+  isLineAttack?: boolean; // For spear thrusts
+  isSelfOnly?: boolean;
 }
 
 export interface Job {
   id: string;
   name: string;
   description: string;
-  role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher';
+  role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer';
   spriteClass: string;
   baseMove: number;
   baseJump: number;
@@ -90,6 +99,8 @@ export interface Unit {
   move: number;
   jump: number;
   
+  statuses: ActiveStatus[];
+  
   x: number;
   z: number;
   facing: FacingDirection;
@@ -107,4 +118,12 @@ export interface CombatForecast {
   expectedDamage: number;
   facingType: 'front' | 'flank' | 'back';
   heightAdvantage: number;
+  willDualWield?: boolean;
+}
+
+export interface DialogueLine {
+  speaker: string;
+  portraitClass: string;
+  side: 'left' | 'right';
+  text: string;
 }

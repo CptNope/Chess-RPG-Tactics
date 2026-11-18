@@ -1,4 +1,17 @@
-import { Unit, Ability, CombatForecast } from './types';
+import { Unit, Ability, CombatForecast, ActiveStatus } from './types';
+
+export interface AttackResult {
+  hit: boolean;
+  damageDealt: number;
+  isCrit: boolean;
+  isHeal: boolean;
+  appliedStatus?: string;
+  secondStrike?: {
+    hit: boolean;
+    damageDealt: number;
+    isCrit: boolean;
+  };
+}
 
 export class CombatEngine {
   /**
@@ -8,7 +21,6 @@ export class CombatEngine {
     const dx = attackerX - target.x;
     const dz = attackerZ - target.z;
 
-    // Target facing directional vector
     let fx = 0;
     let fz = 0;
     switch (target.facing) {
@@ -18,17 +30,12 @@ export class CombatEngine {
       case 'W': fx = -1; break;
     }
 
-    // Dot product between facing vector and vector pointing toward attacker
-    // Normalize attacker vector
     const len = Math.hypot(dx, dz) || 1;
     const ndx = dx / len;
     const ndz = dz / len;
 
     const dot = fx * ndx + fz * ndz;
 
-    // dot > 0.5 means attacker is in front (within 60 degrees of target gaze)
-    // dot < -0.5 means attacker is behind target (backstab!)
-    // otherwise it's a flank attack
     if (dot > 0.3) {
       return 'front';
     } else if (dot < -0.3) {
@@ -57,20 +64,40 @@ export class CombatEngine {
     if (facingType === 'back') hitChance += 30;
     if (heightAdvantage > 0) hitChance += 5;
     if (heightAdvantage < 0) hitChance -= 10;
+
+    // Reaction ability: Ninja Reflexes / Vanish grants 40% evasion
+    if (target.equippedAbilities.reaction === 'ni_shadow_clone') {
+      hitChance = Math.max(15, hitChance - 35);
+    }
+
     hitChance = Math.min(100, Math.max(10, hitChance));
 
-    // Damage Calculation
+    // Special: Gravity deals 25% of target current HP
     let baseDamage = 0;
-    if (ability.element === 'physical') {
+    if (ability.id === 'tm_gravity') {
+      baseDamage = Math.max(1, Math.round(target.currentHp * 0.25));
+    } else if (ability.id === 'sq_focus') {
+      baseDamage = 0;
+      hitChance = 100;
+    } else if (ability.appliesStatus && (ability.id === 'tm_haste' || ability.id === 'wm_protect')) {
+      // Buffs on allies
+      baseDamage = 0;
+      hitChance = 100;
+    } else if (ability.element === 'physical') {
       baseDamage = attacker.baseStats.attack * ability.power * 8;
     } else {
-      // Magic damage
       baseDamage = attacker.baseStats.magic * Math.abs(ability.power) * 9;
     }
 
     // Support abilities modification
     if (attacker.equippedAbilities.support === 'bm_arcane_strength' && ability.element !== 'physical') {
       baseDamage *= 1.25;
+    }
+
+    // Status modifier: Protect reduces physical damage taken by 30%
+    const hasProtect = target.statuses.some((s) => s.type === 'protect');
+    if (hasProtect && ability.element === 'physical') {
+      baseDamage *= 0.70;
     }
 
     // Facing multiplier
@@ -80,9 +107,12 @@ export class CombatEngine {
     // Height modifier
     if (heightAdvantage > 0) baseDamage *= 1.10;
 
+    // Dual Wield check
+    const willDualWield = attacker.equippedAbilities.support === 'ni_dual_wield' && ability.id === 'basic_attack';
+
     // Healing spells have negative power
     if (ability.power < 0) {
-      hitChance = 100; // White magic on allies always connects
+      hitChance = 100;
       baseDamage = -Math.round(baseDamage);
     } else {
       baseDamage = Math.max(1, Math.round(baseDamage));
@@ -95,31 +125,57 @@ export class CombatEngine {
       hitChance,
       expectedDamage: baseDamage,
       facingType,
-      heightAdvantage
+      heightAdvantage,
+      willDualWield
     };
   }
 
   /**
    * Executes the attack and returns result details.
    */
-  public static executeAttack(
-    forecast: CombatForecast
-  ): { hit: boolean; damageDealt: number; isCrit: boolean; isHeal: boolean } {
+  public static executeAttack(forecast: CombatForecast): AttackResult {
     const roll = Math.random() * 100;
     const hit = roll <= forecast.hitChance;
 
+    // Self-buffs (e.g. Focus)
+    if (forecast.ability.id === 'sq_focus') {
+      forecast.attacker.baseStats.attack += 3;
+      return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, appliedStatus: 'Attack +3!' };
+    }
+
     if (!hit) {
       return { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
+    }
+
+    // Apply Status if ability carries one
+    let appliedStatusName: string | undefined;
+    if (forecast.ability.appliesStatus) {
+      const type = forecast.ability.appliesStatus;
+      const existing = forecast.target.statuses.find((s) => s.type === type);
+      const duration = type === 'immobilize' ? 2 : 3;
+
+      if (existing) {
+        existing.duration = duration;
+      } else {
+        const newStatus: ActiveStatus = { type, duration };
+        forecast.target.statuses.push(newStatus);
+      }
+      appliedStatusName = type.toUpperCase();
     }
 
     const isHeal = forecast.ability.power < 0;
     if (isHeal) {
       const healAmount = Math.abs(forecast.expectedDamage);
       forecast.target.currentHp = Math.min(forecast.target.maxHp, forecast.target.currentHp + healAmount);
-      return { hit: true, damageDealt: healAmount, isCrit: false, isHeal: true };
+      return { hit: true, damageDealt: healAmount, isCrit: false, isHeal: true, appliedStatus: appliedStatusName };
     }
 
-    // Critical roll (higher from rear)
+    // Pure status buff
+    if (forecast.expectedDamage === 0 && forecast.ability.appliesStatus) {
+      return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, appliedStatus: appliedStatusName };
+    }
+
+    // Critical roll
     let critChance = 5;
     if (forecast.facingType === 'flank') critChance += 10;
     if (forecast.facingType === 'back') critChance += 25;
@@ -133,6 +189,32 @@ export class CombatEngine {
       forecast.target.isDead = true;
     }
 
-    return { hit: true, damageDealt: finalDamage, isCrit, isHeal: false };
+    // Second Strike for Dual Wield
+    let secondStrikeResult: { hit: boolean; damageDealt: number; isCrit: boolean } | undefined;
+    if (forecast.willDualWield && !forecast.target.isDead) {
+      const roll2 = Math.random() * 100;
+      const hit2 = roll2 <= forecast.hitChance;
+      if (hit2) {
+        const isCrit2 = Math.random() * 100 <= critChance;
+        let dmg2 = Math.round(forecast.expectedDamage * 0.9);
+        if (isCrit2) dmg2 = Math.round(dmg2 * 1.5);
+        forecast.target.currentHp = Math.max(0, forecast.target.currentHp - dmg2);
+        if (forecast.target.currentHp === 0) {
+          forecast.target.isDead = true;
+        }
+        secondStrikeResult = { hit: true, damageDealt: dmg2, isCrit: isCrit2 };
+      } else {
+        secondStrikeResult = { hit: false, damageDealt: 0, isCrit: false };
+      }
+    }
+
+    return {
+      hit: true,
+      damageDealt: finalDamage,
+      isCrit,
+      isHeal: false,
+      appliedStatus: appliedStatusName,
+      secondStrike: secondStrikeResult
+    };
   }
 }

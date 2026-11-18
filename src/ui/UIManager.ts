@@ -1,12 +1,14 @@
-import { Unit, Ability, CombatForecast, FacingDirection } from '../core/types';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine } from '../core/types';
 import { JOBS } from '../data/jobs';
 import { JobSystem } from '../core/JobSystem';
+import { SoundFX } from '../audio/SoundEffects';
 
 export class UIManager {
   // Elements
   private timelineQueueEl = document.getElementById('timeline-queue')!;
   private unitNameEl = document.getElementById('unit-name')!;
   private unitJobEl = document.getElementById('unit-job')!;
+  private unitStatusesEl = document.getElementById('unit-statuses')!;
   private unitHpTextEl = document.getElementById('unit-hp-text')!;
   private unitHpBarEl = document.getElementById('unit-hp-bar')!;
   private unitMpTextEl = document.getElementById('unit-mp-text')!;
@@ -19,6 +21,10 @@ export class UIManager {
   private unitHtValEl = document.getElementById('unit-ht-val')!;
   private tileCoordsEl = document.getElementById('tile-coords')!;
   private tileTerrainEl = document.getElementById('tile-terrain')!;
+
+  // Map & Audio controls
+  private mapSelectEl = document.getElementById('map-select') as HTMLSelectElement;
+  private btnToggleSound = document.getElementById('btn-toggle-sound') as HTMLButtonElement;
 
   // Menus
   private btnMove = document.getElementById('btn-action-move') as HTMLButtonElement;
@@ -41,6 +47,13 @@ export class UIManager {
   private btnForecastConfirm = document.getElementById('btn-forecast-confirm')!;
   private btnForecastCancel = document.getElementById('btn-forecast-cancel')!;
 
+  // Story Cutscene Dialogue Box
+  private dialogueBoxEl = document.getElementById('dialogue-box')!;
+  private dialoguePortraitEl = document.getElementById('dialogue-portrait')!;
+  private dialogueSpeakerEl = document.getElementById('dialogue-speaker')!;
+  private dialogueTextEl = document.getElementById('dialogue-text')!;
+  private onDialogueNext?: () => void;
+
   // Job Modal
   private jobModalEl = document.getElementById('job-modal')!;
   private btnOpenJobModal = document.getElementById('btn-job-menu')!;
@@ -61,25 +74,44 @@ export class UIManager {
   public onFacingConfirmed?: (facing: FacingDirection) => void;
   public onExecuteAttack?: () => void;
   public onCancelAttack?: () => void;
+  public onMapChanged?: (mapId: string) => void;
 
   constructor() {
     this.setupListeners();
   }
 
   private setupListeners(): void {
+    // Audio toggle
+    this.btnToggleSound.addEventListener('click', () => {
+      const isMuted = SoundFX.toggleMute();
+      this.btnToggleSound.textContent = isMuted ? '🔇 MUTED' : '🔊 SFX';
+      if (!isMuted) SoundFX.playMenuBlip();
+    });
+
+    // Map selection change
+    this.mapSelectEl?.addEventListener('change', (e) => {
+      const select = e.target as HTMLSelectElement;
+      SoundFX.playMenuBlip();
+      this.onMapChanged?.(select.value);
+    });
+
     this.btnMove.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.onMoveClicked?.();
     });
 
     this.btnAct.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.toggleSubMenu(true);
     });
 
     this.btnWait.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.onWaitClicked?.();
     });
 
     this.btnSubMenuBack.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.toggleSubMenu(false);
     });
 
@@ -87,6 +119,7 @@ export class UIManager {
     const compassButtons = document.querySelectorAll('.compass-btn');
     compassButtons.forEach((btn) => {
       btn.addEventListener('click', (e) => {
+        SoundFX.playMenuBlip();
         compassButtons.forEach((b) => b.classList.remove('selected'));
         const target = e.currentTarget as HTMLElement;
         target.classList.add('selected');
@@ -95,6 +128,7 @@ export class UIManager {
     });
 
     document.getElementById('btn-face-confirm')?.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.facingSelectorEl.classList.add('hidden');
       this.onFacingConfirmed?.(this.selectedFacing);
     });
@@ -106,18 +140,40 @@ export class UIManager {
     });
 
     this.btnForecastCancel.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.forecastEl.classList.add('hidden');
       this.onCancelAttack?.();
     });
 
     // Job Modal Buttons
     this.btnOpenJobModal.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.jobModalEl.classList.remove('hidden');
     });
 
     this.btnCloseJobModal.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.jobModalEl.classList.add('hidden');
     });
+
+    // Story Dialogue Advance Click
+    this.dialogueBoxEl.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.onDialogueNext?.();
+    });
+  }
+
+  public showDialogue(line: DialogueLine, onNext: () => void): void {
+    this.dialogueSpeakerEl.textContent = line.speaker;
+    this.dialogueTextEl.textContent = line.text;
+    this.dialoguePortraitEl.textContent = line.portraitClass;
+    this.dialogueBoxEl.classList.remove('hidden');
+    this.onDialogueNext = onNext;
+  }
+
+  public hideDialogue(): void {
+    this.dialogueBoxEl.classList.add('hidden');
+    this.onDialogueNext = undefined;
   }
 
   public updateTurnTimeline(timeline: Unit[], activeUnit: Unit | null): void {
@@ -138,6 +194,15 @@ export class UIManager {
     this.unitNameEl.textContent = unit.name;
     this.unitJobEl.textContent = `${job.name} Lv. ${unit.level}`;
 
+    // Render Status Badges
+    this.unitStatusesEl.innerHTML = '';
+    unit.statuses.forEach((status) => {
+      const badge = document.createElement('span');
+      badge.className = `status-badge status-${status.type}`;
+      badge.textContent = `${status.type.substring(0, 4)} ${status.duration}t`;
+      this.unitStatusesEl.appendChild(badge);
+    });
+
     this.unitHpTextEl.textContent = `${unit.currentHp}/${unit.maxHp}`;
     this.unitHpBarEl.style.width = `${Math.max(0, (unit.currentHp / unit.maxHp) * 100)}%`;
 
@@ -152,8 +217,7 @@ export class UIManager {
     this.unitSpdValEl.textContent = unit.speed.toString();
     this.unitHtValEl.textContent = `${currentHeight.toFixed(1)}h`;
 
-    // Update Action Menu states
-    this.btnMove.disabled = unit.hasMoved || unit.team !== 'player';
+    this.btnMove.disabled = unit.hasMoved || unit.team !== 'player' || unit.move === 0;
     this.btnAct.disabled = unit.hasActed || unit.team !== 'player';
     this.btnWait.disabled = unit.team !== 'player';
   }
@@ -182,6 +246,7 @@ export class UIManager {
 
       btn.disabled = unit.currentMp < ability.mpCost;
       btn.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
         this.toggleSubMenu(false);
         this.onAbilitySelected?.(ability);
       });
@@ -215,12 +280,14 @@ export class UIManager {
 
   public showCombatForecast(forecast: CombatForecast): void {
     this.fcTargetName.textContent = forecast.target.name;
-    this.fcFacingBadge.textContent = `${forecast.facingType.toUpperCase()} (+${forecast.facingType === 'back' ? 30 : forecast.facingType === 'flank' ? 15 : 0}%)`;
+    const bonus = forecast.facingType === 'back' ? 30 : forecast.facingType === 'flank' ? 15 : 0;
+    this.fcFacingBadge.textContent = `${forecast.facingType.toUpperCase()} (+${bonus}%)`;
     this.fcFacingBadge.className = `badge-${forecast.facingType}`;
 
     this.fcHitRate.textContent = `${forecast.hitChance}%`;
     const isHeal = forecast.ability.power < 0;
-    this.fcDamage.textContent = `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP`;
+    const dualText = forecast.willDualWield ? ' (×2 Dual)' : '';
+    this.fcDamage.textContent = `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP${dualText}`;
 
     this.forecastEl.classList.remove('hidden');
   }
@@ -228,9 +295,8 @@ export class UIManager {
   public showBanner(text: string): void {
     this.bannerTextEl.textContent = text;
     this.bannerEl.classList.remove('hidden');
-    // Trigger animation replay
     this.bannerEl.style.animation = 'none';
-    void this.bannerEl.offsetHeight; // trigger reflow
+    void this.bannerEl.offsetHeight;
     this.bannerEl.style.animation = 'bannerFade 2.2s forwards ease-in-out';
   }
 
@@ -238,19 +304,18 @@ export class UIManager {
     const unit = units[selectedUnitIndex];
     if (!unit) return;
 
-    // Unit tabs
     this.jobUnitTabsEl.innerHTML = '';
     units.forEach((u, i) => {
       const tab = document.createElement('button');
       tab.className = `job-unit-tab ${i === selectedUnitIndex ? 'active' : ''}`;
       tab.textContent = u.name;
       tab.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
         this.populateJobCustomizer(units, i);
       });
       this.jobUnitTabsEl.appendChild(tab);
     });
 
-    // Jobs list
     this.jobListEl.innerHTML = '';
     for (const [jobId, job] of Object.entries(JOBS)) {
       const jobItem = document.createElement('div');
@@ -260,13 +325,13 @@ export class UIManager {
         <div style="font-size: 13px; color: var(--text-muted);">${job.role} | Move: ${job.baseMove} Jump: ${job.baseJump}</div>
       `;
       jobItem.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
         JobSystem.changeJob(unit, jobId);
         this.populateJobCustomizer(units, selectedUnitIndex);
       });
       this.jobListEl.appendChild(jobItem);
     }
 
-    // 5 Slots
     const slotPrimary = document.getElementById('slot-primary-val')!;
     const slotSecondary = document.getElementById('slot-secondary-val')!;
     const slotReaction = document.getElementById('slot-reaction-val')!;
@@ -282,9 +347,9 @@ export class UIManager {
     slotSupport.textContent = unit.equippedAbilities.support || 'None';
     slotMovement.textContent = unit.equippedAbilities.movement || 'None';
 
-    // Cycle secondary skillset on click
     if (slotSecondary.parentElement) {
       slotSecondary.parentElement.onclick = () => {
+        SoundFX.playMenuBlip();
         const availableJobIds = Object.keys(JOBS);
         const curIdx = unit.equippedAbilities.secondaryJobId
           ? availableJobIds.indexOf(unit.equippedAbilities.secondaryJobId)
@@ -296,7 +361,6 @@ export class UIManager {
       };
     }
 
-    // Learn abilities with JP
     const currentJp = unit.jobPoints[unit.jobId] || 0;
     this.currentUnitJpEl.textContent = currentJp.toString();
     this.learnAbilityListEl.innerHTML = '';
@@ -320,8 +384,8 @@ export class UIManager {
       if (!isLearned && canAfford) {
         item.style.cursor = 'pointer';
         item.addEventListener('click', () => {
+          SoundFX.playTurnChime();
           JobSystem.learnAbility(unit, ability.id, unit.jobId);
-          // If reaction/support/movement, auto-equip for immediate fun
           if (ability.type === 'reaction') unit.equippedAbilities.reaction = ability.id;
           if (ability.type === 'support') unit.equippedAbilities.support = ability.id;
           if (ability.type === 'movement') {

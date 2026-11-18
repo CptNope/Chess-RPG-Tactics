@@ -780,3 +780,110 @@ body, html {
   color: #cbd5e1;
   font-size: 14px;
 }
+
+/* Map Selector & Sound Toggle */
+.hud-select {
+  background: #16243b;
+  border: 1px solid var(--panel-border);
+  color: var(--gold);
+  padding: 6px 8px;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.hud-select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+/* Status Badges */
+.unit-statuses-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  padding: 2px 4px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.status-haste { background: #0284c7; color: #fff; }
+.status-slow { background: #78350f; color: #fde047; }
+.status-protect { background: #3b82f6; color: #fff; }
+.status-immobilize { background: #b91c1c; color: #fff; }
+.status-poison { background: #047857; color: #a7f3d0; }
+
+/* Story / Tactical Cutscene Dialogue Box */
+#dialogue-box {
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 640px;
+  max-width: 90vw;
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  z-index: 60;
+  cursor: pointer;
+  animation: dialogPop 0.25s ease-out;
+}
+
+@keyframes dialogPop {
+  0% { transform: translate(-50%, 20px); opacity: 0; }
+  100% { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.dialogue-portrait {
+  width: 56px;
+  height: 56px;
+  background: #0f172a;
+  border: 2px solid var(--gold);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.dialogue-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+
+.dialogue-speaker {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+.dialogue-text {
+  font-family: var(--font-retro);
+  font-size: 21px;
+  color: var(--text-light);
+  line-height: 1.25;
+}
+
+.dialogue-hint {
+  align-self: flex-end;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--gold);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

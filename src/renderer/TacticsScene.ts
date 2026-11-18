@@ -6,6 +6,8 @@ import {
   createDirtSideTexture,
   createStoneTexture,
   createWaterTexture,
+  createCastleParapetTexture,
+  createSwampTexture,
   createUnitSpriteTexture
 } from '../graphics/PixelTextures';
 
@@ -36,13 +38,13 @@ export class TacticsScene {
   // Camera & Zoom System
   public cameraTarget: THREE.Vector3 = new THREE.Vector3(5, 1, 5);
   public targetCameraTarget: THREE.Vector3 = new THREE.Vector3(5, 1, 5);
-  public currentRotationAngle: number = Math.PI / 4; // 45 deg isometric
+  public currentRotationAngle: number = Math.PI / 4;
   public targetRotationAngle: number = Math.PI / 4;
   
   // Extended zoom range: 2.0 (extreme close-up) to 22.0 (tactical overview)
-  public zoomLevel: number = 8.5; // Natural FFT scale
+  public zoomLevel: number = 8.5;
   public targetZoomLevel: number = 8.5;
-  public minZoomLevel: number = 2.0; // Allows zooming in very close
+  public minZoomLevel: number = 2.0;
   public maxZoomLevel: number = 22.0;
 
   // Panning State
@@ -54,6 +56,13 @@ export class TacticsScene {
   private dirtSideTex = createDirtSideTexture();
   private stoneTex = createStoneTexture();
   private waterTex = createWaterTexture();
+  private parapetTex = createCastleParapetTexture();
+  private swampTex = createSwampTexture();
+
+  // Lighting
+  private ambientLight!: THREE.AmbientLight;
+  private sunLight!: THREE.DirectionalLight;
+  private fillLight!: THREE.DirectionalLight;
 
   // Interaction
   public hoveredTile: { x: number; z: number } | null = null;
@@ -68,10 +77,9 @@ export class TacticsScene {
     this.canvas = canvas;
     this.grid = grid;
 
-    // Renderer
     this.renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: false, // Maintain crisp pixel art
+      antialias: false,
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -79,7 +87,6 @@ export class TacticsScene {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.BasicShadowMap;
 
-    // Scene
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0e17);
 
@@ -88,7 +95,6 @@ export class TacticsScene {
     this.floatingTextContainer.className = 'floating-combat-overlay';
     document.getElementById('game-container')?.appendChild(this.floatingTextContainer);
 
-    // Camera: Orthographic Isometric
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.OrthographicCamera(
       -this.zoomLevel * aspect,
@@ -99,44 +105,74 @@ export class TacticsScene {
       1000
     );
 
-    // Setup Lighting
     this.setupLighting();
-
-    // Build Map Geometry
     this.buildMap();
 
-    // Setup Highlights & Cursor
     this.scene.add(this.highlightGroup);
     this.cursorMesh = this.buildCursor();
     this.scene.add(this.cursorMesh);
 
-    // Setup Interactive Handlers (Wheel, Pan, Pointer)
     this.setupInteractions();
-
     this.updateCameraPosition();
   }
 
   private setupLighting(): void {
-    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-    this.scene.add(ambient);
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    this.scene.add(this.ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xfff5ea, 1.25);
-    sun.position.set(20, 40, 20);
-    sun.castShadow = true;
-    sun.shadow.mapSize.width = 1024;
-    sun.shadow.mapSize.height = 1024;
-    sun.shadow.camera.near = 10;
-    sun.shadow.camera.far = 80;
+    this.sunLight = new THREE.DirectionalLight(0xfff5ea, 1.25);
+    this.sunLight.position.set(20, 40, 20);
+    this.sunLight.castShadow = true;
+    this.sunLight.shadow.mapSize.width = 1024;
+    this.sunLight.shadow.mapSize.height = 1024;
+    this.sunLight.shadow.camera.near = 10;
+    this.sunLight.shadow.camera.far = 80;
     const d = 15;
-    sun.shadow.camera.left = -d;
-    sun.shadow.camera.right = d;
-    sun.shadow.camera.top = d;
-    sun.shadow.camera.bottom = -d;
-    this.scene.add(sun);
+    this.sunLight.shadow.camera.left = -d;
+    this.sunLight.shadow.camera.right = d;
+    this.sunLight.shadow.camera.top = d;
+    this.sunLight.shadow.camera.bottom = -d;
+    this.scene.add(this.sunLight);
 
-    const fillLight = new THREE.DirectionalLight(0x60a5fa, 0.45);
-    fillLight.position.set(-20, 20, -20);
-    this.scene.add(fillLight);
+    this.fillLight = new THREE.DirectionalLight(0x60a5fa, 0.45);
+    this.fillLight.position.set(-20, 20, -20);
+    this.scene.add(this.fillLight);
+  }
+
+  public loadMap(newGrid: BattleGrid): void {
+    this.grid = newGrid;
+
+    // Dispose old tile meshes
+    for (const mesh of this.tileMeshes.values()) {
+      if (mesh.geometry) mesh.geometry.dispose();
+      this.scene.remove(mesh);
+    }
+    this.tileMeshes.clear();
+    this.clearHighlights();
+
+    // Adjust theme backdrop and lighting
+    if (newGrid.mapData.theme === 'night') {
+      this.scene.background = new THREE.Color(0x04060d);
+      this.ambientLight.color.setHex(0x38bdf8);
+      this.ambientLight.intensity = 0.55;
+      this.sunLight.color.setHex(0x93c5fd);
+      this.sunLight.intensity = 0.75;
+    } else if (newGrid.mapData.theme === 'swamp') {
+      this.scene.background = new THREE.Color(0x06140e);
+      this.ambientLight.color.setHex(0xa7f3d0);
+      this.ambientLight.intensity = 0.65;
+      this.sunLight.color.setHex(0x6ee7b7);
+      this.sunLight.intensity = 0.85;
+    } else {
+      this.scene.background = new THREE.Color(0x0a0e17);
+      this.ambientLight.color.setHex(0xffffff);
+      this.ambientLight.intensity = 0.8;
+      this.sunLight.color.setHex(0xfff5ea);
+      this.sunLight.intensity = 1.25;
+    }
+
+    this.buildMap();
+    this.targetCameraTarget.set(5, 1, 5);
   }
 
   private buildMap(): void {
@@ -152,9 +188,18 @@ export class TacticsScene {
       if (t.terrain === 'stone') {
         topMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
         sideMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
+      } else if (t.terrain === 'parapet') {
+        topMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
+        sideMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
+      } else if (t.terrain === 'swamp') {
+        topMat = new THREE.MeshLambertMaterial({ map: this.swampTex, transparent: true, opacity: 0.9 });
+        sideMat = new THREE.MeshLambertMaterial({ map: this.swampTex });
       } else if (t.terrain === 'water') {
         topMat = new THREE.MeshLambertMaterial({ map: this.waterTex, transparent: true, opacity: 0.85 });
         sideMat = new THREE.MeshLambertMaterial({ map: this.waterTex });
+      } else if (t.terrain === 'wood') {
+        topMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
+        sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
       } else {
         topMat = new THREE.MeshLambertMaterial({ map: this.grassTopTex });
         sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
@@ -207,11 +252,9 @@ export class TacticsScene {
   private setupInteractions(): void {
     window.addEventListener('resize', () => this.onResize());
 
-    // Mouse Move & Tile Raycasting
     this.canvas.addEventListener('pointermove', (e) => {
       this.onPointerMove(e);
 
-      // Handle Pan Dragging (Right-Click or Middle-Click)
       if (this.isPanning) {
         const deltaX = e.clientX - this.lastPanPosition.x;
         const deltaY = e.clientY - this.lastPanPosition.y;
@@ -221,7 +264,6 @@ export class TacticsScene {
         const cos = Math.cos(this.currentRotationAngle);
         const sin = Math.sin(this.currentRotationAngle);
 
-        // Pan vectors oriented to camera angle
         const right = new THREE.Vector3(-sin, 0, cos);
         const forward = new THREE.Vector3(-cos, 0, -sin);
 
@@ -230,12 +272,10 @@ export class TacticsScene {
       }
     });
 
-    // Right-Click Context Menu prevention
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // Pan start / end
     this.canvas.addEventListener('pointerdown', (e) => {
-      if (e.button === 2 || e.button === 1) { // Right or Middle button
+      if (e.button === 2 || e.button === 1) {
         this.isPanning = true;
         this.lastPanPosition = { x: e.clientX, y: e.clientY };
       }
@@ -247,7 +287,6 @@ export class TacticsScene {
       }
     });
 
-    // Mouse Wheel Smooth Zoom
     this.canvas.addEventListener(
       'wheel',
       (e: WheelEvent) => {
@@ -278,7 +317,6 @@ export class TacticsScene {
 
       let spriteMesh = this.unitSpritePlanes.get(unit.id);
       if (!spriteMesh) {
-        // Larger, crisply detailed 2D billboard sprite plane (1.35x1.35)
         const geom = new THREE.PlaneGeometry(1.35, 1.35);
         const mat = new THREE.MeshBasicMaterial({
           transparent: true,
@@ -291,19 +329,16 @@ export class TacticsScene {
         this.unitSpritePlanes.set(unit.id, spriteMesh);
       }
 
-      // Height with subtle authentic idle bobbing animation
       const height = this.grid.getHeight(unit.x, unit.z);
       const bob = Math.sin(time + unit.x * 2 + unit.z) * 0.035;
       spriteMesh.position.set(unit.x, height + 0.68 + bob, unit.z);
 
-      // Relative facing texture
       const relativeFacing = this.calculateRelativeFacing(unit.facing);
       const isEnemy = unit.team === 'enemy';
       const tex = createUnitSpriteTexture(unit.jobId, relativeFacing, isEnemy);
       (spriteMesh.material as THREE.MeshBasicMaterial).map = tex;
       (spriteMesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
 
-      // Align billboard to camera
       spriteMesh.rotation.y = this.currentRotationAngle;
     }
   }
@@ -385,13 +420,9 @@ export class TacticsScene {
   }
 
   private updateCameraPosition(): void {
-    // Smooth camera rotation
     this.currentRotationAngle += (this.targetRotationAngle - this.currentRotationAngle) * 0.16;
-
-    // Smooth camera pan
     this.cameraTarget.lerp(this.targetCameraTarget, 0.14);
 
-    // Smooth camera zoom
     const oldZoom = this.zoomLevel;
     this.zoomLevel += (this.targetZoomLevel - this.zoomLevel) * 0.18;
     if (Math.abs(this.zoomLevel - oldZoom) > 0.001) {
@@ -399,7 +430,7 @@ export class TacticsScene {
     }
 
     const distance = 45;
-    const pitch = 35.264 * (Math.PI / 180); // Classic isometric angle
+    const pitch = 35.264 * (Math.PI / 180);
 
     const cx = this.cameraTarget.x + distance * Math.cos(this.currentRotationAngle) * Math.cos(pitch);
     const cz = this.cameraTarget.z + distance * Math.sin(this.currentRotationAngle) * Math.cos(pitch);
@@ -408,7 +439,6 @@ export class TacticsScene {
     this.camera.position.set(cx, cy, cz);
     this.camera.lookAt(this.cameraTarget);
 
-    // Keep sprites aligned with camera
     for (const sprite of this.unitSpritePlanes.values()) {
       sprite.rotation.y = this.currentRotationAngle;
     }
@@ -462,10 +492,8 @@ export class TacticsScene {
       const ft = this.floatingTexts[i];
       ft.lifetime++;
 
-      // Float upward
       ft.position.y += 0.018;
 
-      // Project 3D coordinate to 2D screen coordinate
       screenPos.copy(ft.position);
       screenPos.project(this.camera);
 
@@ -495,7 +523,6 @@ export class TacticsScene {
     this.updateCameraPosition();
     this.updateFloatingNumbers();
 
-    // Pulse cursor
     const time = Date.now() * 0.005;
     const scale = 1 + Math.sin(time) * 0.06;
     this.cursorMesh.scale.set(scale, 1, scale);

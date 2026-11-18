@@ -95,3 +95,22 @@ graph TD
 * `Protect` (Action, 12 MP, 120 JP, 3 Range, 2.0h): Erects barrier, reducing physical damage received by $30\%$.
 * `Auto-Potion` (Reaction, 200 JP): Automatically drinks a restorative potion when taking direct damage.
 * `Regen Walk` (Movement, 220 JP): Restores $10\%$ max HP on every movement step.
+
+
+### Dragoon (Skillset: *Dragon Arts*)
+* `Dragon Plunge` (Action, 6 MP, 120 JP, 3 Range, 4.0h): Leaps high into skies and crashes down with kinetic shock ($1.6\times$ damage).
+* `Dragon Breath` (Action, 14 MP, 180 JP, 2 Range, 2.0h, AOE 1, Fire): Spews dragon fire across enemies.
+* `Dragonheart` (Reaction, 250 JP): Grants chance to survive lethal blow and revive.
+* `Ignore Elevation` (Movement, 350 JP): Scale any cliff wall regardless of elevation height.
+
+### Ninja (Skillset: *Ninjutsu*)
+* `Throw Shuriken` (Action, 0 MP, 100 JP, 4 Range, 2.5h): Hurls sharp stars across distance.
+* `Reflexes / Vanish` (Reaction, 220 JP): Melts into shadows to gain $+40\%$ evasion against attacks.
+* `Dual Wield` (Support, 350 JP): Equips weapons in both hands; basic attacks strike twice in rapid succession!
+* `Water Walk` (Movement, 150 JP): Tread freely over water and deep toxic bogs without movement penalty.
+
+### Time Weaver (Skillset: *Time Magic*)
+* `Haste` (Action, 12 MP, 120 JP, 4 Range, 2.0h): Accelerates time flux, boosting Speed by $+50\%$ for 3 turns.
+* `Slow` (Action, 12 MP, 120 JP, 4 Range, 2.0h): Slows target speed by $33\%$ for 3 turns.
+* `Gravity` (Action, 16 MP, 180 JP, 4 Range, 3.0h): Bends gravitational field, stripping $25\%$ of target's current HP directly.
+* `Teleport` (Movement, 350 JP): Folds spacetime to instantly blink to any tile within range, bypassing cliffs and walls!

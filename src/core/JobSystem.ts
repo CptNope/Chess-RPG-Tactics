@@ -44,18 +44,20 @@ export class JobSystem {
     jobLevels[jobId] = 2;
 
     const jobPoints: Record<string, number> = {
-      squire: 200,
-      knight: 150,
-      archer: 150,
-      black_mage: 180,
-      white_mage: 180
+      squire: 250,
+      knight: 200,
+      archer: 200,
+      black_mage: 200,
+      white_mage: 200,
+      dragoon: 200,
+      ninja: 200,
+      time_mage: 200
     };
 
     const unlockedAbilities: Record<string, boolean> = {
       basic_attack: true
     };
 
-    // Unlock the first ability of the starting job for convenience
     if (job.abilities.length > 0) {
       unlockedAbilities[job.abilities[0].id] = true;
     }
@@ -80,6 +82,7 @@ export class JobSystem {
       ct: 0,
       move: job.baseMove,
       jump: job.baseJump,
+      statuses: [],
       x,
       z,
       facing,
@@ -100,18 +103,34 @@ export class JobSystem {
 
     unit.maxHp = Math.round(unit.baseStats.hp * job.statMultipliers.hp);
     unit.maxMp = Math.round(unit.baseStats.mp * job.statMultipliers.mp);
-    unit.speed = Math.round(unit.baseStats.speed * job.statMultipliers.speed);
+    
+    // Base speed modified by Haste or Slow statuses
+    let spd = Math.round(unit.baseStats.speed * job.statMultipliers.speed);
+    if (unit.statuses.some((s) => s.type === 'haste')) {
+      spd = Math.round(spd * 1.5);
+    }
+    if (unit.statuses.some((s) => s.type === 'slow')) {
+      spd = Math.max(2, Math.round(spd * 0.67));
+    }
+    unit.speed = spd;
 
-    // Baseline move and jump from current job
+    // Movement and Jump
     let move = job.baseMove;
     let jump = job.baseJump;
 
-    // Movement ability modifiers
-    if (unit.equippedAbilities.movement === 'sq_move_plus') {
+    // Check Immobilize status
+    if (unit.statuses.some((s) => s.type === 'immobilize')) {
+      move = 0;
+    } else if (unit.equippedAbilities.movement === 'sq_move_plus') {
       move += 1;
     }
+
     if (unit.equippedAbilities.movement === 'ar_jump_plus') {
       jump += 1;
+    }
+    // Dragoon: Ignore Elevation gives massive jump
+    if (unit.equippedAbilities.movement === 'dr_ignore_height') {
+      jump = 99;
     }
 
     unit.move = move;
@@ -159,7 +178,6 @@ export class JobSystem {
   public static getCombatActionAbilities(unit: Unit) {
     const actions = [BASIC_ATTACK];
 
-    // Primary Job abilities
     const primaryJob = JOBS[unit.equippedAbilities.primaryJobId];
     if (primaryJob) {
       for (const a of primaryJob.abilities) {
@@ -169,7 +187,6 @@ export class JobSystem {
       }
     }
 
-    // Secondary Job abilities
     if (unit.equippedAbilities.secondaryJobId) {
       const secondaryJob = JOBS[unit.equippedAbilities.secondaryJobId];
       if (secondaryJob) {

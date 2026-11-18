@@ -58,7 +58,8 @@ export const JOBS: Record<string, Job> = {
         heightTolerance: 0,
         aoe: 0,
         power: 0,
-        element: 'physical'
+        element: 'physical',
+        isSelfOnly: true
       },
       {
         id: 'sq_counter',
@@ -217,14 +218,15 @@ export const JOBS: Record<string, Job> = {
         name: 'Leg Shot',
         jobId: 'archer',
         type: 'action',
-        description: 'Pinpoints tendon to immobilize enemy movement for 1 turn.',
+        description: 'Pinpoints tendon to immobilize enemy movement for 2 turns.',
         jpCost: 160,
         mpCost: 6,
         range: 4,
         heightTolerance: 2.5,
         aoe: 0,
         power: 0.9,
-        element: 'physical'
+        element: 'physical',
+        appliesStatus: 'immobilize'
       },
       {
         id: 'ar_speed_save',
@@ -316,6 +318,21 @@ export const JOBS: Record<string, Job> = {
         element: 'lightning'
       },
       {
+        id: 'bm_poison',
+        name: 'Poison Cloud',
+        jobId: 'black_mage',
+        type: 'action',
+        description: 'Enshrouds foe in venomous miasma, dealing 10% max HP damage every turn.',
+        jpCost: 140,
+        mpCost: 8,
+        range: 3,
+        heightTolerance: 2.0,
+        aoe: 0,
+        power: 0.5,
+        element: 'dark',
+        appliesStatus: 'poison'
+      },
+      {
         id: 'bm_arcane_strength',
         name: 'Arcane Strength',
         jobId: 'black_mage',
@@ -359,7 +376,7 @@ export const JOBS: Record<string, Job> = {
         range: 4,
         heightTolerance: 2.0,
         aoe: 0,
-        power: -1.4, // Negative power indicates healing
+        power: -1.4,
         element: 'holy'
       },
       {
@@ -367,14 +384,15 @@ export const JOBS: Record<string, Job> = {
         name: 'Protect',
         jobId: 'white_mage',
         type: 'action',
-        description: 'Erects an arcane barrier, softening physical blows by 30%.',
+        description: 'Erects an arcane barrier, softening physical blows by 30% for 3 turns.',
         jpCost: 120,
         mpCost: 12,
         range: 3,
         heightTolerance: 2.0,
         aoe: 0,
         power: 0,
-        element: 'holy'
+        element: 'holy',
+        appliesStatus: 'protect'
       },
       {
         id: 'wm_auto_potion',
@@ -403,6 +421,236 @@ export const JOBS: Record<string, Job> = {
         aoe: 0,
         power: 0,
         element: 'physical'
+      }
+    ]
+  },
+
+  dragoon: {
+    id: 'dragoon',
+    name: 'Dragoon',
+    description: 'Skyward knight wielding polearms. Masters of crushing vertical plunge attacks and draconic arts.',
+    role: 'Lancer',
+    spriteClass: 'dragoon',
+    baseMove: 3,
+    baseJump: 4, // High baseline jump!
+    statMultipliers: {
+      hp: 1.2,
+      mp: 0.8,
+      attack: 1.3,
+      magic: 0.8,
+      speed: 1.0
+    },
+    prerequisites: [{ jobId: 'knight', level: 2 }],
+    abilities: [
+      {
+        id: 'dr_jump',
+        name: 'Dragon Plunge',
+        jobId: 'dragoon',
+        type: 'action',
+        description: 'Leaps high into the skies and crashes down on target with crushing kinetic force.',
+        jpCost: 120,
+        mpCost: 6,
+        range: 3,
+        heightTolerance: 4.0,
+        aoe: 0,
+        power: 1.6,
+        element: 'physical'
+      },
+      {
+        id: 'dr_fire_breath',
+        name: 'Dragon Breath',
+        jobId: 'dragoon',
+        type: 'action',
+        description: 'Channels dragon wyrm spirit to spew cones of searing fire.',
+        jpCost: 180,
+        mpCost: 14,
+        range: 2,
+        heightTolerance: 2.0,
+        aoe: 1,
+        power: 1.3,
+        element: 'fire'
+      },
+      {
+        id: 'dr_dragonheart',
+        name: 'Dragonheart',
+        jobId: 'dragoon',
+        type: 'reaction',
+        description: 'Survives a fatal blow with 1 HP and enters Reraise state.',
+        jpCost: 250,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'dr_ignore_height',
+        name: 'Ignore Elevation',
+        jobId: 'dragoon',
+        type: 'movement',
+        description: 'Allows scaling any sheer cliff or watchtower wall regardless of elevation height.',
+        jpCost: 350,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      }
+    ]
+  },
+
+  ninja: {
+    id: 'ninja',
+    name: 'Ninja',
+    description: 'Lethal shadow operative boasting immense speed, evasion, shuriken throwing, and dual-wielding.',
+    role: 'Skirmisher',
+    spriteClass: 'ninja',
+    baseMove: 4,
+    baseJump: 3,
+    statMultipliers: {
+      hp: 0.9,
+      mp: 0.7,
+      attack: 1.2,
+      magic: 0.9,
+      speed: 1.25 // Highest speed class!
+    },
+    prerequisites: [{ jobId: 'archer', level: 2 }],
+    abilities: [
+      {
+        id: 'ni_shuriken',
+        name: 'Throw Shuriken',
+        jobId: 'ninja',
+        type: 'action',
+        description: 'Flicks sharp four-pointed steel stars across distance to lacerate opponents.',
+        jpCost: 100,
+        mpCost: 0,
+        range: 4,
+        heightTolerance: 2.5,
+        aoe: 0,
+        power: 1.1,
+        element: 'physical'
+      },
+      {
+        id: 'ni_shadow_clone',
+        name: 'Reflexes / Vanish',
+        jobId: 'ninja',
+        type: 'reaction',
+        description: 'Splits into smoke decoys upon being targeted, granting 40% evasion against attacks.',
+        jpCost: 220,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'ni_dual_wield',
+        name: 'Dual Wield',
+        jobId: 'ninja',
+        type: 'support',
+        description: 'Equips a weapon in both hands; basic attacks strike twice in rapid succession!',
+        jpCost: 350,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'ni_water_walk',
+        name: 'Water Walk',
+        jobId: 'ninja',
+        type: 'movement',
+        description: 'Treads effortlessly on water surface and murky bogs without movement penalty.',
+        jpCost: 150,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      }
+    ]
+  },
+
+  time_mage: {
+    id: 'time_mage',
+    name: 'Time Weaver',
+    description: 'Chronomancer manipulating space-time fabric to accelerate allies, slow foes, and bend gravity.',
+    role: 'Chronomancer',
+    spriteClass: 'time_mage',
+    baseMove: 3,
+    baseJump: 2,
+    statMultipliers: {
+      hp: 0.85,
+      mp: 1.35,
+      attack: 0.7,
+      magic: 1.25,
+      speed: 1.05
+    },
+    prerequisites: [{ jobId: 'black_mage', level: 2 }],
+    abilities: [
+      {
+        id: 'tm_haste',
+        name: 'Haste',
+        jobId: 'time_mage',
+        type: 'action',
+        description: 'Accelerates personal time flux, boosting Speed by +50% for 3 turns.',
+        jpCost: 120,
+        mpCost: 12,
+        range: 4,
+        heightTolerance: 2.0,
+        aoe: 0,
+        power: 0,
+        element: 'time',
+        appliesStatus: 'haste'
+      },
+      {
+        id: 'tm_slow',
+        name: 'Slow',
+        jobId: 'time_mage',
+        type: 'action',
+        description: 'Weaves temporal drag around foe, cutting their Speed by 33% for 3 turns.',
+        jpCost: 120,
+        mpCost: 12,
+        range: 4,
+        heightTolerance: 2.0,
+        aoe: 0,
+        power: 0,
+        element: 'time',
+        appliesStatus: 'slow'
+      },
+      {
+        id: 'tm_gravity',
+        name: 'Gravity',
+        jobId: 'time_mage',
+        type: 'action',
+        description: 'Bends gravitational weight, shearing away 25% of target current HP directly.',
+        jpCost: 180,
+        mpCost: 16,
+        range: 4,
+        heightTolerance: 3.0,
+        aoe: 0,
+        power: 1.2,
+        element: 'time'
+      },
+      {
+        id: 'tm_teleport',
+        name: 'Teleport',
+        jobId: 'time_mage',
+        type: 'movement',
+        description: 'Folds spacetime to instantly blink to any tile within range, bypassing cliffs and walls!',
+        jpCost: 350,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'time'
       }
     ]
   }

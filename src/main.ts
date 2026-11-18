@@ -1,11 +1,12 @@
-import { createRuinsMap } from './data/maps';
+import { MAPS } from './data/maps';
 import { BattleGrid } from './core/Grid';
 import { TacticsScene } from './renderer/TacticsScene';
 import { UIManager } from './ui/UIManager';
 import { TurnManager } from './core/TurnManager';
 import { JobSystem } from './core/JobSystem';
 import { CombatEngine } from './core/CombatEngine';
-import { Unit, Ability, CombatForecast, FacingDirection } from './core/types';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine } from './core/types';
+import { SoundFX } from './audio/SoundEffects';
 
 class TacticsGame {
   private grid: BattleGrid;
@@ -15,60 +16,98 @@ class TacticsGame {
   private units: Unit[] = [];
 
   // Interaction State
-  private currentMode: 'idle' | 'moving' | 'targeting' | 'facing' = 'idle';
+  private currentMode: 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' = 'dialogue';
   private selectedAbility: Ability | null = null;
   private currentForecast: CombatForecast | null = null;
 
+  // Story Cutscene Sequence
+  private introDialogue: DialogueLine[] = [
+    { speaker: 'Ramza', portraitClass: '⚔', side: 'left', text: 'Halt, brigands! The knights of the realm have encircled these ruins. Lay down your arms!' },
+    { speaker: 'Bandit Chief', portraitClass: '🛡', side: 'right', text: 'Bah! Spoiled nobles strutting in fine armor! You know nothing of our hunger or our cause!' },
+    { speaker: 'Rogue Warlock', portraitClass: '⚡', side: 'right', text: 'The ancient Zodiac Stones slumber beneath this soil... We will not let dogs of the throne claim them!' },
+    { speaker: 'Agrias', portraitClass: '⚜', side: 'left', text: 'Silence your blasphemy, rebel! In the name of the realm, draw your steel!' }
+  ];
+  private dialogueIndex: number = 0;
+
   constructor() {
-    // 1. Initialize Map & Grid
-    const mapData = createRuinsMap();
+    // 1. Initialize Map
+    const mapData = MAPS.river_ruins();
     this.grid = new BattleGrid(mapData);
 
-    // 2. Initialize Units (Player Squad & Enemy Squad)
+    // 2. Initialize Squads (Player Squad & Enemy Squad)
+    this.initSquads();
+
+    // 3. Initialize Three.js Scene
+    const canvas = document.getElementById('viewport-canvas') as HTMLCanvasElement;
+    this.scene = new TacticsScene(canvas, this.grid);
+    this.scene.updateUnits(this.units);
+
+    // 4. Initialize Turn Engine & UI
+    this.turnManager = new TurnManager(this.units);
+    this.ui = new UIManager();
+    this.bindEvents();
+
+    // 5. Start with Story Cutscene
+    this.playDialogueSequence();
+    this.gameLoop();
+  }
+
+  private initSquads(): void {
     this.units = [
       // Player Units
-      JobSystem.createUnit('p1', 'Ramza', 'player', 'squire', 3, 8, 'N', 2),
-      JobSystem.createUnit('p2', 'Agrias', 'player', 'knight', 4, 8, 'N', 2),
-      JobSystem.createUnit('p3', 'Mustadio', 'player', 'archer', 5, 9, 'N', 2),
+      JobSystem.createUnit('p1', 'Ramza', 'player', 'squire', 3, 8, 'N', 3),
+      JobSystem.createUnit('p2', 'Agrias', 'player', 'knight', 4, 8, 'N', 3),
+      JobSystem.createUnit('p3', 'Mustadio', 'player', 'archer', 5, 9, 'N', 3),
+      JobSystem.createUnit('p4', 'Kain', 'player', 'dragoon', 2, 7, 'N', 3),
 
       // Enemy Units
-      JobSystem.createUnit('e1', 'Bandit Chief', 'enemy', 'knight', 8, 3, 'S', 2),
-      JobSystem.createUnit('e2', 'Brigand Bowman', 'enemy', 'archer', 9, 2, 'S', 2),
-      JobSystem.createUnit('e3', 'Rogue Warlock', 'enemy', 'black_mage', 6, 4, 'S', 2)
+      JobSystem.createUnit('e1', 'Bandit Chief', 'enemy', 'knight', 8, 3, 'S', 3),
+      JobSystem.createUnit('e2', 'Shadow Shinobi', 'enemy', 'ninja', 7, 2, 'S', 3),
+      JobSystem.createUnit('e3', 'Rogue Warlock', 'enemy', 'time_mage', 6, 4, 'S', 3),
+      JobSystem.createUnit('e4', 'Brigand Marksman', 'enemy', 'archer', 9, 2, 'S', 3)
     ];
 
-    // Give Ramza a secondary skillset and some abilities
+    // Give Ramza a secondary skillset and movement ability
     JobSystem.setSecondarySkillset(this.units[0], 'knight');
     this.units[0].unlockedAbilities['kn_rend_armor'] = true;
     this.units[0].unlockedAbilities['sq_move_plus'] = true;
     this.units[0].equippedAbilities.movement = 'sq_move_plus';
     JobSystem.recalculateDerivedStats(this.units[0]);
 
-    // 3. Initialize Renderer & Scene (starts at close tactical zoom 8.5)
-    const canvas = document.getElementById('viewport-canvas') as HTMLCanvasElement;
-    this.scene = new TacticsScene(canvas, this.grid);
-    this.scene.updateUnits(this.units);
+    // Give Kain (Dragoon) Jump abilities
+    this.units[3].unlockedAbilities['dr_jump'] = true;
+    this.units[3].unlockedAbilities['dr_ignore_height'] = true;
+    this.units[3].equippedAbilities.movement = 'dr_ignore_height';
+    JobSystem.recalculateDerivedStats(this.units[3]);
+  }
 
-    // 4. Initialize Turn Manager
-    this.turnManager = new TurnManager(this.units);
-
-    // 5. Initialize UI Manager
-    this.ui = new UIManager();
-    this.bindEvents();
-
-    // 6. Start Battle Loop
-    this.startBattle();
-    this.gameLoop();
+  private playDialogueSequence(): void {
+    this.currentMode = 'dialogue';
+    if (this.dialogueIndex < this.introDialogue.length) {
+      const line = this.introDialogue[this.dialogueIndex];
+      this.ui.showDialogue(line, () => {
+        this.dialogueIndex++;
+        this.playDialogueSequence();
+      });
+    } else {
+      this.ui.hideDialogue();
+      this.startBattle();
+    }
   }
 
   private bindEvents(): void {
+    // Map Selector
+    this.ui.onMapChanged = (mapId) => this.switchBattlefield(mapId);
+
     // Camera HUD controls
     document.getElementById('btn-rot-left')?.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.scene.rotateLeft();
       this.scene.updateUnits(this.units);
     });
 
     document.getElementById('btn-rot-right')?.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
       this.scene.rotateRight();
       this.scene.updateUnits(this.units);
     });
@@ -76,24 +115,28 @@ class TacticsGame {
     document.getElementById('btn-zoom-in')?.addEventListener('click', () => this.scene.zoomIn(1.8));
     document.getElementById('btn-zoom-out')?.addEventListener('click', () => this.scene.zoomOut(1.8));
 
-    // Keyboard shortcuts: rotation, zoom, camera panning, reset
+    // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
-      // Rotation
+      if (this.currentMode === 'dialogue') {
+        if (e.key === ' ' || e.key === 'Enter') {
+          SoundFX.playMenuBlip();
+          this.dialogueIndex++;
+          this.playDialogueSequence();
+        }
+        return;
+      }
+
       if (e.key === 'q' || e.key === 'Q') {
         this.scene.rotateLeft();
         this.scene.updateUnits(this.units);
       } else if (e.key === 'e' || e.key === 'E') {
         this.scene.rotateRight();
         this.scene.updateUnits(this.units);
-      }
-      // Zoom
-      else if (e.key === '+' || e.key === '=') {
+      } else if (e.key === '+' || e.key === '=') {
         this.scene.zoomIn(1.5);
       } else if (e.key === '-' || e.key === '_') {
         this.scene.zoomOut(1.5);
-      }
-      // Camera Panning (WASD / Arrow Keys)
-      else if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+      } else if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
         this.scene.panBy(0, -1.0);
       } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
         this.scene.panBy(0, 1.0);
@@ -101,16 +144,12 @@ class TacticsGame {
         this.scene.panBy(-1.0, 0);
       } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
         this.scene.panBy(1.0, 0);
-      }
-      // Reset camera to active unit
-      else if (e.key === 'r' || e.key === 'R' || e.key === 'Home') {
+      } else if (e.key === 'r' || e.key === 'R' || e.key === 'Home') {
         const active = this.turnManager.activeUnit;
         if (active) {
           this.scene.focusOn(active.x, this.grid.getHeight(active.x, active.z), active.z);
         }
-      }
-      // Cancel targeting
-      else if (e.key === 'Escape') {
+      } else if (e.key === 'Escape') {
         if (this.currentMode === 'targeting') {
           this.cancelTargeting();
         } else if (this.currentMode === 'moving') {
@@ -120,12 +159,10 @@ class TacticsGame {
       }
     });
 
-    // Viewport Click Handling
     this.scene.canvas.addEventListener('click', () => {
       this.onCanvasClick();
     });
 
-    // UI Action Menu events
     this.ui.onMoveClicked = () => this.handleMoveCommand();
     this.ui.onAbilitySelected = (ability) => this.handleAbilityCommand(ability);
     this.ui.onWaitClicked = () => this.handleWaitCommand();
@@ -134,45 +171,69 @@ class TacticsGame {
     this.ui.onCancelAttack = () => this.cancelTargeting();
   }
 
+  private switchBattlefield(mapId: string): void {
+    const mapGen = MAPS[mapId] || MAPS.river_ruins;
+    const mapData = mapGen();
+    this.grid = new BattleGrid(mapData);
+    this.scene.loadMap(this.grid);
+
+    // Reset unit positions according to new battlefield
+    this.initSquads();
+    this.turnManager = new TurnManager(this.units);
+    this.scene.updateUnits(this.units);
+    this.startBattle();
+  }
+
   private startBattle(): void {
+    SoundFX.playTurnChime();
     this.ui.showBanner('BATTLE START');
     this.updateTimeline();
     this.advanceTurn();
   }
 
   private advanceTurn(): void {
-    const active = this.turnManager.advanceToNextActiveTurn();
-    if (!active) {
+    const result = this.turnManager.advanceToNextActiveTurn();
+    if (!result) {
       this.checkBattleStatus();
       return;
     }
+
+    const { activeUnit, poisonDamage } = result;
 
     this.currentMode = 'idle';
     this.scene.clearHighlights();
 
     // Smoothly focus camera on active unit
-    const height = this.grid.getHeight(active.x, active.z);
-    this.scene.focusOn(active.x, height, active.z);
-    this.scene.setCursor(active.x, active.z);
+    const height = this.grid.getHeight(activeUnit.x, activeUnit.z);
+    this.scene.focusOn(activeUnit.x, height, activeUnit.z);
+    this.scene.setCursor(activeUnit.x, activeUnit.z);
 
-    this.ui.updateUnitCard(active, height);
-    this.ui.populateActionSubMenu(active);
-    this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), active);
+    // Poison damage processing
+    if (poisonDamage) {
+      this.scene.spawnFloatingDamage(activeUnit.x, height, activeUnit.z, `POISON -${poisonDamage}`, 'damage');
+      SoundFX.playCrit();
+    }
 
-    this.ui.showBanner(`${active.name.toUpperCase()}'s TURN`);
+    this.ui.updateUnitCard(activeUnit, height);
+    this.ui.populateActionSubMenu(activeUnit);
+    this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), activeUnit);
 
-    if (active.team === 'enemy') {
-      setTimeout(() => this.runEnemyAi(active), 900);
+    this.ui.showBanner(`${activeUnit.name.toUpperCase()}'s TURN`);
+
+    if (activeUnit.team === 'player') {
+      SoundFX.playTurnChime();
+    } else {
+      setTimeout(() => this.runEnemyAi(activeUnit), 900);
     }
   }
 
   private handleMoveCommand(): void {
     const active = this.turnManager.activeUnit;
-    if (!active || active.hasMoved || active.team !== 'player') return;
+    if (!active || active.hasMoved || active.team !== 'player' || active.move === 0) return;
 
     this.currentMode = 'moving';
     const reachable = this.grid.getReachableTiles(active, this.units);
-    this.scene.setHighlights(reachable, 0x3b82f6); // FFT Blue movement tiles
+    this.scene.setHighlights(reachable, 0x3b82f6);
   }
 
   private handleAbilityCommand(ability: Ability): void {
@@ -180,16 +241,24 @@ class TacticsGame {
     if (!active || active.hasActed || active.team !== 'player') return;
 
     this.selectedAbility = ability;
-    this.currentMode = 'targeting';
 
+    // Self-only skills (e.g. Focus) execute directly
+    if (ability.isSelfOnly) {
+      const height = this.grid.getHeight(active.x, active.z);
+      const forecast = CombatEngine.getForecast(active, active, ability, height, height);
+      this.currentForecast = forecast;
+      this.handleExecuteAttack();
+      return;
+    }
+
+    this.currentMode = 'targeting';
     const targetables = this.grid.getTargetableTiles(
       active.x,
       active.z,
       ability.range,
       ability.heightTolerance
     );
-
-    this.scene.setHighlights(targetables, 0xdc2626); // FFT Red attack tiles
+    this.scene.setHighlights(targetables, 0xdc2626);
   }
 
   private handleWaitCommand(): void {
@@ -208,11 +277,9 @@ class TacticsGame {
     active.facing = facing;
     this.scene.updateUnits(this.units);
 
-    // End Active Unit Turn
     this.turnManager.endTurn(active);
     this.updateTimeline();
 
-    // Check if battle resolved or advance to next
     if (!this.checkBattleStatus()) {
       setTimeout(() => this.advanceTurn(), 400);
     }
@@ -224,9 +291,9 @@ class TacticsGame {
     if (!tile || !active) return;
 
     if (this.currentMode === 'idle') {
-      // If player clicks any unit, focus and inspect their card
       const clickedUnit = this.units.find((u) => !u.isDead && u.x === tile.x && u.z === tile.z);
       if (clickedUnit) {
+        SoundFX.playMenuBlip();
         const height = this.grid.getHeight(clickedUnit.x, clickedUnit.z);
         this.scene.focusOn(clickedUnit.x, height, clickedUnit.z);
         this.ui.updateUnitCard(clickedUnit, height);
@@ -236,6 +303,7 @@ class TacticsGame {
       const isValid = reachable.some((r) => r.x === tile.x && r.z === tile.z);
 
       if (isValid) {
+        SoundFX.playMoveStep();
         active.x = tile.x;
         active.z = tile.z;
         active.hasMoved = true;
@@ -245,7 +313,6 @@ class TacticsGame {
 
         this.ui.updateUnitCard(active, this.grid.getHeight(active.x, active.z));
 
-        // If unit already acted, automatically prompt for facing direction
         if (active.hasActed) {
           this.handleWaitCommand();
         }
@@ -253,9 +320,7 @@ class TacticsGame {
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
       const targetUnit = this.units.find((u) => !u.isDead && u.x === tile.x && u.z === tile.z);
       if (targetUnit) {
-        // Can't attack yourself with offensive skills
-        if (targetUnit.id === active.id && this.selectedAbility.power > 0) return;
-
+        SoundFX.playMenuBlip();
         const attackerHeight = this.grid.getHeight(active.x, active.z);
         const targetHeight = this.grid.getHeight(targetUnit.x, targetUnit.z);
 
@@ -279,13 +344,11 @@ class TacticsGame {
     const forecast = this.currentForecast;
     const active = forecast.attacker;
 
-    // Deduct MP
     active.currentMp = Math.max(0, active.currentMp - forecast.ability.mpCost);
 
     const result = CombatEngine.executeAttack(forecast);
     active.hasActed = true;
 
-    // Award JP & EXP
     active.jobPoints[active.jobId] = (active.jobPoints[active.jobId] || 0) + 24;
     active.exp += 15;
 
@@ -298,16 +361,41 @@ class TacticsGame {
 
     if (result.hit) {
       if (result.isHeal) {
+        SoundFX.playHeal();
         this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `+${result.damageDealt}`, 'heal');
         this.ui.showBanner(`${forecast.target.name} healed +${result.damageDealt} HP!`);
-      } else if (result.isCrit) {
-        this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `CRIT! -${result.damageDealt}`, 'crit');
-        this.ui.showBanner(`CRITICAL HIT! ${forecast.target.name} takes ${result.damageDealt} DMG!`);
+      } else if (result.appliedStatus && result.damageDealt === 0) {
+        SoundFX.playMagicCast();
+        this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `[${result.appliedStatus}]`, 'heal');
+        this.ui.showBanner(`${forecast.target.name} granted ${result.appliedStatus}!`);
       } else {
-        this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `-${result.damageDealt}`, 'damage');
-        this.ui.showBanner(`${forecast.target.name} takes ${result.damageDealt} damage!`);
+        if (forecast.ability.element === 'physical') {
+          SoundFX.playSwordSlash();
+        } else {
+          SoundFX.playMagicCast();
+        }
+
+        if (result.isCrit) {
+          SoundFX.playCrit();
+          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `CRIT! -${result.damageDealt}`, 'crit');
+          this.ui.showBanner(`CRITICAL HIT! ${forecast.target.name} takes ${result.damageDealt} DMG!`);
+        } else {
+          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `-${result.damageDealt}`, 'damage');
+          this.ui.showBanner(`${forecast.target.name} takes ${result.damageDealt} damage!`);
+        }
+
+        // Dual Wield Second Strike
+        if (result.secondStrike) {
+          setTimeout(() => {
+            if (result.secondStrike!.hit) {
+              SoundFX.playSwordSlash();
+              this.scene.spawnFloatingDamage(forecast.target.x, targetHeight + 0.3, forecast.target.z, `-${result.secondStrike!.damageDealt}`, 'damage');
+            }
+          }, 350);
+        }
       }
     } else {
+      SoundFX.playMenuBlip();
       this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, 'MISS', 'miss');
       this.ui.showBanner('MISSED!');
     }
@@ -315,7 +403,6 @@ class TacticsGame {
     this.ui.updateUnitCard(active, this.grid.getHeight(active.x, active.z));
     this.updateTimeline();
 
-    // If unit already moved, prompt for facing
     if (active.hasMoved) {
       setTimeout(() => this.handleWaitCommand(), 700);
     }
@@ -344,7 +431,6 @@ class TacticsGame {
 
     if (!closestPlayer) return;
 
-    // Move adjacent to closest player
     const reachable = this.grid.getReachableTiles(enemy, this.units);
     let bestTile = { x: enemy.x, z: enemy.z };
     let bestTileDist = minDist;
@@ -364,7 +450,7 @@ class TacticsGame {
 
     const distNow = Math.abs(enemy.x - closestPlayer.x) + Math.abs(enemy.z - closestPlayer.z);
     const abilities = JobSystem.getCombatActionAbilities(enemy);
-    const attackAbility = abilities.find((a) => a.power > 0 && a.range >= distNow) || abilities[0];
+    const attackAbility = abilities.find((a) => (a.power > 0 || a.appliesStatus) && a.range >= distNow) || abilities[0];
 
     if (distNow <= attackAbility.range) {
       const attackerHeight = this.grid.getHeight(enemy.x, enemy.z);
@@ -378,12 +464,21 @@ class TacticsGame {
 
         const targetH = this.grid.getHeight(closestPlayer!.x, closestPlayer!.z);
         if (result.hit) {
+          if (forecast.ability.element === 'physical') {
+            SoundFX.playSwordSlash();
+          } else {
+            SoundFX.playMagicCast();
+          }
+
           if (result.isCrit) {
+            SoundFX.playCrit();
             this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `CRIT! -${result.damageDealt}`, 'crit');
+          } else if (result.appliedStatus && result.damageDealt === 0) {
+            this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `[${result.appliedStatus}]`, 'heal');
           } else {
             this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `-${result.damageDealt}`, 'damage');
           }
-          this.ui.showBanner(`${enemy.name} struck ${closestPlayer!.name} for ${result.damageDealt} DMG!`);
+          this.ui.showBanner(`${enemy.name} used ${attackAbility.name}!`);
         } else {
           this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, 'MISS', 'miss');
           this.ui.showBanner(`${enemy.name} missed!`);
@@ -431,7 +526,8 @@ class TacticsGame {
       return true;
     }
     if (!enemiesAlive) {
-      this.ui.showBanner('VICTORY! RUINS SECURED');
+      SoundFX.playVictoryFanfare();
+      this.ui.showBanner('VICTORY! BATTLEFIELD SECURED');
       return true;
     }
     return false;
@@ -452,7 +548,6 @@ class TacticsGame {
   }
 }
 
-// Start game once DOM is loaded
 window.addEventListener('DOMContentLoaded', () => {
   new TacticsGame();
 });

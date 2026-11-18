@@ -25,11 +25,16 @@
 
     <!-- Top-Right Camera & Map Controls -->
     <div id="camera-controls" class="hud-panel">
+      <select id="map-select" class="hud-select" title="Switch Battlefield">
+        <option value="river_ruins">Riverside Ruins</option>
+        <option value="night_fortress">Night Battlement</option>
+        <option value="gloomy_swamp">Gloomy Mire</option>
+      </select>
+      <button id="btn-toggle-sound" title="Toggle Sound FX">🔊 SFX</button>
       <button id="btn-rot-left" title="Rotate Left (Q)">⟲ Q</button>
       <button id="btn-rot-right" title="Rotate Right (E)">⟳ E</button>
       <button id="btn-zoom-in" title="Zoom In (+)">+</button>
       <button id="btn-zoom-out" title="Zoom Out (-)">-</button>
-      <button id="btn-toggle-grid" title="Toggle Grid Overlay"># Grid</button>
       <button id="btn-job-menu" title="Open Job Roster">★ Jobs</button>
     </div>
 
@@ -40,6 +45,7 @@
         <div class="unit-header-info">
           <div id="unit-name" class="unit-name">Ramza</div>
           <div id="unit-job" class="unit-job">Squire Lv. 1</div>
+          <div id="unit-statuses" class="unit-statuses-row"></div>
         </div>
       </div>
       <div class="card-stats">
@@ -120,6 +126,16 @@
       </div>
     </div>
 
+    <!-- Story / Tactical Dialogue Cutscene Box -->
+    <div id="dialogue-box" class="hud-panel hidden">
+      <div class="dialogue-portrait" id="dialogue-portrait">⚔</div>
+      <div class="dialogue-content">
+        <div class="dialogue-speaker" id="dialogue-speaker">Ramza</div>
+        <div class="dialogue-text" id="dialogue-text">"Yield your weapons, brigands! The knights of the realm are here!"</div>
+        <div class="dialogue-hint">Click or press Space to continue ▶</div>
+      </div>
+    </div>
+
     <!-- Job & Skill Customization Modal -->
     <div id="job-modal" class="modal-overlay hidden">
       <div class="modal-window hud-panel">
@@ -128,17 +144,14 @@
           <button id="btn-close-job-modal" class="close-btn">×</button>
         </div>
         <div class="modal-content">
-          <!-- Unit Selector Tabs -->
           <div id="job-unit-tabs" class="job-unit-tabs"></div>
 
           <div class="job-config-columns">
-            <!-- Left: Current Job & Job Tree -->
             <div class="job-column">
               <h3>UNLOCKED JOBS</h3>
               <div id="job-list" class="job-selection-list"></div>
             </div>
 
-            <!-- Middle: 5 Ability Slots -->
             <div class="job-column">
               <h3>EQUIPPED ABILITIES (5 SLOTS)</h3>
               <div class="ability-slot-box" data-slot="primary">
@@ -163,7 +176,6 @@
               </div>
             </div>
 
-            <!-- Right: Learn Abilities with JP -->
             <div class="job-column">
               <h3>LEARN ABILITIES (JP: <span id="current-unit-jp">350</span>)</h3>
               <div id="learn-ability-list" class="learn-ability-list"></div>

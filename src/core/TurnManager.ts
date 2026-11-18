@@ -1,4 +1,5 @@
 import { Unit } from './types';
+import { JobSystem } from './JobSystem';
 
 export class TurnManager {
   public units: Unit[];
@@ -11,10 +12,9 @@ export class TurnManager {
   /**
    * Advances the CT clock until at least one unit reaches CT >= 100.
    */
-  public advanceToNextActiveTurn(): Unit | null {
-    // If there is already an active unit that hasn't finished, return it
+  public advanceToNextActiveTurn(): { activeUnit: Unit; poisonDamage?: number } | null {
     if (this.activeUnit && !this.activeUnit.isDead && (!this.activeUnit.hasMoved || !this.activeUnit.hasActed)) {
-      return this.activeUnit;
+      return { activeUnit: this.activeUnit };
     }
 
     const aliveUnits = this.units.filter((u) => !u.isDead);
@@ -24,21 +24,31 @@ export class TurnManager {
     while (iterations < 1000) {
       iterations++;
 
-      // Check if any unit has reached CT >= 100
       const readyUnits = aliveUnits.filter((u) => u.ct >= 100);
       if (readyUnits.length > 0) {
-        // Sort by highest CT, then by Speed
         readyUnits.sort((a, b) => b.ct - a.ct || b.speed - a.speed);
         const nextActive = readyUnits[0];
 
-        // Start active unit turn
         this.activeUnit = nextActive;
         nextActive.hasMoved = false;
         nextActive.hasActed = false;
-        return nextActive;
+
+        // Process Poison damage at start of turn
+        let poisonDmg: number | undefined;
+        if (nextActive.statuses.some((s) => s.type === 'poison')) {
+          poisonDmg = Math.max(1, Math.round(nextActive.maxHp * 0.10));
+          nextActive.currentHp = Math.max(0, nextActive.currentHp - poisonDmg);
+          if (nextActive.currentHp === 0) {
+            nextActive.isDead = true;
+            this.activeUnit = null;
+            return this.advanceToNextActiveTurn();
+          }
+        }
+
+        return { activeUnit: nextActive, poisonDamage: poisonDmg };
       }
 
-      // Tick all units
+      // Tick all units according to current speed
       for (const u of aliveUnits) {
         u.ct += u.speed;
       }
@@ -59,6 +69,16 @@ export class TurnManager {
       unit.ct = 40; // 40% CT refund for taking no action (pure wait)
     }
 
+    // Tick down status durations
+    for (let i = unit.statuses.length - 1; i >= 0; i--) {
+      unit.statuses[i].duration--;
+      if (unit.statuses[i].duration <= 0) {
+        unit.statuses.splice(i, 1);
+      }
+    }
+
+    JobSystem.recalculateDerivedStats(unit);
+
     unit.hasMoved = false;
     unit.hasActed = false;
     this.activeUnit = null;
@@ -71,7 +91,6 @@ export class TurnManager {
     const aliveUnits = this.units.filter((u) => !u.isDead);
     if (aliveUnits.length === 0) return [];
 
-    // Clone simulated CT states
     const sim = aliveUnits.map((u) => ({
       unit: u,
       ct: u.ct,
@@ -89,10 +108,8 @@ export class TurnManager {
         ready.sort((a, b) => b.ct - a.ct || b.speed - a.speed);
         const top = ready[0];
         queue.push(top.unit);
-        // Assume full turn action (ct - 100)
         top.ct -= 100;
       } else {
-        // Advance tick
         for (const s of sim) {
           s.ct += s.speed;
         }
