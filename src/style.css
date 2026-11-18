@@ -781,6 +781,50 @@ body, html {
   font-size: 14px;
 }
 
+/* Projected 3D Overhead Mini HP & CT Bars */
+.unit-overhead-hp {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 5px;
+  background: rgba(10, 14, 23, 0.85);
+  border: 1px solid #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  border-radius: 1px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 1px;
+  will-change: transform;
+}
+
+.unit-overhead-hp.player {
+  border-color: #3b82f6;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+}
+
+.unit-overhead-hp.enemy {
+  border-color: #ef4444;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+}
+
+.overhead-hp-fill {
+  height: 3px;
+  background: linear-gradient(90deg, #10b981, #22c55e);
+  border-radius: 1px;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overhead-ct-fill {
+  height: 1px;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 1px;
+  transition: width 0.15s ease-out;
+}
+
 /* Map Selector & Sound Toggle */
 .hud-select {
   background: #16243b;

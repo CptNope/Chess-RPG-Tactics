@@ -30,6 +30,7 @@ Documenting the architectural choices, tradeoffs, and context of the engine:
 * **[ADR 0009: In-Game 3D Map Editor & Live Mesh Mutation](adr/0009-in-game-3d-map-editor.md)**
 * **[ADR 0010: Five-Slot Equipment & Weapon Range System](adr/0010-equipment-and-inventory-architecture.md)**
 * **[ADR 0011: Multi-Stage Branching Campaign & Dialogue Engine](adr/0011-branching-campaign-state-machine.md)**
+* **[ADR 0012: Visual Effects, Camera Trauma Shake, and 3D Projected Overlays](adr/0012-vfx-particles-and-projected-hud.md)**
 
 ---
 

@@ -10,6 +10,7 @@ import {
   createSwampTexture,
   createUnitSpriteTexture
 } from '../graphics/PixelTextures';
+import { VFXManager } from './VFXManager';
 
 export interface FloatingText {
   element: HTMLElement;
@@ -18,11 +19,20 @@ export interface FloatingText {
   maxLifetime: number;
 }
 
+interface UnitTween {
+  type: 'lunge' | 'recoil';
+  progress: number;
+  maxProgress: number;
+  dirX: number;
+  dirZ: number;
+}
+
 export class TacticsScene {
   public canvas: HTMLCanvasElement;
   public renderer: THREE.WebGLRenderer;
   public scene: THREE.Scene;
   public camera: THREE.OrthographicCamera;
+  public vfx: VFXManager;
 
   // Grid & Map
   public grid: BattleGrid;
@@ -30,6 +40,8 @@ export class TacticsScene {
 
   // Unit meshes & sprites
   private unitSpritePlanes: Map<string, THREE.Mesh> = new Map();
+  private unitTweens: Map<string, UnitTween> = new Map();
+  private overheadHpElements: Map<string, HTMLElement> = new Map();
 
   // Highlight overlays
   private highlightGroup: THREE.Group = new THREE.Group();
@@ -41,7 +53,6 @@ export class TacticsScene {
   public currentRotationAngle: number = Math.PI / 4;
   public targetRotationAngle: number = Math.PI / 4;
   
-  // Extended zoom range: 2.0 (extreme close-up) to 22.0 (tactical overview)
   public zoomLevel: number = 8.5;
   public targetZoomLevel: number = 8.5;
   public minZoomLevel: number = 2.0;
@@ -69,9 +80,10 @@ export class TacticsScene {
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
 
-  // Floating Combat Text
+  // Floating Combat Text & Overlays
   private floatingTexts: FloatingText[] = [];
   private floatingTextContainer: HTMLElement;
+  private lastRenderTime: number = performance.now();
 
   constructor(canvas: HTMLCanvasElement, grid: BattleGrid) {
     this.canvas = canvas;
@@ -89,6 +101,9 @@ export class TacticsScene {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0e17);
+
+    // VFX Manager
+    this.vfx = new VFXManager(this.scene);
 
     // Floating text container overlay
     this.floatingTextContainer = document.createElement('div');
@@ -117,10 +132,10 @@ export class TacticsScene {
   }
 
   private setupLighting(): void {
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     this.scene.add(this.ambientLight);
 
-    this.sunLight = new THREE.DirectionalLight(0xfff5ea, 1.25);
+    this.sunLight = new THREE.DirectionalLight(0xfff5ea, 1.3);
     this.sunLight.position.set(20, 40, 20);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 1024;
@@ -142,7 +157,6 @@ export class TacticsScene {
   public loadMap(newGrid: BattleGrid): void {
     this.grid = newGrid;
 
-    // Dispose old tile meshes
     for (const mesh of this.tileMeshes.values()) {
       if (mesh.geometry) mesh.geometry.dispose();
       this.scene.remove(mesh);
@@ -150,7 +164,6 @@ export class TacticsScene {
     this.tileMeshes.clear();
     this.clearHighlights();
 
-    // Adjust theme backdrop and lighting
     if (newGrid.mapData.theme === 'night') {
       this.scene.background = new THREE.Color(0x04060d);
       this.ambientLight.color.setHex(0x38bdf8);
@@ -166,11 +179,12 @@ export class TacticsScene {
     } else {
       this.scene.background = new THREE.Color(0x0a0e17);
       this.ambientLight.color.setHex(0xffffff);
-      this.ambientLight.intensity = 0.8;
+      this.ambientLight.intensity = 0.85;
       this.sunLight.color.setHex(0xfff5ea);
-      this.sunLight.intensity = 1.25;
+      this.sunLight.intensity = 1.3;
     }
 
+    this.vfx.setWeatherTheme(newGrid.mapData.theme);
     this.buildMap();
     this.targetCameraTarget.set(5, 1, 5);
   }
@@ -355,6 +369,33 @@ export class TacticsScene {
     );
   }
 
+  public triggerUnitLunge(unitId: string, targetX: number, targetZ: number): void {
+    const sprite = this.unitSpritePlanes.get(unitId);
+    if (!sprite) return;
+
+    const dx = targetX - sprite.position.x;
+    const dz = targetZ - sprite.position.z;
+    const len = Math.hypot(dx, dz) || 1;
+
+    this.unitTweens.set(unitId, {
+      type: 'lunge',
+      progress: 0,
+      maxProgress: 18,
+      dirX: dx / len,
+      dirZ: dz / len
+    });
+  }
+
+  public triggerUnitRecoil(unitId: string): void {
+    this.unitTweens.set(unitId, {
+      type: 'recoil',
+      progress: 0,
+      maxProgress: 14,
+      dirX: (Math.random() - 0.5) * 2,
+      dirZ: (Math.random() - 0.5) * 2
+    });
+  }
+
   public updateUnits(units: Unit[]): void {
     const time = Date.now() * 0.0035;
 
@@ -364,6 +405,11 @@ export class TacticsScene {
         if (mesh) {
           this.scene.remove(mesh);
           this.unitSpritePlanes.delete(unit.id);
+        }
+        const bar = this.overheadHpElements.get(unit.id);
+        if (bar) {
+          bar.remove();
+          this.overheadHpElements.delete(unit.id);
         }
         continue;
       }
@@ -384,7 +430,30 @@ export class TacticsScene {
 
       const height = this.grid.getHeight(unit.x, unit.z);
       const bob = Math.sin(time + unit.x * 2 + unit.z) * 0.035;
-      spriteMesh.position.set(unit.x, height + 0.68 + bob, unit.z);
+
+      // Handle Lunge / Recoil Tweens
+      let offsetX = 0;
+      let offsetZ = 0;
+      const tween = this.unitTweens.get(unit.id);
+      if (tween) {
+        tween.progress++;
+        const p = tween.progress / tween.maxProgress;
+        if (tween.type === 'lunge') {
+          const lungeDist = Math.sin(p * Math.PI) * 0.45;
+          offsetX = tween.dirX * lungeDist;
+          offsetZ = tween.dirZ * lungeDist;
+        } else if (tween.type === 'recoil') {
+          const recoilDist = Math.sin(p * Math.PI) * 0.25;
+          offsetX = -tween.dirX * recoilDist;
+          offsetZ = -tween.dirZ * recoilDist;
+        }
+
+        if (tween.progress >= tween.maxProgress) {
+          this.unitTweens.delete(unit.id);
+        }
+      }
+
+      spriteMesh.position.set(unit.x + offsetX, height + 0.68 + bob, unit.z + offsetZ);
 
       const relativeFacing = this.calculateRelativeFacing(unit.facing);
       const isEnemy = unit.team === 'enemy';
@@ -393,7 +462,38 @@ export class TacticsScene {
       (spriteMesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
 
       spriteMesh.rotation.y = this.currentRotationAngle;
+
+      // Update Overhead Mini HP Bar in 3D projection
+      this.updateOverheadHpBar(unit, spriteMesh.position);
     }
+  }
+
+  private updateOverheadHpBar(unit: Unit, worldPos: THREE.Vector3): void {
+    let barEl = this.overheadHpElements.get(unit.id);
+    if (!barEl) {
+      barEl = document.createElement('div');
+      barEl.className = `unit-overhead-hp ${unit.team}`;
+      barEl.innerHTML = `
+        <div class="overhead-hp-fill" style="width: 100%;"></div>
+        <div class="overhead-ct-fill" style="width: 0%;"></div>
+      `;
+      this.floatingTextContainer.appendChild(barEl);
+      this.overheadHpElements.set(unit.id, barEl);
+    }
+
+    const hpFill = barEl.querySelector('.overhead-hp-fill') as HTMLElement;
+    const ctFill = barEl.querySelector('.overhead-ct-fill') as HTMLElement;
+    if (hpFill) hpFill.style.width = `${Math.max(0, (unit.currentHp / unit.maxHp) * 100)}%`;
+    if (ctFill) ctFill.style.width = `${Math.min(100, unit.ct)}%`;
+
+    // Project 3D pos to screen
+    const screenPos = new THREE.Vector3(worldPos.x, worldPos.y + 0.72, worldPos.z);
+    screenPos.project(this.camera);
+
+    const x = ((screenPos.x + 1) * window.innerWidth) / 2;
+    const y = ((-screenPos.y + 1) * window.innerHeight) / 2;
+
+    barEl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
   }
 
   private calculateRelativeFacing(unitFacing: FacingDirection): FacingDirection {
@@ -485,9 +585,9 @@ export class TacticsScene {
     const distance = 45;
     const pitch = 35.264 * (Math.PI / 180);
 
-    const cx = this.cameraTarget.x + distance * Math.cos(this.currentRotationAngle) * Math.cos(pitch);
-    const cz = this.cameraTarget.z + distance * Math.sin(this.currentRotationAngle) * Math.cos(pitch);
-    const cy = this.cameraTarget.y + distance * Math.sin(pitch);
+    const cx = this.cameraTarget.x + distance * Math.cos(this.currentRotationAngle) * Math.cos(pitch) + this.vfx.cameraShakeOffset.x;
+    const cz = this.cameraTarget.z + distance * Math.sin(this.currentRotationAngle) * Math.cos(pitch) + this.vfx.cameraShakeOffset.z;
+    const cy = this.cameraTarget.y + distance * Math.sin(pitch) + this.vfx.cameraShakeOffset.y;
 
     this.camera.position.set(cx, cy, cz);
     this.camera.lookAt(this.cameraTarget);
@@ -573,11 +673,22 @@ export class TacticsScene {
   }
 
   public render(): void {
+    const now = performance.now();
+    const delta = Math.min(0.1, (now - this.lastRenderTime) / 1000);
+    this.lastRenderTime = now;
+
     this.updateCameraPosition();
     this.updateFloatingNumbers();
+    this.vfx.update(delta);
 
-    const time = Date.now() * 0.005;
-    const scale = 1 + Math.sin(time) * 0.06;
+    // Subtle water caustics wave animation
+    const time = now * 0.003;
+    this.waterTex.offset.x = Math.sin(time * 0.6) * 0.06;
+    this.waterTex.offset.y = Math.cos(time * 0.6) * 0.06;
+
+    // Pulse cursor
+    const cursorTime = now * 0.005;
+    const scale = 1 + Math.sin(cursorTime) * 0.06;
     this.cursorMesh.scale.set(scale, 1, scale);
 
     this.renderer.render(this.scene, this.camera);

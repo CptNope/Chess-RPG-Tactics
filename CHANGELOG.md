@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - 2026-11-18
+
+### Added
+- **Visual Effects & Spell Particle Engine (`src/renderer/VFXManager.ts`)**:
+  - **Atmospheric Weather Particles**: Context-aware ambient motes tailored to map themes (golden drifting pollen for daytime ruins, luminous azure motes for night fortress, toxic green spore clouds for swamp).
+  - **Elemental Combat Spell VFX**:
+    - *Slash Energy Arc*: Expanding additive crescent blade with directional orientation.
+    - *Fire / Flare Eruption*: 40-particle velocity-driven upward fire column with dynamic orange `PointLight`.
+    - *Ice / Frost Crystal*: Rotating 3D crystalline cone pillar with cyan point lighting.
+    - *Lightning Bolt*: Multi-segmented celestial lightning strike with full-map ambient illumination.
+    - *Holy / Bless Glow*: Ascending golden torus rings of sacred rejuvenation.
+  - **Trauma-Based Camera Screen Shake**: Quadratic decay model ($\tau^2$) delivering visceral impact on critical strikes and heavy magic.
+- **Combat Sprite Dynamics**:
+  - Kinematic unit lunge forward toward target tile upon attack execution.
+  - Recoil pushback animation upon sustaining physical or magical damage.
+- **Projected 3D Overhead Mini HP & CT Status Bars**:
+  - Dual gauge (green health and yellow CT meter) hovering above each character in 3D perspective space.
+  - Team-colored borders (player royal blue, enemy crimson red) allowing instant situational awareness.
+- **Animated Water Caustics**:
+  - Continuous procedural UV texture offset oscillation creating flowing, rippling river and swamp currents.
+- **Architecture Documentation**:
+  - Added ADR 0012: Visual Effects, Camera Trauma Shake, and 3D Projected Overlays.
+
+---
+
 ## [0.4.0] - 2026-11-17
 
 ### Added

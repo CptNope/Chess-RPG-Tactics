@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { MAPS } from './data/maps';
 import { BattleGrid } from './core/Grid';
 import { TacticsScene } from './renderer/TacticsScene';
@@ -38,11 +39,22 @@ class TacticsGame {
     const canvas = document.getElementById('viewport-canvas') as HTMLCanvasElement;
     this.scene = new TacticsScene(canvas, this.grid);
     this.scene.updateUnits(this.units);
+    this.applyAtmosphereForMap(this.currentChapter.mapId);
 
     // 4. Bind Events & Start Story
     this.bindEvents();
     this.playChapterIntro();
     this.gameLoop();
+  }
+
+  private applyAtmosphereForMap(mapId: string): void {
+    if (mapId === 'night_fortress') {
+      this.scene.vfx.setWeatherTheme('night');
+    } else if (mapId === 'gloomy_swamp') {
+      this.scene.vfx.setWeatherTheme('swamp');
+    } else {
+      this.scene.vfx.setWeatherTheme('day');
+    }
   }
 
   private loadChapter(chapterId: string, refreshScene: boolean = true): void {
@@ -59,6 +71,7 @@ class TacticsGame {
     if (refreshScene && this.scene) {
       this.scene.loadMap(this.grid);
       this.scene.updateUnits(this.units);
+      this.applyAtmosphereForMap(chapter.mapId);
       this.playChapterIntro();
     }
   }
@@ -238,6 +251,7 @@ class TacticsGame {
     const mapData = mapGen();
     this.grid = new BattleGrid(mapData);
     this.scene.loadMap(this.grid);
+    this.applyAtmosphereForMap(mapId);
 
     this.initSquadsForChapter(this.currentChapter);
     this.turnManager = new TurnManager(this.units);
@@ -425,6 +439,9 @@ class TacticsGame {
 
     active.currentMp = Math.max(0, active.currentMp - forecast.ability.mpCost);
 
+    // Trigger sprite lunge animation towards target
+    this.scene.triggerUnitLunge(active.id, forecast.target.x, forecast.target.z);
+
     const result = CombatEngine.executeAttack(forecast);
     active.hasActed = true;
 
@@ -437,21 +454,40 @@ class TacticsGame {
     this.currentForecast = null;
 
     const targetHeight = this.grid.getHeight(forecast.target.x, forecast.target.z);
+    const targetPos = new THREE.Vector3(forecast.target.x, targetHeight, forecast.target.z);
 
     if (result.hit) {
+      this.scene.triggerUnitRecoil(forecast.target.id);
+
       if (result.isHeal) {
         SoundFX.playHeal();
+        this.scene.vfx.spawnHolyFX(targetPos);
         this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `+${result.damageDealt}`, 'heal');
         this.ui.showBanner(`${forecast.target.name} healed +${result.damageDealt} HP!`);
       } else if (result.appliedStatus && result.damageDealt === 0) {
         SoundFX.playMagicCast();
+        this.scene.vfx.spawnHolyFX(targetPos);
         this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `[${result.appliedStatus}]`, 'heal');
         this.ui.showBanner(`${forecast.target.name} granted ${result.appliedStatus}!`);
       } else {
         if (forecast.ability.element === 'physical') {
           SoundFX.playSwordSlash();
+          this.scene.vfx.spawnSlashFX(targetPos);
+        } else if (forecast.ability.element === 'fire') {
+          SoundFX.playMagicCast();
+          this.scene.vfx.spawnFireFX(targetPos);
+        } else if (forecast.ability.element === 'ice') {
+          SoundFX.playMagicCast();
+          this.scene.vfx.spawnIceFX(targetPos);
+        } else if (forecast.ability.element === 'lightning') {
+          SoundFX.playMagicCast();
+          this.scene.vfx.spawnLightningFX(targetPos);
+        } else if (forecast.ability.element === 'holy') {
+          SoundFX.playMagicCast();
+          this.scene.vfx.spawnHolyFX(targetPos);
         } else {
           SoundFX.playMagicCast();
+          this.scene.vfx.spawnSlashFX(targetPos);
         }
 
         if (result.isCrit) {
@@ -467,6 +503,8 @@ class TacticsGame {
           setTimeout(() => {
             if (result.secondStrike!.hit) {
               SoundFX.playSwordSlash();
+              this.scene.vfx.spawnSlashFX(targetPos);
+              this.scene.triggerUnitRecoil(forecast.target.id);
               this.scene.spawnFloatingDamage(forecast.target.x, targetHeight + 0.3, forecast.target.z, `-${result.secondStrike!.damageDealt}`, 'damage');
             }
           }, 350);
@@ -536,16 +574,37 @@ class TacticsGame {
       const forecast = CombatEngine.getForecast(enemy, closestPlayer, attackAbility, attackerHeight, targetHeight);
 
       setTimeout(() => {
+        // Trigger lunge animation towards player target
+        this.scene.triggerUnitLunge(enemy.id, closestPlayer!.x, closestPlayer!.z);
+
         const result = CombatEngine.executeAttack(forecast);
         enemy.hasActed = true;
         this.scene.updateUnits(this.units);
 
         const targetH = this.grid.getHeight(closestPlayer!.x, closestPlayer!.z);
+        const targetPos = new THREE.Vector3(closestPlayer!.x, targetH, closestPlayer!.z);
+
         if (result.hit) {
+          this.scene.triggerUnitRecoil(closestPlayer!.id);
+
           if (forecast.ability.element === 'physical') {
             SoundFX.playSwordSlash();
+            this.scene.vfx.spawnSlashFX(targetPos);
+          } else if (forecast.ability.element === 'fire') {
+            SoundFX.playMagicCast();
+            this.scene.vfx.spawnFireFX(targetPos);
+          } else if (forecast.ability.element === 'ice') {
+            SoundFX.playMagicCast();
+            this.scene.vfx.spawnIceFX(targetPos);
+          } else if (forecast.ability.element === 'lightning') {
+            SoundFX.playMagicCast();
+            this.scene.vfx.spawnLightningFX(targetPos);
+          } else if (forecast.ability.element === 'holy') {
+            SoundFX.playMagicCast();
+            this.scene.vfx.spawnHolyFX(targetPos);
           } else {
             SoundFX.playMagicCast();
+            this.scene.vfx.spawnSlashFX(targetPos);
           }
 
           if (result.isCrit) {
