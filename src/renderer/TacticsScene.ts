@@ -1,0 +1,505 @@
+import * as THREE from 'three';
+import { TileData, Unit, FacingDirection } from '../core/types';
+import { BattleGrid } from '../core/Grid';
+import {
+  createGrassTopTexture,
+  createDirtSideTexture,
+  createStoneTexture,
+  createWaterTexture,
+  createUnitSpriteTexture
+} from '../graphics/PixelTextures';
+
+export interface FloatingText {
+  element: HTMLElement;
+  position: THREE.Vector3;
+  lifetime: number;
+  maxLifetime: number;
+}
+
+export class TacticsScene {
+  public canvas: HTMLCanvasElement;
+  public renderer: THREE.WebGLRenderer;
+  public scene: THREE.Scene;
+  public camera: THREE.OrthographicCamera;
+
+  // Grid & Map
+  public grid: BattleGrid;
+  private tileMeshes: Map<string, THREE.Mesh> = new Map();
+
+  // Unit meshes & sprites
+  private unitSpritePlanes: Map<string, THREE.Mesh> = new Map();
+
+  // Highlight overlays
+  private highlightGroup: THREE.Group = new THREE.Group();
+  private cursorMesh: THREE.Group;
+
+  // Camera & Zoom System
+  public cameraTarget: THREE.Vector3 = new THREE.Vector3(5, 1, 5);
+  public targetCameraTarget: THREE.Vector3 = new THREE.Vector3(5, 1, 5);
+  public currentRotationAngle: number = Math.PI / 4; // 45 deg isometric
+  public targetRotationAngle: number = Math.PI / 4;
+  
+  // Extended zoom range: 2.0 (extreme close-up) to 22.0 (tactical overview)
+  public zoomLevel: number = 8.5; // Natural FFT scale
+  public targetZoomLevel: number = 8.5;
+  public minZoomLevel: number = 2.0; // Allows zooming in very close
+  public maxZoomLevel: number = 22.0;
+
+  // Panning State
+  private isPanning: boolean = false;
+  private lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
+
+  // Textures cache
+  private grassTopTex = createGrassTopTexture();
+  private dirtSideTex = createDirtSideTexture();
+  private stoneTex = createStoneTexture();
+  private waterTex = createWaterTexture();
+
+  // Interaction
+  public hoveredTile: { x: number; z: number } | null = null;
+  private raycaster = new THREE.Raycaster();
+  private mouse = new THREE.Vector2();
+
+  // Floating Combat Text
+  private floatingTexts: FloatingText[] = [];
+  private floatingTextContainer: HTMLElement;
+
+  constructor(canvas: HTMLCanvasElement, grid: BattleGrid) {
+    this.canvas = canvas;
+    this.grid = grid;
+
+    // Renderer
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: false, // Maintain crisp pixel art
+      powerPreference: 'high-performance'
+    });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+
+    // Scene
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0a0e17);
+
+    // Floating text container overlay
+    this.floatingTextContainer = document.createElement('div');
+    this.floatingTextContainer.className = 'floating-combat-overlay';
+    document.getElementById('game-container')?.appendChild(this.floatingTextContainer);
+
+    // Camera: Orthographic Isometric
+    const aspect = window.innerWidth / window.innerHeight;
+    this.camera = new THREE.OrthographicCamera(
+      -this.zoomLevel * aspect,
+      this.zoomLevel * aspect,
+      this.zoomLevel,
+      -this.zoomLevel,
+      0.1,
+      1000
+    );
+
+    // Setup Lighting
+    this.setupLighting();
+
+    // Build Map Geometry
+    this.buildMap();
+
+    // Setup Highlights & Cursor
+    this.scene.add(this.highlightGroup);
+    this.cursorMesh = this.buildCursor();
+    this.scene.add(this.cursorMesh);
+
+    // Setup Interactive Handlers (Wheel, Pan, Pointer)
+    this.setupInteractions();
+
+    this.updateCameraPosition();
+  }
+
+  private setupLighting(): void {
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    this.scene.add(ambient);
+
+    const sun = new THREE.DirectionalLight(0xfff5ea, 1.25);
+    sun.position.set(20, 40, 20);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 1024;
+    sun.shadow.mapSize.height = 1024;
+    sun.shadow.camera.near = 10;
+    sun.shadow.camera.far = 80;
+    const d = 15;
+    sun.shadow.camera.left = -d;
+    sun.shadow.camera.right = d;
+    sun.shadow.camera.top = d;
+    sun.shadow.camera.bottom = -d;
+    this.scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0x60a5fa, 0.45);
+    fillLight.position.set(-20, 20, -20);
+    this.scene.add(fillLight);
+  }
+
+  private buildMap(): void {
+    const { tiles } = this.grid.mapData;
+
+    for (const t of tiles) {
+      const height = Math.max(0.2, t.height);
+      const geom = new THREE.BoxGeometry(1, height, 1);
+
+      let topMat: THREE.Material;
+      let sideMat: THREE.Material;
+
+      if (t.terrain === 'stone') {
+        topMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
+        sideMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
+      } else if (t.terrain === 'water') {
+        topMat = new THREE.MeshLambertMaterial({ map: this.waterTex, transparent: true, opacity: 0.85 });
+        sideMat = new THREE.MeshLambertMaterial({ map: this.waterTex });
+      } else {
+        topMat = new THREE.MeshLambertMaterial({ map: this.grassTopTex });
+        sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
+      }
+
+      const materials = [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
+      const mesh = new THREE.Mesh(geom, materials);
+      mesh.position.set(t.x, height / 2, t.z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData = { tile: t };
+
+      this.scene.add(mesh);
+      this.tileMeshes.set(this.grid.key(t.x, t.z), mesh);
+    }
+  }
+
+  private buildCursor(): THREE.Group {
+    const group = new THREE.Group();
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xf4c430, linewidth: 2 });
+    const points = [
+      new THREE.Vector3(-0.48, 0, -0.48), new THREE.Vector3(-0.25, 0, -0.48),
+      new THREE.Vector3(-0.48, 0, -0.48), new THREE.Vector3(-0.48, 0, -0.25),
+      new THREE.Vector3(0.48, 0, -0.48), new THREE.Vector3(0.25, 0, -0.48),
+      new THREE.Vector3(0.48, 0, -0.48), new THREE.Vector3(0.48, 0, -0.25),
+      new THREE.Vector3(0.48, 0, 0.48), new THREE.Vector3(0.25, 0, 0.48),
+      new THREE.Vector3(0.48, 0, 0.48), new THREE.Vector3(0.48, 0, 0.25),
+      new THREE.Vector3(-0.48, 0, 0.48), new THREE.Vector3(-0.25, 0, 0.48),
+      new THREE.Vector3(-0.48, 0, 0.48), new THREE.Vector3(-0.48, 0, 0.25)
+    ];
+
+    const geom = new THREE.BufferGeometry().setFromPoints(points);
+    const line = new THREE.LineSegments(geom, lineMat);
+    group.add(line);
+
+    const diamondGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, -0.15),
+      new THREE.Vector3(0.15, 0, 0),
+      new THREE.Vector3(0, 0, 0.15),
+      new THREE.Vector3(-0.15, 0, 0),
+      new THREE.Vector3(0, 0, -0.15)
+    ]);
+    const diamond = new THREE.Line(diamondGeom, lineMat);
+    group.add(diamond);
+
+    group.position.set(0, 1.05, 0);
+    return group;
+  }
+
+  private setupInteractions(): void {
+    window.addEventListener('resize', () => this.onResize());
+
+    // Mouse Move & Tile Raycasting
+    this.canvas.addEventListener('pointermove', (e) => {
+      this.onPointerMove(e);
+
+      // Handle Pan Dragging (Right-Click or Middle-Click)
+      if (this.isPanning) {
+        const deltaX = e.clientX - this.lastPanPosition.x;
+        const deltaY = e.clientY - this.lastPanPosition.y;
+        this.lastPanPosition = { x: e.clientX, y: e.clientY };
+
+        const factor = (this.zoomLevel / window.innerHeight) * 1.8;
+        const cos = Math.cos(this.currentRotationAngle);
+        const sin = Math.sin(this.currentRotationAngle);
+
+        // Pan vectors oriented to camera angle
+        const right = new THREE.Vector3(-sin, 0, cos);
+        const forward = new THREE.Vector3(-cos, 0, -sin);
+
+        this.targetCameraTarget.addScaledVector(right, -deltaX * factor);
+        this.targetCameraTarget.addScaledVector(forward, -deltaY * factor);
+      }
+    });
+
+    // Right-Click Context Menu prevention
+    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Pan start / end
+    this.canvas.addEventListener('pointerdown', (e) => {
+      if (e.button === 2 || e.button === 1) { // Right or Middle button
+        this.isPanning = true;
+        this.lastPanPosition = { x: e.clientX, y: e.clientY };
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (e.button === 2 || e.button === 1) {
+        this.isPanning = false;
+      }
+    });
+
+    // Mouse Wheel Smooth Zoom
+    this.canvas.addEventListener(
+      'wheel',
+      (e: WheelEvent) => {
+        e.preventDefault();
+        const zoomDelta = Math.sign(e.deltaY) * 0.9;
+        if (zoomDelta > 0) {
+          this.zoomOut(zoomDelta);
+        } else {
+          this.zoomIn(-zoomDelta);
+        }
+      },
+      { passive: false }
+    );
+  }
+
+  public updateUnits(units: Unit[]): void {
+    const time = Date.now() * 0.0035;
+
+    for (const unit of units) {
+      if (unit.isDead) {
+        const mesh = this.unitSpritePlanes.get(unit.id);
+        if (mesh) {
+          this.scene.remove(mesh);
+          this.unitSpritePlanes.delete(unit.id);
+        }
+        continue;
+      }
+
+      let spriteMesh = this.unitSpritePlanes.get(unit.id);
+      if (!spriteMesh) {
+        // Larger, crisply detailed 2D billboard sprite plane (1.35x1.35)
+        const geom = new THREE.PlaneGeometry(1.35, 1.35);
+        const mat = new THREE.MeshBasicMaterial({
+          transparent: true,
+          side: THREE.DoubleSide,
+          alphaTest: 0.1
+        });
+        spriteMesh = new THREE.Mesh(geom, mat);
+        spriteMesh.renderOrder = 10;
+        this.scene.add(spriteMesh);
+        this.unitSpritePlanes.set(unit.id, spriteMesh);
+      }
+
+      // Height with subtle authentic idle bobbing animation
+      const height = this.grid.getHeight(unit.x, unit.z);
+      const bob = Math.sin(time + unit.x * 2 + unit.z) * 0.035;
+      spriteMesh.position.set(unit.x, height + 0.68 + bob, unit.z);
+
+      // Relative facing texture
+      const relativeFacing = this.calculateRelativeFacing(unit.facing);
+      const isEnemy = unit.team === 'enemy';
+      const tex = createUnitSpriteTexture(unit.jobId, relativeFacing, isEnemy);
+      (spriteMesh.material as THREE.MeshBasicMaterial).map = tex;
+      (spriteMesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
+
+      // Align billboard to camera
+      spriteMesh.rotation.y = this.currentRotationAngle;
+    }
+  }
+
+  private calculateRelativeFacing(unitFacing: FacingDirection): FacingDirection {
+    const normalizedAngle = ((this.currentRotationAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const cameraQuadrant = Math.round(normalizedAngle / (Math.PI / 2)) % 4;
+
+    const directions: FacingDirection[] = ['S', 'E', 'N', 'W'];
+    const unitDirIndex = directions.indexOf(unitFacing);
+    const relativeIndex = (unitDirIndex - cameraQuadrant + 4) % 4;
+    return directions[relativeIndex];
+  }
+
+  public setHighlights(tiles: { x: number; z: number }[], color: number = 0x3b82f6): void {
+    this.clearHighlights();
+
+    for (const t of tiles) {
+      const height = this.grid.getHeight(t.x, t.z);
+      const geom = new THREE.PlaneGeometry(0.95, 0.95);
+      geom.rotateX(-Math.PI / 2);
+
+      const mat = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false
+      });
+
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(t.x, height + 0.02, t.z);
+      this.highlightGroup.add(mesh);
+    }
+  }
+
+  public clearHighlights(): void {
+    while (this.highlightGroup.children.length > 0) {
+      const child = this.highlightGroup.children[0] as THREE.Mesh;
+      if (child.geometry) child.geometry.dispose();
+      this.highlightGroup.remove(child);
+    }
+  }
+
+  public setCursor(x: number, z: number): void {
+    const height = this.grid.getHeight(x, z);
+    this.cursorMesh.position.set(x, height + 0.05, z);
+    this.hoveredTile = { x, z };
+  }
+
+  public focusOn(x: number, height: number, z: number): void {
+    this.targetCameraTarget.set(x, height, z);
+  }
+
+  public rotateLeft(): void {
+    this.targetRotationAngle += Math.PI / 2;
+  }
+
+  public rotateRight(): void {
+    this.targetRotationAngle -= Math.PI / 2;
+  }
+
+  public zoomIn(step: number = 1.6): void {
+    this.targetZoomLevel = Math.max(this.minZoomLevel, this.targetZoomLevel - step);
+  }
+
+  public zoomOut(step: number = 1.6): void {
+    this.targetZoomLevel = Math.min(this.maxZoomLevel, this.targetZoomLevel + step);
+  }
+
+  public panBy(dx: number, dz: number): void {
+    const cos = Math.cos(this.currentRotationAngle);
+    const sin = Math.sin(this.currentRotationAngle);
+
+    const right = new THREE.Vector3(-sin, 0, cos);
+    const forward = new THREE.Vector3(-cos, 0, -sin);
+
+    this.targetCameraTarget.addScaledVector(right, dx);
+    this.targetCameraTarget.addScaledVector(forward, dz);
+  }
+
+  private updateCameraPosition(): void {
+    // Smooth camera rotation
+    this.currentRotationAngle += (this.targetRotationAngle - this.currentRotationAngle) * 0.16;
+
+    // Smooth camera pan
+    this.cameraTarget.lerp(this.targetCameraTarget, 0.14);
+
+    // Smooth camera zoom
+    const oldZoom = this.zoomLevel;
+    this.zoomLevel += (this.targetZoomLevel - this.zoomLevel) * 0.18;
+    if (Math.abs(this.zoomLevel - oldZoom) > 0.001) {
+      this.updateCameraFrustum();
+    }
+
+    const distance = 45;
+    const pitch = 35.264 * (Math.PI / 180); // Classic isometric angle
+
+    const cx = this.cameraTarget.x + distance * Math.cos(this.currentRotationAngle) * Math.cos(pitch);
+    const cz = this.cameraTarget.z + distance * Math.sin(this.currentRotationAngle) * Math.cos(pitch);
+    const cy = this.cameraTarget.y + distance * Math.sin(pitch);
+
+    this.camera.position.set(cx, cy, cz);
+    this.camera.lookAt(this.cameraTarget);
+
+    // Keep sprites aligned with camera
+    for (const sprite of this.unitSpritePlanes.values()) {
+      sprite.rotation.y = this.currentRotationAngle;
+    }
+  }
+
+  private updateCameraFrustum(): void {
+    const aspect = window.innerWidth / window.innerHeight;
+    this.camera.left = -this.zoomLevel * aspect;
+    this.camera.right = this.zoomLevel * aspect;
+    this.camera.top = this.zoomLevel;
+    this.camera.bottom = -this.zoomLevel;
+    this.camera.updateProjectionMatrix();
+  }
+
+  private onPointerMove(e: PointerEvent): void {
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const meshes = Array.from(this.tileMeshes.values());
+    const intersects = this.raycaster.intersectObjects(meshes);
+
+    if (intersects.length > 0) {
+      const tileData = intersects[0].object.userData.tile as TileData;
+      if (tileData) {
+        this.setCursor(tileData.x, tileData.z);
+      }
+    }
+  }
+
+  public spawnFloatingDamage(x: number, y: number, z: number, text: string, type: 'damage' | 'heal' | 'crit' | 'miss'): void {
+    const el = document.createElement('div');
+    el.className = `floating-number ${type}`;
+    el.textContent = text;
+    this.floatingTextContainer.appendChild(el);
+
+    this.floatingTexts.push({
+      element: el,
+      position: new THREE.Vector3(x, y + 1.2, z),
+      lifetime: 0,
+      maxLifetime: 60
+    });
+  }
+
+  private updateFloatingNumbers(): void {
+    const toRemove: number[] = [];
+    const screenPos = new THREE.Vector3();
+
+    for (let i = 0; i < this.floatingTexts.length; i++) {
+      const ft = this.floatingTexts[i];
+      ft.lifetime++;
+
+      // Float upward
+      ft.position.y += 0.018;
+
+      // Project 3D coordinate to 2D screen coordinate
+      screenPos.copy(ft.position);
+      screenPos.project(this.camera);
+
+      const x = ((screenPos.x + 1) * window.innerWidth) / 2;
+      const y = ((-screenPos.y + 1) * window.innerHeight) / 2;
+
+      ft.element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+      ft.element.style.opacity = `${Math.max(0, 1 - ft.lifetime / ft.maxLifetime)}`;
+
+      if (ft.lifetime >= ft.maxLifetime) {
+        toRemove.push(i);
+        ft.element.remove();
+      }
+    }
+
+    for (let i = toRemove.length - 1; i >= 0; i--) {
+      this.floatingTexts.splice(toRemove[i], 1);
+    }
+  }
+
+  private onResize(): void {
+    this.updateCameraFrustum();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  public render(): void {
+    this.updateCameraPosition();
+    this.updateFloatingNumbers();
+
+    // Pulse cursor
+    const time = Date.now() * 0.005;
+    const scale = 1 + Math.sin(time) * 0.06;
+    this.cursorMesh.scale.set(scale, 1, scale);
+
+    this.renderer.render(this.scene, this.camera);
+  }
+}
