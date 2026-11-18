@@ -9,6 +9,8 @@ import { CombatEngine } from './core/CombatEngine';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { SoundFX } from './audio/SoundEffects';
+import { Music } from './audio/MusicSynthesizer';
+import { SaveManager } from './core/SaveManager';
 
 class TacticsGame {
   private grid!: BattleGrid;
@@ -113,6 +115,7 @@ class TacticsGame {
   }
 
   private playDialogueSequence(lines: DialogueLine[], onComplete: () => void): void {
+    Music.playTrack('dialogue');
     this.currentMode = 'dialogue';
     this.dialogueQueue = lines;
     this.dialogueIndex = 0;
@@ -244,6 +247,49 @@ class TacticsGame {
     this.ui.onFacingConfirmed = (facing) => this.handleFacingConfirmed(facing);
     this.ui.onExecuteAttack = () => this.handleExecuteAttack();
     this.ui.onCancelAttack = () => this.cancelTargeting();
+
+    // BGM & Persistence
+    this.ui.onToggleBgm = () => {
+      const isMuted = Music.toggleMute();
+      this.ui.updateBgmButton(isMuted);
+      this.ui.addLogEntry(`[SYSTEM] BGM ${isMuted ? 'muted' : 'enabled'}.`, 'system');
+    };
+
+    this.ui.onSaveGame = () => {
+      const playerUnits = this.units.filter((u) => u.team === 'player');
+      const ok = SaveManager.saveGame(this.currentChapter.id, playerUnits);
+      if (ok) {
+        SoundFX.playTurnChime();
+        this.ui.showBanner('GAME SAVED SUCCESSFULLY!');
+        this.ui.addLogEntry(`[SYSTEM] Squad progress and chapter state saved to browser storage.`, 'system');
+      }
+    };
+
+    this.ui.onLoadGame = () => {
+      const data = SaveManager.loadGame();
+      if (data && data.units && data.units.length > 0) {
+        SoundFX.playTurnChime();
+        this.currentChapter = CAMPAIGN_CHAPTERS[data.currentChapterId] || CAMPAIGN_CHAPTERS.chapter_1;
+        const mapGen = MAPS[this.currentChapter.mapId] || MAPS.river_ruins;
+        this.grid = new BattleGrid(mapGen());
+        this.scene.loadMap(this.grid);
+        this.applyAtmosphereForMap(this.currentChapter.mapId);
+
+        const enemySquad: Unit[] = [];
+        this.currentChapter.enemyRoster.forEach((e, idx) => {
+          enemySquad.push(JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, 'S', e.level));
+        });
+
+        this.units = [...data.units, ...enemySquad];
+        this.turnManager = new TurnManager(this.units);
+        this.scene.updateUnits(this.units);
+        this.ui.showBanner('SAVE FILE RESTORED!');
+        this.ui.addLogEntry(`[SYSTEM] Save file from ${new Date(data.timestamp).toLocaleTimeString()} restored!`, 'system');
+        this.startBattle();
+      } else {
+        alert('No saved game found in browser storage!');
+      }
+    };
   }
 
   private switchBattlefield(mapId: string): void {
@@ -260,8 +306,10 @@ class TacticsGame {
   }
 
   private startBattle(): void {
+    Music.playTrack('battle');
     SoundFX.playTurnChime();
     this.ui.showBanner(`${this.currentChapter.title}: ${this.currentChapter.subtitle.toUpperCase()}`);
+    this.ui.addLogEntry(`=== ${this.currentChapter.title}: ${this.currentChapter.subtitle} ===`, 'system');
     this.updateTimeline();
     this.advanceTurn();
   }
@@ -282,8 +330,11 @@ class TacticsGame {
     this.scene.focusOn(activeUnit.x, height, activeUnit.z);
     this.scene.setCursor(activeUnit.x, activeUnit.z);
 
+    this.ui.addLogEntry(`[TURN] ${activeUnit.name} (${activeUnit.team.toUpperCase()}, CT: ${Math.round(activeUnit.ct)}) is ready to act.`, 'turn');
+
     if (poisonDamage) {
       this.scene.spawnFloatingDamage(activeUnit.x, height, activeUnit.z, `POISON -${poisonDamage}`, 'damage');
+      this.ui.addLogEntry(`[STATUS] ${activeUnit.name} takes ${poisonDamage} poison damage!`, 'spell');
       SoundFX.playCrit();
     }
 
@@ -456,6 +507,8 @@ class TacticsGame {
     const targetHeight = this.grid.getHeight(forecast.target.x, forecast.target.z);
     const targetPos = new THREE.Vector3(forecast.target.x, targetHeight, forecast.target.z);
 
+    this.ui.addLogEntry(`[ACTION] ${active.name} executes ${forecast.ability.name} on ${forecast.target.name} (${forecast.facingType.toUpperCase()}, ${forecast.hitChance}% Hit)`, 'attack');
+
     if (result.hit) {
       this.scene.triggerUnitRecoil(forecast.target.id);
 
@@ -464,11 +517,13 @@ class TacticsGame {
         this.scene.vfx.spawnHolyFX(targetPos);
         this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `+${result.damageDealt}`, 'heal');
         this.ui.showBanner(`${forecast.target.name} healed +${result.damageDealt} HP!`);
+        this.ui.addLogEntry(`[HEAL] ${forecast.target.name} recovers +${result.damageDealt} HP!`, 'heal');
       } else if (result.appliedStatus && result.damageDealt === 0) {
         SoundFX.playMagicCast();
         this.scene.vfx.spawnHolyFX(targetPos);
         this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `[${result.appliedStatus}]`, 'heal');
         this.ui.showBanner(`${forecast.target.name} granted ${result.appliedStatus}!`);
+        this.ui.addLogEntry(`[STATUS] ${forecast.target.name} receives ${result.appliedStatus}!`, 'spell');
       } else {
         if (forecast.ability.element === 'physical') {
           SoundFX.playSwordSlash();
@@ -494,9 +549,15 @@ class TacticsGame {
           SoundFX.playCrit();
           this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `CRIT! -${result.damageDealt}`, 'crit');
           this.ui.showBanner(`CRITICAL HIT! ${forecast.target.name} takes ${result.damageDealt} DMG!`);
+          this.ui.addLogEntry(`[CRIT] Critical strike! ${forecast.target.name} sustains ${result.damageDealt} DMG!`, 'crit');
         } else {
           this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `-${result.damageDealt}`, 'damage');
           this.ui.showBanner(`${forecast.target.name} takes ${result.damageDealt} damage!`);
+          this.ui.addLogEntry(`[HIT] ${forecast.target.name} takes ${result.damageDealt} DMG.`, 'attack');
+        }
+
+        if (forecast.target.isDead) {
+          this.ui.addLogEntry(`[DEFEAT] ${forecast.target.name} has fallen in battle!`, 'defeat');
         }
 
         if (result.secondStrike) {
@@ -506,6 +567,10 @@ class TacticsGame {
               this.scene.vfx.spawnSlashFX(targetPos);
               this.scene.triggerUnitRecoil(forecast.target.id);
               this.scene.spawnFloatingDamage(forecast.target.x, targetHeight + 0.3, forecast.target.z, `-${result.secondStrike!.damageDealt}`, 'damage');
+              this.ui.addLogEntry(`[DUAL WIELD] Secondary strike connects for ${result.secondStrike!.damageDealt} DMG!`, 'attack');
+              if (forecast.target.isDead) {
+                this.ui.addLogEntry(`[DEFEAT] ${forecast.target.name} has fallen in battle!`, 'defeat');
+              }
             }
           }, 350);
         }
@@ -513,7 +578,50 @@ class TacticsGame {
     } else {
       SoundFX.playMenuBlip();
       this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, 'MISS', 'miss');
-      this.ui.showBanner('MISSED!');
+      if (result.reaction && result.reaction.type === 'parry') {
+        this.ui.showBanner(`${result.reaction.description}`);
+        this.ui.addLogEntry(`[PARRY] ${result.reaction.description}`, 'reaction');
+      } else {
+        this.ui.showBanner('MISSED!');
+        this.ui.addLogEntry(`[MISS] Attack missed ${forecast.target.name}!`, 'attack');
+      }
+    }
+
+    // Process Reaction Trigger (Counter, Auto-Potion, Speed Save, Dragonheart, etc.)
+    if (result.reaction && result.reaction.type !== 'parry') {
+      const rx = result.reaction;
+      setTimeout(() => {
+        this.ui.showBanner(`REACTION: ${rx.name.toUpperCase()}!`);
+        this.ui.addLogEntry(`[REACTION] ${rx.description}`, 'reaction');
+
+        if (rx.type === 'counter_attack' && rx.damage) {
+          this.scene.triggerUnitLunge(forecast.target.id, active.x, active.z);
+          this.scene.triggerUnitRecoil(active.id);
+          SoundFX.playSwordSlash();
+          const attackerH = this.grid.getHeight(active.x, active.z);
+          this.scene.spawnFloatingDamage(active.x, attackerH, active.z, `-${rx.damage}`, 'damage');
+          this.scene.vfx.spawnSlashFX(new THREE.Vector3(active.x, attackerH, active.z));
+          if (active.isDead) {
+            this.ui.addLogEntry(`[DEFEAT] Counter-strike felled ${active.name}!`, 'defeat');
+          }
+        } else if (rx.type === 'auto_potion' && rx.heal) {
+          SoundFX.playHeal();
+          this.scene.vfx.spawnHolyFX(targetPos);
+          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `+${rx.heal}`, 'heal');
+        } else if (rx.type === 'dragonheart') {
+          SoundFX.playHeal();
+          this.scene.vfx.spawnHolyFX(targetPos);
+          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `REVIVED!`, 'heal');
+        } else if (rx.type === 'speed_save') {
+          SoundFX.playTurnChime();
+          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `SPD +2`, 'heal');
+        } else if (rx.type === 'critical_quick') {
+          SoundFX.playTurnChime();
+          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `QUICK!`, 'heal');
+        }
+
+        this.scene.updateUnits(this.units);
+      }, 450);
     }
 
     this.ui.updateUnitCard(active, this.grid.getHeight(active.x, active.z));
@@ -584,6 +692,8 @@ class TacticsGame {
         const targetH = this.grid.getHeight(closestPlayer!.x, closestPlayer!.z);
         const targetPos = new THREE.Vector3(closestPlayer!.x, targetH, closestPlayer!.z);
 
+        this.ui.addLogEntry(`[ACTION] ${enemy.name} uses ${forecast.ability.name} on ${closestPlayer!.name} (${forecast.facingType.toUpperCase()}, ${forecast.hitChance}% Hit)`, 'attack');
+
         if (result.hit) {
           this.scene.triggerUnitRecoil(closestPlayer!.id);
 
@@ -610,15 +720,65 @@ class TacticsGame {
           if (result.isCrit) {
             SoundFX.playCrit();
             this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `CRIT! -${result.damageDealt}`, 'crit');
+            this.ui.addLogEntry(`[CRIT] Critical strike! ${closestPlayer!.name} sustains ${result.damageDealt} DMG!`, 'crit');
           } else if (result.appliedStatus && result.damageDealt === 0) {
             this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `[${result.appliedStatus}]`, 'heal');
+            this.ui.addLogEntry(`[STATUS] ${closestPlayer!.name} receives ${result.appliedStatus}!`, 'spell');
           } else {
             this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `-${result.damageDealt}`, 'damage');
+            this.ui.addLogEntry(`[HIT] ${closestPlayer!.name} takes ${result.damageDealt} DMG.`, 'attack');
+          }
+
+          if (closestPlayer!.isDead) {
+            this.ui.addLogEntry(`[DEFEAT] ${closestPlayer!.name} has fallen in battle!`, 'defeat');
           }
           this.ui.showBanner(`${enemy.name} used ${attackAbility.name}!`);
         } else {
           this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, 'MISS', 'miss');
-          this.ui.showBanner(`${enemy.name} missed!`);
+          if (result.reaction && result.reaction.type === 'parry') {
+            this.ui.showBanner(`${result.reaction.description}`);
+            this.ui.addLogEntry(`[PARRY] ${result.reaction.description}`, 'reaction');
+          } else {
+            this.ui.showBanner(`${enemy.name} missed!`);
+            this.ui.addLogEntry(`[MISS] ${enemy.name}'s attack missed!`, 'attack');
+          }
+        }
+
+        // Process Player Reaction Trigger against Enemy
+        if (result.reaction && result.reaction.type !== 'parry') {
+          const rx = result.reaction;
+          setTimeout(() => {
+            this.ui.showBanner(`REACTION: ${rx.name.toUpperCase()}!`);
+            this.ui.addLogEntry(`[REACTION] ${rx.description}`, 'reaction');
+
+            if (rx.type === 'counter_attack' && rx.damage) {
+              this.scene.triggerUnitLunge(closestPlayer!.id, enemy.x, enemy.z);
+              this.scene.triggerUnitRecoil(enemy.id);
+              SoundFX.playSwordSlash();
+              const enemyH = this.grid.getHeight(enemy.x, enemy.z);
+              this.scene.spawnFloatingDamage(enemy.x, enemyH, enemy.z, `-${rx.damage}`, 'damage');
+              this.scene.vfx.spawnSlashFX(new THREE.Vector3(enemy.x, enemyH, enemy.z));
+              if (enemy.isDead) {
+                this.ui.addLogEntry(`[DEFEAT] ${enemy.name} was defeated by counter-attack!`, 'defeat');
+              }
+            } else if (rx.type === 'auto_potion' && rx.heal) {
+              SoundFX.playHeal();
+              this.scene.vfx.spawnHolyFX(targetPos);
+              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `+${rx.heal}`, 'heal');
+            } else if (rx.type === 'dragonheart') {
+              SoundFX.playHeal();
+              this.scene.vfx.spawnHolyFX(targetPos);
+              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `REVIVED!`, 'heal');
+            } else if (rx.type === 'speed_save') {
+              SoundFX.playTurnChime();
+              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `SPD +2`, 'heal');
+            } else if (rx.type === 'critical_quick') {
+              SoundFX.playTurnChime();
+              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `QUICK!`, 'heal');
+            }
+
+            this.scene.updateUnits(this.units);
+          }, 450);
         }
 
         this.faceTowards(enemy, closestPlayer!.x, closestPlayer!.z);
@@ -659,12 +819,16 @@ class TacticsGame {
     const enemiesAlive = this.units.some((u) => !u.isDead && u.team === 'enemy');
 
     if (!playersAlive) {
+      Music.stop();
       this.ui.showBanner('DEFEAT... ALL ALLIES FALLEN');
+      this.ui.addLogEntry('=== DEFEAT! All allies have fallen in battle. ===', 'defeat');
       return true;
     }
     if (!enemiesAlive) {
+      Music.playTrack('victory');
       SoundFX.playVictoryFanfare();
       this.ui.showBanner('VICTORY! BATTLEFIELD SECURED');
+      this.ui.addLogEntry('=== VICTORY! All hostiles defeated! Battlefield secured. ===', 'system');
 
       // Play Victory Dialogue then trigger Branching Choice Modal
       setTimeout(() => {

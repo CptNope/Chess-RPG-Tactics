@@ -31,6 +31,10 @@
         <option value="gloomy_swamp">Gloomy Mire</option>
       </select>
       <button id="btn-toggle-sound" title="Toggle Sound FX">🔊 SFX</button>
+      <button id="btn-toggle-bgm" title="Toggle Background Music">🎵 BGM</button>
+      <button id="btn-toggle-log" title="Toggle Combat Chronicle Log">📜 Log</button>
+      <button id="btn-save-game" title="Save Game (localStorage)">💾 Save</button>
+      <button id="btn-load-game" title="Load Game (localStorage)">📂 Load</button>
       <button id="btn-toggle-editor" title="Toggle 3D Map Editor">✎ Editor</button>
       <button id="btn-rot-left" title="Rotate Left (Q)">⟲ Q</button>
       <button id="btn-rot-right" title="Rotate Right (E)">⟳ E</button>
@@ -265,6 +269,18 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Slide-Up Combat & Reaction Battle Log Drawer -->
+    <div id="combat-log-drawer" class="hud-panel combat-log-panel hidden">
+      <div class="combat-log-header">
+        <span class="combat-log-title">⚔ BATTLE CHRONICLE & REACTION LOG</span>
+        <div class="combat-log-actions">
+          <button id="btn-clear-log" class="hud-btn-mini" title="Clear Chronicle">Clear</button>
+          <button id="btn-close-log" class="close-btn" title="Close Chronicle">×</button>
+        </div>
+      </div>
+      <div id="combat-log-entries" class="combat-log-entries"></div>
     </div>
 
     <!-- Battle Banner / Event Notification -->

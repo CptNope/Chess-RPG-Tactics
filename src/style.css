@@ -1110,3 +1110,116 @@ body, html {
   border-color: var(--gold);
   background: #1b2f4f;
 }
+
+/* Slide-Up Combat Chronicle & Reaction Log */
+.combat-log-panel {
+  position: absolute;
+  bottom: 84px;
+  right: 16px;
+  width: 440px;
+  max-width: 92vw;
+  max-height: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(10, 16, 28, 0.94);
+  border: 2px solid var(--panel-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.85);
+  z-index: 45;
+  transition: all 0.25s ease-in-out;
+}
+
+.combat-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--panel-border-inner);
+  padding-bottom: 6px;
+}
+
+.combat-log-title {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+
+.combat-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.combat-log-entries {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 190px;
+  padding-right: 4px;
+  font-family: var(--font-retro);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.combat-log-entries::-webkit-scrollbar {
+  width: 5px;
+}
+.combat-log-entries::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 2px;
+}
+
+.log-entry {
+  padding: 2px 4px;
+  border-radius: 2px;
+  border-left: 2px solid transparent;
+}
+
+.log-entry.turn {
+  color: #93c5fd;
+  border-left-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.log-entry.attack {
+  color: #f1f5f9;
+  border-left-color: #cbd5e1;
+}
+
+.log-entry.crit {
+  color: #fef08a;
+  border-left-color: #facc15;
+  background: rgba(250, 204, 21, 0.12);
+  font-weight: bold;
+}
+
+.log-entry.heal {
+  color: #86efac;
+  border-left-color: #22c55e;
+}
+
+.log-entry.spell {
+  color: #c084fc;
+  border-left-color: #a855f7;
+}
+
+.log-entry.reaction {
+  color: #fb923c;
+  border-left-color: #f97316;
+  background: rgba(249, 115, 22, 0.12);
+  font-weight: bold;
+}
+
+.log-entry.defeat {
+  color: #f87171;
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.log-entry.system {
+  color: var(--gold);
+  border-left-color: var(--gold);
+}

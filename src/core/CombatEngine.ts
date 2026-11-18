@@ -1,11 +1,21 @@
 import { Unit, Ability, CombatForecast, ActiveStatus } from './types';
 
+export interface ReactionTrigger {
+  name: string;
+  type: 'counter_attack' | 'auto_potion' | 'speed_save' | 'dragonheart' | 'critical_quick' | 'parry';
+  target: Unit;
+  damage?: number;
+  heal?: number;
+  description: string;
+}
+
 export interface AttackResult {
   hit: boolean;
   damageDealt: number;
   isCrit: boolean;
   isHeal: boolean;
   appliedStatus?: string;
+  reaction?: ReactionTrigger;
   secondStrike?: {
     hit: boolean;
     damageDealt: number;
@@ -143,6 +153,29 @@ export class CombatEngine {
       return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, appliedStatus: 'Attack +3!' };
     }
 
+    // Reaction Check: Knight Parry / Weapon Guard (Front Physical Attacks)
+    if (
+      forecast.ability.element === 'physical' &&
+      forecast.facingType === 'front' &&
+      forecast.target.equippedAbilities.reaction === 'kn_parry'
+    ) {
+      // 30% chance to parry incoming front physical strike
+      if (Math.random() * 100 <= 30) {
+        return {
+          hit: false,
+          damageDealt: 0,
+          isCrit: false,
+          isHeal: false,
+          reaction: {
+            name: 'Weapon Guard',
+            type: 'parry',
+            target: forecast.attacker,
+            description: `${forecast.target.name} parried the strike with their blade!`
+          }
+        };
+      }
+    }
+
     if (!hit) {
       return { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
     }
@@ -189,6 +222,95 @@ export class CombatEngine {
       forecast.target.isDead = true;
     }
 
+    // Reaction Trigger Check
+    let reactionTrigger: ReactionTrigger | undefined;
+
+    // 1. Dragoon Dragonheart (Defies death on fatal strike)
+    if (forecast.target.isDead && forecast.target.equippedAbilities.reaction === 'dr_dragonheart') {
+      forecast.target.isDead = false;
+      forecast.target.currentHp = 1;
+      forecast.target.statuses.push({ type: 'protect', duration: 3 });
+      reactionTrigger = {
+        name: 'Dragonheart',
+        type: 'dragonheart',
+        target: forecast.target,
+        description: `${forecast.target.name}'s Dragonheart defied death with 1 HP remaining!`
+      };
+    }
+    // 2. White Mage Auto-Potion
+    else if (!forecast.target.isDead && forecast.target.equippedAbilities.reaction === 'wm_auto_potion') {
+      const healAmt = 30;
+      forecast.target.currentHp = Math.min(forecast.target.maxHp, forecast.target.currentHp + healAmt);
+      reactionTrigger = {
+        name: 'Auto-Potion',
+        type: 'auto_potion',
+        target: forecast.target,
+        heal: healAmt,
+        description: `${forecast.target.name} drank an Auto-Potion, recovering +${healAmt} HP!`
+      };
+    }
+    // 3. Archer Speed Save
+    else if (!forecast.target.isDead && forecast.target.equippedAbilities.reaction === 'ar_speed_save') {
+      forecast.target.speed += 2;
+      reactionTrigger = {
+        name: 'Speed Save',
+        type: 'speed_save',
+        target: forecast.target,
+        description: `${forecast.target.name}'s Speed increased by +2!`
+      };
+    }
+    // 4. Squire Counter Tackle (Melee physical response within distance <= 1)
+    else if (
+      !forecast.target.isDead &&
+      forecast.ability.element === 'physical' &&
+      forecast.target.equippedAbilities.reaction === 'sq_counter_tackle'
+    ) {
+      const dist = Math.abs(forecast.attacker.x - forecast.target.x) + Math.abs(forecast.attacker.z - forecast.target.z);
+      if (dist <= 1) {
+        const counterDmg = Math.max(1, Math.round(forecast.target.baseStats.attack * 5.5));
+        forecast.attacker.currentHp = Math.max(0, forecast.attacker.currentHp - counterDmg);
+        if (forecast.attacker.currentHp === 0) {
+          forecast.attacker.isDead = true;
+        }
+        reactionTrigger = {
+          name: 'Counter Tackle',
+          type: 'counter_attack',
+          target: forecast.attacker,
+          damage: counterDmg,
+          description: `${forecast.target.name} retaliated with Counter Tackle for ${counterDmg} DMG!`
+        };
+      }
+    }
+    // 5. Black Mage Arcane Retaliation
+    else if (!forecast.target.isDead && forecast.target.equippedAbilities.reaction === 'bm_magic_counter') {
+      const counterDmg = Math.max(1, Math.round(forecast.target.baseStats.magic * 6));
+      forecast.attacker.currentHp = Math.max(0, forecast.attacker.currentHp - counterDmg);
+      if (forecast.attacker.currentHp === 0) {
+        forecast.attacker.isDead = true;
+      }
+      reactionTrigger = {
+        name: 'Arcane Retaliation',
+        type: 'counter_attack',
+        target: forecast.attacker,
+        damage: counterDmg,
+        description: `${forecast.target.name} retaliated with Arcane Retaliation for ${counterDmg} DMG!`
+      };
+    }
+    // 6. Time Weaver Critical Quick
+    else if (
+      !forecast.target.isDead &&
+      forecast.target.equippedAbilities.reaction === 'tm_critical_quick' &&
+      forecast.target.currentHp / forecast.target.maxHp <= 0.35
+    ) {
+      forecast.target.ct = 100;
+      reactionTrigger = {
+        name: 'Critical Quick',
+        type: 'critical_quick',
+        target: forecast.target,
+        description: `${forecast.target.name} accelerated time! CT instantly charged to 100!`
+      };
+    }
+
     // Second Strike for Dual Wield
     let secondStrikeResult: { hit: boolean; damageDealt: number; isCrit: boolean } | undefined;
     if (forecast.willDualWield && !forecast.target.isDead) {
@@ -214,6 +336,7 @@ export class CombatEngine {
       isCrit,
       isHeal: false,
       appliedStatus: appliedStatusName,
+      reaction: reactionTrigger,
       secondStrike: secondStrikeResult
     };
   }

@@ -26,7 +26,18 @@ export class UIManager {
   // Map & Audio controls
   private mapSelectEl = document.getElementById('map-select') as HTMLSelectElement;
   private btnToggleSound = document.getElementById('btn-toggle-sound') as HTMLButtonElement;
+  private btnToggleBgm = document.getElementById('btn-toggle-bgm') as HTMLButtonElement;
+  private btnToggleLog = document.getElementById('btn-toggle-log') as HTMLButtonElement;
+  private btnSaveGame = document.getElementById('btn-save-game') as HTMLButtonElement;
+  private btnLoadGame = document.getElementById('btn-load-game') as HTMLButtonElement;
   private btnToggleEditor = document.getElementById('btn-toggle-editor') as HTMLButtonElement;
+
+  // Combat Chronicle & Reaction Log Drawer
+  private combatLogDrawerEl = document.getElementById('combat-log-drawer')!;
+  private combatLogEntriesEl = document.getElementById('combat-log-entries')!;
+  private btnClearLog = document.getElementById('btn-clear-log')!;
+  private btnCloseLog = document.getElementById('btn-close-log')!;
+  public isCombatLogOpen: boolean = false;
 
   // 3D Map Editor Panel
   private editorPanelEl = document.getElementById('editor-panel')!;
@@ -109,17 +120,54 @@ export class UIManager {
   public onEditorExport?: () => void;
   public onEditorImport?: (jsonString: string) => void;
   public onEditorTestBattle?: () => void;
+  public onToggleBgm?: () => void;
+  public onSaveGame?: () => void;
+  public onLoadGame?: () => void;
 
   constructor() {
     this.setupListeners();
   }
 
   private setupListeners(): void {
-    // Audio toggle
+    // SFX toggle
     this.btnToggleSound.addEventListener('click', () => {
       const isMuted = SoundFX.toggleMute();
       this.btnToggleSound.textContent = isMuted ? '🔇 MUTED' : '🔊 SFX';
       if (!isMuted) SoundFX.playMenuBlip();
+    });
+
+    // BGM toggle
+    this.btnToggleBgm.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      if (this.onToggleBgm) this.onToggleBgm();
+    });
+
+    // Combat Log toggle & actions
+    this.btnToggleLog.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.toggleCombatLog(!this.isCombatLogOpen);
+    });
+
+    this.btnCloseLog.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.toggleCombatLog(false);
+    });
+
+    this.btnClearLog.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.combatLogEntriesEl.innerHTML = '';
+      this.addLogEntry('Chronicle cleared.', 'system');
+    });
+
+    // Save & Load Game
+    this.btnSaveGame.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      if (this.onSaveGame) this.onSaveGame();
+    });
+
+    this.btnLoadGame.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      if (this.onLoadGame) this.onLoadGame();
     });
 
     // Editor toggle
@@ -314,6 +362,30 @@ export class UIManager {
     });
 
     this.choiceModalEl.classList.remove('hidden');
+  }
+
+  public updateBgmButton(isMuted: boolean): void {
+    this.btnToggleBgm.textContent = isMuted ? '🔇 BGM' : '🎵 BGM';
+  }
+
+  public toggleCombatLog(forceOpen?: boolean): void {
+    this.isCombatLogOpen = forceOpen !== undefined ? forceOpen : !this.isCombatLogOpen;
+    if (this.isCombatLogOpen) {
+      this.combatLogDrawerEl.classList.remove('hidden');
+      this.btnToggleLog.classList.add('highlight');
+      this.combatLogEntriesEl.scrollTop = this.combatLogEntriesEl.scrollHeight;
+    } else {
+      this.combatLogDrawerEl.classList.add('hidden');
+      this.btnToggleLog.classList.remove('highlight');
+    }
+  }
+
+  public addLogEntry(text: string, type: 'turn' | 'attack' | 'crit' | 'heal' | 'spell' | 'reaction' | 'defeat' | 'system'): void {
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.textContent = text;
+    this.combatLogEntriesEl.appendChild(entry);
+    this.combatLogEntriesEl.scrollTop = this.combatLogEntriesEl.scrollHeight;
   }
 
   public updateTurnTimeline(timeline: Unit[], activeUnit: Unit | null): void {
