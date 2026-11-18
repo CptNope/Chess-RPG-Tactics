@@ -5,99 +5,161 @@ import { UIManager } from './ui/UIManager';
 import { TurnManager } from './core/TurnManager';
 import { JobSystem } from './core/JobSystem';
 import { CombatEngine } from './core/CombatEngine';
-import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine } from './core/types';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
+import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { SoundFX } from './audio/SoundEffects';
 
 class TacticsGame {
-  private grid: BattleGrid;
-  private scene: TacticsScene;
-  private ui: UIManager;
-  private turnManager: TurnManager;
+  private grid!: BattleGrid;
+  private scene!: TacticsScene;
+  private ui!: UIManager;
+  private turnManager!: TurnManager;
   private units: Unit[] = [];
 
-  // Interaction State
-  private currentMode: 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' = 'dialogue';
+  // Interaction & Editor State
+  private currentMode: 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' = 'dialogue';
   private selectedAbility: Ability | null = null;
   private currentForecast: CombatForecast | null = null;
 
-  // Story Cutscene Sequence
-  private introDialogue: DialogueLine[] = [
-    { speaker: 'Ramza', portraitClass: '⚔', side: 'left', text: 'Halt, brigands! The knights of the realm have encircled these ruins. Lay down your arms!' },
-    { speaker: 'Bandit Chief', portraitClass: '🛡', side: 'right', text: 'Bah! Spoiled nobles strutting in fine armor! You know nothing of our hunger or our cause!' },
-    { speaker: 'Rogue Warlock', portraitClass: '⚡', side: 'right', text: 'The ancient Zodiac Stones slumber beneath this soil... We will not let dogs of the throne claim them!' },
-    { speaker: 'Agrias', portraitClass: '⚜', side: 'left', text: 'Silence your blasphemy, rebel! In the name of the realm, draw your steel!' }
-  ];
+  // Campaign State
+  private currentChapter: CampaignChapter = CAMPAIGN_CHAPTERS.chapter_1;
+  private dialogueQueue: DialogueLine[] = [];
   private dialogueIndex: number = 0;
+  private onDialogueFinished?: () => void;
 
   constructor() {
-    // 1. Initialize Map
-    const mapData = MAPS.river_ruins();
-    this.grid = new BattleGrid(mapData);
+    // 1. Initialize UI Manager
+    this.ui = new UIManager();
 
-    // 2. Initialize Squads (Player Squad & Enemy Squad)
-    this.initSquads();
+    // 2. Load Initial Campaign Chapter
+    this.loadChapter('chapter_1', false);
 
     // 3. Initialize Three.js Scene
     const canvas = document.getElementById('viewport-canvas') as HTMLCanvasElement;
     this.scene = new TacticsScene(canvas, this.grid);
     this.scene.updateUnits(this.units);
 
-    // 4. Initialize Turn Engine & UI
-    this.turnManager = new TurnManager(this.units);
-    this.ui = new UIManager();
+    // 4. Bind Events & Start Story
     this.bindEvents();
-
-    // 5. Start with Story Cutscene
-    this.playDialogueSequence();
+    this.playChapterIntro();
     this.gameLoop();
   }
 
-  private initSquads(): void {
-    this.units = [
-      // Player Units
+  private loadChapter(chapterId: string, refreshScene: boolean = true): void {
+    const chapter = CAMPAIGN_CHAPTERS[chapterId] || CAMPAIGN_CHAPTERS.chapter_1;
+    this.currentChapter = chapter;
+
+    const mapGen = MAPS[chapter.mapId] || MAPS.river_ruins;
+    const mapData = mapGen();
+    this.grid = new BattleGrid(mapData);
+
+    this.initSquadsForChapter(chapter);
+    this.turnManager = new TurnManager(this.units);
+
+    if (refreshScene && this.scene) {
+      this.scene.loadMap(this.grid);
+      this.scene.updateUnits(this.units);
+      this.playChapterIntro();
+    }
+  }
+
+  private initSquadsForChapter(chapter: CampaignChapter): void {
+    // Retain or create player squad
+    const playerSquad = [
       JobSystem.createUnit('p1', 'Ramza', 'player', 'squire', 3, 8, 'N', 3),
       JobSystem.createUnit('p2', 'Agrias', 'player', 'knight', 4, 8, 'N', 3),
       JobSystem.createUnit('p3', 'Mustadio', 'player', 'archer', 5, 9, 'N', 3),
-      JobSystem.createUnit('p4', 'Kain', 'player', 'dragoon', 2, 7, 'N', 3),
-
-      // Enemy Units
-      JobSystem.createUnit('e1', 'Bandit Chief', 'enemy', 'knight', 8, 3, 'S', 3),
-      JobSystem.createUnit('e2', 'Shadow Shinobi', 'enemy', 'ninja', 7, 2, 'S', 3),
-      JobSystem.createUnit('e3', 'Rogue Warlock', 'enemy', 'time_mage', 6, 4, 'S', 3),
-      JobSystem.createUnit('e4', 'Brigand Marksman', 'enemy', 'archer', 9, 2, 'S', 3)
+      JobSystem.createUnit('p4', 'Kain', 'player', 'dragoon', 2, 7, 'N', 3)
     ];
 
-    // Give Ramza a secondary skillset and movement ability
-    JobSystem.setSecondarySkillset(this.units[0], 'knight');
-    this.units[0].unlockedAbilities['kn_rend_armor'] = true;
-    this.units[0].unlockedAbilities['sq_move_plus'] = true;
-    this.units[0].equippedAbilities.movement = 'sq_move_plus';
-    JobSystem.recalculateDerivedStats(this.units[0]);
+    JobSystem.setSecondarySkillset(playerSquad[0], 'knight');
+    playerSquad[0].unlockedAbilities['kn_rend_armor'] = true;
+    playerSquad[0].unlockedAbilities['sq_move_plus'] = true;
+    playerSquad[0].equippedAbilities.movement = 'sq_move_plus';
+    JobSystem.recalculateDerivedStats(playerSquad[0]);
 
-    // Give Kain (Dragoon) Jump abilities
-    this.units[3].unlockedAbilities['dr_jump'] = true;
-    this.units[3].unlockedAbilities['dr_ignore_height'] = true;
-    this.units[3].equippedAbilities.movement = 'dr_ignore_height';
-    JobSystem.recalculateDerivedStats(this.units[3]);
+    playerSquad[3].unlockedAbilities['dr_jump'] = true;
+    playerSquad[3].unlockedAbilities['dr_ignore_height'] = true;
+    playerSquad[3].equippedAbilities.movement = 'dr_ignore_height';
+    JobSystem.recalculateDerivedStats(playerSquad[3]);
+
+    // Build enemy squad from chapter definition
+    const enemySquad: Unit[] = [];
+    chapter.enemyRoster.forEach((e, idx) => {
+      const enemyUnit = JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, 'S', e.level);
+      enemySquad.push(enemyUnit);
+    });
+
+    this.units = [...playerSquad, ...enemySquad];
   }
 
-  private playDialogueSequence(): void {
+  private playChapterIntro(): void {
+    this.playDialogueSequence(this.currentChapter.introDialogue, () => {
+      this.startBattle();
+    });
+  }
+
+  private playDialogueSequence(lines: DialogueLine[], onComplete: () => void): void {
     this.currentMode = 'dialogue';
-    if (this.dialogueIndex < this.introDialogue.length) {
-      const line = this.introDialogue[this.dialogueIndex];
+    this.dialogueQueue = lines;
+    this.dialogueIndex = 0;
+    this.onDialogueFinished = onComplete;
+    this.advanceDialogue();
+  }
+
+  private advanceDialogue(): void {
+    if (this.dialogueIndex < this.dialogueQueue.length) {
+      const line = this.dialogueQueue[this.dialogueIndex];
       this.ui.showDialogue(line, () => {
         this.dialogueIndex++;
-        this.playDialogueSequence();
+        this.advanceDialogue();
       });
     } else {
       this.ui.hideDialogue();
-      this.startBattle();
+      this.onDialogueFinished?.();
     }
   }
 
   private bindEvents(): void {
     // Map Selector
     this.ui.onMapChanged = (mapId) => this.switchBattlefield(mapId);
+
+    // Map Editor Events
+    this.ui.onEditorToggled = (isOpen) => {
+      this.currentMode = isOpen ? 'editor' : 'idle';
+      this.scene.clearHighlights();
+    };
+
+    this.ui.onEditorExport = () => {
+      const json = JSON.stringify(this.grid.mapData, null, 2);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(json);
+        this.ui.showBanner('MAP JSON COPIED TO CLIPBOARD!');
+      } else {
+        prompt('Copy your Map JSON:', json);
+      }
+    };
+
+    this.ui.onEditorImport = (jsonString) => {
+      try {
+        const parsed = JSON.parse(jsonString);
+        if (parsed.tiles && parsed.width) {
+          this.grid = new BattleGrid(parsed);
+          this.scene.loadMap(this.grid);
+          this.ui.showBanner('CUSTOM MAP LOADED SUCCESSFULLY!');
+        }
+      } catch (err) {
+        alert('Invalid Map JSON syntax!');
+      }
+    };
+
+    this.ui.onEditorTestBattle = () => {
+      this.ui.toggleEditor(false);
+      this.currentMode = 'idle';
+      this.initSquadsForChapter(this.currentChapter);
+      this.scene.updateUnits(this.units);
+      this.startBattle();
+    };
 
     // Camera HUD controls
     document.getElementById('btn-rot-left')?.addEventListener('click', () => {
@@ -121,7 +183,7 @@ class TacticsGame {
         if (e.key === ' ' || e.key === 'Enter') {
           SoundFX.playMenuBlip();
           this.dialogueIndex++;
-          this.playDialogueSequence();
+          this.advanceDialogue();
         }
         return;
       }
@@ -177,8 +239,7 @@ class TacticsGame {
     this.grid = new BattleGrid(mapData);
     this.scene.loadMap(this.grid);
 
-    // Reset unit positions according to new battlefield
-    this.initSquads();
+    this.initSquadsForChapter(this.currentChapter);
     this.turnManager = new TurnManager(this.units);
     this.scene.updateUnits(this.units);
     this.startBattle();
@@ -186,7 +247,7 @@ class TacticsGame {
 
   private startBattle(): void {
     SoundFX.playTurnChime();
-    this.ui.showBanner('BATTLE START');
+    this.ui.showBanner(`${this.currentChapter.title}: ${this.currentChapter.subtitle.toUpperCase()}`);
     this.updateTimeline();
     this.advanceTurn();
   }
@@ -203,12 +264,10 @@ class TacticsGame {
     this.currentMode = 'idle';
     this.scene.clearHighlights();
 
-    // Smoothly focus camera on active unit
     const height = this.grid.getHeight(activeUnit.x, activeUnit.z);
     this.scene.focusOn(activeUnit.x, height, activeUnit.z);
     this.scene.setCursor(activeUnit.x, activeUnit.z);
 
-    // Poison damage processing
     if (poisonDamage) {
       this.scene.spawnFloatingDamage(activeUnit.x, height, activeUnit.z, `POISON -${poisonDamage}`, 'damage');
       SoundFX.playCrit();
@@ -242,7 +301,6 @@ class TacticsGame {
 
     this.selectedAbility = ability;
 
-    // Self-only skills (e.g. Focus) execute directly
     if (ability.isSelfOnly) {
       const height = this.grid.getHeight(active.x, active.z);
       const forecast = CombatEngine.getForecast(active, active, ability, height, height);
@@ -287,8 +345,29 @@ class TacticsGame {
 
   private onCanvasClick(): void {
     const tile = this.scene.hoveredTile;
+    if (!tile) return;
+
+    // 3D Map Editor Interception
+    if (this.ui.isEditorOpen) {
+      const targetTile = this.grid.getTile(tile.x, tile.z);
+      if (!targetTile) return;
+
+      SoundFX.playMoveStep();
+      const tool = this.ui.currentEditorTool;
+      if (tool === 'raise') {
+        this.scene.updateTile(tile.x, tile.z, targetTile.height + 0.5, targetTile.terrain, targetTile.walkable);
+      } else if (tool === 'lower') {
+        this.scene.updateTile(tile.x, tile.z, Math.max(0, targetTile.height - 0.5), targetTile.terrain, targetTile.walkable);
+      } else if (tool === 'paint') {
+        this.scene.updateTile(tile.x, tile.z, targetTile.height, this.ui.currentPaintTerrain, targetTile.walkable);
+      } else if (tool === 'walkable') {
+        this.scene.updateTile(tile.x, tile.z, targetTile.height, targetTile.terrain, !targetTile.walkable);
+      }
+      return;
+    }
+
     const active = this.turnManager.activeUnit;
-    if (!tile || !active) return;
+    if (!active) return;
 
     if (this.currentMode === 'idle') {
       const clickedUnit = this.units.find((u) => !u.isDead && u.x === tile.x && u.z === tile.z);
@@ -384,7 +463,6 @@ class TacticsGame {
           this.ui.showBanner(`${forecast.target.name} takes ${result.damageDealt} damage!`);
         }
 
-        // Dual Wield Second Strike
         if (result.secondStrike) {
           setTimeout(() => {
             if (result.secondStrike!.hit) {
@@ -528,15 +606,45 @@ class TacticsGame {
     if (!enemiesAlive) {
       SoundFX.playVictoryFanfare();
       this.ui.showBanner('VICTORY! BATTLEFIELD SECURED');
+
+      // Play Victory Dialogue then trigger Branching Choice Modal
+      setTimeout(() => {
+        if (this.currentChapter.victoryDialogue && this.currentChapter.victoryDialogue.length > 0) {
+          this.playDialogueSequence(this.currentChapter.victoryDialogue, () => {
+            this.handleChapterVictoryChoices();
+          });
+        } else {
+          this.handleChapterVictoryChoices();
+        }
+      }, 1500);
+
       return true;
     }
     return false;
   }
 
+  private handleChapterVictoryChoices(): void {
+    if (this.currentChapter.choices && this.currentChapter.choices.length > 0) {
+      this.ui.showChoiceModal(
+        `${this.currentChapter.title} — VICTORY!`,
+        'The enemy forces are in disarray! How shall we proceed, Commander?',
+        this.currentChapter.choices,
+        (selectedChoice) => {
+          this.ui.showBanner(`CHOICE ACCEPTED: ${selectedChoice.text}`);
+          setTimeout(() => {
+            this.loadChapter(selectedChoice.nextChapterId, true);
+          }, 1200);
+        }
+      );
+    } else {
+      this.ui.showBanner('CAMPAIGN CONCLUDED! THE REALM IS AT PEACE.');
+    }
+  }
+
   private gameLoop(): void {
     requestAnimationFrame(() => this.gameLoop());
 
-    if (this.scene.hoveredTile) {
+    if (this.scene && this.scene.hoveredTile) {
       const { x, z } = this.scene.hoveredTile;
       const tile = this.grid.getTile(x, z);
       if (tile) {
@@ -544,7 +652,9 @@ class TacticsGame {
       }
     }
 
-    this.scene.render();
+    if (this.scene) {
+      this.scene.render();
+    }
   }
 }
 

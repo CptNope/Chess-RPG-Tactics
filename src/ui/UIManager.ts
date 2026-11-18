@@ -1,6 +1,7 @@
-import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine } from '../core/types';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainType, EquipmentSlot, StoryChoice } from '../core/types';
 import { JOBS } from '../data/jobs';
 import { JobSystem } from '../core/JobSystem';
+import { getItemsForSlot } from '../data/items';
 import { SoundFX } from '../audio/SoundEffects';
 
 export class UIManager {
@@ -25,6 +26,20 @@ export class UIManager {
   // Map & Audio controls
   private mapSelectEl = document.getElementById('map-select') as HTMLSelectElement;
   private btnToggleSound = document.getElementById('btn-toggle-sound') as HTMLButtonElement;
+  private btnToggleEditor = document.getElementById('btn-toggle-editor') as HTMLButtonElement;
+
+  // 3D Map Editor Panel
+  private editorPanelEl = document.getElementById('editor-panel')!;
+  private btnCloseEditor = document.getElementById('btn-close-editor')!;
+  private editorTerrainSelect = document.getElementById('editor-terrain-select') as HTMLSelectElement;
+  private btnEditorExport = document.getElementById('btn-editor-export')!;
+  private btnEditorImport = document.getElementById('btn-editor-import')!;
+  private btnEditorTest = document.getElementById('btn-editor-test')!;
+  private editorStatusEl = document.getElementById('editor-status')!;
+
+  public isEditorOpen: boolean = false;
+  public currentEditorTool: 'raise' | 'lower' | 'paint' | 'walkable' = 'raise';
+  public currentPaintTerrain: TerrainType = 'grass';
 
   // Menus
   private btnMove = document.getElementById('btn-action-move') as HTMLButtonElement;
@@ -54,14 +69,29 @@ export class UIManager {
   private dialogueTextEl = document.getElementById('dialogue-text')!;
   private onDialogueNext?: () => void;
 
-  // Job Modal
+  // Branching Choice Modal
+  private choiceModalEl = document.getElementById('choice-modal')!;
+  private choiceChapterTitleEl = document.getElementById('choice-chapter-title')!;
+  private choiceIntroTextEl = document.getElementById('choice-intro-text')!;
+  private choiceCardsContainerEl = document.getElementById('choice-cards-container')!;
+
+  // Job & Equipment Modal
   private jobModalEl = document.getElementById('job-modal')!;
   private btnOpenJobModal = document.getElementById('btn-job-menu')!;
   private btnCloseJobModal = document.getElementById('btn-close-job-modal')!;
+  private btnTabJobs = document.getElementById('btn-tab-jobs')!;
+  private btnTabEquip = document.getElementById('btn-tab-equip')!;
+  private tabContentJobs = document.getElementById('tab-content-jobs')!;
+  private tabContentEquip = document.getElementById('tab-content-equip')!;
+
   private jobUnitTabsEl = document.getElementById('job-unit-tabs')!;
   private jobListEl = document.getElementById('job-list')!;
   private currentUnitJpEl = document.getElementById('current-unit-jp')!;
   private learnAbilityListEl = document.getElementById('learn-ability-list')!;
+
+  private selectedGearSlot: EquipmentSlot = 'weapon';
+  private inventoryListEl = document.getElementById('inventory-list')!;
+  private inventoryHeaderEl = document.getElementById('inventory-header')!;
 
   // Banner
   private bannerEl = document.getElementById('battle-banner')!;
@@ -75,6 +105,10 @@ export class UIManager {
   public onExecuteAttack?: () => void;
   public onCancelAttack?: () => void;
   public onMapChanged?: (mapId: string) => void;
+  public onEditorToggled?: (isOpen: boolean) => void;
+  public onEditorExport?: () => void;
+  public onEditorImport?: (jsonString: string) => void;
+  public onEditorTestBattle?: () => void;
 
   constructor() {
     this.setupListeners();
@@ -86,6 +120,53 @@ export class UIManager {
       const isMuted = SoundFX.toggleMute();
       this.btnToggleSound.textContent = isMuted ? '🔇 MUTED' : '🔊 SFX';
       if (!isMuted) SoundFX.playMenuBlip();
+    });
+
+    // Editor toggle
+    this.btnToggleEditor.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.toggleEditor(!this.isEditorOpen);
+    });
+
+    this.btnCloseEditor.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.toggleEditor(false);
+    });
+
+    // Editor Tools
+    const toolButtons = document.querySelectorAll('.editor-tool-btn');
+    toolButtons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        SoundFX.playMenuBlip();
+        toolButtons.forEach((b) => b.classList.remove('active'));
+        const target = e.currentTarget as HTMLElement;
+        target.classList.add('active');
+        this.currentEditorTool = target.dataset.tool as 'raise' | 'lower' | 'paint' | 'walkable';
+        this.editorStatusEl.textContent = `Tool: ${this.currentEditorTool.toUpperCase()} active. Click tiles.`;
+      });
+    });
+
+    this.editorTerrainSelect.addEventListener('change', (e) => {
+      const select = e.target as HTMLSelectElement;
+      this.currentPaintTerrain = select.value as TerrainType;
+    });
+
+    this.btnEditorExport.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.onEditorExport?.();
+    });
+
+    this.btnEditorImport.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      const input = prompt('Paste your exported Map JSON:');
+      if (input) {
+        this.onEditorImport?.(input);
+      }
+    });
+
+    this.btnEditorTest.addEventListener('click', () => {
+      SoundFX.playTurnChime();
+      this.onEditorTestBattle?.();
     });
 
     // Map selection change
@@ -156,11 +237,42 @@ export class UIManager {
       this.jobModalEl.classList.add('hidden');
     });
 
+    // Modal Subtabs (Jobs vs Equip)
+    this.btnTabJobs.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.btnTabJobs.classList.add('active');
+      this.btnTabEquip.classList.remove('active');
+      this.tabContentJobs.classList.remove('hidden');
+      this.tabContentEquip.classList.add('hidden');
+    });
+
+    this.btnTabEquip.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.btnTabEquip.classList.add('active');
+      this.btnTabJobs.classList.remove('active');
+      this.tabContentEquip.classList.remove('hidden');
+      this.tabContentJobs.classList.add('hidden');
+    });
+
     // Story Dialogue Advance Click
     this.dialogueBoxEl.addEventListener('click', () => {
       SoundFX.playMenuBlip();
       this.onDialogueNext?.();
     });
+  }
+
+  public toggleEditor(open: boolean): void {
+    this.isEditorOpen = open;
+    if (open) {
+      this.editorPanelEl.classList.remove('hidden');
+      this.btnToggleEditor.style.background = '#2563eb';
+      this.btnToggleEditor.style.color = '#fff';
+    } else {
+      this.editorPanelEl.classList.add('hidden');
+      this.btnToggleEditor.style.background = '#16243b';
+      this.btnToggleEditor.style.color = 'var(--gold)';
+    }
+    this.onEditorToggled?.(open);
   }
 
   public showDialogue(line: DialogueLine, onNext: () => void): void {
@@ -174,6 +286,34 @@ export class UIManager {
   public hideDialogue(): void {
     this.dialogueBoxEl.classList.add('hidden');
     this.onDialogueNext = undefined;
+  }
+
+  public showChoiceModal(
+    chapterTitle: string,
+    introText: string,
+    choices: StoryChoice[],
+    onSelect: (choice: StoryChoice) => void
+  ): void {
+    this.choiceChapterTitleEl.textContent = chapterTitle;
+    this.choiceIntroTextEl.textContent = introText;
+    this.choiceCardsContainerEl.innerHTML = '';
+
+    choices.forEach((choice) => {
+      const card = document.createElement('div');
+      card.className = 'story-choice-card';
+      card.innerHTML = `
+        <div class="story-choice-title">▶ ${choice.text}</div>
+        <div class="story-choice-reward">Reward: ${choice.rewardText}</div>
+      `;
+      card.addEventListener('click', () => {
+        SoundFX.playTurnChime();
+        this.choiceModalEl.classList.add('hidden');
+        onSelect(choice);
+      });
+      this.choiceCardsContainerEl.appendChild(card);
+    });
+
+    this.choiceModalEl.classList.remove('hidden');
   }
 
   public updateTurnTimeline(timeline: Unit[], activeUnit: Unit | null): void {
@@ -194,7 +334,6 @@ export class UIManager {
     this.unitNameEl.textContent = unit.name;
     this.unitJobEl.textContent = `${job.name} Lv. ${unit.level}`;
 
-    // Render Status Badges
     this.unitStatusesEl.innerHTML = '';
     unit.statuses.forEach((status) => {
       const badge = document.createElement('span');
@@ -316,6 +455,7 @@ export class UIManager {
       this.jobUnitTabsEl.appendChild(tab);
     });
 
+    // 1. JOBS VIEW
     this.jobListEl.innerHTML = '';
     for (const [jobId, job] of Object.entries(JOBS)) {
       const jobItem = document.createElement('div');
@@ -397,6 +537,79 @@ export class UIManager {
       }
 
       this.learnAbilityListEl.appendChild(item);
+    }
+
+    // 2. EQUIPMENT VIEW
+    const gearWeaponVal = document.getElementById('gear-weapon-val')!;
+    const gearShieldVal = document.getElementById('gear-shield-val')!;
+    const gearHeadVal = document.getElementById('gear-head-val')!;
+    const gearBodyVal = document.getElementById('gear-body-val')!;
+    const gearAccessoryVal = document.getElementById('gear-accessory-val')!;
+
+    gearWeaponVal.textContent = unit.equipment.weapon ? unit.equipment.weapon.name : 'None';
+    gearShieldVal.textContent = unit.equipment.shield ? unit.equipment.shield.name : 'None';
+    gearHeadVal.textContent = unit.equipment.head ? unit.equipment.head.name : 'None';
+    gearBodyVal.textContent = unit.equipment.body ? unit.equipment.body.name : 'None';
+    gearAccessoryVal.textContent = unit.equipment.accessory ? unit.equipment.accessory.name : 'None';
+
+    const gearSlots = document.querySelectorAll('.gear-slot-box');
+    gearSlots.forEach((slotEl) => {
+      slotEl.classList.remove('selected');
+      const slotType = (slotEl as HTMLElement).dataset.gearslot as EquipmentSlot;
+      if (slotType === this.selectedGearSlot) {
+        slotEl.classList.add('selected');
+      }
+
+      (slotEl as HTMLElement).onclick = () => {
+        SoundFX.playMenuBlip();
+        this.selectedGearSlot = slotType;
+        this.populateJobCustomizer(units, selectedUnitIndex);
+      };
+    });
+
+    // Populate inventory for selected slot
+    this.inventoryHeaderEl.textContent = `AVAILABLE ${this.selectedGearSlot.toUpperCase()} INVENTORY`;
+    this.inventoryListEl.innerHTML = '';
+
+    const availableItems = getItemsForSlot(this.selectedGearSlot);
+
+    // Unequip option
+    const unequipBtn = document.createElement('div');
+    unequipBtn.className = 'learn-item';
+    unequipBtn.innerHTML = `
+      <div style="font-family: var(--font-pixel); font-size: 9px; color: var(--text-muted);">(Unequip / Empty Slot)</div>
+    `;
+    unequipBtn.onclick = () => {
+      SoundFX.playMenuBlip();
+      JobSystem.unequipItem(unit, this.selectedGearSlot);
+      this.populateJobCustomizer(units, selectedUnitIndex);
+    };
+    this.inventoryListEl.appendChild(unequipBtn);
+
+    for (const item of availableItems) {
+      const isEquipped = unit.equipment[this.selectedGearSlot]?.id === item.id;
+      const el = document.createElement('div');
+      el.className = `learn-item ${isEquipped ? 'active' : ''}`;
+
+      const statsDesc = Object.entries(item.stats)
+        .map(([stat, val]) => `${stat.toUpperCase()} +${val}`)
+        .join(', ');
+
+      el.innerHTML = `
+        <div style="display:flex; justify-content:space-between; font-family: var(--font-pixel); font-size: 9px;">
+          <span>${item.name}</span>
+          <span style="color: ${isEquipped ? 'var(--gold)' : 'var(--hp-green)'};">${isEquipped ? 'EQUIPPED' : statsDesc}</span>
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">${item.description}</div>
+      `;
+
+      el.onclick = () => {
+        SoundFX.playTurnChime();
+        JobSystem.equipItem(unit, item);
+        this.populateJobCustomizer(units, selectedUnitIndex);
+      };
+
+      this.inventoryListEl.appendChild(el);
     }
   }
 }

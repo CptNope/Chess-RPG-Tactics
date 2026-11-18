@@ -23,7 +23,7 @@
       <div id="timeline-queue" class="timeline-queue"></div>
     </header>
 
-    <!-- Top-Right Camera & Map Controls -->
+    <!-- Top-Right Camera, Map & Editor Controls -->
     <div id="camera-controls" class="hud-panel">
       <select id="map-select" class="hud-select" title="Switch Battlefield">
         <option value="river_ruins">Riverside Ruins</option>
@@ -31,11 +31,44 @@
         <option value="gloomy_swamp">Gloomy Mire</option>
       </select>
       <button id="btn-toggle-sound" title="Toggle Sound FX">🔊 SFX</button>
+      <button id="btn-toggle-editor" title="Toggle 3D Map Editor">✎ Editor</button>
       <button id="btn-rot-left" title="Rotate Left (Q)">⟲ Q</button>
       <button id="btn-rot-right" title="Rotate Right (E)">⟳ E</button>
       <button id="btn-zoom-in" title="Zoom In (+)">+</button>
       <button id="btn-zoom-out" title="Zoom Out (-)">-</button>
-      <button id="btn-job-menu" title="Open Job Roster">★ Jobs</button>
+      <button id="btn-job-menu" title="Open Job Roster">★ Team</button>
+    </div>
+
+    <!-- 3D Map Editor Tool Palette (Top Left) -->
+    <div id="editor-panel" class="hud-panel hidden">
+      <div class="editor-header">
+        <span>3D MAP EDITOR</span>
+        <button id="btn-close-editor" class="close-btn">×</button>
+      </div>
+      <div class="editor-tools-grid">
+        <button class="editor-tool-btn active" data-tool="raise">▲ Raise (+0.5h)</button>
+        <button class="editor-tool-btn" data-tool="lower">▼ Lower (-0.5h)</button>
+        <button class="editor-tool-btn" data-tool="paint">🎨 Paint Material</button>
+        <button class="editor-tool-btn" data-tool="walkable">⛔ Toggle Walk</button>
+      </div>
+      <div class="editor-terrain-row">
+        <label>Terrain:</label>
+        <select id="editor-terrain-select" class="hud-select">
+          <option value="grass">Grassland</option>
+          <option value="stone">Stone Ruins</option>
+          <option value="dirt">Dirt Soil</option>
+          <option value="water">Water Bed</option>
+          <option value="swamp">Poison Swamp</option>
+          <option value="parapet">Castle Stone</option>
+          <option value="wood">Wood Bridge</option>
+        </select>
+      </div>
+      <div class="editor-actions-row">
+        <button id="btn-editor-export" class="hud-btn-mini">💾 Export</button>
+        <button id="btn-editor-import" class="hud-btn-mini">📥 Import</button>
+        <button id="btn-editor-test" class="hud-btn-mini highlight">⚔ Test Battle</button>
+      </div>
+      <div id="editor-status" class="editor-status-text">Click any tile in 3D to edit height & terrain.</div>
     </div>
 
     <!-- Active Unit Status Card (Bottom Left) -->
@@ -136,17 +169,34 @@
       </div>
     </div>
 
-    <!-- Job & Skill Customization Modal -->
+    <!-- Branching Campaign Choice Modal -->
+    <div id="choice-modal" class="modal-overlay hidden">
+      <div class="modal-window choice-window hud-panel">
+        <div class="modal-header">
+          <h2 id="choice-chapter-title">VICTORY — CHAPTER CLEARED</h2>
+        </div>
+        <div class="choice-intro-text" id="choice-intro-text">
+          The enemy line is broken! Scouts report enemy movements in multiple directions. What is your order, Commander?
+        </div>
+        <div id="choice-cards-container" class="choice-cards-container"></div>
+      </div>
+    </div>
+
+    <!-- Job & Equipment Customization Modal -->
     <div id="job-modal" class="modal-overlay hidden">
       <div class="modal-window hud-panel">
         <div class="modal-header">
-          <h2>CHARACTER JOB & ABILITIES</h2>
+          <div class="modal-title-tabs">
+            <button id="btn-tab-jobs" class="modal-subtab active">★ JOBS & ABILITIES</button>
+            <button id="btn-tab-equip" class="modal-subtab">🛡 EQUIPMENT & GEAR</button>
+          </div>
           <button id="btn-close-job-modal" class="close-btn">×</button>
         </div>
         <div class="modal-content">
           <div id="job-unit-tabs" class="job-unit-tabs"></div>
 
-          <div class="job-config-columns">
+          <!-- Tab 1: Jobs & Abilities View -->
+          <div id="tab-content-jobs" class="job-config-columns">
             <div class="job-column">
               <h3>UNLOCKED JOBS</h3>
               <div id="job-list" class="job-selection-list"></div>
@@ -156,11 +206,11 @@
               <h3>EQUIPPED ABILITIES (5 SLOTS)</h3>
               <div class="ability-slot-box" data-slot="primary">
                 <div class="slot-name">PRIMARY ACTION</div>
-                <div id="slot-primary-val" class="slot-val">Fundaments (Squire)</div>
+                <div id="slot-primary-val" class="slot-val">Fundaments</div>
               </div>
               <div class="ability-slot-box" data-slot="secondary">
                 <div class="slot-name">SECONDARY ACTION</div>
-                <div id="slot-secondary-val" class="slot-val">Arts of War (Knight)</div>
+                <div id="slot-secondary-val" class="slot-val">Arts of War</div>
               </div>
               <div class="ability-slot-box" data-slot="reaction">
                 <div class="slot-name">REACTION ABILITY</div>
@@ -179,6 +229,38 @@
             <div class="job-column">
               <h3>LEARN ABILITIES (JP: <span id="current-unit-jp">350</span>)</h3>
               <div id="learn-ability-list" class="learn-ability-list"></div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Equipment & Gear View -->
+          <div id="tab-content-equip" class="job-config-columns hidden">
+            <div class="job-column">
+              <h3>EQUIPPED GEAR</h3>
+              <div class="gear-slot-box" data-gearslot="weapon">
+                <div class="slot-name">WEAPON (RIGHT HAND)</div>
+                <div id="gear-weapon-val" class="slot-val">Iron Broadsword</div>
+              </div>
+              <div class="gear-slot-box" data-gearslot="shield">
+                <div class="slot-name">SHIELD (LEFT HAND)</div>
+                <div id="gear-shield-val" class="slot-val">Bronze Buckler</div>
+              </div>
+              <div class="gear-slot-box" data-gearslot="head">
+                <div class="slot-name">HEADGEAR</div>
+                <div id="gear-head-val" class="slot-val">Steel Bascinet</div>
+              </div>
+              <div class="gear-slot-box" data-gearslot="body">
+                <div class="slot-name">ARMOR / ROBE</div>
+                <div id="gear-body-val" class="slot-val">Reinforced Hauberk</div>
+              </div>
+              <div class="gear-slot-box" data-gearslot="accessory">
+                <div class="slot-name">ACCESSORY</div>
+                <div id="gear-accessory-val" class="slot-val">Battle Greaves</div>
+              </div>
+            </div>
+
+            <div class="job-column" style="grid-column: span 2;">
+              <h3 id="inventory-header">AVAILABLE INVENTORY</h3>
+              <div id="inventory-list" class="learn-ability-list"></div>
             </div>
           </div>
         </div>

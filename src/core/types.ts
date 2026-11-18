@@ -12,7 +12,31 @@ export type StatusEffectType = 'haste' | 'slow' | 'protect' | 'immobilize' | 'po
 
 export interface ActiveStatus {
   type: StatusEffectType;
-  duration: number; // in turns
+  duration: number;
+}
+
+export type EquipmentSlot = 'weapon' | 'shield' | 'head' | 'body' | 'accessory';
+
+export type WeaponType = 'sword' | 'spear' | 'bow' | 'staff' | 'dagger';
+
+export interface Item {
+  id: string;
+  name: string;
+  slot: EquipmentSlot;
+  weaponType?: WeaponType;
+  description: string;
+  price: number;
+  stats: {
+    hp?: number;
+    mp?: number;
+    attack?: number;
+    magic?: number;
+    speed?: number;
+    move?: number;
+    jump?: number;
+    evasion?: number;
+  };
+  range?: number;
 }
 
 export interface TileData {
@@ -37,7 +61,7 @@ export interface Ability {
   power: number;
   element: Element;
   appliesStatus?: StatusEffectType;
-  isLineAttack?: boolean; // For spear thrusts
+  isLineAttack?: boolean;
   isSelfOnly?: boolean;
 }
 
@@ -68,6 +92,14 @@ export interface EquippedAbilities {
   movement: string | null;
 }
 
+export interface EquippedGear {
+  weapon: Item | null;
+  shield: Item | null;
+  head: Item | null;
+  body: Item | null;
+  accessory: Item | null;
+}
+
 export interface Unit {
   id: string;
   name: string;
@@ -79,8 +111,8 @@ export interface Unit {
   jobPoints: Record<string, number>;
   unlockedAbilities: Record<string, boolean>;
   equippedAbilities: EquippedAbilities;
+  equipment: EquippedGear;
   
-  // Base stats (unmodified by job)
   baseStats: {
     hp: number;
     mp: number;
@@ -89,7 +121,6 @@ export interface Unit {
     speed: number;
   };
   
-  // Current combat state
   currentHp: number;
   maxHp: number;
   currentMp: number;
@@ -98,6 +129,7 @@ export interface Unit {
   ct: number;
   move: number;
   jump: number;
+  evasion: number;
   
   statuses: ActiveStatus[];
   
@@ -126,4 +158,27 @@ export interface DialogueLine {
   portraitClass: string;
   side: 'left' | 'right';
   text: string;
+}
+
+export interface StoryChoice {
+  text: string;
+  nextChapterId: string;
+  rewardText: string;
+}
+
+export interface CampaignChapter {
+  id: string;
+  title: string;
+  subtitle: string;
+  mapId: string;
+  introDialogue: DialogueLine[];
+  victoryDialogue: DialogueLine[];
+  choices?: StoryChoice[];
+  enemyRoster: {
+    name: string;
+    jobId: string;
+    level: number;
+    x: number;
+    z: number;
+  }[];
 }

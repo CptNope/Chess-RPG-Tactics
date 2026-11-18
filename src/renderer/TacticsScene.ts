@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { TileData, Unit, FacingDirection } from '../core/types';
+import { TileData, Unit, FacingDirection, TerrainType } from '../core/types';
 import { BattleGrid } from '../core/Grid';
 import {
   createGrassTopTexture,
@@ -173,6 +173,59 @@ export class TacticsScene {
 
     this.buildMap();
     this.targetCameraTarget.set(5, 1, 5);
+  }
+
+  public updateTile(x: number, z: number, newHeight: number, newTerrain: TerrainType, walkable: boolean): void {
+    const tile = this.grid.getTile(x, z);
+    if (!tile) return;
+
+    tile.height = Math.max(0, Math.min(6.0, Math.round(newHeight * 10) / 10));
+    tile.terrain = newTerrain;
+    tile.walkable = walkable;
+
+    const oldMesh = this.tileMeshes.get(this.grid.key(x, z));
+    if (oldMesh) {
+      if (oldMesh.geometry) oldMesh.geometry.dispose();
+      this.scene.remove(oldMesh);
+    }
+
+    const height = Math.max(0.2, tile.height);
+    const geom = new THREE.BoxGeometry(1, height, 1);
+
+    let topMat: THREE.Material;
+    let sideMat: THREE.Material;
+
+    if (tile.terrain === 'stone') {
+      topMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
+      sideMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
+    } else if (tile.terrain === 'parapet') {
+      topMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
+      sideMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
+    } else if (tile.terrain === 'swamp') {
+      topMat = new THREE.MeshLambertMaterial({ map: this.swampTex, transparent: true, opacity: 0.9 });
+      sideMat = new THREE.MeshLambertMaterial({ map: this.swampTex });
+    } else if (tile.terrain === 'water') {
+      topMat = new THREE.MeshLambertMaterial({ map: this.waterTex, transparent: true, opacity: 0.85 });
+      sideMat = new THREE.MeshLambertMaterial({ map: this.waterTex });
+    } else if (tile.terrain === 'wood') {
+      topMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
+      sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
+    } else {
+      topMat = new THREE.MeshLambertMaterial({ map: this.grassTopTex });
+      sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
+    }
+
+    const materials = [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
+    const mesh = new THREE.Mesh(geom, materials);
+    mesh.position.set(tile.x, height / 2, tile.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.userData = { tile };
+
+    this.scene.add(mesh);
+    this.tileMeshes.set(this.grid.key(tile.x, tile.z), mesh);
+
+    this.setCursor(x, z);
   }
 
   private buildMap(): void {

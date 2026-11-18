@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-11-17
+
+### Added
+- **In-Game 3D Map Editor**:
+  - Live 3D terrain sculpting: click any tile on the battlefield to raise height (`+0.5h`), lower height (`-0.5h`), or paint materials.
+  - 7 Paintable terrain materials: *Grassland*, *Stone Ruins*, *Dirt Soil*, *Water Bed*, *Poison Swamp*, *Castle Stone*, and *Wood Bridge*.
+  - Walkability toggling (set impassable boulders, walls, or fences).
+  - One-click **JSON Export** (copies formatted map data to clipboard) and **JSON Import** to load custom maps.
+  - Instant **Test Battle** button to drop units into skirmish on the sculpted map immediately.
+- **Equipment & Inventory System**:
+  - 5 Gear slots per character: **Weapon**, **Shield**, **Headgear**, **Body Armor**, and **Accessory**.
+  - 18 Unique items with stat scaling (Attack, Magic, Defense HP/MP, Speed, Move, Jump, Evasion).
+  - Weapon types with variable range: Swords, Long Dragon Lance (2-tile spear range), Longbow (5-tile archer range), Chrono Scepter, and Assassin Daggers.
+  - Subtab in `#job-modal` to inspect current loadouts, compare stats, and equip/unequip gear dynamically.
+- **Multi-Stage Branching Campaign**:
+  - Chapter-based story campaign (`src/data/campaign.ts`) with character dialogues and tactical encounter progressions:
+    - **Chapter I**: *Ambush at Riverside Ruins*
+    - **Chapter II-A**: *The Sunken Crypts (Gloomy Mire)*
+    - **Chapter II-B**: *The Siege of Night Battlement*
+    - **Final Chapter**: *The Awakening at the Summit*
+  - **Narrative Choice System**: After Chapter I victory, players choose whether to pursue the sorcerer into the toxic mire or reinforce the castle garrison, unlocking distinct maps, enemy compositions, and equipment rewards!
+- **Architectural Decision Records**: Added ADR 0009 (In-Game 3D Map Editor), ADR 0010 (Equipment & Inventory Architecture), and ADR 0011 (Branching Campaign State Machine).
+
+---
+
 ## [0.3.0] - 2026-11-17
 
 ### Added
@@ -22,47 +47,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Pure Web Audio API retro synth: sword slashes, spell chimes, crits, heal sparkles, turn bells, and victory fanfares.
   - Top HUD audio toggle button (`🔊 SFX` / `🔇 MUTED`).
 - **Story Cutscene Dialogue System**:
-  - Visual novel style dialogue box with character portraits, speaker titles, and retro dialog prompts between Ramza, Agrias, and the brigand chiefs before battle!
+  - Visual novel style dialogue box with character portraits, speaker titles, and retro dialog prompts before battle.
 - **Multi-Map Battlefield Selector**:
-  - Added dropdown to switch between:
-    - *Riverside Ruins* (Daytime river, ruins, and stone watchtower).
-    - *Night Battlement* (Dark castle ramparts, archer bastions, and torches).
-    - *Gloomy Mire & Marsh* (Murky swamp pools, toxic bogs, and wooden boardwalks).
+  - Added dropdown to switch between *Riverside Ruins*, *Night Battlement*, and *Gloomy Mire & Marsh*.
 - **Status Effects Engine**:
-  - Active tracking for `Haste`, `Slow`, `Protect` ($-30\%$ physical damage taken), `Immobilize` (Move reduced to 0), and `Poison` ($-10\%$ max HP per turn).
-  - Colored status badges displayed on the active unit card with turn countdown timers (`[HAST 3t]`, `[PROT 2t]`).
+  - Active tracking for `Haste`, `Slow`, `Protect`, `Immobilize`, and `Poison` with countdown badges.
 
 ---
 
 ## [0.2.0] - 2026-11-17
 
 ### Added
-- **Extreme Close-Up Zoom System**: Extended minimum orthographic camera zoom down to `2.0` (nearly $10\times$ closer than initial release), enabling dramatic close-up inspection of retro pixel art and weapon animations.
-- **Smooth Mouse Wheel Zoom**: Interactive scroll wheel listener with lerped interpolation across the zoom range (`2.0` to `22.0`).
-- **Mouse Drag Camera Panning**: Right-click and Middle-click drag functionality that dynamically pans the camera target in world space oriented to the current camera rotation.
-- **Keyboard Camera Controls**: Added `W`/`A`/`S`/`D` and Arrow Keys for camera translation, `+`/`-` for zoom, and `R` / `Home` to re-center on the active unit.
-- **3D Floating Combat Text**: Dynamic screen-projected damage, heal, critical hit, and miss numbers (`-34`, `CRIT! -51`, `+45`, `MISS`) floating upward in 3D world space over target units.
-- **Idle Sprite Animation**: Added subtle procedural sinusoidal bobbing to billboard sprites to give characters an authentic retro battle stance.
-- **Click-to-Inspect Units**: Clicking any unit on the battlefield in idle mode focuses the camera and displays their live stat card and equipped job.
-- **Architectural Documentation Suite**: Added comprehensive architecture diagrams, combat mechanics specs, job tree guides, and Architecture Decision Records (ADRs 0001–0006).
-
-### Changed
-- Default camera zoom changed from wide overview (`38.0`) to authentic tactical isometric scale (`8.5`).
-- Sprite plane dimensions expanded from `1.2x1.2` to `1.35x1.35` for enhanced visual presence.
+- **Extreme Close-Up Zoom System**: Extended minimum orthographic camera zoom down to `2.0`.
+- **Smooth Mouse Wheel Zoom**: Interactive scroll wheel listener across `2.0` to `22.0`.
+- **Mouse Drag Camera Panning**: Right-click and Middle-click drag functionality.
+- **Keyboard Camera Controls**: `W`/`A`/`S`/`D` pan, `+`/`-` zoom, `R`/`Home` re-center.
+- **3D Floating Combat Text**: Dynamic screen-projected damage, heal, critical hit, and miss numbers.
+- **Idle Sprite Animation**: Procedural sinusoidal bobbing for billboard sprites.
+- **Click-to-Inspect Units**: Live inspection of friend or foe stats.
 
 ---
 
 ## [0.1.0] - 2026-11-17
 
 ### Added
-- **Core 3D Isometric Viewport**: Orthographic camera with stepped elevation terrain (grasslands, dirt banks, stone ruins, river water).
-- **90° Rotatable Camera**: Smooth 90-degree camera rotation on `Q` / `E` allowing full inspection of obscured terrain and ledges.
-- **CT (Charge Time) Engine**: Speed-based tick timeline with upcoming turn order prediction ribbon.
-- **CT Refund Mechanics**: $20\%$ refund for moving without acting or acting without moving; $40\%$ refund for pure `WAIT`.
-- **Directional Facing & Combat Geometry**: 4-way compass facing (North, East, South, West) with dot-product front, flank ($+15\%$), and back ($+30\%$) combat modifiers.
-- **Height & Elevation Constraints**: 3D Dijkstra pathfinding constrained by unit `Move` and `Jump` attributes.
-- **5-Slot Job & Ability Architecture**: Primary, Secondary, Reaction, Support, Movement abilities.
-- **Job Class Roster**: Implemented Squire, Knight, Archer, Black Mage, and White Mage with JP earning and ability learning.
-- **Procedural Pixel Art Engine**: Canvas-based 16x16 tile textures and 32x32 4-directional billboard sprites with nearest-neighbor rendering.
-- **Tactical Enemy AI**: Utility evaluation for pathfinding, skill selection, and post-turn facing.
-- **GitHub Pages CI/CD Workflow**: Automated build and deployment via `.github/workflows/deploy.yml` with relative Vite base configuration.
+- **Core 3D Isometric Viewport & 90° Rotatable Camera**.
+- **CT Speed Tick Engine & CT Refund Rules**.
+- **Directional Facing & Combat Geometry**.
+- **5-Slot Job & Ability Architecture**.
+- **GitHub Pages CI/CD Pipeline**.

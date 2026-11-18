@@ -10,7 +10,7 @@ Welcome to the comprehensive technical documentation and design specifications f
 | :--- | :--- |
 | **[System Architecture](ARCHITECTURE.md)** | High-level topology, component interaction, turn lifecycle sequence diagram, and class relationship model. |
 | **[Combat System Specifications](COMBAT_SYSTEM.md)** | Speed tick formulas, CT refund matrix, facing vector dot-product geometry, elevation bonuses, and damage formulas. |
-| **[Job & Ability System](JOB_SYSTEM.md)** | 5-slot ability equipping model (FFT paradigm), job progression tree, stat multipliers, and full ability database. |
+| **[Job & Ability System](JOB_SYSTEM.md)** | 5-slot ability equipping model (FFT paradigm), job progression tree, stat multipliers, and full ability database including Dragoon, Ninja, and Time Weaver. |
 | **[Controls & Camera Guide](CONTROLS_AND_CAMERA.md)** | Orthographic isometric camera mathematics, zoom bounds (2.0x to 22.0x), mouse drag panning, and keyboard mapping. |
 
 ---
@@ -25,6 +25,11 @@ Documenting the architectural choices, tradeoffs, and context of the engine:
 * **[ADR 0004: Procedural Canvas Pixel Art Textures & Directional Billboarding](adr/0004-billboard-pixel-art-sprites.md)**
 * **[ADR 0005: 3D Height-Constrained Dijkstra Pathfinding](adr/0005-height-jump-pathfinding.md)**
 * **[ADR 0006: GitHub Actions CI/CD for Automated GitHub Pages Deployment](adr/0006-github-actions-pages-deployment.md)**
+* **[ADR 0007: Web Audio API Retro 16-Bit Sound Synthesis](adr/0007-web-audio-api-sound-synthesizer.md)**
+* **[ADR 0008: Multi-Map Generator & Dynamic Thematic Lighting](adr/0008-multi-map-theme-architecture.md)**
+* **[ADR 0009: In-Game 3D Map Editor & Live Mesh Mutation](adr/0009-in-game-3d-map-editor.md)**
+* **[ADR 0010: Five-Slot Equipment & Weapon Range System](adr/0010-equipment-and-inventory-architecture.md)**
+* **[ADR 0011: Multi-Stage Branching Campaign & Dialogue Engine](adr/0011-branching-campaign-state-machine.md)**
 
 ---
 
