@@ -1,12 +1,25 @@
 # Chess RPG Tactics (Tactics JRPG Engine)
 
 A 2.5D turn-based tactical RPG built in the style of *Final Fantasy Tactics* and *Tactics Ogre*, featuring:
-- **3D Isometric Rotatable View**: 90° camera rotation (`Q` / `E`), zoom controls (`+` / `-`), and stepped terrain elevation.
+- **3D Isometric Rotatable View**: 90° camera rotation (`Q` / `E`), extreme close-up zoom (`2.0` to `22.0`), mouse drag panning, and stepped terrain elevation.
 - **Elevation & Physics**: Movement governed by unit Jump and height difference; physical & ranged attacks modified by elevation advantages.
 - **Directional Facing & Combat Geometry**: Front, Flank (+15% hit, damage bonus), and Back (+30% hit, backstab criticals).
 - **Speed / CT (Charge Time) Engine**: Tick-based speed timeline rather than rigid team turns; remaining CT refund for moving without acting or waiting.
 - **Deep Job & Ability System**: 5-slot ability equipping (Primary Action, Secondary Action, Reaction, Support, Movement), JP earning, and skill unlocking.
-- **Billboard Pixel Art Sprites**: Dynamic 2D sprites facing camera perspective with 4-way relative orientation.
+- **Billboard Pixel Art Sprites**: Dynamic 2D sprites facing camera perspective with 4-way relative orientation and idle breathing animation.
+
+---
+
+## 📚 Technical Documentation & Architecture
+
+Comprehensive design guides, Mermaid sequence & class diagrams, and Architectural Decision Records:
+
+* 🗺️ **[System Architecture & Data Flow](docs/ARCHITECTURE.md)**: Component topology, turn lifecycle sequence, and class diagrams.
+* ⚔️ **[Combat Engine & Formulas](docs/COMBAT_SYSTEM.md)**: Speed ticks, CT refunds, facing vector dot products, and damage equations.
+* 🛡️ **[Job & Ability System](docs/JOB_SYSTEM.md)**: 5-slot equipping model, job progression tree, and ability database.
+* 🎥 **[Controls & Isometric Camera](docs/CONTROLS_AND_CAMERA.md)**: Mouse drag panning, wheel zoom, and camera math.
+* 🏛️ **[Architectural Decision Records (ADRs)](docs/README.md#architectural-decision-records-adrs)**: ADRs 0001–0006 detailing all engine decisions.
+* 📜 **[Changelog](CHANGELOG.md)**: Semantic release notes following the Keep a Changelog standard.
 
 ---
 
@@ -15,12 +28,17 @@ A 2.5D turn-based tactical RPG built in the style of *Final Fantasy Tactics* and
 This repository includes an automated GitHub Actions deployment workflow ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
 
 ### How to Enable GitHub Pages:
-1. Push your code to your repository on GitHub.
+1. Push your code to your repository on GitHub:
+   ```bash
+   git add .
+   git commit -m "docs: add comprehensive documentation, mermaid diagrams, changelogs, and ADRs"
+   git push origin main
+   ```
 2. Go to your repository on GitHub: `https://github.com/CptNope/Chess-RPG-Tactics`
 3. Click **Settings** $\to$ **Pages** (in the left sidebar under *Code and automation*).
 4. Under **Build and deployment** $\to$ **Source**, choose:
    - **GitHub Actions**
-5. That's it! Every time you commit and push to the `main` branch, the GitHub Actions workflow will automatically build and publish your game to:
+5. That's it! Every push to `main` will build and publish automatically to:
    - `https://cptnope.github.io/Chess-RPG-Tactics/`
 
 ---
@@ -33,38 +51,15 @@ npm run dev
 ```
 Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
 
-### Camera Controls
-* **Rotate Left**: Press `Q` or click `⟲ Q` on the top-right HUD.
-* **Rotate Right**: Press `E` or click `⟳ E` on the top-right HUD.
-* **Zoom In / Out**: Click `+` / `-` buttons.
-* **Hover / Select Tile**: Move your cursor over any tile to see coordinates, height level, and terrain.
+### Camera & Navigation Controls
+* **Rotate Left / Right**: Press `Q` / `E` or click `⟲ Q` / `⟳ E` on the top-right HUD.
+* **Zoom In / Out**: Scroll **Mouse Wheel Up/Down**, press `+` / `-`, or click `+` / `-` buttons. Can zoom down to `2.0` for extreme close-up view!
+* **Pan Camera**: **Hold Right-Click (or Middle-Click) & Drag**, or press `W` / `A` / `S` / `D` or Arrow Keys.
+* **Reset Camera**: Press `R` or `Home` to re-center on the current active unit.
+* **Inspect Unit**: Click on any unit on the map to focus the camera and view their full stat card.
 
 ### Combat Commands
 * **MOVE**: Click `MOVE` to highlight blue reachable tiles based on Move and Jump stats. Click a blue tile to step there.
 * **ACT**: Open action menu (Attack, Throw Stone, Rend Armor, Aim, Fire, Cure, etc.). Click a target unit to view the **Battle Forecast** (Hit %, Expected Damage, Facing advantage), then confirm execution.
 * **WAIT**: Choose one of 4 facing directions (North, East, South, West) to protect your rear from critical backstabs!
 * **★ JOBS**: Open the character customization window to inspect unlocked jobs, equip secondary skillsets, and spend JP to learn new abilities.
-
----
-
-## 🏗️ Project Architecture
-```
-src/
-├── core/
-│   ├── types.ts          # Core data models (Unit, Job, Ability, Tile, CombatForecast)
-│   ├── Grid.ts           # 3D height-aware grid, Jump constraints, Dijkstra pathfinding
-│   ├── CombatEngine.ts   # Facing calculation (Front/Flank/Back), height & damage formulas
-│   ├── TurnManager.ts    # CT (Charge Time) speed tick loop and future turn predictor
-│   └── JobSystem.ts      # Job scaling, 5-slot ability equipping, and JP progression
-├── data/
-│   ├── jobs.ts           # Job definitions (Squire, Knight, Archer, Black Mage, White Mage)
-│   └── maps.ts           # 3D stepped terrain layout (Ruins by the River)
-├── graphics/
-│   └── PixelTextures.ts  # Procedural retro pixel art textures & 4-directional billboard sprites
-├── renderer/
-│   └── TacticsScene.ts   # Three.js isometric orthographic camera, lighting, and meshes
-├── ui/
-│   └── UIManager.ts      # Tactical HUD, turn timeline, status card, and action menus
-├── style.css             # CRT scanline overlay, retro 90s palette and typography
-└── main.ts               # Game loop and AI turn execution
-```

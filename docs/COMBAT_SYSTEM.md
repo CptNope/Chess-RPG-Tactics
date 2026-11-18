@@ -1,0 +1,105 @@
+# Combat Engine & Mechanics Specification
+
+This document details the mathematical formulas, geometric calculations, and turn structures governing **Chess RPG Tactics**.
+
+---
+
+## 1. The Charge Time (CT) Engine
+
+Combat turns are determined strictly by individual unit **Speed** rather than round-robin team turns.
+
+```mermaid
+flowchart TD
+    Start(["Clock Tick"]) --> CheckCT{"Any unit CT >= 100?"}
+    CheckCT -- No --> AddSpeed["For each alive unit:<br/>CT = CT + Speed"]
+    AddSpeed --> Start
+    CheckCT -- Yes --> SelectActive["Sort ready units by highest CT,<br/>then by Speed.<br/>Grant Active Turn to #1."]
+    SelectActive --> TurnAction["Unit executes Move, Act, Wait"]
+    TurnAction --> CalculateRefund{"Actions Taken?"}
+    CalculateRefund -- "Moved AND Acted" --> Refund0["CT = max(0, CT - 100)"]
+    CalculateRefund -- "Moved ONLY or Acted ONLY" --> Refund20["CT = 20 (20% Refund)"]
+    CalculateRefund -- "Neither Moved nor Acted (Wait)" --> Refund40["CT = 40 (40% Refund)"]
+    Refund0 --> Advance(["Advance to Next Tick"])
+    Refund20 --> Advance
+    Refund40 --> Advance
+```
+
+### CT Refund Reference Table
+
+| Action Taken During Turn | End-of-Turn CT | Effective Turn Acceleration | Tactical Utility |
+| :--- | :--- | :--- | :--- |
+| **Move + Action** | $CT - 100$ | $0\%$ bonus | Maximum immediate impact (reposition & strike). |
+| **Move Only** (No Action) | $20$ | $+20\%$ faster next turn | Repositioning defensively while queuing next strike sooner. |
+| **Action Only** (No Move) | $20$ | $+20\%$ faster next turn | Firing spells or arrows from entrenched high ground. |
+| **Pure Wait** (No Move, No Action) | $40$ | $+40\%$ faster next turn | Holding defensive posture; turns cycle in nearly half time! |
+
+---
+
+## 2. Directional Facing Geometry
+
+Every unit faces one of four cardinal directions: **North (`N`)**, **East (`E`)**, **South (`S`)**, or **West (`W`)**.
+
+When an attacker at $(x_a, z_a)$ targets a defender at $(x_t, z_t)$:
+
+$$\vec{D} = (x_a - x_t, z_a - z_t), \quad \hat{D} = \frac{\vec{D}}{\|\vec{D}\|}$$
+
+The defender's unit gaze vector $\vec{F}$ is defined as:
+* $\vec{F}_N = (0, -1)$
+* $\vec{F}_S = (0, 1)$
+* $\vec{F}_E = (1, 0)$
+* $\vec{F}_W = (-1, 0)$
+
+The facing dot product is computed as:
+
+$$\cos \theta = \vec{F} \cdot \hat{D}$$
+
+```mermaid
+graph TD
+    Dot["Dot Product: F · D"]
+    Dot -- "> 0.3" --> Front["FRONT ATTACK<br/>(Normal Accuracy & Damage)"]
+    Dot -- "-0.3 to 0.3" --> Flank["FLANK ATTACK<br/>(+15% Hit Rate, +15% Damage)"]
+    Dot -- "< -0.3" --> Back["REAR ATTACK (BACKSTAB)<br/>(+30% Hit Rate, +30% Damage, +25% Crit)"]
+```
+
+### Facing Combat Modifiers
+
+| Facing Angle | Dot Product Range | Hit Rate Modifier | Damage Multiplier | Base Critical Chance |
+| :--- | :--- | :--- | :--- | :--- |
+| **Front** | $\cos \theta > 0.3$ | $+0\%$ | $1.00\times$ | $5\%$ |
+| **Flank (Side)** | $-0.3 \le \cos \theta \le 0.3$ | $+15\%$ | $1.15\times$ | $15\%$ |
+| **Rear (Back)** | $\cos \theta < -0.3$ | $+30\%$ | $1.30\times$ | $30\%$ |
+
+---
+
+## 3. Elevation & Height Advantage
+
+Tiles in the world carry a discrete height value $H$ (in units). The height difference between attacker and target is:
+
+$$\Delta H = H_{\text{attacker}} - H_{\text{target}}$$
+
+* **High Ground Advantage ($\Delta H > 0$)**:
+  * Accuracy: $+5\%$ bonus hit chance.
+  * Damage: $+10\%$ bonus damage multiplier.
+  * Archery Range: Archers gain $+1$ effective tile range for every $2.0$ height units above target.
+* **Low Ground Penalty ($\Delta H < 0$)**:
+  * Accuracy: $-10\%$ penalty.
+  * Melee Restriction: Melee attacks fail if $|\Delta H| > 1.5$ height units.
+
+---
+
+## 4. Damage & Healing Formulas
+
+### Physical Abilities
+$$\text{Base Damage} = \text{Attack} \times \text{Power} \times 8$$
+
+$$\text{Final Damage} = \text{Base Damage} \times M_{\text{facing}} \times M_{\text{height}} \times M_{\text{crit}}$$
+
+* $M_{\text{facing}} \in \{1.00, 1.15, 1.30\}$
+* $M_{\text{height}} = 1.10$ if $\Delta H > 0$ else $1.00$
+* $M_{\text{crit}} = 1.50$ on critical strike
+
+### Magical Abilities
+$$\text{Base Damage} = \text{Magic} \times |\text{Power}| \times 9$$
+
+* If the attacker has the Support Ability **Arcane Strength** (`bm_arcane_strength`), magical damage is multiplied by $1.25\times$.
+* Healing spells (e.g. *Cure*) carry negative power ($\text{Power} = -1.4$), delivering targeted HP restoration.
