@@ -37,15 +37,20 @@ export class TacticsScene {
   // Grid & Map
   public grid: BattleGrid;
   private tileMeshes: Map<string, THREE.Mesh> = new Map();
+  private tileMeshList: THREE.Mesh[] = [];
 
   // Unit meshes & sprites
+  public currentUnits: Unit[] = [];
   private unitSpritePlanes: Map<string, THREE.Mesh> = new Map();
   private unitTweens: Map<string, UnitTween> = new Map();
   private overheadHpElements: Map<string, HTMLElement> = new Map();
 
-  // Highlight overlays
+  // Highlight overlays (pooled)
   private highlightGroup: THREE.Group = new THREE.Group();
   private cursorMesh: THREE.Group;
+  private sharedHighlightGeom = new THREE.PlaneGeometry(0.95, 0.95);
+  private moveHighlightMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.55, depthWrite: false });
+  private attackHighlightMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.55, depthWrite: false });
 
   // Camera & Zoom System
   public cameraTarget: THREE.Vector3 = new THREE.Vector3(5, 1, 5);
@@ -70,6 +75,16 @@ export class TacticsScene {
   private parapetTex = createCastleParapetTexture();
   private swampTex = createSwampTexture();
 
+  // Shared Tile Materials (Avoid instantiating hundreds of material instances)
+  private stoneMat!: THREE.MeshLambertMaterial;
+  private parapetMat!: THREE.MeshLambertMaterial;
+  private swampTopMat!: THREE.MeshLambertMaterial;
+  private swampSideMat!: THREE.MeshLambertMaterial;
+  private waterTopMat!: THREE.MeshLambertMaterial;
+  private waterSideMat!: THREE.MeshLambertMaterial;
+  private dirtMat!: THREE.MeshLambertMaterial;
+  private grassTopMat!: THREE.MeshLambertMaterial;
+
   // Lighting
   private ambientLight!: THREE.AmbientLight;
   private sunLight!: THREE.DirectionalLight;
@@ -80,10 +95,11 @@ export class TacticsScene {
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
 
-  // Floating Combat Text & Overlays
+  // Floating Combat Text & Overlays (reusable screen vector)
   private floatingTexts: FloatingText[] = [];
   private floatingTextContainer: HTMLElement;
   private lastRenderTime: number = performance.now();
+  private tempScreenPos: THREE.Vector3 = new THREE.Vector3();
 
   constructor(canvas: HTMLCanvasElement, grid: BattleGrid) {
     this.canvas = canvas;
@@ -110,6 +126,10 @@ export class TacticsScene {
     this.floatingTextContainer.className = 'floating-combat-overlay';
     document.getElementById('game-container')?.appendChild(this.floatingTextContainer);
 
+    // Initialize Shared Geometries & Materials
+    this.sharedHighlightGeom.rotateX(-Math.PI / 2);
+    this.initTileMaterials();
+
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.OrthographicCamera(
       -this.zoomLevel * aspect,
@@ -129,6 +149,44 @@ export class TacticsScene {
 
     this.setupInteractions();
     this.updateCameraPosition();
+  }
+
+  private initTileMaterials(): void {
+    this.stoneMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
+    this.parapetMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
+    this.swampTopMat = new THREE.MeshLambertMaterial({ map: this.swampTex, transparent: true, opacity: 0.9 });
+    this.swampSideMat = new THREE.MeshLambertMaterial({ map: this.swampTex });
+    this.waterTopMat = new THREE.MeshLambertMaterial({ map: this.waterTex, transparent: true, opacity: 0.85 });
+    this.waterSideMat = new THREE.MeshLambertMaterial({ map: this.waterTex });
+    this.dirtMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
+    this.grassTopMat = new THREE.MeshLambertMaterial({ map: this.grassTopTex });
+  }
+
+  private getTileMaterials(terrain: TerrainType): THREE.Material[] {
+    let topMat: THREE.Material;
+    let sideMat: THREE.Material;
+
+    if (terrain === 'stone') {
+      topMat = this.stoneMat;
+      sideMat = this.stoneMat;
+    } else if (terrain === 'parapet') {
+      topMat = this.parapetMat;
+      sideMat = this.parapetMat;
+    } else if (terrain === 'swamp') {
+      topMat = this.swampTopMat;
+      sideMat = this.swampSideMat;
+    } else if (terrain === 'water') {
+      topMat = this.waterTopMat;
+      sideMat = this.waterSideMat;
+    } else if (terrain === 'wood') {
+      topMat = this.dirtMat;
+      sideMat = this.dirtMat;
+    } else {
+      topMat = this.grassTopMat;
+      sideMat = this.dirtMat;
+    }
+
+    return [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
   }
 
   private setupLighting(): void {
@@ -205,31 +263,8 @@ export class TacticsScene {
 
     const height = Math.max(0.2, tile.height);
     const geom = new THREE.BoxGeometry(1, height, 1);
+    const materials = this.getTileMaterials(tile.terrain);
 
-    let topMat: THREE.Material;
-    let sideMat: THREE.Material;
-
-    if (tile.terrain === 'stone') {
-      topMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
-      sideMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
-    } else if (tile.terrain === 'parapet') {
-      topMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
-      sideMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
-    } else if (tile.terrain === 'swamp') {
-      topMat = new THREE.MeshLambertMaterial({ map: this.swampTex, transparent: true, opacity: 0.9 });
-      sideMat = new THREE.MeshLambertMaterial({ map: this.swampTex });
-    } else if (tile.terrain === 'water') {
-      topMat = new THREE.MeshLambertMaterial({ map: this.waterTex, transparent: true, opacity: 0.85 });
-      sideMat = new THREE.MeshLambertMaterial({ map: this.waterTex });
-    } else if (tile.terrain === 'wood') {
-      topMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
-      sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
-    } else {
-      topMat = new THREE.MeshLambertMaterial({ map: this.grassTopTex });
-      sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
-    }
-
-    const materials = [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
     const mesh = new THREE.Mesh(geom, materials);
     mesh.position.set(tile.x, height / 2, tile.z);
     mesh.castShadow = true;
@@ -238,6 +273,7 @@ export class TacticsScene {
 
     this.scene.add(mesh);
     this.tileMeshes.set(this.grid.key(tile.x, tile.z), mesh);
+    this.tileMeshList = Array.from(this.tileMeshes.values());
 
     this.setCursor(x, z);
   }
@@ -248,31 +284,8 @@ export class TacticsScene {
     for (const t of tiles) {
       const height = Math.max(0.2, t.height);
       const geom = new THREE.BoxGeometry(1, height, 1);
+      const materials = this.getTileMaterials(t.terrain);
 
-      let topMat: THREE.Material;
-      let sideMat: THREE.Material;
-
-      if (t.terrain === 'stone') {
-        topMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
-        sideMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
-      } else if (t.terrain === 'parapet') {
-        topMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
-        sideMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
-      } else if (t.terrain === 'swamp') {
-        topMat = new THREE.MeshLambertMaterial({ map: this.swampTex, transparent: true, opacity: 0.9 });
-        sideMat = new THREE.MeshLambertMaterial({ map: this.swampTex });
-      } else if (t.terrain === 'water') {
-        topMat = new THREE.MeshLambertMaterial({ map: this.waterTex, transparent: true, opacity: 0.85 });
-        sideMat = new THREE.MeshLambertMaterial({ map: this.waterTex });
-      } else if (t.terrain === 'wood') {
-        topMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
-        sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
-      } else {
-        topMat = new THREE.MeshLambertMaterial({ map: this.grassTopTex });
-        sideMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
-      }
-
-      const materials = [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
       const mesh = new THREE.Mesh(geom, materials);
       mesh.position.set(t.x, height / 2, t.z);
       mesh.castShadow = true;
@@ -282,6 +295,8 @@ export class TacticsScene {
       this.scene.add(mesh);
       this.tileMeshes.set(this.grid.key(t.x, t.z), mesh);
     }
+
+    this.tileMeshList = Array.from(this.tileMeshes.values());
   }
 
   private buildCursor(): THREE.Group {
@@ -397,7 +412,7 @@ export class TacticsScene {
   }
 
   public updateUnits(units: Unit[]): void {
-    const time = Date.now() * 0.0035;
+    this.currentUnits = [...units];
 
     for (const unit of units) {
       if (unit.isDead) {
@@ -427,6 +442,34 @@ export class TacticsScene {
         this.scene.add(spriteMesh);
         this.unitSpritePlanes.set(unit.id, spriteMesh);
       }
+
+      // Update Overhead Mini HP Bar stat fills
+      let barEl = this.overheadHpElements.get(unit.id);
+      if (!barEl) {
+        barEl = document.createElement('div');
+        barEl.className = `unit-overhead-hp ${unit.team}`;
+        barEl.innerHTML = `
+          <div class="overhead-hp-fill" style="width: 100%;"></div>
+          <div class="overhead-ct-fill" style="width: 0%;"></div>
+        `;
+        this.floatingTextContainer.appendChild(barEl);
+        this.overheadHpElements.set(unit.id, barEl);
+      }
+
+      const hpFill = barEl.querySelector('.overhead-hp-fill') as HTMLElement;
+      const ctFill = barEl.querySelector('.overhead-ct-fill') as HTMLElement;
+      if (hpFill) hpFill.style.width = `${Math.max(0, (unit.currentHp / unit.maxHp) * 100)}%`;
+      if (ctFill) ctFill.style.width = `${Math.min(100, unit.ct)}%`;
+    }
+  }
+
+  private animateUnits(now: number): void {
+    const time = now * 0.0035;
+
+    for (const unit of this.currentUnits) {
+      if (unit.isDead) continue;
+      const spriteMesh = this.unitSpritePlanes.get(unit.id);
+      if (!spriteMesh) continue;
 
       const height = this.grid.getHeight(unit.x, unit.z);
       const bob = Math.sin(time + unit.x * 2 + unit.z) * 0.035;
@@ -458,40 +501,29 @@ export class TacticsScene {
       const relativeFacing = this.calculateRelativeFacing(unit.facing);
       const isEnemy = unit.team === 'enemy';
       const tex = createUnitSpriteTexture(unit.jobId, relativeFacing, isEnemy);
-      (spriteMesh.material as THREE.MeshBasicMaterial).map = tex;
-      (spriteMesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
+      const mat = spriteMesh.material as THREE.MeshBasicMaterial;
+      if (mat.map !== tex) {
+        mat.map = tex;
+        mat.needsUpdate = true;
+      }
 
       spriteMesh.rotation.y = this.currentRotationAngle;
 
       // Update Overhead Mini HP Bar in 3D projection
-      this.updateOverheadHpBar(unit, spriteMesh.position);
+      this.updateOverheadHpBarPosition(unit.id, spriteMesh.position);
     }
   }
 
-  private updateOverheadHpBar(unit: Unit, worldPos: THREE.Vector3): void {
-    let barEl = this.overheadHpElements.get(unit.id);
-    if (!barEl) {
-      barEl = document.createElement('div');
-      barEl.className = `unit-overhead-hp ${unit.team}`;
-      barEl.innerHTML = `
-        <div class="overhead-hp-fill" style="width: 100%;"></div>
-        <div class="overhead-ct-fill" style="width: 0%;"></div>
-      `;
-      this.floatingTextContainer.appendChild(barEl);
-      this.overheadHpElements.set(unit.id, barEl);
-    }
+  private updateOverheadHpBarPosition(unitId: string, worldPos: THREE.Vector3): void {
+    const barEl = this.overheadHpElements.get(unitId);
+    if (!barEl) return;
 
-    const hpFill = barEl.querySelector('.overhead-hp-fill') as HTMLElement;
-    const ctFill = barEl.querySelector('.overhead-ct-fill') as HTMLElement;
-    if (hpFill) hpFill.style.width = `${Math.max(0, (unit.currentHp / unit.maxHp) * 100)}%`;
-    if (ctFill) ctFill.style.width = `${Math.min(100, unit.ct)}%`;
+    // Project 3D pos to screen with pooled vector
+    this.tempScreenPos.set(worldPos.x, worldPos.y + 0.72, worldPos.z);
+    this.tempScreenPos.project(this.camera);
 
-    // Project 3D pos to screen
-    const screenPos = new THREE.Vector3(worldPos.x, worldPos.y + 0.72, worldPos.z);
-    screenPos.project(this.camera);
-
-    const x = ((screenPos.x + 1) * window.innerWidth) / 2;
-    const y = ((-screenPos.y + 1) * window.innerHeight) / 2;
+    const x = ((this.tempScreenPos.x + 1) * window.innerWidth) / 2;
+    const y = ((-this.tempScreenPos.y + 1) * window.innerHeight) / 2;
 
     barEl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
   }
@@ -508,20 +540,11 @@ export class TacticsScene {
 
   public setHighlights(tiles: { x: number; z: number }[], color: number = 0x3b82f6): void {
     this.clearHighlights();
+    const mat = color === 0xef4444 ? this.attackHighlightMat : this.moveHighlightMat;
 
     for (const t of tiles) {
       const height = this.grid.getHeight(t.x, t.z);
-      const geom = new THREE.PlaneGeometry(0.95, 0.95);
-      geom.rotateX(-Math.PI / 2);
-
-      const mat = new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0.55,
-        depthWrite: false
-      });
-
-      const mesh = new THREE.Mesh(geom, mat);
+      const mesh = new THREE.Mesh(this.sharedHighlightGeom, mat);
       mesh.position.set(t.x, height + 0.02, t.z);
       this.highlightGroup.add(mesh);
     }
@@ -529,9 +552,7 @@ export class TacticsScene {
 
   public clearHighlights(): void {
     while (this.highlightGroup.children.length > 0) {
-      const child = this.highlightGroup.children[0] as THREE.Mesh;
-      if (child.geometry) child.geometry.dispose();
-      this.highlightGroup.remove(child);
+      this.highlightGroup.remove(this.highlightGroup.children[0]);
     }
   }
 
@@ -612,8 +633,7 @@ export class TacticsScene {
     this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    const meshes = Array.from(this.tileMeshes.values());
-    const intersects = this.raycaster.intersectObjects(meshes);
+    const intersects = this.raycaster.intersectObjects(this.tileMeshList);
 
     if (intersects.length > 0) {
       const tileData = intersects[0].object.userData.tile as TileData;
@@ -639,7 +659,6 @@ export class TacticsScene {
 
   private updateFloatingNumbers(): void {
     const toRemove: number[] = [];
-    const screenPos = new THREE.Vector3();
 
     for (let i = 0; i < this.floatingTexts.length; i++) {
       const ft = this.floatingTexts[i];
@@ -647,11 +666,11 @@ export class TacticsScene {
 
       ft.position.y += 0.018;
 
-      screenPos.copy(ft.position);
-      screenPos.project(this.camera);
+      this.tempScreenPos.copy(ft.position);
+      this.tempScreenPos.project(this.camera);
 
-      const x = ((screenPos.x + 1) * window.innerWidth) / 2;
-      const y = ((-screenPos.y + 1) * window.innerHeight) / 2;
+      const x = ((this.tempScreenPos.x + 1) * window.innerWidth) / 2;
+      const y = ((-this.tempScreenPos.y + 1) * window.innerHeight) / 2;
 
       ft.element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
       ft.element.style.opacity = `${Math.max(0, 1 - ft.lifetime / ft.maxLifetime)}`;
@@ -678,6 +697,7 @@ export class TacticsScene {
     this.lastRenderTime = now;
 
     this.updateCameraPosition();
+    this.animateUnits(now);
     this.updateFloatingNumbers();
     this.vfx.update(delta);
 

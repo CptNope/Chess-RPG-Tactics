@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.1] - 2026-11-18
+
+### Optimized
+- **Procedural Canvas Texture Caching (`src/graphics/PixelTextures.ts`)**:
+  - Implemented `unitSpriteTextureCache` to memoize 32x32 character sprite textures across all 64 job/facing/faction permutations, eliminating recurring canvas rasterization and GPU VRAM re-uploads.
+- **Three.js Material & Geometry Pooling (`src/renderer/TacticsScene.ts`)**:
+  - Consolidated 240+ duplicate `MeshLambertMaterial` instances into shared static material singletons for stone, parapet, swamp, water, dirt, and grass.
+  - Reused `sharedHighlightGeom` and static blue/red highlight materials across tactical range overlays without per-turn allocation or disposal.
+  - Reused `tempScreenPos` across 3D floating damage text and overhead HP bar projections.
+- **Raycasting Performance**:
+  - Replaced per-mouse-move `Array.from(tileMeshes.values())` heap allocations with a pre-cached `tileMeshList` updated only on map mutations.
+- **60 FPS Decoupled Animation Loop**:
+  - Moved character sprite idle breathing bob, attack lunges, damage recoils, and overhead HP bar tracking into `TacticsScene.render()`.
+  - Units now interpolate smoothly at a full 60 FPS instead of ticking only on discrete state events.
+- **Monotonic BFS Pathfinding (`src/core/Grid.ts`)**:
+  - Removed redundant $O(N \log N)$ `queue.sort` in `getReachableTiles()`, leveraging natural FIFO queue monotonicity in unweighted $1$-cost movement graphs.
+- **DOM Paint Throttling (`src/main.ts`)**:
+  - Added `lastHoveredKey` guard in `gameLoop()`, eliminating 60 layout writes per second when cursor hovers over a stationary tile.
+- **Rollup Code Splitting (`vite.config.ts`)**:
+  - Isolated Three.js into a dedicated vendor chunk (`assets/three-[hash].js`), shrinking the main application chunk from $570\text{ kB}$ to **$94.5\text{ kB}$** ($26.7\text{ kB}$ gzip).
+- **Architecture Documentation**:
+  - Added ADR 0013: Engine Performance, Object Pooling, and Animation Loop Optimization.
+
+---
+
 ## [0.5.0] - 2026-11-18
 
 ### Added

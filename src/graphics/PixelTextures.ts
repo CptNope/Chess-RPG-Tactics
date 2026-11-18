@@ -143,9 +143,16 @@ export function createSwampTexture(): THREE.CanvasTexture {
   });
 }
 
+// Unit Sprite Texture Cache to avoid redundant canvas & GPU texture allocations
+const unitSpriteTextureCache = new Map<string, THREE.CanvasTexture>();
+
 // Procedural 32x32 Character Pixel Art Sprites
 export function createUnitSpriteTexture(jobClass: string, facing: FacingDirection, isEnemy: boolean = false): THREE.CanvasTexture {
-  return createPixelTexture(32, 32, (ctx) => {
+  const cacheKey = `${jobClass}_${facing}_${isEnemy ? 'e' : 'p'}`;
+  const cached = unitSpriteTextureCache.get(cacheKey);
+  if (cached) return cached;
+
+  const texture = createPixelTexture(32, 32, (ctx) => {
     ctx.clearRect(0, 0, 32, 32);
 
     const skin = '#fcd34d';
@@ -410,4 +417,7 @@ export function createUnitSpriteTexture(jobClass: string, facing: FacingDirectio
       ctx.restore();
     }
   });
+
+  unitSpriteTextureCache.set(cacheKey, texture);
+  return texture;
 }

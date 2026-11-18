@@ -700,14 +700,20 @@ class TacticsGame {
     }
   }
 
+  private lastHoveredKey: string = '';
+
   private gameLoop(): void {
     requestAnimationFrame(() => this.gameLoop());
 
     if (this.scene && this.scene.hoveredTile) {
       const { x, z } = this.scene.hoveredTile;
-      const tile = this.grid.getTile(x, z);
-      if (tile) {
-        this.ui.updateTileInfo(x, z, tile.height, tile.terrain);
+      const key = `${x},${z}`;
+      if (key !== this.lastHoveredKey) {
+        this.lastHoveredKey = key;
+        const tile = this.grid.getTile(x, z);
+        if (tile) {
+          this.ui.updateTileInfo(x, z, tile.height, tile.terrain);
+        }
       }
     }
 

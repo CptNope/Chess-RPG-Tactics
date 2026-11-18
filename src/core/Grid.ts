@@ -67,8 +67,7 @@ export class BattleGrid {
     ];
 
     while (queue.length > 0) {
-      // Sort queue by lowest cost
-      queue.sort((a, b) => a.cost - b.cost);
+      // Monotonic BFS FIFO queue: order is inherently non-decreasing cost
       const current = queue.shift()!;
 
       // Add to reachable if not the origin and not occupied by another unit
