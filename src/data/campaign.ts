@@ -66,7 +66,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     ],
     choices: [
       {
-        text: 'Ascend to the summit for the final battle at Night Battlement!',
+        text: 'Ascend to the Zodiac Summit for the final battle!',
         nextChapterId: 'chapter_3',
         rewardText: 'Armory: Hermes Slippers & Windslayer Bow',
         rewardItemIds: ['hermes_shoes', 'sniper_bow']

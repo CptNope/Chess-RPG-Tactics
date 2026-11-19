@@ -46,6 +46,61 @@ All edges respect iPhone/Android safe areas (`viewport-fit=cover`, `env(safe-are
 
 ---
 
+## 1c. How gestures are recognised
+
+`TacticsScene.setupInteractions()` tracks every active pointer itself, so mouse, touch and pen share one state machine:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Hover: mouse / pen moves (no button)
+    Hover --> Idle
+    Idle --> Pressed: pointerdown
+    Pressed --> Tap: released < 10px (touch) / 6px
+    Tap --> Idle: raycast tile at release point → onTileTap
+    Pressed --> Drag: moved past threshold
+    Drag --> Idle: release (pan only, never selects)
+    Pressed --> Cancel: pen eraser / barrel button
+    Cancel --> Idle: onCancelGesture
+    Pressed --> TwoFinger: second pointer down
+    TwoFinger --> TwoFinger: pinch → zoom · midpoint → pan · twist 50° → rotate 90°
+    TwoFinger --> Cancel: lifted within 350ms without moving
+    TwoFinger --> Idle: all pointers up
+    Pressed --> Idle: pointercancel / lost capture / blur
+```
+
+## 1d. Controller layout
+
+```mermaid
+flowchart LR
+    subgraph Left["Left side"]
+        LB["LB · rotate ⟲"]
+        LT["LT · zoom out"]
+        LS["Left stick · cursor / menus"]
+        DP["D-pad · cursor / menus"]
+        VIEW["View/Back · Controls"]
+    end
+    subgraph Right["Right side"]
+        RB["RB · rotate ⟳"]
+        RT["RT · zoom in"]
+        Y["Y / △ · Team"]
+        X["X / □ · Commands"]
+        B["B / ○ · Back"]
+        A["A / ✕ · Select"]
+        RS["Right stick · pan<br/>click · re-center"]
+        START["Start · Menu"]
+    end
+```
+
+| Constant (`GamepadInput.ts`) | Value | Meaning |
+| :--- | :---: | :--- |
+| `DEADZONE` | 0.5 | Stick travel needed to count as a direction |
+| `PAN_DEADZONE` | 0.18 | Right-stick travel before panning |
+| `REPEAT_DELAY` | 320ms | Hold before a direction starts repeating |
+| `REPEAT_RATE` | 110ms | Repeat interval while held |
+
+---
+
 ## 2. Orthographic Isometric Camera Mathematics
 
 ```mermaid

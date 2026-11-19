@@ -1,150 +1,141 @@
-# Job & Ability System Specification
+# Job & Ability System
 
-This document details the multi-class progression, 5-slot ability equipping model, and job roster for **Chess RPG Tactics**.
+How units grow: jobs, the five ability slots, JP, EXP, levels and gear. For the full numbers (every job, ability and item), see the generated **[Content Reference](CONTENT_REFERENCE.md)**.
+
+**Code:** `src/core/JobSystem.ts` · `src/data/jobs.ts` · `src/data/items.ts` · `src/ui/UIManager.ts` (Team screen)
 
 ---
 
-## 1. The 5-Slot Ability Architecture
+## 1. The five ability slots
 
-Every character customizes their battlefield identity through five distinct ability slots, adhering to the classic *Final Fantasy Tactics* design pattern:
+Every unit builds its battlefield identity from five slots, after *Final Fantasy Tactics*.
 
 ```mermaid
 flowchart LR
-    Unit["Character Unit"] --> P["1. Primary Action<br/>(Current Job Skillset)"]
-    Unit --> S["2. Secondary Action<br/>(Equipped Unlocked Job)"]
-    Unit --> R["3. Reaction Ability<br/>(Triggered when attacked)"]
-    Unit --> Sup["4. Support Ability<br/>(Passive stat / rule modifier)"]
-    Unit --> M["5. Movement Ability<br/>(Enhanced mobility / jump)"]
+    Unit(["Unit"]) --> P["① Primary action<br/><i>current job's skillset</i>"]
+    Unit --> S["② Secondary action<br/><i>any other job's skillset</i>"]
+    Unit --> R["③ Reaction<br/><i>fires when hit</i>"]
+    Unit --> Sup["④ Support<br/><i>always-on rule change</i>"]
+    Unit --> M["⑤ Movement<br/><i>how it crosses terrain</i>"]
+    P & S --> Menu["ACT menu"]
+    R --> Combat["CombatEngine.checkReaction"]
+    Sup --> Formula["Damage / JP formulas"]
+    M --> Path["BattleGrid.getReachableTiles"]
 ```
 
-| Slot # | Category | Nature | Example |
+| Slot | Comes from | When it matters | Examples |
 | :---: | :--- | :--- | :--- |
-| **1** | **Primary Action** | Fixed to current active job; gives access to all learned action commands in this class. | *Knight's "Arts of War"* |
-| **2** | **Secondary Action** | Freely chosen from any other unlocked job to create hybrid builds. | *Black Mage's "Black Magic" equipped on a Knight* |
-| **3** | **Reaction Ability** | Passive trigger that automatically activates upon sustaining damage or being targeted. | *Auto-Potion*, *Counter Tackle*, *Weapon Guard* |
-| **4** | **Support Ability** | Always-active passive modifier that alters core rules, equipment rules, or damage output. | *Equip Heavy Armor*, *Arcane Strength*, *JP Boost* |
-| **5** | **Movement Ability** | Directly modifies the unit's spatial navigation across the 3D elevation grid. | *Move +1*, *Jump +1*, *Regen Walk* |
+| ① Primary | The unit's current job (fixed) | ACT menu | Knight → Rend Armor, Shield Bash |
+| ② Secondary | Any job, cycled in **Team → Jobs** | ACT menu, alongside primary | Black Magic on a Knight |
+| ③ Reaction | Any learned reaction | After taking a hit | Counter Tackle, Auto-Potion, Earthen Ward |
+| ④ Support | Any learned support | Every damage/JP calculation | Arcane Strength, Attack Boost, JP Boost |
+| ⑤ Movement | Any learned movement ability | Pathfinding and move range | Move +1, Teleport, Water Walk |
+
+Only **learned** abilities can be equipped. Click (or press Enter / A on) a Reaction, Support or Movement slot to cycle through every passive the unit has learned from *any* job, plus None. Learning a passive equips it at once.
 
 ---
 
-## 2. Job Progression Tree
+## 2. Jobs at a glance
 
 ```mermaid
-graph TD
-    Squire["Squire<br/>(Tier 1 Vanguard)"]
-    Chemist["Scholar / Chemist<br/>(Tier 1 Support)"]
+quadrantChart
+    title Job identity (multipliers)
+    x-axis "Magic-leaning" --> "Attack-leaning"
+    y-axis "Slow" --> "Fast"
+    quadrant-1 "Fast strikers"
+    quadrant-2 "Fast casters"
+    quadrant-3 "Steady casters"
+    quadrant-4 "Heavy hitters"
+    Squire: [0.6, 0.45]
+    Knight: [0.85, 0.3]
+    Archer: [0.68, 0.6]
+    Black Mage: [0.1, 0.3]
+    White Mage: [0.15, 0.45]
+    Dragoon: [0.85, 0.45]
+    Ninja: [0.75, 0.95]
+    Geomancer: [0.45, 0.45]
+    Time Weaver: [0.15, 0.6]
+```
 
-    Squire -->|"Level 2"| Knight["Knight<br/>(Tier 2 Heavy Vanguard)"]
-    Squire -->|"Level 2"| Archer["Archer<br/>(Tier 2 Marksman)"]
-    Chemist -->|"Level 2"| BlackMage["Black Mage<br/>(Tier 2 Offensive Magic)"]
-    Chemist -->|"Level 2"| WhiteMage["White Mage<br/>(Tier 2 Holy Healer)"]
+| Job | Plays like | Signature tools |
+| :--- | :--- | :--- |
+| **Squire** | Flexible starter | Throw Stone (range 4), Focus, Counter Tackle, Move +1 |
+| **Knight** | Front-line wall | Rend Armor, Shield Bash, Weapon Guard (parry) |
+| **Archer** | Long-range damage | Aim +2, Leg Shot (immobilize), Speed Save |
+| **Black Mage** | Area damage | Fire / Blizzard / Thunder (Area 1), Poison Cloud, Arcane Strength |
+| **White Mage** | Healer | Cure, Protect, Auto-Potion, Regen Walk |
+| **Dragoon** | Mobile bruiser | Dragon Plunge, Dragon Breath (Area 1), Dragonheart, Ignore Elevation |
+| **Ninja** | Fastest unit | Throw Shuriken, Reflexes, Dual Wield, Water Walk |
+| **Geomancer** | Terrain caster | Elemental (changes with the ground), Earth Slash, Earthen Ward |
+| **Time Weaver** | Tempo control | Haste, Slow, Gravity, Critical Quick, Teleport |
 
-    Knight -->|"Level 3"| Dragoon["Dragoon / Lancer<br/>(Tier 3 High Jump & Spears)"]
-    Archer -->|"Level 3"| Ninja["Ninja / Thief<br/>(Tier 3 Dual Wield & High Speed)"]
-    BlackMage -->|"Level 3"| TimeMage["Time Weaver<br/>(Tier 3 Haste & Gravity)"]
-    WhiteMage -->|"Level 3"| Summoner["Summoner / Invoker<br/>(Tier 3 Battlefield Spirits)"]
+### Prerequisites (defined, not yet enforced)
 
-    Knight -.->|"Mastery"| Warmage["Warmage (Hybrid)"]
-    BlackMage -.->|"Mastery"| Warmage
+`src/data/jobs.ts` declares which job unlocks which, but **the Team screen currently lets any unit switch to any job**. Enforcing this tree is on the [roadmap](ROADMAP.md).
+
+```mermaid
+flowchart LR
+    Squire --> |Lv 2| Knight
+    Squire --> |Lv 2| Archer
+    Knight --> |Lv 2| Dragoon
+    Archer --> |Lv 2| Ninja
+    BlackMage["Black Mage"] --> |Lv 2| TimeWeaver["Time Weaver"]
+    WhiteMage["White Mage"]
+    Geomancer
 ```
 
 ---
 
-## 3. Job Class Database & Stat Multipliers
+## 3. Growth: EXP, levels and JP
 
-| Job | Role | Move | Jump | HP Mult | MP Mult | Atk Mult | Mag Mult | Spd Mult |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Squire** | Balanced Vanguard | 4 | 2 | $1.00\times$ | $0.80\times$ | $1.00\times$ | $0.80\times$ | $1.00\times$ |
-| **Knight** | Armored Vanguard | 3 | 2 | $1.30\times$ | $0.70\times$ | $1.25\times$ | $0.70\times$ | $0.95\times$ |
-| **Archer** | Ranged Marksman | 3 | 3 | $0.95\times$ | $0.80\times$ | $1.10\times$ | $0.80\times$ | $1.05\times$ |
-| **Black Mage**| Elemental Blaster | 3 | 2 | $0.80\times$ | $1.40\times$ | $0.70\times$ | $1.35\times$ | $0.95\times$ |
-| **White Mage**| Holy Healer | 3 | 2 | $0.85\times$ | $1.30\times$ | $0.70\times$ | $1.25\times$ | $1.00\times$ |
-| **Geomancer** | Terramancer | 4 | 3 | $1.05\times$ | $1.00\times$ | $1.05\times$ | $1.15\times$ | $1.00\times$ |
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Acting
+    Acting --> Acting: action → +10 EXP, +24 JP<br/>KO → +20 EXP
+    Acting --> Spoils: battle won or lost
+    Spoils --> LevelUp: EXP ≥ 100
+    LevelUp --> Spoils: +18 HP, +5 MP,<br/>+1.8 ATK, +1.6 MAG
+    Spoils --> Team: spend JP on abilities,<br/>equip new gear
+    Team --> Acting: next battle
+```
+
+| Source | EXP | JP (current job) |
+| :--- | ---: | ---: |
+| Any action | 10 | 24 (36 with JP Boost) |
+| Action that scores a KO | +20 | — |
+| Battle won, unit survived | 40 + 10/KO | 60 |
+| Battle won, unit fell | 15 + 10/KO | 20 |
+| Battle lost | — (EXP/JP earned during the fight is kept) | — |
+
+* **100 EXP = 1 level.** Speed rises by 1 every third level (`8 + ⌊level / 3⌋`).
+* **JP belongs to a job.** Points earned as a Knight buy Knight abilities only.
+* **Persistence:** levels, JP, learned abilities, equipped slots and gear carry over between chapters, into New Game+ and into the Trials.
 
 ---
 
-## 4. Ability Matrix & JP Costs
+## 4. Effective stats
 
-### Squire (Skillset: *Fundaments*)
-* `Attack` (Action, Free, 1 Range, 1.5h): Basic weapon strike.
-* `Throw Stone` (Action, 0 MP, 50 JP, 4 Range, 2.0h): Hurls a loose rock at long distance for chipping damage.
-* `Focus` (Action, 0 MP, 100 JP, Self): Channels physical focus to permanently boost Attack for the battle.
-* `Counter Tackle` (Reaction, 120 JP): Retaliates with shoulder check when struck by adjacent melee attacks.
-* `JP Boost` (Support, 150 JP): Grants $+50\%$ additional Job Points from all battlefield actions.
-* `Move +1` (Movement, 200 JP): Permanently increases unit movement radius by $+1$ tile.
+```mermaid
+flowchart LR
+    Base["Base stats<br/>(grow with level)"] --> Mult["× job multipliers"]
+    Mult --> Gear["+ gear stats"]
+    Gear --> Status["× battle modifiers<br/>Focus 1.25 · Enrage 1.2<br/>Haste 1.5 · Slow 0.67"]
+    Status --> Final["ATK / MAG / SPD<br/>used by CombatEngine"]
+```
 
-### Knight (Skillset: *Arts of War*)
-* `Rend Armor` (Action, 5 MP, 150 JP, 1 Range, 1.5h): Shatters foe armor plating, permanently reducing defense.
-* `Shield Bash` (Action, 8 MP, 180 JP, 1 Range, 1.5h): Bludgeons target with heavy shield, dealing physical shock.
-* `Weapon Guard` (Reaction, 200 JP): Grants chance to parry incoming front physical blows with equipped weapon.
-* `Equip Heavy Armor` (Support, 250 JP): Allows non-knight classes to equip plate armor and heavy helms.
+`JobSystem.getAttackPower()` and `getMagicPower()` are the only places that combine these. Battle modifiers never write to `baseStats`, so nothing stacks across battles.
 
-### Archer (Skillset: *Aim*)
-* `Aim +2` (Action, 0 MP, 100 JP, 5 Range, 3.0h): Takes calculated aim for $1.4\times$ damage puncture.
-* `Leg Shot` (Action, 6 MP, 160 JP, 4 Range, 2.5h): Targets tendon to immobilize enemy movement.
-* `Speed Save` (Reaction, 200 JP): Increases unit Speed stat whenever sustaining damage in combat.
-* `Jump +1` (Movement, 180 JP): Grants $+1$ Jump height, allowing scaling higher cliffs and obstacles.
+---
 
-### Black Mage (Skillset: *Black Magic*)
-* `Fire` (Action, 10 MP, 80 JP, 4 Range, 2.0h, AOE 1): Engulfs target tile and surrounding foes in searing fire.
-* `Blizzard` (Action, 10 MP, 80 JP, 4 Range, 2.0h, AOE 1): Summons frost shards to strike enemy formations.
-* `Thunder` (Action, 10 MP, 80 JP, 4 Range, 3.5h, AOE 1): Calls down lightning with high vertical tolerance.
-* `Arcane Strength` (Support, 250 JP): Amplifies all magical ability damage output by $+25\%$.
+## 5. Gear and the armory
 
-### White Mage (Skillset: *White Magic*)
-* `Cure` (Action, 8 MP, 70 JP, 4 Range, 2.0h): Channels restorative holy light, recovering target ally HP.
-* `Protect` (Action, 12 MP, 120 JP, 3 Range, 2.0h): Erects barrier, reducing physical damage received by $30\%$.
-* `Auto-Potion` (Reaction, 200 JP): Automatically drinks a restorative potion when taking direct damage.
-* `Regen Walk` (Movement, 220 JP): Restores $10\%$ max HP on every movement step.
+| Slot | Affects | Notes |
+| :--- | :--- | :--- |
+| Weapon | ATK / MAG, **range** | Spears reach 2, bows 5–6; range replaces Attack's range of 1 |
+| Shield | HP, evasion | Evasion above 5 lowers front/flank physical hit chance |
+| Head | HP, MP, evasion | |
+| Body | HP, ATK | |
+| Accessory | Anything | Speed, Move, Jump, MP… |
 
-
-### Dragoon (Skillset: *Dragon Arts*)
-* `Dragon Plunge` (Action, 6 MP, 120 JP, 3 Range, 4.0h): Leaps high into skies and crashes down with kinetic shock ($1.6\times$ damage).
-* `Dragon Breath` (Action, 14 MP, 180 JP, 2 Range, 2.0h, AOE 1, Fire): Spews dragon fire across enemies.
-* `Dragonheart` (Reaction, 250 JP): Grants chance to survive lethal blow and revive.
-* `Ignore Elevation` (Movement, 350 JP): Scale any cliff wall regardless of elevation height.
-
-### Ninja (Skillset: *Ninjutsu*)
-* `Throw Shuriken` (Action, 0 MP, 100 JP, 4 Range, 2.5h): Hurls sharp stars across distance.
-* `Reflexes / Vanish` (Reaction, 220 JP): Melts into shadows to gain $+40\%$ evasion against attacks.
-* `Dual Wield` (Support, 350 JP): Equips weapons in both hands; basic attacks strike twice in rapid succession!
-* `Water Walk` (Movement, 150 JP): Tread freely over water and deep toxic bogs without movement penalty.
-
-### Time Weaver (Skillset: *Time Magic*)
-* `Haste` (Action, 12 MP, 120 JP, 4 Range, 2.0h): Accelerates time flux, boosting Speed by $+50\%$ for 3 turns.
-* `Slow` (Action, 12 MP, 120 JP, 4 Range, 2.0h): Slows target speed by $33\%$ for 3 turns.
-* `Gravity` (Action, 16 MP, 180 JP, 4 Range, 3.0h): Bends gravitational field, stripping $25\%$ of target's current HP directly.
-* `Critical Quick` (Reaction, 220 JP): When struck down to 35% HP or less, CT is charged to 100 so the unit acts next.
-* `Teleport` (Movement, 350 JP): Blinks to any open tile within Move + 1, ignoring cliffs and walls.
-
-### Geomancer (Skillset: *Geomancy*) — new in 0.7.0
-Bria, a Geomancer, joins the squad at the start of Chapter II on either branch.
-* `Elemental` (Action, free, 3 Range, 2.5h): Becomes a different spell depending on the caster's tile:
-
-  | Caster stands on | Spell | Effect |
-  | :--- | :--- | :--- |
-  | Grass | Hell Ivy | Dark damage + Immobilize |
-  | Stone / Parapet | Rockslide | Heavy physical damage |
-  | Dirt | Sandstorm | Physical damage + Slow |
-  | Water | Torrent | Ice damage |
-  | Swamp | Quicksand | Dark damage + Poison |
-  | Wood | Wildfire | Fire damage |
-* `Earth Slash` (Action, 8 MP, 160 JP, 2 Range, Area 1): Shockwave hitting the target and adjacent foes.
-* `Earthen Ward` (Reaction, 180 JP): Hit while on stone, dirt or parapet: gain Protect.
-* `Attack Boost` (Support, 220 JP): Physical damage +20%.
-* `Mountain Stride` (Movement, 200 JP): Jump +2.
-
-### Black Mage additions
-* `Arcane Retaliation` (Reaction, 200 JP): 50% chance to strike back with raw magic when hit.
-
-## 5. Equipping Passives (0.7.0)
-
-In **★ Team → Jobs**, click the Reaction, Support or Movement slot to cycle through every passive the unit has learned from *any* job (plus None). Learning a passive still equips it immediately.
-
-## 6. Levels, EXP and the Armory (0.7.0)
-
-* Every action earns 10 EXP (+20 if it scores a KO) and 24 JP for the current job (+50% with JP Boost).
-* After a victory, survivors earn 40 EXP / 60 JP, fallen units 15 EXP / 20 JP, plus 10 EXP per KO.
-* 100 EXP = 1 level: +18 HP, +5 MP, +1.8 ATK, +1.6 MAG, and +1 Speed every third level.
-* The squad, its levels, jobs, abilities and gear now **carry over** between chapters (before 0.7.0 the squad was rebuilt from scratch each chapter).
-* The gear tab lists only items in the squad's **armory**. Chapter victories, branch choices and Trials drops add new items.
+The gear tab lists only items in the squad's **armory**. You start with 13 items. Chapter wins, branch choices and Trials drops add more ([where each item comes from](CONTENT_REFERENCE.md#items)). Any number of units can equip the same item.

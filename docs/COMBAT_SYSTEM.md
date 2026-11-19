@@ -142,3 +142,39 @@ Boss units have $+60\%$ HP and $+15\%$ ATK/MAG. The first time a boss drops to $
 | Earthen Ward (`geo_earthen_ward`) | Geomancer | Hit while on stone/dirt/parapet: gain Protect |
 
 Before 0.7.0, Counter Tackle, Arcane Retaliation and Critical Quick were checked against ability ids that did not exist, so they never fired. A unit test now fails if engine code references an unknown ability id.
+
+---
+
+## 8. Resolving one hit
+
+```mermaid
+flowchart TD
+    F(["getForecast"]) --> H["Hit % = 80<br/>+15 flank / +30 back<br/>+5 higher / −10 lower<br/>− (evasion − 5) for physical, unless back<br/>− 35 vs Reflexes<br/>clamped 10–100"]
+    H --> D{"Ability kind"}
+    D -- "heal (power < 0)" --> Heal["MAG × |power| × 3 → 100% hit"]
+    D -- "pure buff / debuff" --> Stat["0 damage, status only"]
+    D -- Gravity --> Grav["25% current HP (12% vs boss)"]
+    D -- physical --> Phys["ATK × power × 5<br/>× support × Protect<br/>× facing × height"]
+    D -- spell --> Mag["MAG × power × 3<br/>× Arcane Strength<br/>× 0.6 on splash ring"]
+    Heal & Stat & Grav & Phys & Mag --> X(["executeAttack"])
+    X --> P{"Front physical vs<br/>Weapon Guard? 30%"}
+    P -- parried --> Miss(["MISS + parry"])
+    P -- no --> R{"roll ≤ hit %"}
+    R -- no --> Miss2(["MISS"])
+    R -- yes --> S["Apply status"]
+    S --> C{"crit? 5% / 15% flank / 30% back"}
+    C --> Dmg["Damage (×1.5 on crit)"]
+    Dmg --> Re["Reaction · Dual Wield 2nd strike · boss enrage"]
+```
+
+| Facing | Hit bonus | Damage | Crit chance | Ignores evasion |
+| :--- | :---: | :---: | :---: | :---: |
+| Front | +0 | ×1.00 | 5% | — |
+| Flank | +15 | ×1.15 | 15% | — |
+| Back | +30 | ×1.30 | 30% | ✓ |
+
+| Height | Hit | Damage |
+| :--- | :---: | :---: |
+| Attacker higher | +5 | ×1.10 (physical) |
+| Level | — | — |
+| Attacker lower | −10 | — |

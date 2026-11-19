@@ -41,6 +41,9 @@ jobs:
       - name: Smoke-test the build output
         run: npm run test:build
 
+      - name: Check generated docs are current
+        run: npm run docs:check
+
       - name: Setup Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
