@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0] - 2026-11-19
+
+### Fixed
+- **GitHub Pages deploy**: the 2026-11-18 deploy failed with *"No artifacts named github-pages were found"* because `deploy-pages` ran in the same job, milliseconds after the upload. Build and deploy are now separate jobs (GitHub's recommended layout) with one automatic retry; actions updated off the deprecated Node 20 runtime.
+- **Out-of-range attacks**: clicking any unit opened the forecast, even across the map. Targeting now uses the same range/height rule as the red overlay.
+- **Reactions that never fired**: Counter Tackle, Arcane Retaliation and Critical Quick were checked against ability ids that did not exist. Arcane Retaliation and Critical Quick are now learnable.
+- **Gear did nothing**: weapon/gear ATK and MAG, job multipliers and evasion now affect damage and hit chance.
+- **Area spells hit one unit**: Fire, Blizzard, Thunder and Dragon Breath now hit every foe within 1 tile (60% on the ring).
+- **Enemy AI** could cast Haste/Protect on your units and never paid MP.
+- **Squad reset every chapter**: levels, JP, abilities and gear now carry over.
+- **Story rewards** ("Unlocked: Ring of Arcana!") were text only; they are now added to the armory.
+- **EXP never levelled anyone up.**
+- **Focus** permanently stacked +3 ATK; it is now a 4-turn +25% buff.
+- Dragonheart could save a unit every hit; now once per battle.
+- Defeat left a dead board; the campaign ended on a banner.
+- Leftover sprites from the previous battle stayed on the map; stale turn order/unit card showed during intros.
+- Camera toolbar covered the turn-order strip; tile info showed through dialogue; missing favicon (404).
+
+### Added
+- **Smarter enemy AI** (`src/core/EnemyAI.ts`): weighs every reachable tile, affordable ability and target; finishes wounded units, heals and buffs allies, uses area spells on clusters, prefers high ground.
+- **AUTO command** (button or `T`): let the AI play the active unit's turn.
+- **Geomancer job** and recruit **Bria** (joins in Chapter II): *Elemental* changes with the terrain underfoot (Hell Ivy, Rockslide, Sandstorm, Torrent, Quicksand, Wildfire), plus Earth Slash, Earthen Ward, Attack Boost, Mountain Stride.
+- **Zodiac Summit**: new final-battle map (terraced shrine, starlit pools, obelisks, rope bridge).
+- **Boss units** with nameplates, +60% HP and an **enrage** phase at half HP (Haste, +20% power).
+- **Spoils of War screen**: per-unit EXP/JP/KOs, level-ups and new gear.
+- **Armory**: the gear tab shows only owned items; 6 new items (Gaia Staff, Windslayer Bow, Zodiac Blade, Crystal Helm, Wyrmscale Mail, Zodiac Ribbon).
+- **Defeat screen** with Retry Battle / Load Save. **Epilogue** with New Game+ (keeps your squad) or…
+- **Trials of the Zodiac**: endless post-game floors, deterministic per floor, a Warden boss every 5th floor, a rare drop each clear, best floor recorded.
+- **Terrain movement costs**: water and swamp cost 2 Move; Water Walk, Teleport and Regen Walk now work, as does JP Boost.
+- Reaction / Support / Movement slots can be cycled through any learned passive; slots show names instead of ids.
+- Autosave at the start of each chapter and after each Trial.
+- **Tests**: 28 Vitest unit tests (`npm test`) for combat, reactions, AI, pathfinding, data integrity and Trials, run in CI.
+
+### Changed
+- Damage rebalanced: base HP 120 + 18/level; physical `ATK × Power × 5`; magic `MAG × Power × 3`; facing/height bonuses are physical-only.
+- Save format 0.7.0 (stores armory, mode and Trials floor). 0.6.x saves still load.
+
+---
+
 ## [0.5.1] - 2026-11-18
 
 ### Optimized

@@ -7,7 +7,15 @@ export interface GameSaveData {
   currentChapterId: string;
   units: Unit[];
   customMaps?: Record<string, MapData>;
+  /** Owned item ids (added in 0.7.0; older saves rebuild it from equipped gear). */
+  armory?: string[];
+  /** 'campaign' or 'trials' (added in 0.7.0). */
+  mode?: 'campaign' | 'trials';
+  trialsFloor?: number;
+  campaignCleared?: boolean;
 }
+
+const BEST_FLOOR_KEY = 'chess_rpg_tactics_best_trial_v1';
 
 const STORAGE_KEY = 'chess_rpg_tactics_save_v1';
 const CUSTOM_MAPS_KEY = 'chess_rpg_tactics_custom_maps_v1';
@@ -16,13 +24,18 @@ export class SaveManager {
   /**
    * Serializes current campaign and squad progress to localStorage.
    */
-  public static saveGame(chapterId: string, playerUnits: Unit[]): boolean {
+  public static saveGame(
+    chapterId: string,
+    playerUnits: Unit[],
+    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared'> = {}
+  ): boolean {
     try {
       const saveData: GameSaveData = {
-        version: '0.6.0',
+        version: '0.7.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
-        units: playerUnits
+        units: playerUnits,
+        ...extra
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
@@ -52,14 +65,41 @@ export class SaveManager {
    * Checks whether a save file exists.
    */
   public static hasSave(): boolean {
-    return localStorage.getItem(STORAGE_KEY) !== null;
+    try {
+      return localStorage.getItem(STORAGE_KEY) !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Highest Trials of the Zodiac floor ever cleared on this browser. */
+  public static getBestTrialFloor(): number {
+    try {
+      return parseInt(localStorage.getItem(BEST_FLOOR_KEY) || '0', 10) || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  public static recordTrialFloor(floor: number): boolean {
+    if (floor <= this.getBestTrialFloor()) return false;
+    try {
+      localStorage.setItem(BEST_FLOOR_KEY, String(floor));
+    } catch {
+      /* storage unavailable (private mode / embedded iframe) */
+    }
+    return true;
   }
 
   /**
    * Clears saved game from localStorage.
    */
   public static clearSave(): void {
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
   }
 
   /**

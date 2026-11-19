@@ -51,7 +51,7 @@ export const JOBS: Record<string, Job> = {
         name: 'Focus',
         jobId: 'squire',
         type: 'action',
-        description: 'Channel concentration to bolster Physical Attack for the battle.',
+        description: 'Channel concentration: physical damage +25% for 4 turns.',
         jpCost: 100,
         mpCost: 0,
         range: 0,
@@ -59,6 +59,7 @@ export const JOBS: Record<string, Job> = {
         aoe: 0,
         power: 0,
         element: 'physical',
+        appliesStatus: 'focus',
         isSelfOnly: true
       },
       {
@@ -333,6 +334,20 @@ export const JOBS: Record<string, Job> = {
         appliesStatus: 'poison'
       },
       {
+        id: 'bm_magic_counter',
+        name: 'Arcane Retaliation',
+        jobId: 'black_mage',
+        type: 'reaction',
+        description: 'When struck, lashes back at the attacker with a burst of raw magic.',
+        jpCost: 200,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'dark'
+      },
+      {
         id: 'bm_arcane_strength',
         name: 'Arcane Strength',
         jobId: 'black_mage',
@@ -577,6 +592,96 @@ export const JOBS: Record<string, Job> = {
     ]
   },
 
+  geomancer: {
+    id: 'geomancer',
+    name: 'Geomancer',
+    description: 'Terramancer who draws power from the ground underfoot. The same spell becomes fire, ice or venom depending on where they stand.',
+    role: 'Terramancer',
+    spriteClass: 'geomancer',
+    baseMove: 4,
+    baseJump: 3,
+    statMultipliers: {
+      hp: 1.05,
+      mp: 1.0,
+      attack: 1.05,
+      magic: 1.15,
+      speed: 1.0
+    },
+    abilities: [
+      {
+        id: 'geo_elemental',
+        name: 'Elemental',
+        jobId: 'geomancer',
+        type: 'action',
+        description: 'Channels the terrain you stand on: grass = Hell Ivy (immobilize), stone = Rockslide, dirt = Sandstorm (slow), water = Torrent (ice), swamp = Quicksand (poison), wood = Wildfire (fire).',
+        jpCost: 0,
+        mpCost: 0,
+        range: 3,
+        heightTolerance: 2.5,
+        aoe: 0,
+        power: 1.15,
+        element: 'physical',
+        terrainDriven: true
+      },
+      {
+        id: 'geo_earth_slash',
+        name: 'Earth Slash',
+        jobId: 'geomancer',
+        type: 'action',
+        description: 'Splits the ground in a shockwave that strikes the target and every foe beside it.',
+        jpCost: 160,
+        mpCost: 8,
+        range: 2,
+        heightTolerance: 2.0,
+        aoe: 1,
+        power: 1.1,
+        element: 'physical'
+      },
+      {
+        id: 'geo_earthen_ward',
+        name: 'Earthen Ward',
+        jobId: 'geomancer',
+        type: 'reaction',
+        description: 'When struck while standing on stone, dirt or parapet, the ground hardens into armor (Protect for 3 turns).',
+        jpCost: 180,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'geo_attack_up',
+        name: 'Attack Boost',
+        jobId: 'geomancer',
+        type: 'support',
+        description: 'Increases all physical damage dealt by 20%.',
+        jpCost: 220,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'geo_stride',
+        name: 'Mountain Stride',
+        jobId: 'geomancer',
+        type: 'movement',
+        description: 'Sure-footed climbing: Jump +2.',
+        jpCost: 200,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      }
+    ]
+  },
+
   time_mage: {
     id: 'time_mage',
     name: 'Time Weaver',
@@ -636,6 +741,20 @@ export const JOBS: Record<string, Job> = {
         heightTolerance: 3.0,
         aoe: 0,
         power: 1.2,
+        element: 'time'
+      },
+      {
+        id: 'tm_critical_quick',
+        name: 'Critical Quick',
+        jobId: 'time_mage',
+        type: 'reaction',
+        description: 'When struck down to 35% HP or less, instantly charges CT to 100 to act next.',
+        jpCost: 220,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
         element: 'time'
       },
       {

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tactics RPG — Isometric Turn-Based Battle</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%224%22 fill=%22%230b1220%22/%3E%3Cpath d=%22M16 5l3 7h-6zM11 13h10l-2 9h-6zM8 24h16v3H8z%22 fill=%22%23f4c430%22/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
@@ -29,6 +30,7 @@
         <option value="river_ruins">Riverside Ruins</option>
         <option value="night_fortress">Night Battlement</option>
         <option value="gloomy_swamp">Gloomy Mire</option>
+        <option value="zodiac_summit">Zodiac Summit</option>
       </select>
       <button id="btn-toggle-sound" title="Toggle Sound FX">🔊 SFX</button>
       <button id="btn-toggle-bgm" title="Toggle Background Music">🎵 BGM</button>
@@ -119,6 +121,7 @@
       <button id="btn-action-move" class="menu-btn">MOVE</button>
       <button id="btn-action-act" class="menu-btn">ACT</button>
       <button id="btn-action-wait" class="menu-btn">WAIT</button>
+      <button id="btn-action-auto" class="menu-btn" title="Let the AI play this unit's turn (T)">AUTO</button>
       <button id="btn-action-status" class="menu-btn">STATUS</button>
     </div>
 
@@ -183,6 +186,18 @@
           The enemy line is broken! Scouts report enemy movements in multiple directions. What is your order, Commander?
         </div>
         <div id="choice-cards-container" class="choice-cards-container"></div>
+      </div>
+    </div>
+
+    <!-- Battle Result Modal: spoils, defeat, campaign epilogue, Trials of the Zodiac -->
+    <div id="result-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="modal-window result-window hud-panel">
+        <div class="modal-header">
+          <h2 id="result-title">VICTORY</h2>
+        </div>
+        <div id="result-subtitle" class="choice-intro-text"></div>
+        <div id="result-body" class="result-body"></div>
+        <div id="result-actions" class="result-actions"></div>
       </div>
     </div>
 

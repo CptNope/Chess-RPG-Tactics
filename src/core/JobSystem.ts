@@ -1,4 +1,4 @@
-import { Unit, Team, FacingDirection, EquippedAbilities, EquippedGear, Item, EquipmentSlot } from './types';
+import { Unit, Team, FacingDirection, EquippedAbilities, EquippedGear, Item, EquipmentSlot, Ability } from './types';
 import { JOBS, BASIC_ATTACK } from '../data/jobs';
 import { ITEMS } from '../data/items';
 
@@ -19,7 +19,7 @@ export class JobSystem {
     const job = JOBS[jobId] || JOBS.squire;
 
     const baseStats = {
-      hp: 100 + level * 14,
+      hp: 120 + level * 18,
       mp: 30 + level * 5,
       attack: 9 + level * 1.8,
       magic: 8 + level * 1.6,
@@ -66,6 +66,10 @@ export class JobSystem {
       initialGear.head = ITEMS.wizard_hat;
       initialGear.body = ITEMS.silk_robe;
       initialGear.accessory = ITEMS.mage_ring;
+    } else if (jobId === 'geomancer') {
+      initialGear.weapon = ITEMS.gaia_staff;
+      initialGear.head = ITEMS.shinobi_band;
+      initialGear.body = ITEMS.chainmail;
     } else if (jobId === 'white_mage') {
       initialGear.weapon = ITEMS.chrono_rod;
       initialGear.body = ITEMS.silk_robe;
@@ -86,6 +90,7 @@ export class JobSystem {
       white_mage: 200,
       dragoon: 200,
       ninja: 200,
+      geomancer: 200,
       time_mage: 200
     };
 
@@ -190,6 +195,9 @@ export class JobSystem {
     if (unit.equippedAbilities.movement === 'ar_jump_plus') {
       jump += 1;
     }
+    if (unit.equippedAbilities.movement === 'geo_stride') {
+      jump += 2;
+    }
     if (unit.equippedAbilities.movement === 'dr_ignore_height') {
       jump = 99;
     }
@@ -233,6 +241,114 @@ export class JobSystem {
     unit.jobPoints[jobId] -= ability.jpCost;
     unit.unlockedAbilities[abilityId] = true;
     return true;
+  }
+
+  /** Sum of a stat across all equipped gear. */
+  public static gearStat(unit: Unit, stat: keyof Item['stats']): number {
+    let total = 0;
+    for (const item of Object.values(unit.equipment)) {
+      if (item && item.stats && item.stats[stat]) total += item.stats[stat]!;
+    }
+    return total;
+  }
+
+  /**
+   * Effective physical power: base stat scaled by the current job, plus weapon/gear ATK.
+   * Focus (+25%) and a boss enrage (+20%) are battle-only multipliers, never written to baseStats.
+   */
+  public static getAttackPower(unit: Unit): number {
+    const job = JOBS[unit.jobId] || JOBS.squire;
+    let atk = unit.baseStats.attack * job.statMultipliers.attack + this.gearStat(unit, 'attack');
+    if (unit.statuses.some((s) => s.type === 'focus')) atk *= 1.25;
+    if (unit.isEnraged) atk *= 1.2;
+    return atk;
+  }
+
+  /** Effective magical power: base stat scaled by the current job, plus gear MAG. */
+  public static getMagicPower(unit: Unit): number {
+    const job = JOBS[unit.jobId] || JOBS.squire;
+    let mag = unit.baseStats.magic * job.statMultipliers.magic + this.gearStat(unit, 'magic');
+    if (unit.isEnraged) mag *= 1.2;
+    return mag;
+  }
+
+  /** EXP needed for each level. Kept flat so level-ups arrive every battle or two. */
+  public static readonly EXP_PER_LEVEL = 100;
+
+  /**
+   * Awards EXP and applies any level-ups. Returns the number of levels gained.
+   * Each level adds +18 HP, +5 MP, +1.8 ATK, +1.6 MAG; Speed rises every third level.
+   */
+  public static grantExp(unit: Unit, amount: number): number {
+    unit.exp += Math.max(0, Math.round(amount));
+    let gained = 0;
+    while (unit.exp >= this.EXP_PER_LEVEL && unit.level < 99) {
+      unit.exp -= this.EXP_PER_LEVEL;
+      unit.level++;
+      gained++;
+      unit.baseStats.hp += 18;
+      unit.baseStats.mp += 5;
+      unit.baseStats.attack = Math.round((unit.baseStats.attack + 1.8) * 10) / 10;
+      unit.baseStats.magic = Math.round((unit.baseStats.magic + 1.6) * 10) / 10;
+      unit.baseStats.speed = 8 + Math.floor(unit.level / 3);
+    }
+    if (gained > 0) {
+      const hpRatio = unit.maxHp > 0 ? unit.currentHp / unit.maxHp : 1;
+      this.recalculateDerivedStats(unit);
+      unit.currentHp = Math.max(1, Math.round(unit.maxHp * hpRatio));
+    }
+    return gained;
+  }
+
+  /** Turns a unit into a boss: +60% HP, +15% ATK/MAG, a fixed reaction, and an enrage phase. */
+  public static makeBoss(unit: Unit): void {
+    unit.isBoss = true;
+    unit.isEnraged = false;
+    unit.baseStats.hp = Math.round(unit.baseStats.hp * 1.6);
+    unit.baseStats.attack = Math.round(unit.baseStats.attack * 1.15 * 10) / 10;
+    unit.baseStats.magic = Math.round(unit.baseStats.magic * 1.15 * 10) / 10;
+    this.recalculateDerivedStats(unit);
+    unit.currentHp = unit.maxHp;
+    unit.currentMp = unit.maxMp;
+  }
+
+  /** Restores a squad member between battles and places them on a deployment tile. */
+  public static resetForBattle(unit: Unit, x: number, z: number): void {
+    unit.isDead = false;
+    unit.statuses = [];
+    unit.isEnraged = false;
+    unit.usedDragonheart = false;
+    unit.ct = 0;
+    unit.hasMoved = false;
+    unit.hasActed = false;
+    unit.x = x;
+    unit.z = z;
+    unit.facing = 'N';
+    this.recalculateDerivedStats(unit);
+    unit.currentHp = unit.maxHp;
+    unit.currentMp = unit.maxMp;
+  }
+
+  /** Passive abilities (reaction / support / movement) the unit has learned from any job. */
+  public static getLearnedPassives(unit: Unit, type: 'reaction' | 'support' | 'movement'): { id: string; name: string }[] {
+    const out: { id: string; name: string }[] = [];
+    for (const job of Object.values(JOBS)) {
+      for (const a of job.abilities) {
+        if (a.type === type && unit.unlockedAbilities[a.id]) out.push({ id: a.id, name: a.name });
+      }
+    }
+    return out;
+  }
+
+  /** Looks up any ability by id across all jobs (or the basic attack). */
+  public static findAbility(abilityId: string | null): Ability | null {
+    if (!abilityId) return null;
+    if (abilityId === BASIC_ATTACK.id) return BASIC_ATTACK;
+    for (const job of Object.values(JOBS)) {
+      const a = job.abilities.find((ab) => ab.id === abilityId);
+      if (a) return a;
+    }
+    return null;
   }
 
   public static getCombatActionAbilities(unit: Unit) {

@@ -8,7 +8,7 @@ export type AbilityType = 'action' | 'reaction' | 'support' | 'movement';
 
 export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark' | 'time';
 
-export type StatusEffectType = 'haste' | 'slow' | 'protect' | 'immobilize' | 'poison';
+export type StatusEffectType = 'haste' | 'slow' | 'protect' | 'immobilize' | 'poison' | 'focus';
 
 export interface ActiveStatus {
   type: StatusEffectType;
@@ -63,13 +63,15 @@ export interface Ability {
   appliesStatus?: StatusEffectType;
   isLineAttack?: boolean;
   isSelfOnly?: boolean;
+  /** Geomancer abilities: element and effect are decided by the terrain the caster stands on. */
+  terrainDriven?: boolean;
 }
 
 export interface Job {
   id: string;
   name: string;
   description: string;
-  role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer';
+  role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer';
   spriteClass: string;
   baseMove: number;
   baseJump: number;
@@ -140,6 +142,12 @@ export interface Unit {
   isDead: boolean;
   hasMoved: boolean;
   hasActed: boolean;
+
+  /** Boss units get a nameplate, extra HP and an enrage phase below 50% HP. */
+  isBoss?: boolean;
+  isEnraged?: boolean;
+  /** Dragonheart can save a unit only once per battle. */
+  usedDragonheart?: boolean;
 }
 
 export interface CombatForecast {
@@ -151,6 +159,8 @@ export interface CombatForecast {
   facingType: 'front' | 'flank' | 'back';
   heightAdvantage: number;
   willDualWield?: boolean;
+  /** Terrain under the target, used by terrain-aware reactions such as Earthen Ward. */
+  targetTerrain?: TerrainType;
 }
 
 export interface DialogueLine {
@@ -164,6 +174,8 @@ export interface StoryChoice {
   text: string;
   nextChapterId: string;
   rewardText: string;
+  /** Items added to the squad's armory as soon as this path is chosen. */
+  rewardItemIds?: string[];
 }
 
 export interface CampaignChapter {
@@ -174,11 +186,18 @@ export interface CampaignChapter {
   introDialogue: DialogueLine[];
   victoryDialogue: DialogueLine[];
   choices?: StoryChoice[];
-  enemyRoster: {
-    name: string;
-    jobId: string;
-    level: number;
-    x: number;
-    z: number;
-  }[];
+  enemyRoster: EnemySpawn[];
+  /** Items added to the squad's armory when the chapter is won. */
+  rewardItemIds?: string[];
+  /** A new ally who joins the squad at the start of this chapter (if not already recruited). */
+  recruit?: { id: string; name: string; jobId: string; level: number };
+}
+
+export interface EnemySpawn {
+  name: string;
+  jobId: string;
+  level: number;
+  x: number;
+  z: number;
+  isBoss?: boolean;
 }
