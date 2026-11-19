@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.0] - 2026-11-19
+
+### Added
+- **Every input works everywhere**: one dispatcher for mouse, keyboard, touch, pen and controller.
+  - **Touch**: tap to select, drag to pan, pinch to zoom, two-finger twist to rotate, two-finger tap to cancel. Taps now select the tile under your finger (before, a tap used the last hovered tile).
+  - **Pen**: hover previews tiles, tap selects, drag pans, eraser / barrel button cancels.
+  - **Keyboard**: a tile cursor on the arrows, Enter to select, Esc to back out, `1`–`4` command hotkeys, `J`/`L`/`H` for Team/Log/Controls, and arrow-key navigation inside every menu. A whole turn can be played without a mouse.
+  - **Controller** (`src/input/GamepadInput.ts`): standard mapping with d-pad/stick cursor and menu navigation, held-direction repeat, LB/RB rotate, analog-trigger zoom, right-stick pan, rumble on crits and boss enrage, and a connect banner.
+  - **Mouse**: left-drag now pans too (trackpads without a right button), and trackpad pinch zooms smoothly.
+- **Controls screen** listing all five input methods, with your current one first.
+- **STATUS** button now opens that unit's jobs and gear (it did nothing before).
+- Unit card portrait shows the unit's actual sprite.
+
+### Changed
+- **Responsive layout** for phones (portrait and landscape), tablets and desktops: bottom command bar and stacked unit card on phones, bottom sheets for actions/forecast/log, full-screen modals, a two-column Team screen on tablets, safe-area insets for notched phones, and 44px touch targets.
+- The 11-button toolbar is now four buttons (Team, Log, Controls, Menu) plus a camera cluster; map, sound, save, load and editor moved into Menu. Emoji buttons are replaced with drawn pixel icons.
+- Portrait screens fit the camera to the screen width, so phones see the whole battlefield.
+- Hotkey hints and the dialogue "continue" hint match the input you're using.
+- Visible gold focus rings, `Tab` trapped inside modals with focus restored on close, ARIA labels and dialog roles throughout.
+- Reduced-motion: screen shake is cut to 15% and the turn banner fades instead of sliding.
+
+### Fixed
+- Desktop toolbar covered the turn order at 1920px; camera buttons collided with the command menu on 768px-tall laptops; the stat row wrapped ("HT: 1.0h" on two lines); an empty turn-order strip showed during intros.
+
+---
+
 ## [0.7.0] - 2026-11-19
 
 ### Fixed

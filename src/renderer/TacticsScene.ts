@@ -65,7 +65,6 @@ export class TacticsScene {
 
   // Panning State
   private isPanning: boolean = false;
-  private lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
 
   // Textures cache
   private grassTopTex = createGrassTopTexture();
@@ -331,54 +330,217 @@ export class TacticsScene {
     return group;
   }
 
+  // ---------------------------------------------------------------------------
+  // Pointer input: one path for mouse, touch and pen (Pointer Events)
+  // ---------------------------------------------------------------------------
+
+  /** Fired when a tile is tapped/clicked without dragging. */
+  public onTileTap?: (x: number, z: number, pointerType: string) => void;
+  /** Fired by a two-finger tap, or a pen eraser / barrel-button tap: "cancel / back". */
+  public onCancelGesture?: () => void;
+  /** Fired the first time each kind of pointer is used, so the HUD can show matching hints. */
+  public onPointerKind?: (pointerType: string) => void;
+
+  private pointers = new Map<number, { x: number; y: number; sx: number; sy: number; t: number; type: string; moved: boolean; cancel: boolean }>();
+  private pinch: { dist: number; angle: number; zoom: number; midX: number; midY: number; rotSteps: number; moved: boolean; t: number } | null = null;
+  private multiTouchGesture = false;
+
+  private distance(a: { x: number; y: number }, b: { x: number; y: number }): number {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  /** Pans the camera by a screen-space pixel delta (dragging the map). */
+  private panByPixels(deltaX: number, deltaY: number): void {
+    const factor = (this.zoomLevel / Math.min(window.innerWidth, window.innerHeight)) * 1.8;
+    const cos = Math.cos(this.currentRotationAngle);
+    const sin = Math.sin(this.currentRotationAngle);
+    const right = new THREE.Vector3(-sin, 0, cos);
+    const forward = new THREE.Vector3(-cos, 0, -sin);
+    this.targetCameraTarget.addScaledVector(right, -deltaX * factor);
+    this.targetCameraTarget.addScaledVector(forward, -deltaY * factor);
+  }
+
+  public setZoom(level: number): void {
+    this.targetZoomLevel = Math.min(this.maxZoomLevel, Math.max(this.minZoomLevel, level));
+  }
+
+  /** Raycasts a screen point to a tile. */
+  public pickTile(clientX: number, clientY: number): { x: number; z: number } | null {
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const hit = this.raycaster.intersectObjects(this.tileMeshList)[0];
+    const tile = hit?.object.userData.tile as TileData | undefined;
+    return tile ? { x: tile.x, z: tile.z } : null;
+  }
+
+  /**
+   * Moves the tile cursor one step in a screen direction (keyboard arrows, d-pad, stick).
+   * "Up" follows the grid axis that points most toward the top-right of the screen for the
+   * current camera rotation, the convention of classic isometric tactics games.
+   */
+  public moveCursor(dir: 'up' | 'down' | 'left' | 'right'): { x: number; z: number } | null {
+    const cos = Math.cos(this.currentRotationAngle);
+    const sin = Math.sin(this.currentRotationAngle);
+    const fwd = { x: -cos, z: -sin };
+    const right = { x: -sin, z: cos };
+    const upV = { x: fwd.x + right.x, z: fwd.z + right.z };
+    const rightV = { x: right.x - fwd.x, z: right.z - fwd.z };
+    const want = dir === 'up' ? upV : dir === 'down' ? { x: -upV.x, z: -upV.z } : dir === 'right' ? rightV : { x: -rightV.x, z: -rightV.z };
+    const axes = [{ x: 1, z: 0 }, { x: -1, z: 0 }, { x: 0, z: 1 }, { x: 0, z: -1 }];
+    const step = axes.reduce((best, a) => (a.x * want.x + a.z * want.z > best.x * want.x + best.z * want.z ? a : best));
+    const cur = this.hoveredTile || { x: Math.round(this.targetCameraTarget.x), z: Math.round(this.targetCameraTarget.z) };
+    const nx = cur.x + step.x;
+    const nz = cur.z + step.z;
+    if (!this.grid.getTile(nx, nz)) return null;
+    this.setCursor(nx, nz);
+    // Keep the cursor on screen: nudge the camera toward it
+    const h = this.grid.getHeight(nx, nz);
+    const t = this.targetCameraTarget;
+    if (Math.hypot(nx - t.x, nz - t.z) > this.zoomLevel * 0.45) this.targetCameraTarget.set(nx, h, nz);
+    return { x: nx, z: nz };
+  }
+
   private setupInteractions(): void {
     window.addEventListener('resize', () => this.onResize());
+    window.visualViewport?.addEventListener('resize', () => this.onResize());
 
-    this.canvas.addEventListener('pointermove', (e) => {
-      this.onPointerMove(e);
+    const c = this.canvas;
+    c.style.touchAction = 'none'; // we handle pan/zoom ourselves; stop the page from scrolling/zooming
+    c.addEventListener('contextmenu', (e) => e.preventDefault());
 
-      if (this.isPanning) {
-        const deltaX = e.clientX - this.lastPanPosition.x;
-        const deltaY = e.clientY - this.lastPanPosition.y;
-        this.lastPanPosition = { x: e.clientX, y: e.clientY };
+    const seenKinds = new Set<string>();
 
-        const factor = (this.zoomLevel / window.innerHeight) * 1.8;
-        const cos = Math.cos(this.currentRotationAngle);
-        const sin = Math.sin(this.currentRotationAngle);
-
-        const right = new THREE.Vector3(-sin, 0, cos);
-        const forward = new THREE.Vector3(-cos, 0, -sin);
-
-        this.targetCameraTarget.addScaledVector(right, -deltaX * factor);
-        this.targetCameraTarget.addScaledVector(forward, -deltaY * factor);
+    c.addEventListener('pointerdown', (e) => {
+      if (!seenKinds.has(e.pointerType)) {
+        seenKinds.add(e.pointerType);
+        this.onPointerKind?.(e.pointerType);
       }
-    });
+      try {
+        c.setPointerCapture(e.pointerId);
+      } catch {
+        /* synthetic events cannot be captured */
+      }
+      // Pen eraser (button 5) or barrel button (button 2) marks this press as "cancel"
+      const cancel = e.pointerType === 'pen' && (e.button === 5 || e.button === 2 || (e.buttons & 32) !== 0);
+      this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), type: e.pointerType, moved: false, cancel });
 
-    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-
-    this.canvas.addEventListener('pointerdown', (e) => {
-      if (e.button === 2 || e.button === 1) {
+      if (e.pointerType === 'mouse' && (e.button === 1 || e.button === 2)) {
         this.isPanning = true;
-        this.lastPanPosition = { x: e.clientX, y: e.clientY };
+      }
+
+      if (this.pointers.size === 2) {
+        const [a, b] = [...this.pointers.values()];
+        this.multiTouchGesture = true;
+        this.pinch = {
+          dist: Math.max(1, this.distance(a, b)),
+          angle: Math.atan2(b.y - a.y, b.x - a.x),
+          zoom: this.targetZoomLevel,
+          midX: (a.x + b.x) / 2,
+          midY: (a.y + b.y) / 2,
+          rotSteps: 0,
+          moved: false,
+          t: performance.now()
+        };
       }
     });
 
+    c.addEventListener('pointermove', (e) => {
+      const p = this.pointers.get(e.pointerId);
+      if (!p) {
+        // Hover (mouse, or a pen held above the screen) previews the tile under it
+        if (e.pointerType !== 'touch') this.onPointerMove(e);
+        return;
+      }
+      const dx = e.clientX - p.x;
+      const dy = e.clientY - p.y;
+      p.x = e.clientX;
+      p.y = e.clientY;
+      const threshold = p.type === 'touch' ? 10 : 6;
+      if (!p.moved && Math.hypot(p.x - p.sx, p.y - p.sy) > threshold) p.moved = true;
+
+      if (this.pinch && this.pointers.size >= 2) {
+        const [a, b] = [...this.pointers.values()];
+        const dist = Math.max(1, this.distance(a, b));
+        const midX = (a.x + b.x) / 2;
+        const midY = (a.y + b.y) / 2;
+        if (Math.abs(dist - this.pinch.dist) > 12 || Math.hypot(midX - this.pinch.midX, midY - this.pinch.midY) > 12) this.pinch.moved = true;
+        // Pinch: spread fingers to zoom in
+        this.setZoom(this.pinch.zoom * (this.pinch.dist / dist));
+        // Two-finger drag pans
+        this.panByPixels(midX - this.pinch.midX, midY - this.pinch.midY);
+        this.pinch.midX = midX;
+        this.pinch.midY = midY;
+        // Twist: every 50 degrees of rotation turns the camera 90 degrees
+        let delta = Math.atan2(b.y - a.y, b.x - a.x) - this.pinch.angle;
+        delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+        const steps = Math.trunc(delta / (50 * Math.PI / 180));
+        while (steps > this.pinch.rotSteps) { this.rotateRight(); this.pinch.rotSteps++; this.pinch.moved = true; }
+        while (steps < this.pinch.rotSteps) { this.rotateLeft(); this.pinch.rotSteps--; this.pinch.moved = true; }
+        return;
+      }
+
+      if (this.isPanning || (p.moved && !this.multiTouchGesture)) {
+        this.panByPixels(dx, dy);
+      } else if (e.pointerType !== 'touch') {
+        this.onPointerMove(e);
+      }
+    });
+
+    const finish = (e: PointerEvent, cancelled: boolean) => {
+      const p = this.pointers.get(e.pointerId);
+      if (!p) return;
+      this.pointers.delete(e.pointerId);
+      if (e.pointerType === 'mouse' && (e.button === 1 || e.button === 2)) this.isPanning = false;
+
+      if (this.multiTouchGesture) {
+        // Two-finger tap (quick, no pinch/pan/twist) = cancel / back
+        if (!cancelled && this.pinch && !this.pinch.moved && performance.now() - this.pinch.t < 350 && this.pointers.size === 1) {
+          this.onCancelGesture?.();
+          this.pinch.moved = true; // fire once
+        }
+        if (this.pointers.size < 2) this.pinch = null;
+        if (this.pointers.size === 0) this.multiTouchGesture = false;
+        return;
+      }
+
+      if (cancelled || p.moved || this.isPanning) return;
+      if (p.cancel) {
+        this.onCancelGesture?.();
+        return;
+      }
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const tile = this.pickTile(e.clientX, e.clientY);
+      if (tile) {
+        this.setCursor(tile.x, tile.z);
+        this.onTileTap?.(tile.x, tile.z, e.pointerType);
+      }
+    };
+
+    c.addEventListener('pointerup', (e) => finish(e, false));
+    c.addEventListener('pointercancel', (e) => finish(e, true));
+    c.addEventListener('lostpointercapture', (e) => {
+      if (this.pointers.has(e.pointerId)) finish(e, true);
+    });
+    window.addEventListener('blur', () => {
+      this.pointers.clear();
+      this.pinch = null;
+      this.multiTouchGesture = false;
+      this.isPanning = false;
+    });
     window.addEventListener('pointerup', (e) => {
-      if (e.button === 2 || e.button === 1) {
-        this.isPanning = false;
-      }
+      if (e.pointerType === 'mouse' && (e.button === 1 || e.button === 2)) this.isPanning = false;
     });
 
-    this.canvas.addEventListener(
+    c.addEventListener(
       'wheel',
       (e: WheelEvent) => {
         e.preventDefault();
-        const zoomDelta = Math.sign(e.deltaY) * 0.9;
-        if (zoomDelta > 0) {
-          this.zoomOut(zoomDelta);
-        } else {
-          this.zoomIn(-zoomDelta);
-        }
+        // Trackpad pinch arrives as ctrl+wheel with small deltas; mouse wheels use steps
+        const step = e.ctrlKey ? Math.min(2, Math.abs(e.deltaY) * 0.05) : 0.9;
+        if (e.deltaY > 0) this.zoomOut(step);
+        else if (e.deltaY < 0) this.zoomIn(step);
       },
       { passive: false }
     );
@@ -638,10 +800,13 @@ export class TacticsScene {
 
   private updateCameraFrustum(): void {
     const aspect = window.innerWidth / window.innerHeight;
-    this.camera.left = -this.zoomLevel * aspect;
-    this.camera.right = this.zoomLevel * aspect;
-    this.camera.top = this.zoomLevel;
-    this.camera.bottom = -this.zoomLevel;
+    // Fit the zoom to the shorter screen side so portrait phones see as much map as landscape
+    const halfW = aspect >= 1 ? this.zoomLevel * aspect : this.zoomLevel;
+    const halfH = aspect >= 1 ? this.zoomLevel : this.zoomLevel / aspect;
+    this.camera.left = -halfW;
+    this.camera.right = halfW;
+    this.camera.top = halfH;
+    this.camera.bottom = -halfH;
     this.camera.updateProjectionMatrix();
   }
 

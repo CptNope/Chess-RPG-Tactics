@@ -67,12 +67,15 @@ npm run test:build  # tests + check every built asset exists (what CI runs)
 Add `?debug` to the URL to expose the running game as `window.__tactics` for automated play-testing (`?debug&fast` also speeds up animations).
 Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
 
-### Camera & Navigation Controls
-* **Rotate Left / Right**: Press `Q` / `E` or click `⟲ Q` / `⟳ E` on the top-right HUD.
-* **Zoom In / Out**: Scroll **Mouse Wheel Up/Down**, press `+` / `-`, or click `+` / `-` buttons. Can zoom down to `2.0` for extreme close-up view!
-* **Pan Camera**: **Hold Right-Click (or Middle-Click) & Drag**, or press `W` / `A` / `S` / `D` or Arrow Keys.
-* **Reset Camera**: Press `R` or `Home` to re-center on the current active unit.
-* **Inspect Unit**: Click on any unit on the map to focus the camera and view their full stat card.
+### Controls: mouse, keyboard, touch, pen or controller
+Play with whatever you have; press **H** (or the **?** button, or **View/Back** on a controller) for the full list in-game.
+* **Mouse**: click to select, drag (left, right or middle) to pan, wheel to zoom.
+* **Keyboard**: arrows move the cursor (or between menu buttons), `Enter` selects, `Esc` backs out, `1`–`4` = Move/Act/Wait/Auto, `Q`/`E` rotate, `+`/`-` zoom, `R` re-center, `J` Team, `L` Log.
+* **Touch**: tap to select, drag to pan, pinch to zoom, twist two fingers to rotate, two-finger tap to cancel.
+* **Pen**: hover to preview a tile, tap to select, drag to pan, eraser or barrel button to cancel.
+* **Controller**: d-pad/left stick + A to select, B back, X commands, Y Team, LB/RB rotate, LT/RT zoom, right stick pan.
+
+Works on phones (portrait and landscape), tablets and desktops. See [Controls & Camera](docs/CONTROLS_AND_CAMERA.md) for the full matrix and layout breakpoints.
 
 ### Combat Commands
 * **MOVE**: Click `MOVE` to highlight blue reachable tiles based on Move and Jump stats. Click a blue tile to step there.

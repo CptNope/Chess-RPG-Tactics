@@ -79,7 +79,10 @@ export class VFXManager {
     this.scene.add(this.ambientParticles);
   }
 
+  private reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   public triggerScreenShake(intensity: number = 0.5): void {
+    if (this.reduceMotion) intensity *= 0.15;
     this.cameraTrauma = Math.min(1.0, this.cameraTrauma + intensity);
   }
 

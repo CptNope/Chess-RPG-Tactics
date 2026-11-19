@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0c10" />
   <title>Tactics RPG — Isometric Turn-Based Battle</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%224%22 fill=%22%230b1220%22/%3E%3Cpath d=%22M16 5l3 7h-6zM11 13h10l-2 9h-6zM8 24h16v3H8z%22 fill=%22%23f4c430%22/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,30 +20,111 @@
     <div class="crt-overlay"></div>
 
     <!-- Top Turn Order Timeline Ribbon -->
-    <header id="turn-timeline" class="hud-panel">
-      <div class="timeline-label">TURN ORDER:</div>
-      <div id="timeline-queue" class="timeline-queue"></div>
+    <header id="turn-timeline" class="hud-panel" aria-label="Turn order">
+      <div class="timeline-label">TURN ORDER</div>
+      <div id="timeline-queue" class="timeline-queue" role="list"></div>
     </header>
 
-    <!-- Top-Right Camera, Map & Editor Controls -->
-    <div id="camera-controls" class="hud-panel">
-      <select id="map-select" class="hud-select" title="Switch Battlefield">
-        <option value="river_ruins">Riverside Ruins</option>
-        <option value="night_fortress">Night Battlement</option>
-        <option value="gloomy_swamp">Gloomy Mire</option>
-        <option value="zodiac_summit">Zodiac Summit</option>
-      </select>
-      <button id="btn-toggle-sound" title="Toggle Sound FX">🔊 SFX</button>
-      <button id="btn-toggle-bgm" title="Toggle Background Music">🎵 BGM</button>
-      <button id="btn-toggle-log" title="Toggle Combat Chronicle Log">📜 Log</button>
-      <button id="btn-save-game" title="Save Game (localStorage)">💾 Save</button>
-      <button id="btn-load-game" title="Load Game (localStorage)">📂 Load</button>
-      <button id="btn-toggle-editor" title="Toggle 3D Map Editor">✎ Editor</button>
-      <button id="btn-rot-left" title="Rotate Left (Q)">⟲ Q</button>
-      <button id="btn-rot-right" title="Rotate Right (E)">⟳ E</button>
-      <button id="btn-zoom-in" title="Zoom In (+)">+</button>
-      <button id="btn-zoom-out" title="Zoom Out (-)">-</button>
-      <button id="btn-job-menu" title="Open Job Roster">★ Team</button>
+    <!-- Top bar: the few things you need every turn; everything else lives in Menu -->
+    <nav id="top-bar" class="hud-panel" aria-label="Game">
+      <button id="btn-job-menu" class="icon-btn" title="Team: jobs, abilities and gear (J)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M5 2h6v2h2v4h-2v2H5V8H3V4h2z M2 12h12v2H2z"/></g></svg><span class="btn-label">Team</span></button>
+      <button id="btn-toggle-log" class="icon-btn" title="Battle log (L)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M3 1h10v14H3z M5 4h6v1.5H5z M5 7h6v1.5H5z M5 10h4v1.5H5z" fill-rule="evenodd"/></g></svg><span class="btn-label">Log</span></button>
+      <button id="btn-help" class="icon-btn" title="Controls (H)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M5 2h6v2h2v4h-2v2H9v2H7V9h2V7h2V4H5v2H3V4h2z M7 13h2v2H7z"/></g></svg><span class="btn-label">Controls</span></button>
+      <button id="btn-menu" class="icon-btn" title="Menu: map, sound, save, load, editor" aria-haspopup="true" aria-expanded="false" aria-controls="system-menu"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M2 3h12v2H2z M2 7h12v2H2z M2 11h12v2H2z"/></g></svg><span class="btn-label">Menu</span></button>
+    </nav>
+
+    <!-- System menu (dropdown) -->
+    <div id="system-menu" class="hud-panel hidden" role="menu" aria-label="Menu">
+      <label class="menu-field">Battlefield
+        <select id="map-select" class="hud-select">
+          <option value="river_ruins">Riverside Ruins</option>
+          <option value="night_fortress">Night Battlement</option>
+          <option value="gloomy_swamp">Gloomy Mire</option>
+          <option value="zodiac_summit">Zodiac Summit</option>
+        </select>
+      </label>
+      <button id="btn-toggle-sound" role="menuitem">Sound FX: On</button>
+      <button id="btn-toggle-bgm" role="menuitem">Music: On</button>
+      <button id="btn-save-game" role="menuitem">Save game</button>
+      <button id="btn-load-game" role="menuitem">Load game</button>
+      <button id="btn-toggle-editor" role="menuitem">Map editor</button>
+    </div>
+
+    <!-- Camera cluster -->
+    <div id="camera-controls" class="hud-panel" aria-label="Camera">
+      <button id="btn-rot-left" class="icon-btn" title="Rotate left (Q)" aria-label="Rotate camera left"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M5 2h7v2h2v6h-2v2H8v-2h4V4H5v2H3V1h2z M1 4h4v2H1z" /></g></svg></button>
+      <button id="btn-rot-right" class="icon-btn" title="Rotate right (E)" aria-label="Rotate camera right"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M4 2h7V1h2v5h-2V4H4v6h4v2H4v-2H2V4h2z M11 4h4v2h-4z" /></g></svg></button>
+      <button id="btn-zoom-in" class="icon-btn" title="Zoom in (+)" aria-label="Zoom in"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M3 1h7v2h2v6h-2v2H3V9H1V3h2z M3 3v6h7V3z M5 5h1V4h1v1h1v1H7v1H6V6H5z M11 11h2v2h2v2h-2v-2h-2z" fill-rule="evenodd"/></g></svg></button>
+      <button id="btn-zoom-out" class="icon-btn" title="Zoom out (-)" aria-label="Zoom out"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M3 1h7v2h2v6h-2v2H3V9H1V3h2z M3 3v6h7V3z M4 5h5v1.5H4z M11 11h2v2h2v2h-2v-2h-2z" fill-rule="evenodd"/></g></svg></button>
+      <button id="btn-recenter" class="icon-btn" title="Center on active unit (R)" aria-label="Center camera on active unit"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M7 1h2v4H7z M7 11h2v4H7z M1 7h4v2H1z M11 7h4v2h-4z M6 6h4v4H6z"/></g></svg></button>
+    </div>
+
+    <!-- Controls help -->
+    <div id="help-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="modal-window help-window hud-panel">
+        <div class="modal-header">
+          <h2 id="help-title">CONTROLS</h2>
+          <button id="btn-close-help" class="close-btn" aria-label="Close controls">×</button>
+        </div>
+        <div class="help-grid">
+          <section class="help-card" data-input="touch">
+            <h3>Touch</h3>
+            <dl>
+              <dt>Tap</dt><dd>Select a tile or unit</dd>
+              <dt>Drag</dt><dd>Pan the map</dd>
+              <dt>Pinch</dt><dd>Zoom</dd>
+              <dt>Twist two fingers</dt><dd>Rotate the camera</dd>
+              <dt>Two-finger tap</dt><dd>Cancel / back</dd>
+            </dl>
+          </section>
+          <section class="help-card" data-input="pen">
+            <h3>Pen</h3>
+            <dl>
+              <dt>Hover</dt><dd>Preview the tile under the tip</dd>
+              <dt>Tap</dt><dd>Select</dd>
+              <dt>Drag</dt><dd>Pan the map</dd>
+              <dt>Eraser or barrel button + tap</dt><dd>Cancel / back</dd>
+            </dl>
+          </section>
+          <section class="help-card" data-input="mouse">
+            <h3>Mouse &amp; trackpad</h3>
+            <dl>
+              <dt>Click</dt><dd>Select</dd>
+              <dt>Drag, or right/middle-drag</dt><dd>Pan the map</dd>
+              <dt>Wheel / pinch</dt><dd>Zoom</dd>
+              <dt>Hover</dt><dd>Tile height &amp; terrain</dd>
+            </dl>
+          </section>
+          <section class="help-card" data-input="keyboard">
+            <h3>Keyboard</h3>
+            <dl>
+              <dt><kbd>←↑↓→</kbd></dt><dd>Move the cursor, or move between buttons in a menu</dd>
+              <dt><kbd>Enter</kbd> <kbd>Space</kbd></dt><dd>Select / confirm</dd>
+              <dt><kbd>Esc</kbd></dt><dd>Cancel / back</dd>
+              <dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></dt><dd>Move · Act · Wait · Auto</dd>
+              <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Pan the camera</dd>
+              <dt><kbd>Q</kbd> <kbd>E</kbd></dt><dd>Rotate</dd>
+              <dt><kbd>+</kbd> <kbd>-</kbd></dt><dd>Zoom</dd>
+              <dt><kbd>R</kbd></dt><dd>Center on active unit</dd>
+              <dt><kbd>J</kbd> <kbd>L</kbd> <kbd>H</kbd></dt><dd>Team · Log · Controls</dd>
+            </dl>
+          </section>
+          <section class="help-card" data-input="gamepad">
+            <h3>Controller</h3>
+            <dl>
+              <dt>D-pad / left stick</dt><dd>Move the cursor, or move between buttons in a menu</dd>
+              <dt>A (✕)</dt><dd>Select / confirm</dd>
+              <dt>B (○)</dt><dd>Cancel / back</dd>
+              <dt>X (□)</dt><dd>Command menu</dd>
+              <dt>Y (△)</dt><dd>Team</dd>
+              <dt>LB / RB</dt><dd>Rotate camera</dd>
+              <dt>LT / RT</dt><dd>Zoom out / in</dd>
+              <dt>Right stick</dt><dd>Pan · click it to re-center</dd>
+              <dt>Start / View</dt><dd>Menu / Controls</dd>
+            </dl>
+          </section>
+        </div>
+      </div>
     </div>
 
     <!-- 3D Map Editor Tool Palette (Top Left) -->
@@ -78,9 +160,9 @@
     </div>
 
     <!-- Active Unit Status Card (Bottom Left) -->
-    <div id="unit-card" class="hud-panel">
+    <section id="unit-card" class="hud-panel" aria-label="Selected unit" aria-live="polite">
       <div class="card-header">
-        <div id="unit-portrait" class="unit-portrait"></div>
+        <canvas id="unit-portrait" class="unit-portrait" width="32" height="32" aria-hidden="true"></canvas>
         <div class="unit-header-info">
           <div id="unit-name" class="unit-name">Ramza</div>
           <div id="unit-job" class="unit-job">Squire Lv. 1</div>
@@ -107,7 +189,7 @@
           <div>HT: <span id="unit-ht-val">1.0h</span></div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Hovered Tile / Target Info Card (Bottom Center) -->
     <div id="tile-info-card" class="hud-panel">
@@ -116,26 +198,26 @@
     </div>
 
     <!-- Tactical Action Menu (Bottom Right) -->
-    <div id="action-menu" class="hud-panel">
+    <nav id="action-menu" class="hud-panel" aria-label="Commands">
       <div class="menu-title">COMMAND</div>
-      <button id="btn-action-move" class="menu-btn">MOVE</button>
-      <button id="btn-action-act" class="menu-btn">ACT</button>
-      <button id="btn-action-wait" class="menu-btn">WAIT</button>
-      <button id="btn-action-auto" class="menu-btn" title="Let the AI play this unit's turn (T)">AUTO</button>
-      <button id="btn-action-status" class="menu-btn">STATUS</button>
-    </div>
+      <button id="btn-action-move" class="menu-btn" title="Move (1)"><kbd class="hk">1</kbd>MOVE</button>
+      <button id="btn-action-act" class="menu-btn" title="Act (2)"><kbd class="hk">2</kbd>ACT</button>
+      <button id="btn-action-wait" class="menu-btn" title="Wait and choose facing (3)"><kbd class="hk">3</kbd>WAIT</button>
+      <button id="btn-action-auto" class="menu-btn" title="Let the AI play this unit's turn (4)"><kbd class="hk">4</kbd>AUTO</button>
+      <button id="btn-action-status" class="menu-btn" title="Jobs and gear for this unit">STATUS</button>
+    </nav>
 
     <!-- Submenu: Skills / Actions -->
-    <div id="sub-menu" class="hud-panel hidden">
+    <div id="sub-menu" class="hud-panel hidden" role="menu" aria-label="Actions">
       <div class="menu-header">
         <span id="sub-menu-title">ACTIONS</span>
-        <button id="btn-sub-menu-back" class="close-btn">×</button>
+        <button id="btn-sub-menu-back" class="close-btn" aria-label="Close actions">×</button>
       </div>
       <div id="sub-menu-items" class="sub-menu-items"></div>
     </div>
 
     <!-- Facing Direction Selector Overlay (Directional Compass) -->
-    <div id="facing-selector" class="hud-panel hidden">
+    <div id="facing-selector" class="hud-panel hidden" role="dialog" aria-label="Choose facing">
       <div class="facing-prompt">CHOOSE FACING DIRECTION</div>
       <div class="compass-grid">
         <button id="btn-face-n" class="compass-btn compass-n" data-facing="N">▲ NORTH</button>
@@ -150,7 +232,7 @@
     </div>
 
     <!-- Combat Forecast / Target Preview Popup -->
-    <div id="combat-forecast" class="hud-panel hidden">
+    <div id="combat-forecast" class="hud-panel hidden" role="dialog" aria-label="Battle forecast">
       <div class="forecast-header">BATTLE FORECAST</div>
       <div class="forecast-body">
         <div class="forecast-target">Target: <span id="fc-target-name">Knight</span></div>
@@ -177,7 +259,7 @@
     </div>
 
     <!-- Branching Campaign Choice Modal -->
-    <div id="choice-modal" class="modal-overlay hidden">
+    <div id="choice-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="choice-chapter-title">
       <div class="modal-window choice-window hud-panel">
         <div class="modal-header">
           <h2 id="choice-chapter-title">VICTORY — CHAPTER CLEARED</h2>
@@ -202,14 +284,14 @@
     </div>
 
     <!-- Job & Equipment Customization Modal -->
-    <div id="job-modal" class="modal-overlay hidden">
+    <div id="job-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Team">
       <div class="modal-window hud-panel">
         <div class="modal-header">
           <div class="modal-title-tabs">
             <button id="btn-tab-jobs" class="modal-subtab active">★ JOBS & ABILITIES</button>
             <button id="btn-tab-equip" class="modal-subtab">🛡 EQUIPMENT & GEAR</button>
           </div>
-          <button id="btn-close-job-modal" class="close-btn">×</button>
+          <button id="btn-close-job-modal" class="close-btn" aria-label="Close team">×</button>
         </div>
         <div class="modal-content">
           <div id="job-unit-tabs" class="job-unit-tabs"></div>

@@ -34,6 +34,7 @@ Documenting the architectural choices, tradeoffs, and context of the engine:
 * **[ADR 0013: Engine Performance, Object Pooling, and Animation Loop Optimization](adr/0013-engine-performance-and-memory-pooling.md)**
 * **[ADR 0014: Reactions, Procedural BGM, Battle Chronicle, and Persistence](adr/0014-reactions-bgm-combat-log-persistence.md)**
 * **[ADR 0015: Unified Action Pipeline, Planning AI, Persistent Squad, and Trials of the Zodiac](adr/0015-action-pipeline-ai-progression-trials.md)**
+* **[ADR 0016: Unified Multi-Device Input and Responsive HUD](adr/0016-multi-device-input-and-responsive-hud.md)**
 
 ---
 
