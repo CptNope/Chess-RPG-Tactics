@@ -5,12 +5,27 @@ import { TacticsScene } from './renderer/TacticsScene';
 import { UIManager } from './ui/UIManager';
 import { TurnManager } from './core/TurnManager';
 import { JobSystem } from './core/JobSystem';
-import { CombatEngine } from './core/CombatEngine';
-import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
-import { CAMPAIGN_CHAPTERS } from './data/campaign';
+import { CombatEngine, AttackResult } from './core/CombatEngine';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter, Element } from './core/types';
+import { CAMPAIGN_CHAPTERS, PLAYER_DEPLOY } from './data/campaign';
+import { ITEMS, STARTING_ARMORY } from './data/items';
+import { JOBS } from './data/jobs';
 import { SoundFX } from './audio/SoundEffects';
 import { Music } from './audio/MusicSynthesizer';
-import { SaveManager } from './core/SaveManager';
+import { SaveManager, GameSaveData } from './core/SaveManager';
+import { resolveTerrainAbility } from './core/Geomancy';
+import { planTurn, unitsInBlast, faceTowards } from './core/EnemyAI';
+import { buildTrialFloor, rollTrialDrop } from './core/Trials';
+
+type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
+
+/** ?fast speeds every animation delay up (used by the automated play-test). */
+const SPEED = new URLSearchParams(location.search).has('fast') ? 0.12 : 1;
+const later = (fn: () => void, ms: number) => setTimeout(fn, ms * SPEED);
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms * SPEED));
+
+/** HTML-escape text that goes into the result modal. */
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
 class TacticsGame {
   private grid!: BattleGrid;
@@ -19,99 +34,190 @@ class TacticsGame {
   private turnManager!: TurnManager;
   private units: Unit[] = [];
 
-  // Interaction & Editor State
-  private currentMode: 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' = 'dialogue';
+  /** Persistent player squad: levels, JP, abilities and gear carry from battle to battle. */
+  private squad: Unit[] = [];
+  /** Item ids the squad owns. */
+  private armory: string[] = [...STARTING_ARMORY];
+
+  private mode: 'campaign' | 'trials' = 'campaign';
+  private trialsFloor = 0;
+  private campaignCleared = false;
+  private battleOver = false;
+  /** Per-battle kill tally for the spoils screen. */
+  private kills: Record<string, number> = {};
+
+  // Interaction state
+  private currentMode: InputMode = 'dialogue';
   private selectedAbility: Ability | null = null;
   private currentForecast: CombatForecast | null = null;
+  private targetTile: { x: number; z: number } | null = null;
 
-  // Campaign State
+  // Campaign state
   private currentChapter: CampaignChapter = CAMPAIGN_CHAPTERS.chapter_1;
   private dialogueQueue: DialogueLine[] = [];
-  private dialogueIndex: number = 0;
+  private dialogueIndex = 0;
   private onDialogueFinished?: () => void;
 
   constructor() {
-    // 1. Initialize UI Manager
     this.ui = new UIManager();
+    this.ui.armory = this.armory;
+    this.squad = this.createStartingSquad();
 
-    // 2. Load Initial Campaign Chapter
-    this.loadChapter('chapter_1', false);
+    this.setupBattle(CAMPAIGN_CHAPTERS.chapter_1);
 
-    // 3. Initialize Three.js Scene
     const canvas = document.getElementById('viewport-canvas') as HTMLCanvasElement;
     this.scene = new TacticsScene(canvas, this.grid);
     this.scene.updateUnits(this.units);
     this.applyAtmosphereForMap(this.currentChapter.mapId);
 
-    // 4. Bind Events & Start Story
     this.bindEvents();
     this.playChapterIntro();
     this.gameLoop();
-  }
 
-  private applyAtmosphereForMap(mapId: string): void {
-    if (mapId === 'night_fortress') {
-      this.scene.vfx.setWeatherTheme('night');
-    } else if (mapId === 'gloomy_swamp') {
-      this.scene.vfx.setWeatherTheme('swamp');
-    } else {
-      this.scene.vfx.setWeatherTheme('day');
+    // Debug / automated play-testing hook: add ?debug to the URL
+    if (new URLSearchParams(location.search).has('debug')) {
+      (window as unknown as { __tactics: TacticsGame }).__tactics = this;
     }
   }
 
-  private loadChapter(chapterId: string, refreshScene: boolean = true): void {
-    const chapter = CAMPAIGN_CHAPTERS[chapterId] || CAMPAIGN_CHAPTERS.chapter_1;
-    this.currentChapter = chapter;
+  // ---------------------------------------------------------------------------
+  // Squad, chapters and battle setup
+  // ---------------------------------------------------------------------------
 
-    const mapGen = MAPS[chapter.mapId] || MAPS.river_ruins;
-    const mapData = mapGen();
-    this.grid = new BattleGrid(mapData);
-
-    this.initSquadsForChapter(chapter);
-    this.turnManager = new TurnManager(this.units);
-
-    if (refreshScene && this.scene) {
-      this.scene.loadMap(this.grid);
-      this.scene.updateUnits(this.units);
-      this.applyAtmosphereForMap(chapter.mapId);
-      this.playChapterIntro();
-    }
-  }
-
-  private initSquadsForChapter(chapter: CampaignChapter): void {
-    // Retain or create player squad
-    const playerSquad = [
+  private createStartingSquad(): Unit[] {
+    const squad = [
       JobSystem.createUnit('p1', 'Ramza', 'player', 'squire', 3, 8, 'N', 3),
       JobSystem.createUnit('p2', 'Agrias', 'player', 'knight', 4, 8, 'N', 3),
       JobSystem.createUnit('p3', 'Mustadio', 'player', 'archer', 5, 9, 'N', 3),
       JobSystem.createUnit('p4', 'Kain', 'player', 'dragoon', 2, 7, 'N', 3)
     ];
 
-    JobSystem.setSecondarySkillset(playerSquad[0], 'knight');
-    playerSquad[0].unlockedAbilities['kn_rend_armor'] = true;
-    playerSquad[0].unlockedAbilities['sq_move_plus'] = true;
-    playerSquad[0].equippedAbilities.movement = 'sq_move_plus';
-    JobSystem.recalculateDerivedStats(playerSquad[0]);
+    JobSystem.setSecondarySkillset(squad[0], 'knight');
+    squad[0].unlockedAbilities['kn_rend_armor'] = true;
+    squad[0].unlockedAbilities['sq_move_plus'] = true;
+    squad[0].equippedAbilities.movement = 'sq_move_plus';
+    JobSystem.recalculateDerivedStats(squad[0]);
 
-    playerSquad[3].unlockedAbilities['dr_jump'] = true;
-    playerSquad[3].unlockedAbilities['dr_ignore_height'] = true;
-    playerSquad[3].equippedAbilities.movement = 'dr_ignore_height';
-    JobSystem.recalculateDerivedStats(playerSquad[3]);
+    squad[3].unlockedAbilities['dr_jump'] = true;
+    squad[3].unlockedAbilities['dr_ignore_height'] = true;
+    squad[3].equippedAbilities.movement = 'dr_ignore_height';
+    JobSystem.recalculateDerivedStats(squad[3]);
 
-    // Build enemy squad from chapter definition
-    const enemySquad: Unit[] = [];
-    chapter.enemyRoster.forEach((e, idx) => {
-      const enemyUnit = JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, 'S', e.level);
-      enemySquad.push(enemyUnit);
+    return squad;
+  }
+
+  private applyAtmosphereForMap(mapId: string): void {
+    const theme = MAPS[mapId] ? MAPS[mapId]().theme : 'day';
+    this.scene.vfx.setWeatherTheme(theme);
+  }
+
+  /** Puts every squad member on a free, walkable deployment tile with full HP/MP. */
+  private deploySquad(): void {
+    const taken = new Set<string>();
+    for (const e of this.units.filter((u) => u.team === 'enemy')) taken.add(`${e.x},${e.z}`);
+
+    this.squad.forEach((member, i) => {
+      let spot = PLAYER_DEPLOY[i % PLAYER_DEPLOY.length];
+      const ok = (x: number, z: number) => this.grid.isWalkable(x, z) && !taken.has(`${x},${z}`);
+      if (!ok(spot.x, spot.z)) {
+        // Fall back to the nearest open tile on the southern edge of the map
+        const candidates = this.grid.mapData.tiles
+          .filter((t) => t.walkable && !taken.has(`${t.x},${t.z}`))
+          .sort((a, b) => b.z - a.z || Math.abs(a.x - spot.x) - Math.abs(b.x - spot.x));
+        if (candidates[0]) spot = { x: candidates[0].x, z: candidates[0].z };
+      }
+      taken.add(`${spot.x},${spot.z}`);
+      JobSystem.resetForBattle(member, spot.x, spot.z);
     });
+  }
 
-    this.units = [...playerSquad, ...enemySquad];
+  private spawnEnemies(chapter: CampaignChapter): Unit[] {
+    return chapter.enemyRoster.map((e, idx) => {
+      const u = JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, 'S', e.level);
+      if (e.isBoss) JobSystem.makeBoss(u);
+      // Enemy casters get their job's reaction/support so they fight like the player's units
+      this.equipEnemyPassives(u);
+      return u;
+    });
+  }
+
+  private equipEnemyPassives(u: Unit): void {
+    const byJob: Record<string, { reaction?: string; support?: string }> = {
+      knight: { reaction: 'kn_parry' },
+      white_mage: { reaction: 'wm_auto_potion' },
+      black_mage: { support: 'bm_arcane_strength' },
+      ninja: { support: 'ni_dual_wield' },
+      dragoon: { reaction: 'dr_dragonheart' },
+      geomancer: { reaction: 'geo_earthen_ward' }
+    };
+    if (u.level < 4) return;
+    const p = byJob[u.jobId] || {};
+    if (p.reaction) {
+      u.unlockedAbilities[p.reaction] = true;
+      u.equippedAbilities.reaction = p.reaction;
+    }
+    if (p.support) {
+      u.unlockedAbilities[p.support] = true;
+      u.equippedAbilities.support = p.support;
+    }
+    // Veteran enemies know every action in their job's skillset
+    for (const a of JOBS[u.jobId]?.abilities || []) {
+      if (a.type === 'action') u.unlockedAbilities[a.id] = true;
+    }
+  }
+
+  /** Builds grid, squad deployment and enemies for a chapter (optionally on a different map). */
+  private setupBattle(chapter: CampaignChapter, mapOverride?: string): void {
+    this.currentChapter = chapter;
+    const mapId = mapOverride || chapter.mapId;
+    this.grid = new BattleGrid((MAPS[mapId] || MAPS.river_ruins)());
+
+    if (chapter.recruit && !this.squad.some((u) => u.id === chapter.recruit!.id)) {
+      const r = chapter.recruit;
+      this.squad.push(JobSystem.createUnit(r.id, r.name, 'player', r.jobId, 0, 0, 'N', r.level));
+      if (!this.armory.includes('gaia_staff')) this.armory.push('gaia_staff');
+    }
+
+    const enemies = this.spawnEnemies(chapter);
+    this.units = [...enemies];
+    this.deploySquad();
+    this.units = [...this.squad, ...enemies];
+    this.turnManager = new TurnManager(this.units);
+    this.kills = {};
+    this.battleOver = false;
+
+    this.ui.setMapSelection(mapId);
+    if (this.scene) {
+      this.scene.loadMap(this.grid);
+      this.scene.updateUnits(this.units);
+      this.applyAtmosphereForMap(mapId);
+      // Clear the previous battle's HUD before the intro dialogue plays
+      this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), null);
+      const lead = this.squad[0];
+      this.ui.updateUnitCard(lead, this.grid.getHeight(lead.x, lead.z));
+      this.scene.focusOn(lead.x, this.grid.getHeight(lead.x, lead.z), lead.z);
+    }
+  }
+
+  private loadChapter(chapterId: string): void {
+    this.mode = 'campaign';
+    this.setupBattle(CAMPAIGN_CHAPTERS[chapterId] || CAMPAIGN_CHAPTERS.chapter_1);
+    this.playChapterIntro();
+  }
+
+  private startTrial(floor: number): void {
+    this.mode = 'trials';
+    this.trialsFloor = floor;
+    this.setupBattle(buildTrialFloor(floor));
+    this.startBattle();
   }
 
   private playChapterIntro(): void {
-    this.playDialogueSequence(this.currentChapter.introDialogue, () => {
+    if (this.currentChapter.introDialogue.length === 0) {
       this.startBattle();
-    });
+      return;
+    }
+    this.playDialogueSequence(this.currentChapter.introDialogue, () => this.startBattle());
   }
 
   private playDialogueSequence(lines: DialogueLine[], onComplete: () => void): void {
@@ -132,15 +238,19 @@ class TacticsGame {
       });
     } else {
       this.ui.hideDialogue();
-      this.onDialogueFinished?.();
+      const done = this.onDialogueFinished;
+      this.onDialogueFinished = undefined;
+      done?.();
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Input binding
+  // ---------------------------------------------------------------------------
+
   private bindEvents(): void {
-    // Map Selector
     this.ui.onMapChanged = (mapId) => this.switchBattlefield(mapId);
 
-    // Map Editor Events
     this.ui.onEditorToggled = (isOpen) => {
       this.currentMode = isOpen ? 'editor' : 'idle';
       this.scene.clearHighlights();
@@ -164,39 +274,41 @@ class TacticsGame {
           this.scene.loadMap(this.grid);
           this.ui.showBanner('CUSTOM MAP LOADED SUCCESSFULLY!');
         }
-      } catch (err) {
-        alert('Invalid Map JSON syntax!');
+      } catch {
+        this.ui.showBanner('INVALID MAP JSON');
       }
     };
 
     this.ui.onEditorTestBattle = () => {
       this.ui.toggleEditor(false);
-      this.currentMode = 'idle';
-      this.initSquadsForChapter(this.currentChapter);
+      const enemies = this.spawnEnemies(this.currentChapter);
+      this.units = [...enemies];
+      this.deploySquad();
+      this.units = [...this.squad, ...enemies];
+      this.turnManager = new TurnManager(this.units);
+      this.battleOver = false;
       this.scene.updateUnits(this.units);
       this.startBattle();
     };
 
-    // Camera HUD controls
     document.getElementById('btn-rot-left')?.addEventListener('click', () => {
       SoundFX.playMenuBlip();
       this.scene.rotateLeft();
       this.scene.updateUnits(this.units);
     });
-
     document.getElementById('btn-rot-right')?.addEventListener('click', () => {
       SoundFX.playMenuBlip();
       this.scene.rotateRight();
       this.scene.updateUnits(this.units);
     });
-
     document.getElementById('btn-zoom-in')?.addEventListener('click', () => this.scene.zoomIn(1.8));
     document.getElementById('btn-zoom-out')?.addEventListener('click', () => this.scene.zoomOut(1.8));
 
-    // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
+      if (this.ui.isResultModalOpen) return; // buttons handle Enter/Space themselves
       if (this.currentMode === 'dialogue') {
         if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
           SoundFX.playMenuBlip();
           this.dialogueIndex++;
           this.advanceDialogue();
@@ -204,30 +316,31 @@ class TacticsGame {
         return;
       }
 
-      if (e.key === 'q' || e.key === 'Q') {
+      const k = e.key;
+      if (k === 'q' || k === 'Q') {
         this.scene.rotateLeft();
         this.scene.updateUnits(this.units);
-      } else if (e.key === 'e' || e.key === 'E') {
+      } else if (k === 'e' || k === 'E') {
         this.scene.rotateRight();
         this.scene.updateUnits(this.units);
-      } else if (e.key === '+' || e.key === '=') {
+      } else if (k === '+' || k === '=') {
         this.scene.zoomIn(1.5);
-      } else if (e.key === '-' || e.key === '_') {
+      } else if (k === '-' || k === '_') {
         this.scene.zoomOut(1.5);
-      } else if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+      } else if (k === 'w' || k === 'W' || k === 'ArrowUp') {
         this.scene.panBy(0, -1.0);
-      } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+      } else if (k === 's' || k === 'S' || k === 'ArrowDown') {
         this.scene.panBy(0, 1.0);
-      } else if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+      } else if (k === 'a' || k === 'A' || k === 'ArrowLeft') {
         this.scene.panBy(-1.0, 0);
-      } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+      } else if (k === 'd' || k === 'D' || k === 'ArrowRight') {
         this.scene.panBy(1.0, 0);
-      } else if (e.key === 'r' || e.key === 'R' || e.key === 'Home') {
+      } else if (k === 'r' || k === 'R' || k === 'Home') {
         const active = this.turnManager.activeUnit;
-        if (active) {
-          this.scene.focusOn(active.x, this.grid.getHeight(active.x, active.z), active.z);
-        }
-      } else if (e.key === 'Escape') {
+        if (active) this.scene.focusOn(active.x, this.grid.getHeight(active.x, active.z), active.z);
+      } else if ((k === 't' || k === 'T') && this.currentMode === 'idle') {
+        this.handleAutoCommand();
+      } else if (k === 'Escape') {
         if (this.currentMode === 'targeting') {
           this.cancelTargeting();
         } else if (this.currentMode === 'moving') {
@@ -237,84 +350,118 @@ class TacticsGame {
       }
     });
 
-    this.scene.canvas.addEventListener('click', () => {
-      this.onCanvasClick();
-    });
+    this.scene.canvas.addEventListener('click', () => this.onCanvasClick());
 
     this.ui.onMoveClicked = () => this.handleMoveCommand();
     this.ui.onAbilitySelected = (ability) => this.handleAbilityCommand(ability);
     this.ui.onWaitClicked = () => this.handleWaitCommand();
+    this.ui.onAutoClicked = () => this.handleAutoCommand();
     this.ui.onFacingConfirmed = (facing) => this.handleFacingConfirmed(facing);
     this.ui.onExecuteAttack = () => this.handleExecuteAttack();
     this.ui.onCancelAttack = () => this.cancelTargeting();
 
-    // BGM & Persistence
     this.ui.onToggleBgm = () => {
       const isMuted = Music.toggleMute();
       this.ui.updateBgmButton(isMuted);
       this.ui.addLogEntry(`[SYSTEM] BGM ${isMuted ? 'muted' : 'enabled'}.`, 'system');
     };
 
-    this.ui.onSaveGame = () => {
-      const playerUnits = this.units.filter((u) => u.team === 'player');
-      const ok = SaveManager.saveGame(this.currentChapter.id, playerUnits);
-      if (ok) {
-        SoundFX.playTurnChime();
-        this.ui.showBanner('GAME SAVED SUCCESSFULLY!');
-        this.ui.addLogEntry(`[SYSTEM] Squad progress and chapter state saved to browser storage.`, 'system');
-      }
-    };
+    this.ui.onSaveGame = () => this.saveGame(true);
+    this.ui.onLoadGame = () => this.loadGame();
+  }
 
-    this.ui.onLoadGame = () => {
-      const data = SaveManager.loadGame();
-      if (data && data.units && data.units.length > 0) {
-        SoundFX.playTurnChime();
-        this.currentChapter = CAMPAIGN_CHAPTERS[data.currentChapterId] || CAMPAIGN_CHAPTERS.chapter_1;
-        const mapGen = MAPS[this.currentChapter.mapId] || MAPS.river_ruins;
-        this.grid = new BattleGrid(mapGen());
-        this.scene.loadMap(this.grid);
-        this.applyAtmosphereForMap(this.currentChapter.mapId);
+  // ---------------------------------------------------------------------------
+  // Save / load
+  // ---------------------------------------------------------------------------
 
-        const enemySquad: Unit[] = [];
-        this.currentChapter.enemyRoster.forEach((e, idx) => {
-          enemySquad.push(JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, 'S', e.level));
-        });
+  private saveGame(announce: boolean): void {
+    const ok = SaveManager.saveGame(this.currentChapter.id, this.squad, {
+      armory: this.armory,
+      mode: this.mode,
+      trialsFloor: this.trialsFloor,
+      campaignCleared: this.campaignCleared
+    });
+    if (ok && announce) {
+      SoundFX.playTurnChime();
+      this.ui.showBanner('GAME SAVED!');
+      this.ui.addLogEntry('[SYSTEM] Squad, armory and progress saved to this browser.', 'system');
+    } else if (!ok && announce) {
+      this.ui.showBanner('SAVE FAILED: BROWSER STORAGE UNAVAILABLE');
+    }
+  }
 
-        this.units = [...data.units, ...enemySquad];
-        this.turnManager = new TurnManager(this.units);
-        this.scene.updateUnits(this.units);
-        this.ui.showBanner('SAVE FILE RESTORED!');
-        this.ui.addLogEntry(`[SYSTEM] Save file from ${new Date(data.timestamp).toLocaleTimeString()} restored!`, 'system');
-        this.startBattle();
-      } else {
-        alert('No saved game found in browser storage!');
-      }
-    };
+  private loadGame(): void {
+    const data = SaveManager.loadGame();
+    if (!data || !data.units || data.units.length === 0) {
+      this.ui.showBanner('NO SAVED GAME FOUND');
+      return;
+    }
+    this.restoreFromSave(data);
+  }
+
+  private restoreFromSave(data: GameSaveData): void {
+    SoundFX.playTurnChime();
+    this.ui.hideResultModal();
+
+    // Re-hydrate gear from the current item table so balance changes apply to old saves
+    this.squad = data.units
+      .filter((u) => u.team === 'player')
+      .map((u) => {
+        for (const slot of Object.keys(u.equipment) as (keyof typeof u.equipment)[]) {
+          const it = u.equipment[slot];
+          u.equipment[slot] = it && ITEMS[it.id] ? ITEMS[it.id] : it;
+        }
+        // 0.6.x saves stored Focus as a permanent +3 ATK; nothing to undo, but clear battle flags
+        u.isBoss = false;
+        u.isEnraged = false;
+        return u;
+      });
+
+    const owned = new Set<string>(data.armory || STARTING_ARMORY);
+    for (const u of this.squad) {
+      for (const it of Object.values(u.equipment)) if (it) owned.add(it.id);
+    }
+    this.armory.length = 0;
+    this.armory.push(...owned);
+
+    this.campaignCleared = !!data.campaignCleared;
+    if (data.mode === 'trials' && data.trialsFloor) {
+      this.ui.showBanner('SAVE FILE RESTORED!');
+      this.startTrial(data.trialsFloor);
+    } else {
+      this.mode = 'campaign';
+      this.setupBattle(CAMPAIGN_CHAPTERS[data.currentChapterId] || CAMPAIGN_CHAPTERS.chapter_1);
+      this.ui.showBanner('SAVE FILE RESTORED!');
+      this.startBattle();
+    }
+    this.ui.addLogEntry(`[SYSTEM] Save file from ${new Date(data.timestamp).toLocaleString()} restored.`, 'system');
   }
 
   private switchBattlefield(mapId: string): void {
-    const mapGen = MAPS[mapId] || MAPS.river_ruins;
-    const mapData = mapGen();
-    this.grid = new BattleGrid(mapData);
-    this.scene.loadMap(this.grid);
-    this.applyAtmosphereForMap(mapId);
-
-    this.initSquadsForChapter(this.currentChapter);
-    this.turnManager = new TurnManager(this.units);
-    this.scene.updateUnits(this.units);
+    this.setupBattle(this.currentChapter, mapId);
     this.startBattle();
   }
+
+  // ---------------------------------------------------------------------------
+  // Turn flow
+  // ---------------------------------------------------------------------------
 
   private startBattle(): void {
     Music.playTrack('battle');
     SoundFX.playTurnChime();
+    this.battleOver = false;
+    this.currentMode = 'busy';
     this.ui.showBanner(`${this.currentChapter.title}: ${this.currentChapter.subtitle.toUpperCase()}`);
     this.ui.addLogEntry(`=== ${this.currentChapter.title}: ${this.currentChapter.subtitle} ===`, 'system');
+    const boss = this.units.find((u) => u.isBoss && u.team === 'enemy');
+    if (boss) this.ui.addLogEntry(`[BOSS] ${boss.name} commands the enemy. It will enrage at half HP!`, 'system');
     this.updateTimeline();
     this.advanceTurn();
   }
 
   private advanceTurn(): void {
+    if (this.battleOver || this.checkBattleStatus()) return;
+
     const result = this.turnManager.advanceToNextActiveTurn();
     if (!result) {
       this.checkBattleStatus();
@@ -322,7 +469,6 @@ class TacticsGame {
     }
 
     const { activeUnit, poisonDamage } = result;
-
     this.currentMode = 'idle';
     this.scene.clearHighlights();
 
@@ -330,58 +476,55 @@ class TacticsGame {
     this.scene.focusOn(activeUnit.x, height, activeUnit.z);
     this.scene.setCursor(activeUnit.x, activeUnit.z);
 
-    this.ui.addLogEntry(`[TURN] ${activeUnit.name} (${activeUnit.team.toUpperCase()}, CT: ${Math.round(activeUnit.ct)}) is ready to act.`, 'turn');
+    this.ui.addLogEntry(`[TURN] ${activeUnit.name} (${activeUnit.team.toUpperCase()}) is ready to act.`, 'turn');
 
     if (poisonDamage) {
       this.scene.spawnFloatingDamage(activeUnit.x, height, activeUnit.z, `POISON -${poisonDamage}`, 'damage');
       this.ui.addLogEntry(`[STATUS] ${activeUnit.name} takes ${poisonDamage} poison damage!`, 'spell');
       SoundFX.playCrit();
+      this.scene.updateUnits(this.units);
     }
 
     this.ui.updateUnitCard(activeUnit, height);
-    this.ui.populateActionSubMenu(activeUnit);
+    this.ui.populateActionSubMenu(activeUnit, this.grid.getTile(activeUnit.x, activeUnit.z)?.terrain);
     this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), activeUnit);
-
     this.ui.showBanner(`${activeUnit.name.toUpperCase()}'s TURN`);
 
     if (activeUnit.team === 'player') {
       SoundFX.playTurnChime();
     } else {
-      setTimeout(() => this.runEnemyAi(activeUnit), 900);
+      this.currentMode = 'busy';
+      later(() => this.runAiTurn(activeUnit), 800);
     }
   }
 
   private handleMoveCommand(): void {
     const active = this.turnManager.activeUnit;
-    if (!active || active.hasMoved || active.team !== 'player' || active.move === 0) return;
+    if (!active || active.hasMoved || active.team !== 'player' || active.move === 0 || this.currentMode === 'busy') return;
 
     this.currentMode = 'moving';
-    const reachable = this.grid.getReachableTiles(active, this.units);
-    this.scene.setHighlights(reachable, 0x3b82f6);
+    this.scene.setHighlights(this.grid.getReachableTiles(active, this.units), 0x3b82f6);
   }
 
-  private handleAbilityCommand(ability: Ability): void {
+  private handleAbilityCommand(raw: Ability): void {
     const active = this.turnManager.activeUnit;
-    if (!active || active.hasActed || active.team !== 'player') return;
+    if (!active || active.hasActed || active.team !== 'player' || this.currentMode === 'busy') return;
+    if (active.currentMp < raw.mpCost) return;
 
+    const ability = resolveTerrainAbility(raw, this.grid.getTile(active.x, active.z)?.terrain);
     this.selectedAbility = ability;
 
     if (ability.isSelfOnly) {
-      const height = this.grid.getHeight(active.x, active.z);
-      const forecast = CombatEngine.getForecast(active, active, ability, height, height);
-      this.currentForecast = forecast;
-      this.handleExecuteAttack();
+      void this.executePlayerAction(active, ability, active.x, active.z);
       return;
     }
 
     this.currentMode = 'targeting';
-    const targetables = this.grid.getTargetableTiles(
-      active.x,
-      active.z,
-      ability.range,
-      ability.heightTolerance
+    const supportive = CombatEngine.isSupportive(ability);
+    const tiles = this.grid.mapData.tiles.filter((t) =>
+      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive)
     );
-    this.scene.setHighlights(targetables, 0xdc2626);
+    this.scene.setHighlights(tiles, supportive ? 0x22c55e : 0xdc2626);
   }
 
   private handleWaitCommand(): void {
@@ -399,12 +542,12 @@ class TacticsGame {
 
     active.facing = facing;
     this.scene.updateUnits(this.units);
-
     this.turnManager.endTurn(active);
     this.updateTimeline();
 
     if (!this.checkBattleStatus()) {
-      setTimeout(() => this.advanceTurn(), 400);
+      this.currentMode = 'busy';
+      later(() => this.advanceTurn(), 400);
     }
   }
 
@@ -412,11 +555,9 @@ class TacticsGame {
     const tile = this.scene.hoveredTile;
     if (!tile) return;
 
-    // 3D Map Editor Interception
     if (this.ui.isEditorOpen) {
       const targetTile = this.grid.getTile(tile.x, tile.z);
       if (!targetTile) return;
-
       SoundFX.playMoveStep();
       const tool = this.ui.currentEditorTool;
       if (tool === 'raise') {
@@ -443,192 +584,82 @@ class TacticsGame {
         this.ui.updateUnitCard(clickedUnit, height);
       }
     } else if (this.currentMode === 'moving' && active.team === 'player') {
-      const reachable = this.grid.getReachableTiles(active, this.units);
-      const isValid = reachable.some((r) => r.x === tile.x && r.z === tile.z);
+      const dest = this.grid.getReachableTiles(active, this.units).find((r) => r.x === tile.x && r.z === tile.z);
+      if (!dest) return;
 
-      if (isValid) {
-        SoundFX.playMoveStep();
-        active.x = tile.x;
-        active.z = tile.z;
-        active.hasMoved = true;
-        this.scene.updateUnits(this.units);
-        this.scene.clearHighlights();
-        this.currentMode = 'idle';
+      SoundFX.playMoveStep();
+      active.x = tile.x;
+      active.z = tile.z;
+      active.hasMoved = true;
+      this.applyRegenWalk(active, dest.cost);
+      this.scene.updateUnits(this.units);
+      this.scene.clearHighlights();
+      this.currentMode = 'idle';
 
-        this.ui.updateUnitCard(active, this.grid.getHeight(active.x, active.z));
+      this.ui.updateUnitCard(active, this.grid.getHeight(active.x, active.z));
+      // Terrain-driven spells change with the ground: refresh the action list
+      this.ui.populateActionSubMenu(active, this.grid.getTile(active.x, active.z)?.terrain);
 
-        if (active.hasActed) {
-          this.handleWaitCommand();
-        }
-      }
+      if (active.hasActed) this.handleWaitCommand();
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
-      const targetUnit = this.units.find((u) => !u.isDead && u.x === tile.x && u.z === tile.z);
-      if (targetUnit) {
-        SoundFX.playMenuBlip();
-        const attackerHeight = this.grid.getHeight(active.x, active.z);
-        const targetHeight = this.grid.getHeight(targetUnit.x, targetUnit.z);
-
-        const forecast = CombatEngine.getForecast(
-          active,
-          targetUnit,
-          this.selectedAbility,
-          attackerHeight,
-          targetHeight
-        );
-
-        this.currentForecast = forecast;
-        this.ui.showCombatForecast(forecast);
+      const ability = this.selectedAbility;
+      const supportive = CombatEngine.isSupportive(ability);
+      if (!this.grid.canTarget(active.x, active.z, tile.x, tile.z, ability.range, ability.heightTolerance, supportive)) {
+        this.ui.showBanner('OUT OF RANGE');
+        return;
       }
+
+      const victims = this.victimsFor(active, ability, tile.x, tile.z);
+      if (victims.length === 0) {
+        this.ui.showBanner(ability.aoe > 0 ? 'NO TARGETS IN AREA' : 'NO TARGET THERE');
+        return;
+      }
+
+      SoundFX.playMenuBlip();
+      // Preview the unit on the clicked tile, or the first unit caught in the blast
+      const primary = victims.find((v) => v.x === tile.x && v.z === tile.z) || victims[0];
+      this.currentForecast = this.forecastFor(active, primary, ability, { x: tile.x, z: tile.z });
+      this.targetTile = { x: tile.x, z: tile.z };
+      this.ui.showCombatForecast(this.currentForecast, victims.length - 1);
     }
   }
 
+  private applyRegenWalk(unit: Unit, steps: number): void {
+    if (unit.equippedAbilities.movement !== 'wm_regen_move' || unit.currentHp >= unit.maxHp) return;
+    const heal = Math.round(unit.maxHp * Math.min(0.4, 0.1 * steps));
+    unit.currentHp = Math.min(unit.maxHp, unit.currentHp + heal);
+    const h = this.grid.getHeight(unit.x, unit.z);
+    this.scene.spawnFloatingDamage(unit.x, h, unit.z, `REGEN +${heal}`, 'heal');
+  }
+
   private handleExecuteAttack(): void {
-    if (!this.currentForecast) return;
-
-    const forecast = this.currentForecast;
-    const active = forecast.attacker;
-
-    active.currentMp = Math.max(0, active.currentMp - forecast.ability.mpCost);
-
-    // Trigger sprite lunge animation towards target
-    this.scene.triggerUnitLunge(active.id, forecast.target.x, forecast.target.z);
-
-    const result = CombatEngine.executeAttack(forecast);
-    active.hasActed = true;
-
-    active.jobPoints[active.jobId] = (active.jobPoints[active.jobId] || 0) + 24;
-    active.exp += 15;
-
-    this.scene.updateUnits(this.units);
-    this.scene.clearHighlights();
-    this.currentMode = 'idle';
+    if (!this.currentForecast || !this.targetTile) return;
+    const { attacker, ability } = this.currentForecast;
+    const tile = this.targetTile;
     this.currentForecast = null;
+    this.targetTile = null;
+    void this.executePlayerAction(attacker, ability, tile.x, tile.z);
+  }
 
-    const targetHeight = this.grid.getHeight(forecast.target.x, forecast.target.z);
-    const targetPos = new THREE.Vector3(forecast.target.x, targetHeight, forecast.target.z);
+  private async executePlayerAction(active: Unit, ability: Ability, tx: number, tz: number): Promise<void> {
+    this.currentMode = 'busy';
+    this.scene.clearHighlights();
+    await this.performAction(active, ability, tx, tz);
+    this.selectedAbility = null;
 
-    this.ui.addLogEntry(`[ACTION] ${active.name} executes ${forecast.ability.name} on ${forecast.target.name} (${forecast.facingType.toUpperCase()}, ${forecast.hitChance}% Hit)`, 'attack');
+    if (this.battleOver || this.checkBattleStatus()) return;
 
-    if (result.hit) {
-      this.scene.triggerUnitRecoil(forecast.target.id);
-
-      if (result.isHeal) {
-        SoundFX.playHeal();
-        this.scene.vfx.spawnHolyFX(targetPos);
-        this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `+${result.damageDealt}`, 'heal');
-        this.ui.showBanner(`${forecast.target.name} healed +${result.damageDealt} HP!`);
-        this.ui.addLogEntry(`[HEAL] ${forecast.target.name} recovers +${result.damageDealt} HP!`, 'heal');
-      } else if (result.appliedStatus && result.damageDealt === 0) {
-        SoundFX.playMagicCast();
-        this.scene.vfx.spawnHolyFX(targetPos);
-        this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `[${result.appliedStatus}]`, 'heal');
-        this.ui.showBanner(`${forecast.target.name} granted ${result.appliedStatus}!`);
-        this.ui.addLogEntry(`[STATUS] ${forecast.target.name} receives ${result.appliedStatus}!`, 'spell');
-      } else {
-        if (forecast.ability.element === 'physical') {
-          SoundFX.playSwordSlash();
-          this.scene.vfx.spawnSlashFX(targetPos);
-        } else if (forecast.ability.element === 'fire') {
-          SoundFX.playMagicCast();
-          this.scene.vfx.spawnFireFX(targetPos);
-        } else if (forecast.ability.element === 'ice') {
-          SoundFX.playMagicCast();
-          this.scene.vfx.spawnIceFX(targetPos);
-        } else if (forecast.ability.element === 'lightning') {
-          SoundFX.playMagicCast();
-          this.scene.vfx.spawnLightningFX(targetPos);
-        } else if (forecast.ability.element === 'holy') {
-          SoundFX.playMagicCast();
-          this.scene.vfx.spawnHolyFX(targetPos);
-        } else {
-          SoundFX.playMagicCast();
-          this.scene.vfx.spawnSlashFX(targetPos);
-        }
-
-        if (result.isCrit) {
-          SoundFX.playCrit();
-          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `CRIT! -${result.damageDealt}`, 'crit');
-          this.ui.showBanner(`CRITICAL HIT! ${forecast.target.name} takes ${result.damageDealt} DMG!`);
-          this.ui.addLogEntry(`[CRIT] Critical strike! ${forecast.target.name} sustains ${result.damageDealt} DMG!`, 'crit');
-        } else {
-          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `-${result.damageDealt}`, 'damage');
-          this.ui.showBanner(`${forecast.target.name} takes ${result.damageDealt} damage!`);
-          this.ui.addLogEntry(`[HIT] ${forecast.target.name} takes ${result.damageDealt} DMG.`, 'attack');
-        }
-
-        if (forecast.target.isDead) {
-          this.ui.addLogEntry(`[DEFEAT] ${forecast.target.name} has fallen in battle!`, 'defeat');
-        }
-
-        if (result.secondStrike) {
-          setTimeout(() => {
-            if (result.secondStrike!.hit) {
-              SoundFX.playSwordSlash();
-              this.scene.vfx.spawnSlashFX(targetPos);
-              this.scene.triggerUnitRecoil(forecast.target.id);
-              this.scene.spawnFloatingDamage(forecast.target.x, targetHeight + 0.3, forecast.target.z, `-${result.secondStrike!.damageDealt}`, 'damage');
-              this.ui.addLogEntry(`[DUAL WIELD] Secondary strike connects for ${result.secondStrike!.damageDealt} DMG!`, 'attack');
-              if (forecast.target.isDead) {
-                this.ui.addLogEntry(`[DEFEAT] ${forecast.target.name} has fallen in battle!`, 'defeat');
-              }
-            }
-          }, 350);
-        }
-      }
-    } else {
-      SoundFX.playMenuBlip();
-      this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, 'MISS', 'miss');
-      if (result.reaction && result.reaction.type === 'parry') {
-        this.ui.showBanner(`${result.reaction.description}`);
-        this.ui.addLogEntry(`[PARRY] ${result.reaction.description}`, 'reaction');
-      } else {
-        this.ui.showBanner('MISSED!');
-        this.ui.addLogEntry(`[MISS] Attack missed ${forecast.target.name}!`, 'attack');
-      }
-    }
-
-    // Process Reaction Trigger (Counter, Auto-Potion, Speed Save, Dragonheart, etc.)
-    if (result.reaction && result.reaction.type !== 'parry') {
-      const rx = result.reaction;
-      setTimeout(() => {
-        this.ui.showBanner(`REACTION: ${rx.name.toUpperCase()}!`);
-        this.ui.addLogEntry(`[REACTION] ${rx.description}`, 'reaction');
-
-        if (rx.type === 'counter_attack' && rx.damage) {
-          this.scene.triggerUnitLunge(forecast.target.id, active.x, active.z);
-          this.scene.triggerUnitRecoil(active.id);
-          SoundFX.playSwordSlash();
-          const attackerH = this.grid.getHeight(active.x, active.z);
-          this.scene.spawnFloatingDamage(active.x, attackerH, active.z, `-${rx.damage}`, 'damage');
-          this.scene.vfx.spawnSlashFX(new THREE.Vector3(active.x, attackerH, active.z));
-          if (active.isDead) {
-            this.ui.addLogEntry(`[DEFEAT] Counter-strike felled ${active.name}!`, 'defeat');
-          }
-        } else if (rx.type === 'auto_potion' && rx.heal) {
-          SoundFX.playHeal();
-          this.scene.vfx.spawnHolyFX(targetPos);
-          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `+${rx.heal}`, 'heal');
-        } else if (rx.type === 'dragonheart') {
-          SoundFX.playHeal();
-          this.scene.vfx.spawnHolyFX(targetPos);
-          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `REVIVED!`, 'heal');
-        } else if (rx.type === 'speed_save') {
-          SoundFX.playTurnChime();
-          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `SPD +2`, 'heal');
-        } else if (rx.type === 'critical_quick') {
-          SoundFX.playTurnChime();
-          this.scene.spawnFloatingDamage(forecast.target.x, targetHeight, forecast.target.z, `QUICK!`, 'heal');
-        }
-
-        this.scene.updateUnits(this.units);
-      }, 450);
-    }
-
+    this.currentMode = 'idle';
     this.ui.updateUnitCard(active, this.grid.getHeight(active.x, active.z));
     this.updateTimeline();
 
-    if (active.hasMoved) {
-      setTimeout(() => this.handleWaitCommand(), 700);
+    if (active.isDead) {
+      // Felled by a counter: their turn ends
+      this.turnManager.endTurn(active);
+      this.currentMode = 'busy';
+      later(() => this.advanceTurn(), 600);
+    } else if (active.hasMoved) {
+      later(() => this.handleWaitCommand(), 500);
     }
   }
 
@@ -636,235 +667,423 @@ class TacticsGame {
     this.currentMode = 'idle';
     this.selectedAbility = null;
     this.currentForecast = null;
+    this.targetTile = null;
     this.scene.clearHighlights();
   }
 
-  private runEnemyAi(enemy: Unit): void {
-    const players = this.units.filter((u) => !u.isDead && u.team === 'player');
-    if (players.length === 0) return;
+  // ---------------------------------------------------------------------------
+  // Shared action resolution (player + enemy)
+  // ---------------------------------------------------------------------------
 
-    let closestPlayer: Unit | null = null;
-    let minDist = 999;
-    for (const p of players) {
-      const d = Math.abs(p.x - enemy.x) + Math.abs(p.z - enemy.z);
-      if (d < minDist) {
-        minDist = d;
-        closestPlayer = p;
-      }
-    }
+  /** Units an ability aimed at (tx, tz) will affect. Single-target abilities hit whoever is on the tile. */
+  private victimsFor(caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
+    if (ability.isSelfOnly) return [caster];
+    if (ability.aoe > 0) return unitsInBlast(caster, ability, tx, tz, this.units);
+    const u = this.units.find((v) => !v.isDead && v.x === tx && v.z === tz);
+    return u ? [u] : [];
+  }
 
-    if (!closestPlayer) return;
+  private forecastFor(attacker: Unit, target: Unit, ability: Ability, aim?: { x: number; z: number }): CombatForecast {
+    const isSplash = !!aim && ability.aoe > 0 && (target.x !== aim.x || target.z !== aim.z);
+    return CombatEngine.getForecast(
+      attacker,
+      target,
+      ability,
+      this.grid.getHeight(attacker.x, attacker.z),
+      this.grid.getHeight(target.x, target.z),
+      this.grid.getTile(target.x, target.z)?.terrain,
+      isSplash
+    );
+  }
 
-    const reachable = this.grid.getReachableTiles(enemy, this.units);
-    let bestTile = { x: enemy.x, z: enemy.z };
-    let bestTileDist = minDist;
-
-    for (const r of reachable) {
-      const d = Math.abs(r.x - closestPlayer.x) + Math.abs(r.z - closestPlayer.z);
-      if (d < bestTileDist) {
-        bestTileDist = d;
-        bestTile = { x: r.x, z: r.z };
-      }
-    }
-
-    enemy.x = bestTile.x;
-    enemy.z = bestTile.z;
-    enemy.hasMoved = true;
-    this.scene.updateUnits(this.units);
-
-    const distNow = Math.abs(enemy.x - closestPlayer.x) + Math.abs(enemy.z - closestPlayer.z);
-    const abilities = JobSystem.getCombatActionAbilities(enemy);
-    const attackAbility = abilities.find((a) => (a.power > 0 || a.appliesStatus) && a.range >= distNow) || abilities[0];
-
-    if (distNow <= attackAbility.range) {
-      const attackerHeight = this.grid.getHeight(enemy.x, enemy.z);
-      const targetHeight = this.grid.getHeight(closestPlayer.x, closestPlayer.z);
-      const forecast = CombatEngine.getForecast(enemy, closestPlayer, attackAbility, attackerHeight, targetHeight);
-
-      setTimeout(() => {
-        // Trigger lunge animation towards player target
-        this.scene.triggerUnitLunge(enemy.id, closestPlayer!.x, closestPlayer!.z);
-
-        const result = CombatEngine.executeAttack(forecast);
-        enemy.hasActed = true;
-        this.scene.updateUnits(this.units);
-
-        const targetH = this.grid.getHeight(closestPlayer!.x, closestPlayer!.z);
-        const targetPos = new THREE.Vector3(closestPlayer!.x, targetH, closestPlayer!.z);
-
-        this.ui.addLogEntry(`[ACTION] ${enemy.name} uses ${forecast.ability.name} on ${closestPlayer!.name} (${forecast.facingType.toUpperCase()}, ${forecast.hitChance}% Hit)`, 'attack');
-
-        if (result.hit) {
-          this.scene.triggerUnitRecoil(closestPlayer!.id);
-
-          if (forecast.ability.element === 'physical') {
-            SoundFX.playSwordSlash();
-            this.scene.vfx.spawnSlashFX(targetPos);
-          } else if (forecast.ability.element === 'fire') {
-            SoundFX.playMagicCast();
-            this.scene.vfx.spawnFireFX(targetPos);
-          } else if (forecast.ability.element === 'ice') {
-            SoundFX.playMagicCast();
-            this.scene.vfx.spawnIceFX(targetPos);
-          } else if (forecast.ability.element === 'lightning') {
-            SoundFX.playMagicCast();
-            this.scene.vfx.spawnLightningFX(targetPos);
-          } else if (forecast.ability.element === 'holy') {
-            SoundFX.playMagicCast();
-            this.scene.vfx.spawnHolyFX(targetPos);
-          } else {
-            SoundFX.playMagicCast();
-            this.scene.vfx.spawnSlashFX(targetPos);
-          }
-
-          if (result.isCrit) {
-            SoundFX.playCrit();
-            this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `CRIT! -${result.damageDealt}`, 'crit');
-            this.ui.addLogEntry(`[CRIT] Critical strike! ${closestPlayer!.name} sustains ${result.damageDealt} DMG!`, 'crit');
-          } else if (result.appliedStatus && result.damageDealt === 0) {
-            this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `[${result.appliedStatus}]`, 'heal');
-            this.ui.addLogEntry(`[STATUS] ${closestPlayer!.name} receives ${result.appliedStatus}!`, 'spell');
-          } else {
-            this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `-${result.damageDealt}`, 'damage');
-            this.ui.addLogEntry(`[HIT] ${closestPlayer!.name} takes ${result.damageDealt} DMG.`, 'attack');
-          }
-
-          if (closestPlayer!.isDead) {
-            this.ui.addLogEntry(`[DEFEAT] ${closestPlayer!.name} has fallen in battle!`, 'defeat');
-          }
-          this.ui.showBanner(`${enemy.name} used ${attackAbility.name}!`);
-        } else {
-          this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, 'MISS', 'miss');
-          if (result.reaction && result.reaction.type === 'parry') {
-            this.ui.showBanner(`${result.reaction.description}`);
-            this.ui.addLogEntry(`[PARRY] ${result.reaction.description}`, 'reaction');
-          } else {
-            this.ui.showBanner(`${enemy.name} missed!`);
-            this.ui.addLogEntry(`[MISS] ${enemy.name}'s attack missed!`, 'attack');
-          }
-        }
-
-        // Process Player Reaction Trigger against Enemy
-        if (result.reaction && result.reaction.type !== 'parry') {
-          const rx = result.reaction;
-          setTimeout(() => {
-            this.ui.showBanner(`REACTION: ${rx.name.toUpperCase()}!`);
-            this.ui.addLogEntry(`[REACTION] ${rx.description}`, 'reaction');
-
-            if (rx.type === 'counter_attack' && rx.damage) {
-              this.scene.triggerUnitLunge(closestPlayer!.id, enemy.x, enemy.z);
-              this.scene.triggerUnitRecoil(enemy.id);
-              SoundFX.playSwordSlash();
-              const enemyH = this.grid.getHeight(enemy.x, enemy.z);
-              this.scene.spawnFloatingDamage(enemy.x, enemyH, enemy.z, `-${rx.damage}`, 'damage');
-              this.scene.vfx.spawnSlashFX(new THREE.Vector3(enemy.x, enemyH, enemy.z));
-              if (enemy.isDead) {
-                this.ui.addLogEntry(`[DEFEAT] ${enemy.name} was defeated by counter-attack!`, 'defeat');
-              }
-            } else if (rx.type === 'auto_potion' && rx.heal) {
-              SoundFX.playHeal();
-              this.scene.vfx.spawnHolyFX(targetPos);
-              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `+${rx.heal}`, 'heal');
-            } else if (rx.type === 'dragonheart') {
-              SoundFX.playHeal();
-              this.scene.vfx.spawnHolyFX(targetPos);
-              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `REVIVED!`, 'heal');
-            } else if (rx.type === 'speed_save') {
-              SoundFX.playTurnChime();
-              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `SPD +2`, 'heal');
-            } else if (rx.type === 'critical_quick') {
-              SoundFX.playTurnChime();
-              this.scene.spawnFloatingDamage(closestPlayer!.x, targetH, closestPlayer!.z, `QUICK!`, 'heal');
-            }
-
-            this.scene.updateUnits(this.units);
-          }, 450);
-        }
-
-        this.faceTowards(enemy, closestPlayer!.x, closestPlayer!.z);
-        this.scene.updateUnits(this.units);
-        this.turnManager.endTurn(enemy);
-        this.updateTimeline();
-
-        setTimeout(() => this.advanceTurn(), 1200);
-      }, 700);
+  private playElementFx(element: Element, pos: THREE.Vector3): void {
+    if (element === 'physical') {
+      SoundFX.playSwordSlash();
+      this.scene.vfx.spawnSlashFX(pos);
     } else {
-      this.faceTowards(enemy, closestPlayer.x, closestPlayer.z);
-      this.scene.updateUnits(this.units);
-      this.turnManager.endTurn(enemy);
-      this.updateTimeline();
-
-      setTimeout(() => this.advanceTurn(), 800);
+      SoundFX.playMagicCast();
+      if (element === 'fire') this.scene.vfx.spawnFireFX(pos);
+      else if (element === 'ice') this.scene.vfx.spawnIceFX(pos);
+      else if (element === 'lightning') this.scene.vfx.spawnLightningFX(pos);
+      else if (element === 'holy' || element === 'time') this.scene.vfx.spawnHolyFX(pos);
+      else this.scene.vfx.spawnSlashFX(pos);
     }
   }
 
-  private faceTowards(unit: Unit, targetX: number, targetZ: number): void {
-    const dx = targetX - unit.x;
-    const dz = targetZ - unit.z;
-    if (Math.abs(dx) > Math.abs(dz)) {
-      unit.facing = dx > 0 ? 'E' : 'W';
-    } else {
-      unit.facing = dz > 0 ? 'S' : 'N';
+  /**
+   * Resolves an ability: spends MP once, then rolls it against every unit it touches,
+   * plays effects, handles reactions, boss enrage, and awards EXP/JP to player units.
+   */
+  private async performAction(caster: Unit, ability: Ability, tx: number, tz: number): Promise<void> {
+    const victims = this.victimsFor(caster, ability, tx, tz);
+    caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
+    caster.hasActed = true;
+
+    if (!ability.isSelfOnly) {
+      caster.facing = faceTowards(caster.x, caster.z, tx, tz);
+      this.scene.triggerUnitLunge(caster.id, tx, tz);
     }
+    this.scene.updateUnits(this.units);
+
+    const verb = caster.team === 'player' ? 'executes' : 'uses';
+    const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || 'empty ground';
+    this.ui.addLogEntry(`[ACTION] ${caster.name} ${verb} ${ability.name} on ${targetText}.`, 'attack');
+    if (caster.team === 'enemy') this.ui.showBanner(`${caster.name}: ${ability.name}!`);
+
+    let anyKill = false;
+    for (const target of victims) {
+      if (target.isDead) continue;
+      const forecast = this.forecastFor(caster, target, ability, { x: tx, z: tz });
+      const result = CombatEngine.executeAttack(forecast);
+      this.presentResult(target, forecast, result);
+      if (target.isDead) {
+        anyKill = true;
+        if (caster.team === 'player') this.kills[caster.id] = (this.kills[caster.id] || 0) + 1;
+      }
+      if (result.reaction && result.reaction.type !== 'parry') {
+        await wait(380);
+        this.presentReaction(caster, target, result);
+      }
+      if (caster.isDead) break; // killed by a counter
+      await wait(victims.length > 1 ? 220 : 120);
+    }
+
+    // Player progression: JP for the current job, EXP for acting and for kills
+    if (caster.team === 'player' && !caster.isDead) {
+      const jpGain = Math.round(24 * (caster.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
+      caster.jobPoints[caster.jobId] = (caster.jobPoints[caster.jobId] || 0) + jpGain;
+      const levels = JobSystem.grantExp(caster, 10 + (anyKill ? 20 : 0));
+      if (levels > 0) {
+        const h = this.grid.getHeight(caster.x, caster.z);
+        this.scene.spawnFloatingDamage(caster.x, h + 0.4, caster.z, `LEVEL UP! Lv ${caster.level}`, 'heal');
+        this.ui.addLogEntry(`[LEVEL] ${caster.name} reached level ${caster.level}!`, 'system');
+        SoundFX.playVictoryFanfare();
+      }
+    }
+
+    this.scene.updateUnits(this.units);
+    await wait(250);
+  }
+
+  private presentResult(target: Unit, forecast: CombatForecast, result: AttackResult): void {
+    const h = this.grid.getHeight(target.x, target.z);
+    const pos = new THREE.Vector3(target.x, h, target.z);
+    const ability = forecast.ability;
+
+    if (!result.hit) {
+      SoundFX.playMenuBlip();
+      this.scene.spawnFloatingDamage(target.x, h, target.z, 'MISS', 'miss');
+      if (result.reaction?.type === 'parry') {
+        this.ui.showBanner(result.reaction.description);
+        this.ui.addLogEntry(`[PARRY] ${result.reaction.description}`, 'reaction');
+      } else {
+        this.ui.addLogEntry(`[MISS] ${ability.name} missed ${target.name}.`, 'attack');
+      }
+      return;
+    }
+
+    if (result.isHeal) {
+      SoundFX.playHeal();
+      this.scene.vfx.spawnHolyFX(pos);
+      this.scene.spawnFloatingDamage(target.x, h, target.z, `+${result.damageDealt}`, 'heal');
+      this.ui.addLogEntry(`[HEAL] ${target.name} recovers ${result.damageDealt} HP.`, 'heal');
+      return;
+    }
+
+    if (result.damageDealt === 0) {
+      SoundFX.playMagicCast();
+      this.scene.vfx.spawnHolyFX(pos);
+      this.scene.spawnFloatingDamage(target.x, h, target.z, `[${result.appliedStatus || 'OK'}]`, 'heal');
+      this.ui.addLogEntry(`[STATUS] ${target.name} receives ${result.appliedStatus}.`, 'spell');
+      return;
+    }
+
+    this.scene.triggerUnitRecoil(target.id);
+    this.playElementFx(ability.element, pos);
+
+    if (result.isCrit) {
+      SoundFX.playCrit();
+      this.scene.vfx.triggerScreenShake(0.6);
+      this.scene.spawnFloatingDamage(target.x, h, target.z, `CRIT! -${result.damageDealt}`, 'crit');
+      this.ui.addLogEntry(`[CRIT] ${target.name} takes ${result.damageDealt} DMG (${forecast.facingType}).`, 'crit');
+    } else {
+      this.scene.spawnFloatingDamage(target.x, h, target.z, `-${result.damageDealt}`, 'damage');
+      this.ui.addLogEntry(`[HIT] ${target.name} takes ${result.damageDealt} DMG (${forecast.facingType}).`, 'attack');
+    }
+    if (result.appliedStatus) {
+      this.ui.addLogEntry(`[STATUS] ${target.name} is afflicted with ${result.appliedStatus}.`, 'spell');
+    }
+
+    if (result.secondStrike) {
+      const ss = result.secondStrike;
+      later(() => {
+        if (ss.hit) {
+          SoundFX.playSwordSlash();
+          this.scene.vfx.spawnSlashFX(pos);
+          this.scene.triggerUnitRecoil(target.id);
+          this.scene.spawnFloatingDamage(target.x, h + 0.3, target.z, `-${ss.damageDealt}`, 'damage');
+          this.ui.addLogEntry(`[DUAL WIELD] Second strike for ${ss.damageDealt} DMG.`, 'attack');
+        }
+        this.scene.updateUnits(this.units);
+      }, 300);
+    }
+
+    if (result.bossEnraged) {
+      SoundFX.playCrit();
+      this.scene.vfx.triggerScreenShake(1.0);
+      this.scene.vfx.spawnFireFX(pos);
+      this.ui.showBanner(`${target.name.toUpperCase()} IS ENRAGED!`);
+      this.ui.addLogEntry(`[BOSS] ${target.name} is enraged: Haste and +20% power!`, 'crit');
+    }
+
+    if (target.isDead) {
+      this.ui.addLogEntry(`[DEFEAT] ${target.name} has fallen!`, 'defeat');
+    }
+  }
+
+  private presentReaction(caster: Unit, target: Unit, result: AttackResult): void {
+    const rx = result.reaction!;
+    this.ui.showBanner(`REACTION: ${rx.name.toUpperCase()}!`);
+    this.ui.addLogEntry(`[REACTION] ${rx.description}`, 'reaction');
+    const th = this.grid.getHeight(target.x, target.z);
+    const tpos = new THREE.Vector3(target.x, th, target.z);
+
+    if (rx.type === 'counter_attack' && rx.damage) {
+      this.scene.triggerUnitLunge(target.id, caster.x, caster.z);
+      this.scene.triggerUnitRecoil(caster.id);
+      SoundFX.playSwordSlash();
+      const ch = this.grid.getHeight(caster.x, caster.z);
+      this.scene.spawnFloatingDamage(caster.x, ch, caster.z, `-${rx.damage}`, 'damage');
+      this.scene.vfx.spawnSlashFX(new THREE.Vector3(caster.x, ch, caster.z));
+      if (caster.isDead) this.ui.addLogEntry(`[DEFEAT] The counter felled ${caster.name}!`, 'defeat');
+    } else if (rx.type === 'auto_potion' && rx.heal) {
+      SoundFX.playHeal();
+      this.scene.vfx.spawnHolyFX(tpos);
+      this.scene.spawnFloatingDamage(target.x, th, target.z, `+${rx.heal}`, 'heal');
+    } else if (rx.type === 'dragonheart') {
+      SoundFX.playHeal();
+      this.scene.vfx.spawnHolyFX(tpos);
+      this.scene.spawnFloatingDamage(target.x, th, target.z, 'REVIVED!', 'heal');
+    } else if (rx.type === 'earthen_ward') {
+      SoundFX.playHeal();
+      this.scene.spawnFloatingDamage(target.x, th, target.z, 'PROTECT', 'heal');
+    } else if (rx.type === 'speed_save') {
+      SoundFX.playTurnChime();
+      this.scene.spawnFloatingDamage(target.x, th, target.z, 'SPD +2', 'heal');
+    } else if (rx.type === 'critical_quick') {
+      SoundFX.playTurnChime();
+      this.scene.spawnFloatingDamage(target.x, th, target.z, 'QUICK!', 'heal');
+    }
+    this.scene.updateUnits(this.units);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Enemy turns
+  // ---------------------------------------------------------------------------
+
+  /** AUTO command: the AI plans and plays the active player unit's turn. */
+  private handleAutoCommand(): void {
+    const active = this.turnManager.activeUnit;
+    if (!active || active.team !== 'player' || this.currentMode === 'busy' || this.battleOver) return;
+    this.cancelTargeting();
+    this.currentMode = 'busy';
+    this.ui.toggleSubMenu(false);
+    void this.runAiTurn(active);
+  }
+
+  private async runAiTurn(enemy: Unit): Promise<void> {
+    if (this.battleOver) return;
+    const plan = planTurn(enemy, this.units, this.grid);
+
+    if (plan.moveTo.x !== enemy.x || plan.moveTo.z !== enemy.z) {
+      enemy.x = plan.moveTo.x;
+      enemy.z = plan.moveTo.z;
+      enemy.hasMoved = true;
+      SoundFX.playMoveStep();
+      this.scene.updateUnits(this.units);
+      this.scene.focusOn(enemy.x, this.grid.getHeight(enemy.x, enemy.z), enemy.z);
+      await wait(550);
+    }
+
+    if (plan.ability && plan.targetTile) {
+      await this.performAction(enemy, plan.ability, plan.targetTile.x, plan.targetTile.z);
+    }
+
+    if (this.battleOver || this.checkBattleStatus()) return;
+
+    if (!enemy.isDead) enemy.facing = plan.facing;
+    this.scene.updateUnits(this.units);
+    this.turnManager.endTurn(enemy);
+    this.updateTimeline();
+    later(() => this.advanceTurn(), plan.ability ? 900 : 500);
   }
 
   private updateTimeline(): void {
-    const nextUnits = this.turnManager.predictTurnTimeline(8);
-    this.ui.updateTurnTimeline(nextUnits, this.turnManager.activeUnit);
-    this.ui.populateJobCustomizer(this.units.filter((u) => u.team === 'player'));
+    this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), this.turnManager.activeUnit);
+    this.ui.populateJobCustomizer(this.squad);
   }
 
+  // ---------------------------------------------------------------------------
+  // Victory, defeat, spoils, epilogue, Trials
+  // ---------------------------------------------------------------------------
+
   private checkBattleStatus(): boolean {
+    if (this.battleOver) return true;
     const playersAlive = this.units.some((u) => !u.isDead && u.team === 'player');
     const enemiesAlive = this.units.some((u) => !u.isDead && u.team === 'enemy');
 
     if (!playersAlive) {
+      this.battleOver = true;
+      this.currentMode = 'menu';
       Music.stop();
       this.ui.showBanner('DEFEAT... ALL ALLIES FALLEN');
-      this.ui.addLogEntry('=== DEFEAT! All allies have fallen in battle. ===', 'defeat');
+      this.ui.addLogEntry('=== DEFEAT! All allies have fallen. ===', 'defeat');
+      later(() => this.showDefeat(), 1600);
       return true;
     }
     if (!enemiesAlive) {
+      this.battleOver = true;
+      this.currentMode = 'menu';
       Music.playTrack('victory');
       SoundFX.playVictoryFanfare();
       this.ui.showBanner('VICTORY! BATTLEFIELD SECURED');
-      this.ui.addLogEntry('=== VICTORY! All hostiles defeated! Battlefield secured. ===', 'system');
-
-      // Play Victory Dialogue then trigger Branching Choice Modal
-      setTimeout(() => {
-        if (this.currentChapter.victoryDialogue && this.currentChapter.victoryDialogue.length > 0) {
-          this.playDialogueSequence(this.currentChapter.victoryDialogue, () => {
-            this.handleChapterVictoryChoices();
-          });
-        } else {
-          this.handleChapterVictoryChoices();
-        }
-      }, 1500);
-
+      this.ui.addLogEntry('=== VICTORY! All hostiles defeated. ===', 'system');
+      later(() => this.showSpoils(), 1500);
       return true;
     }
     return false;
   }
 
+  private showDefeat(): void {
+    const retry = () => {
+      if (this.mode === 'trials') this.startTrial(this.trialsFloor);
+      else {
+        this.setupBattle(this.currentChapter);
+        this.startBattle();
+      }
+    };
+    const buttons: { label: string; primary?: boolean; onClick: () => void }[] = [
+      { label: 'Retry Battle', primary: true, onClick: retry }
+    ];
+    if (SaveManager.hasSave()) buttons.push({ label: 'Load Save', onClick: () => this.loadGame() });
+    this.ui.showResultModal({
+      title: 'DEFEAT',
+      subtitle: 'Your squad keeps the EXP and JP it earned. Retry with a new formation, swap jobs in Team, or load your save.',
+      buttons
+    });
+  }
+
+  /** Awards end-of-battle EXP/JP/items and shows the spoils screen. */
+  private showSpoils(): void {
+    const rows: string[] = [];
+    for (const u of this.squad) {
+      const survived = !u.isDead;
+      const exp = survived ? 40 : 15;
+      const jp = survived ? 60 : 20;
+      u.jobPoints[u.jobId] = (u.jobPoints[u.jobId] || 0) + Math.round(jp * (u.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
+      const levels = JobSystem.grantExp(u, exp + (this.kills[u.id] || 0) * 10);
+      const killsText = this.kills[u.id] ? ` · ${this.kills[u.id]} KO` : '';
+      rows.push(`<div class="result-row ${survived ? '' : 'fallen'}">
+        <span><span class="result-name">${esc(u.name)}</span>${levels > 0 ? `<span class="levelup">LEVEL UP! Lv ${u.level}</span>` : ''}</span>
+        <span class="result-detail">${survived ? '' : 'Fell in battle · '}+${exp} EXP · +${jp} JP${killsText}</span>
+      </div>`);
+    }
+
+    const newItems: string[] = [];
+    if (this.mode === 'campaign') {
+      for (const id of this.currentChapter.rewardItemIds || []) {
+        if (!this.armory.includes(id)) newItems.push(id);
+      }
+    } else {
+      const drop = rollTrialDrop(this.trialsFloor, this.armory);
+      if (drop) newItems.push(drop);
+    }
+    this.armory.push(...newItems);
+    if (newItems.length > 0) {
+      rows.push(`<div class="result-loot"><b>NEW GEAR:</b> ${newItems.map((id) => esc(ITEMS[id].name)).join(', ')}<br><small>Equip it from ★ Team → Equipment.</small></div>`);
+    }
+
+    let subtitle = `${this.currentChapter.title}: ${this.currentChapter.subtitle}`;
+    if (this.mode === 'trials') {
+      const isRecord = SaveManager.recordTrialFloor(this.trialsFloor);
+      subtitle += isRecord ? ` · New record: floor ${this.trialsFloor}!` : ` · Best: floor ${SaveManager.getBestTrialFloor()}`;
+    }
+
+    if (this.mode === 'trials') {
+      this.ui.showResultModal({
+        title: 'TRIAL CLEARED',
+        subtitle,
+        bodyHtml: rows.join(''),
+        buttons: [
+          { label: `Next Trial (${this.trialsFloor + 1})`, primary: true, onClick: () => { this.trialsFloor++; this.saveGame(false); this.startTrial(this.trialsFloor); } },
+          { label: 'Save', onClick: () => { this.saveGame(true); this.trialsFloor++; this.saveGame(false); this.startTrial(this.trialsFloor); } }
+        ]
+      });
+      return;
+    }
+
+    this.ui.showResultModal({
+      title: 'VICTORY — SPOILS OF WAR',
+      subtitle,
+      bodyHtml: rows.join(''),
+      buttons: [{ label: 'Continue', primary: true, onClick: () => this.afterSpoils() }]
+    });
+  }
+
+  private afterSpoils(): void {
+    const next = () => this.handleChapterVictoryChoices();
+    if (this.currentChapter.victoryDialogue.length > 0) {
+      this.playDialogueSequence(this.currentChapter.victoryDialogue, next);
+    } else {
+      next();
+    }
+  }
+
   private handleChapterVictoryChoices(): void {
+    this.currentMode = 'menu';
     if (this.currentChapter.choices && this.currentChapter.choices.length > 0) {
       this.ui.showChoiceModal(
         `${this.currentChapter.title} — VICTORY!`,
         'The enemy forces are in disarray! How shall we proceed, Commander?',
         this.currentChapter.choices,
-        (selectedChoice) => {
-          this.ui.showBanner(`CHOICE ACCEPTED: ${selectedChoice.text}`);
-          setTimeout(() => {
-            this.loadChapter(selectedChoice.nextChapterId, true);
+        (choice) => {
+          for (const id of choice.rewardItemIds || []) if (!this.armory.includes(id)) this.armory.push(id);
+          this.ui.showBanner(`ORDERS: ${choice.text}`);
+          this.ui.addLogEntry(`[ARMORY] ${choice.rewardText}`, 'system');
+          later(() => {
+            this.loadChapter(choice.nextChapterId);
+            this.saveGame(false); // autosave at the start of each chapter
           }, 1200);
         }
       );
-    } else {
-      this.ui.showBanner('CAMPAIGN CONCLUDED! THE REALM IS AT PEACE.');
+      return;
     }
+
+    this.campaignCleared = true;
+    this.saveGame(false);
+    this.showEpilogue();
   }
 
-  private lastHoveredKey: string = '';
+  private showEpilogue(): void {
+    const best = SaveManager.getBestTrialFloor();
+    this.ui.showResultModal({
+      title: 'THE REALM IS AT PEACE',
+      subtitle: 'Campaign complete! Twelve more seals stir beneath the mountain: the Trials of the Zodiac are endless generated battles with rare gear and a Warden boss every fifth floor.',
+      bodyHtml: best > 0 ? `<div class="result-row"><span class="result-name">BEST TRIAL</span><span class="result-detail">Floor ${best}</span></div>` : '',
+      buttons: [
+        { label: 'Enter the Trials', primary: true, onClick: () => this.startTrial(1) },
+        { label: 'New Game+', onClick: () => this.startNewGamePlus() }
+      ]
+    });
+  }
+
+  /** Replays the campaign from Chapter I keeping squad levels, jobs, abilities and armory. */
+  private startNewGamePlus(): void {
+    this.ui.addLogEntry('[SYSTEM] New Game+ : your squad keeps its levels, jobs and gear.', 'system');
+    this.loadChapter('chapter_1');
+  }
+
+  private lastHoveredKey = '';
 
   private gameLoop(): void {
     requestAnimationFrame(() => this.gameLoop());
@@ -875,15 +1094,11 @@ class TacticsGame {
       if (key !== this.lastHoveredKey) {
         this.lastHoveredKey = key;
         const tile = this.grid.getTile(x, z);
-        if (tile) {
-          this.ui.updateTileInfo(x, z, tile.height, tile.terrain);
-        }
+        if (tile) this.ui.updateTileInfo(x, z, tile.height, tile.terrain);
       }
     }
 
-    if (this.scene) {
-      this.scene.render();
-    }
+    if (this.scene) this.scene.render();
   }
 }
 

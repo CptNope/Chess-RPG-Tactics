@@ -32,6 +32,8 @@ Documenting the architectural choices, tradeoffs, and context of the engine:
 * **[ADR 0011: Multi-Stage Branching Campaign & Dialogue Engine](adr/0011-branching-campaign-state-machine.md)**
 * **[ADR 0012: Visual Effects, Camera Trauma Shake, and 3D Projected Overlays](adr/0012-vfx-particles-and-projected-hud.md)**
 * **[ADR 0013: Engine Performance, Object Pooling, and Animation Loop Optimization](adr/0013-engine-performance-and-memory-pooling.md)**
+* **[ADR 0014: Reactions, Procedural BGM, Battle Chronicle, and Persistence](adr/0014-reactions-bgm-combat-log-persistence.md)**
+* **[ADR 0015: Unified Action Pipeline, Planning AI, Persistent Squad, and Trials of the Zodiac](adr/0015-action-pipeline-ai-progression-trials.md)**
 
 ---
 

@@ -89,17 +89,56 @@ $$\Delta H = H_{\text{attacker}} - H_{\text{target}}$$
 
 ## 4. Damage & Healing Formulas
 
+*Rebalanced in 0.7.0: gear and job multipliers now count, magic is flatter, and HP is higher.*
+
+Effective power combines the unit's base stat, its current job's multiplier and its gear:
+
+$$\text{ATK} = \text{base attack} \times \text{job atk mult} + \text{gear ATK}$$
+$$\text{MAG} = \text{base magic} \times \text{job mag mult} + \text{gear MAG}$$
+
+*Focus* multiplies ATK by $1.25$ for 4 turns; an enraged boss multiplies ATK and MAG by $1.20$.
+
 ### Physical Abilities
-$$\text{Base Damage} = \text{Attack} \times \text{Power} \times 8$$
+$$\text{Base Damage} = \text{ATK} \times \text{Power} \times 5$$
 
 $$\text{Final Damage} = \text{Base Damage} \times M_{\text{facing}} \times M_{\text{height}} \times M_{\text{crit}}$$
 
 * $M_{\text{facing}} \in \{1.00, 1.15, 1.30\}$
 * $M_{\text{height}} = 1.10$ if $\Delta H > 0$ else $1.00$
 * $M_{\text{crit}} = 1.50$ on critical strike
+* Hit chance from the front or flank is reduced by the target's gear evasion above the base 5. Back attacks ignore evasion.
+* **Attack Boost** (`geo_attack_up`) multiplies physical damage by $1.20$.
 
 ### Magical Abilities
-$$\text{Base Damage} = \text{Magic} \times |\text{Power}| \times 9$$
+$$\text{Base Damage} = \text{MAG} \times |\text{Power}| \times 3$$
 
+* Facing and height bonuses apply to **physical** damage only; spells land the same from any side.
 * If the attacker has the Support Ability **Arcane Strength** (`bm_arcane_strength`), magical damage is multiplied by $1.25\times$.
+* **Area spells** (Area 1: Fire, Blizzard, Thunder, Dragon Breath, Earth Slash) hit every foe within 1 tile of the aimed tile. Units on the ring take $60\%$ damage. Heals and buffs never hit foes, and damage never hits allies.
+* **Gravity** removes $25\%$ of current HP ($12\%$ against bosses).
 * Healing spells (e.g. *Cure*) carry negative power ($\text{Power} = -1.4$), delivering targeted HP restoration.
+
+---
+
+## 5. Terrain Movement Costs (0.7.0)
+
+Entering **water** or **swamp** costs 2 Move. *Water Walk* (`ni_water_walk`) removes the penalty. *Teleport* (`tm_teleport`) blinks to any open tile within Move + 1, ignoring height.
+
+## 6. Bosses (0.7.0)
+
+Boss units have $+60\%$ HP and $+15\%$ ATK/MAG. The first time a boss drops to $50\%$ HP it **enrages**: permanent Haste, $+20\%$ damage, and Slow/Immobilize are cleansed.
+
+## 7. Reactions Reference
+
+| Reaction | Job | Trigger |
+| :--- | :--- | :--- |
+| Weapon Guard (`kn_parry`) | Knight | 30% to parry physical attacks from the front |
+| Counter Tackle (`sq_counter`) | Squire | Adjacent physical hit: strike back for $\text{ATK} \times 3.5$ |
+| Auto-Potion (`wm_auto_potion`) | White Mage | Heal 30 HP after being hit |
+| Speed Save (`ar_speed_save`) | Archer | +2 Speed after being hit |
+| Dragonheart (`dr_dragonheart`) | Dragoon | Survive a fatal blow with 1 HP + Protect, **once per battle** |
+| Arcane Retaliation (`bm_magic_counter`) | Black Mage | 50%: strike back for $\text{MAG} \times 3$ |
+| Critical Quick (`tm_critical_quick`) | Time Weaver | At $\le 35\%$ HP after a hit, CT jumps to 100 |
+| Earthen Ward (`geo_earthen_ward`) | Geomancer | Hit while on stone/dirt/parapet: gain Protect |
+
+Before 0.7.0, Counter Tackle, Arcane Retaliation and Critical Quick were checked against ability ids that did not exist, so they never fired. A unit test now fails if engine code references an unknown ability id.

@@ -7,6 +7,13 @@ A 2.5D turn-based tactical RPG built in the style of *Final Fantasy Tactics* and
 - **Speed / CT (Charge Time) Engine**: Tick-based speed timeline rather than rigid team turns; remaining CT refund for moving without acting or waiting.
 - **Deep Job & Ability System**: 5-slot ability equipping (Primary Action, Secondary Action, Reaction, Support, Movement), JP earning, and skill unlocking.
 - **Billboard Pixel Art Sprites**: Dynamic 2D sprites facing camera perspective with 4-way relative orientation and idle breathing animation.
+- **Branching Campaign with a Persistent Squad**: Levels, JP, abilities and gear carry from chapter to chapter. Win battles for EXP, level-ups and new armory gear on the Spoils of War screen.
+- **9 Jobs** including the **Geomancer**, whose *Elemental* spell changes with the terrain underfoot (grass, stone, dirt, water, swamp, wood).
+- **Boss Battles**: commanders with an enrage phase at half HP, ending on the new **Zodiac Summit** map.
+- **Trials of the Zodiac**: endless post-game floors with rare drops and a Warden boss every fifth floor, plus **New Game+**.
+- **Planning Enemy AI**: enemies focus wounded units, heal and buff each other, and drop area spells on clusters. Press **AUTO** (`T`) to let the same AI play one of your turns.
+
+▶ **Play it:** https://cptnope.github.io/Chess-RPG-Tactics/
 
 ---
 
@@ -18,7 +25,7 @@ Comprehensive design guides, Mermaid sequence & class diagrams, and Architectura
 * ⚔️ **[Combat Engine & Formulas](docs/COMBAT_SYSTEM.md)**: Speed ticks, CT refunds, facing vector dot products, and damage equations.
 * 🛡️ **[Job & Ability System](docs/JOB_SYSTEM.md)**: 5-slot equipping model, job progression tree, and ability database.
 * 🎥 **[Controls & Isometric Camera](docs/CONTROLS_AND_CAMERA.md)**: Mouse drag panning, wheel zoom, and camera math.
-* 🏛️ **[Architectural Decision Records (ADRs)](docs/README.md#architectural-decision-records-adrs)**: ADRs 0001–0006 detailing all engine decisions.
+* 🏛️ **[Architectural Decision Records (ADRs)](docs/README.md#architectural-decision-records-adrs)**: ADRs 0001–0015 detailing all engine decisions.
 * 📜 **[Changelog](CHANGELOG.md)**: Semantic release notes following the Keep a Changelog standard.
 
 ---
@@ -47,8 +54,17 @@ This repository includes an automated GitHub Actions deployment workflow ([`.git
 
 ### Development Server
 ```bash
+npm install
 npm run dev
 ```
+
+### Tests
+```bash
+npm test            # Vitest unit tests for combat, AI, pathfinding, data and Trials
+npm run build       # type-check + production build
+npm run test:build  # tests + check every built asset exists (what CI runs)
+```
+Add `?debug` to the URL to expose the running game as `window.__tactics` for automated play-testing (`?debug&fast` also speeds up animations).
 Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
 
 ### Camera & Navigation Controls
@@ -62,4 +78,6 @@ Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
 * **MOVE**: Click `MOVE` to highlight blue reachable tiles based on Move and Jump stats. Click a blue tile to step there.
 * **ACT**: Open action menu (Attack, Throw Stone, Rend Armor, Aim, Fire, Cure, etc.). Click a target unit to view the **Battle Forecast** (Hit %, Expected Damage, Facing advantage), then confirm execution.
 * **WAIT**: Choose one of 4 facing directions (North, East, South, West) to protect your rear from critical backstabs!
+* **AUTO** (`T`): Let the AI plan and play this unit's turn.
+* **Terrain**: Water and swamp cost 2 Move (Water Walk ignores this). Spells ignore facing; physical attacks from the side or back hit harder and more often.
 * **★ JOBS**: Open the character customization window to inspect unlocked jobs, equip secondary skillsets, and spend JP to learn new abilities.

@@ -414,6 +414,21 @@ export class TacticsScene {
   public updateUnits(units: Unit[]): void {
     this.currentUnits = [...units];
 
+    // Drop sprites and HP bars for units that are no longer in the battle (new chapter / Trial)
+    const liveIds = new Set(units.map((u) => u.id));
+    for (const [id, mesh] of this.unitSpritePlanes) {
+      if (!liveIds.has(id)) {
+        this.scene.remove(mesh);
+        this.unitSpritePlanes.delete(id);
+      }
+    }
+    for (const [id, el] of this.overheadHpElements) {
+      if (!liveIds.has(id)) {
+        el.remove();
+        this.overheadHpElements.delete(id);
+      }
+    }
+
     for (const unit of units) {
       if (unit.isDead) {
         const mesh = this.unitSpritePlanes.get(unit.id);
@@ -455,6 +470,9 @@ export class TacticsScene {
         this.floatingTextContainer.appendChild(barEl);
         this.overheadHpElements.set(unit.id, barEl);
       }
+
+      barEl.classList.toggle('boss', !!unit.isBoss);
+      barEl.classList.toggle('enraged', !!unit.isEnraged);
 
       const hpFill = barEl.querySelector('.overhead-hp-fill') as HTMLElement;
       const ctFill = barEl.querySelector('.overhead-ct-fill') as HTMLElement;

@@ -2,6 +2,7 @@ import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainTy
 import { JOBS } from '../data/jobs';
 import { JobSystem } from '../core/JobSystem';
 import { getItemsForSlot } from '../data/items';
+import { resolveTerrainAbility } from '../core/Geomancy';
 import { SoundFX } from '../audio/SoundEffects';
 
 export class UIManager {
@@ -56,6 +57,7 @@ export class UIManager {
   private btnMove = document.getElementById('btn-action-move') as HTMLButtonElement;
   private btnAct = document.getElementById('btn-action-act') as HTMLButtonElement;
   private btnWait = document.getElementById('btn-action-wait') as HTMLButtonElement;
+  private btnAuto = document.getElementById('btn-action-auto') as HTMLButtonElement;
   private subMenuEl = document.getElementById('sub-menu')!;
   private subMenuItemsEl = document.getElementById('sub-menu-items')!;
   private btnSubMenuBack = document.getElementById('btn-sub-menu-back')!;
@@ -104,6 +106,16 @@ export class UIManager {
   private inventoryListEl = document.getElementById('inventory-list')!;
   private inventoryHeaderEl = document.getElementById('inventory-header')!;
 
+  // Result modal (spoils / defeat / epilogue / Trials)
+  private resultModalEl = document.getElementById('result-modal')!;
+  private resultTitleEl = document.getElementById('result-title')!;
+  private resultSubtitleEl = document.getElementById('result-subtitle')!;
+  private resultBodyEl = document.getElementById('result-body')!;
+  private resultActionsEl = document.getElementById('result-actions')!;
+
+  /** Item ids the squad owns. The gear tab only offers these. */
+  public armory: string[] = [];
+
   // Banner
   private bannerEl = document.getElementById('battle-banner')!;
   private bannerTextEl = document.getElementById('banner-text')!;
@@ -112,6 +124,7 @@ export class UIManager {
   public onMoveClicked?: () => void;
   public onAbilitySelected?: (ability: Ability) => void;
   public onWaitClicked?: () => void;
+  public onAutoClicked?: () => void;
   public onFacingConfirmed?: (facing: FacingDirection) => void;
   public onExecuteAttack?: () => void;
   public onCancelAttack?: () => void;
@@ -239,6 +252,11 @@ export class UIManager {
       this.onWaitClicked?.();
     });
 
+    this.btnAuto.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.onAutoClicked?.();
+    });
+
     this.btnSubMenuBack.addEventListener('click', () => {
       SoundFX.playMenuBlip();
       this.toggleSubMenu(false);
@@ -364,6 +382,51 @@ export class UIManager {
     this.choiceModalEl.classList.remove('hidden');
   }
 
+  /**
+   * Shows the shared result modal. `bodyHtml` must be built from trusted, game-generated text.
+   * The first button marked primary receives focus so Enter/Space confirms it.
+   */
+  public showResultModal(opts: {
+    title: string;
+    subtitle?: string;
+    bodyHtml?: string;
+    buttons: { label: string; primary?: boolean; onClick: () => void }[];
+  }): void {
+    this.resultTitleEl.textContent = opts.title;
+    this.resultSubtitleEl.textContent = opts.subtitle || '';
+    this.resultSubtitleEl.style.display = opts.subtitle ? '' : 'none';
+    this.resultBodyEl.innerHTML = opts.bodyHtml || '';
+    this.resultActionsEl.innerHTML = '';
+    let focusTarget: HTMLButtonElement | null = null;
+    for (const b of opts.buttons) {
+      const btn = document.createElement('button');
+      btn.textContent = b.label;
+      if (b.primary) btn.className = 'primary';
+      btn.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
+        this.hideResultModal();
+        b.onClick();
+      });
+      this.resultActionsEl.appendChild(btn);
+      if (b.primary && !focusTarget) focusTarget = btn;
+    }
+    this.resultModalEl.classList.remove('hidden');
+    (focusTarget || (this.resultActionsEl.firstElementChild as HTMLButtonElement | null))?.focus();
+  }
+
+  /** Keeps the battlefield dropdown in sync with the map actually being played. */
+  public setMapSelection(mapId: string): void {
+    if ([...this.mapSelectEl.options].some((o) => o.value === mapId)) this.mapSelectEl.value = mapId;
+  }
+
+  public hideResultModal(): void {
+    this.resultModalEl.classList.add('hidden');
+  }
+
+  public get isResultModalOpen(): boolean {
+    return !this.resultModalEl.classList.contains('hidden');
+  }
+
   public updateBgmButton(isMuted: boolean): void {
     this.btnToggleBgm.textContent = isMuted ? '🔇 BGM' : '🎵 BGM';
   }
@@ -392,7 +455,8 @@ export class UIManager {
     this.timelineQueueEl.innerHTML = '';
     timeline.forEach((u, index) => {
       const el = document.createElement('div');
-      el.className = `timeline-unit ${u.team} ${index === 0 && activeUnit?.id === u.id ? 'active' : ''}`;
+      el.className = `timeline-unit ${u.team} ${index === 0 && activeUnit?.id === u.id ? 'active' : ''} ${u.isBoss ? 'boss' : ''}`;
+      el.title = `${u.name}${u.isBoss ? ' (BOSS)' : ''}`;
       el.innerHTML = `
         <span class="unit-tag">${u.name.substring(0, 3).toUpperCase()}</span>
         <span class="ct-mini">${Math.min(100, u.ct)}</span>
@@ -407,10 +471,22 @@ export class UIManager {
     this.unitJobEl.textContent = `${job.name} Lv. ${unit.level}`;
 
     this.unitStatusesEl.innerHTML = '';
+    if (unit.team === 'player') {
+      const exp = document.createElement('span');
+      exp.className = 'status-badge status-exp';
+      exp.textContent = `EXP ${unit.exp}/${JobSystem.EXP_PER_LEVEL}`;
+      this.unitStatusesEl.appendChild(exp);
+    }
+    if (unit.isBoss) {
+      const badge = document.createElement('span');
+      badge.className = `status-badge ${unit.isEnraged ? 'status-enraged' : 'status-boss'}`;
+      badge.textContent = unit.isEnraged ? 'ENRAGED' : 'BOSS';
+      this.unitStatusesEl.appendChild(badge);
+    }
     unit.statuses.forEach((status) => {
       const badge = document.createElement('span');
       badge.className = `status-badge status-${status.type}`;
-      badge.textContent = `${status.type.substring(0, 4)} ${status.duration}t`;
+      badge.textContent = status.duration > 50 ? status.type.substring(0, 4) : `${status.type.substring(0, 4)} ${status.duration}t`;
       this.unitStatusesEl.appendChild(badge);
     });
 
@@ -431,6 +507,7 @@ export class UIManager {
     this.btnMove.disabled = unit.hasMoved || unit.team !== 'player' || unit.move === 0;
     this.btnAct.disabled = unit.hasActed || unit.team !== 'player';
     this.btnWait.disabled = unit.team !== 'player';
+    this.btnAuto.disabled = unit.team !== 'player';
   }
 
   public updateTileInfo(x: number, z: number, height: number, terrain: string): void {
@@ -438,9 +515,9 @@ export class UIManager {
     this.tileTerrainEl.textContent = `Terrain: ${terrain.toUpperCase()}`;
   }
 
-  public populateActionSubMenu(unit: Unit): void {
+  public populateActionSubMenu(unit: Unit, terrain?: TerrainType): void {
     this.subMenuItemsEl.innerHTML = '';
-    const abilities = JobSystem.getCombatActionAbilities(unit);
+    const abilities = JobSystem.getCombatActionAbilities(unit).map((a) => resolveTerrainAbility(a, terrain));
 
     for (const ability of abilities) {
       const btn = document.createElement('button');
@@ -452,7 +529,7 @@ export class UIManager {
           <span>${ability.name}</span>
           <span class="action-mp">${mpText}</span>
         </div>
-        <div class="action-desc">Rng: ${ability.range}h | ${ability.description}</div>
+        <div class="action-desc">Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''} | ${ability.description}</div>
       `;
 
       btn.disabled = unit.currentMp < ability.mpCost;
@@ -489,8 +566,8 @@ export class UIManager {
     this.facingSelectorEl.classList.remove('hidden');
   }
 
-  public showCombatForecast(forecast: CombatForecast): void {
-    this.fcTargetName.textContent = forecast.target.name;
+  public showCombatForecast(forecast: CombatForecast, extraTargets: number = 0): void {
+    this.fcTargetName.textContent = extraTargets > 0 ? `${forecast.target.name} +${extraTargets} more` : forecast.target.name;
     const bonus = forecast.facingType === 'back' ? 30 : forecast.facingType === 'flank' ? 15 : 0;
     this.fcFacingBadge.textContent = `${forecast.facingType.toUpperCase()} (+${bonus}%)`;
     this.fcFacingBadge.className = `badge-${forecast.facingType}`;
@@ -498,7 +575,9 @@ export class UIManager {
     this.fcHitRate.textContent = `${forecast.hitChance}%`;
     const isHeal = forecast.ability.power < 0;
     const dualText = forecast.willDualWield ? ' (×2 Dual)' : '';
-    this.fcDamage.textContent = `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP${dualText}`;
+    this.fcDamage.textContent = forecast.expectedDamage === 0
+      ? (forecast.ability.appliesStatus ? forecast.ability.appliesStatus.toUpperCase() : '—')
+      : `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP${dualText}`;
 
     this.forecastEl.classList.remove('hidden');
   }
@@ -555,9 +634,31 @@ export class UIManager {
     slotSecondary.textContent = unit.equippedAbilities.secondaryJobId
       ? `${JOBS[unit.equippedAbilities.secondaryJobId]?.name || 'None'} Skillset`
       : 'None (Click to cycle)';
-    slotReaction.textContent = unit.equippedAbilities.reaction || 'None';
-    slotSupport.textContent = unit.equippedAbilities.support || 'None';
-    slotMovement.textContent = unit.equippedAbilities.movement || 'None';
+    const nameOf = (id: string | null) => (id ? JobSystem.findAbility(id)?.name || id : 'None');
+    slotReaction.textContent = nameOf(unit.equippedAbilities.reaction);
+    slotSupport.textContent = nameOf(unit.equippedAbilities.support);
+    slotMovement.textContent = nameOf(unit.equippedAbilities.movement);
+
+    // Click a passive slot to cycle through every reaction/support/movement this unit has learned
+    const bindCycle = (el: HTMLElement, type: 'reaction' | 'support' | 'movement') => {
+      const box = el.parentElement;
+      if (!box) return;
+      const learned = JobSystem.getLearnedPassives(unit, type);
+      box.classList.toggle('cyclable', learned.length > 0);
+      box.title = learned.length > 0 ? 'Click to cycle learned abilities' : 'Learn one in the list to the right';
+      box.onclick = () => {
+        if (learned.length === 0) return;
+        SoundFX.playMenuBlip();
+        const ids: (string | null)[] = [...learned.map((l) => l.id), null];
+        const cur = ids.indexOf(unit.equippedAbilities[type]);
+        unit.equippedAbilities[type] = ids[(cur + 1) % ids.length];
+        JobSystem.recalculateDerivedStats(unit);
+        this.populateJobCustomizer(units, selectedUnitIndex);
+      };
+    };
+    bindCycle(slotReaction, 'reaction');
+    bindCycle(slotSupport, 'support');
+    bindCycle(slotMovement, 'movement');
 
     if (slotSecondary.parentElement) {
       slotSecondary.parentElement.onclick = () => {
@@ -643,7 +744,7 @@ export class UIManager {
     this.inventoryHeaderEl.textContent = `AVAILABLE ${this.selectedGearSlot.toUpperCase()} INVENTORY`;
     this.inventoryListEl.innerHTML = '';
 
-    const availableItems = getItemsForSlot(this.selectedGearSlot);
+    const availableItems = getItemsForSlot(this.selectedGearSlot, this.armory.length > 0 ? this.armory : undefined);
 
     // Unequip option
     const unequipBtn = document.createElement('div');

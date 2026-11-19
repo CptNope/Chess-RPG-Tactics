@@ -59,6 +59,7 @@ graph TD
 | **Archer** | Ranged Marksman | 3 | 3 | $0.95\times$ | $0.80\times$ | $1.10\times$ | $0.80\times$ | $1.05\times$ |
 | **Black Mage**| Elemental Blaster | 3 | 2 | $0.80\times$ | $1.40\times$ | $0.70\times$ | $1.35\times$ | $0.95\times$ |
 | **White Mage**| Holy Healer | 3 | 2 | $0.85\times$ | $1.30\times$ | $0.70\times$ | $1.25\times$ | $1.00\times$ |
+| **Geomancer** | Terramancer | 4 | 3 | $1.05\times$ | $1.00\times$ | $1.05\times$ | $1.15\times$ | $1.00\times$ |
 
 ---
 
@@ -113,4 +114,37 @@ graph TD
 * `Haste` (Action, 12 MP, 120 JP, 4 Range, 2.0h): Accelerates time flux, boosting Speed by $+50\%$ for 3 turns.
 * `Slow` (Action, 12 MP, 120 JP, 4 Range, 2.0h): Slows target speed by $33\%$ for 3 turns.
 * `Gravity` (Action, 16 MP, 180 JP, 4 Range, 3.0h): Bends gravitational field, stripping $25\%$ of target's current HP directly.
-* `Teleport` (Movement, 350 JP): Folds spacetime to instantly blink to any tile within range, bypassing cliffs and walls!
+* `Critical Quick` (Reaction, 220 JP): When struck down to 35% HP or less, CT is charged to 100 so the unit acts next.
+* `Teleport` (Movement, 350 JP): Blinks to any open tile within Move + 1, ignoring cliffs and walls.
+
+### Geomancer (Skillset: *Geomancy*) — new in 0.7.0
+Bria, a Geomancer, joins the squad at the start of Chapter II on either branch.
+* `Elemental` (Action, free, 3 Range, 2.5h): Becomes a different spell depending on the caster's tile:
+
+  | Caster stands on | Spell | Effect |
+  | :--- | :--- | :--- |
+  | Grass | Hell Ivy | Dark damage + Immobilize |
+  | Stone / Parapet | Rockslide | Heavy physical damage |
+  | Dirt | Sandstorm | Physical damage + Slow |
+  | Water | Torrent | Ice damage |
+  | Swamp | Quicksand | Dark damage + Poison |
+  | Wood | Wildfire | Fire damage |
+* `Earth Slash` (Action, 8 MP, 160 JP, 2 Range, Area 1): Shockwave hitting the target and adjacent foes.
+* `Earthen Ward` (Reaction, 180 JP): Hit while on stone, dirt or parapet: gain Protect.
+* `Attack Boost` (Support, 220 JP): Physical damage +20%.
+* `Mountain Stride` (Movement, 200 JP): Jump +2.
+
+### Black Mage additions
+* `Arcane Retaliation` (Reaction, 200 JP): 50% chance to strike back with raw magic when hit.
+
+## 5. Equipping Passives (0.7.0)
+
+In **★ Team → Jobs**, click the Reaction, Support or Movement slot to cycle through every passive the unit has learned from *any* job (plus None). Learning a passive still equips it immediately.
+
+## 6. Levels, EXP and the Armory (0.7.0)
+
+* Every action earns 10 EXP (+20 if it scores a KO) and 24 JP for the current job (+50% with JP Boost).
+* After a victory, survivors earn 40 EXP / 60 JP, fallen units 15 EXP / 20 JP, plus 10 EXP per KO.
+* 100 EXP = 1 level: +18 HP, +5 MP, +1.8 ATK, +1.6 MAG, and +1 Speed every third level.
+* The squad, its levels, jobs, abilities and gear now **carry over** between chapters (before 0.7.0 the squad was rebuilt from scratch each chapter).
+* The gear tab lists only items in the squad's **armory**. Chapter victories, branch choices and Trials drops add new items.

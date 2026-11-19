@@ -184,6 +184,10 @@ export function createUnitSpriteTexture(jobClass: string, facing: FacingDirectio
       hairColor = '#0f172a';
       mainColor = isEnemy ? '#881337' : '#1e293b'; // Midnight shinobi garb
       subColor = isEnemy ? '#dc2626' : '#ef4444'; // Red sash
+    } else if (jobClass === 'geomancer') {
+      hairColor = '#3f6212';
+      mainColor = isEnemy ? '#9a3412' : '#4d7c0f'; // Moss-green terramancer cloak
+      subColor = isEnemy ? '#7c2d12' : '#a16207'; // Earthen sash
     } else if (jobClass === 'time_mage') {
       hairColor = '#831843';
       mainColor = isEnemy ? '#701a75' : '#be123c'; // Crimson starry chronomancer
@@ -311,6 +315,15 @@ export function createUnitSpriteTexture(jobClass: string, facing: FacingDirectio
         ctx.fillRect(23, 8, 2, 18);
         ctx.fillStyle = '#38bdf8';
         ctx.fillRect(22, 6, 4, 4);
+      } else if (jobClass === 'geomancer') {
+        // Gnarled oak staff topped with a jade earth-stone
+        ctx.fillStyle = '#713f12';
+        ctx.fillRect(23, 7, 2, 19);
+        ctx.fillRect(22, 9, 1, 2);
+        ctx.fillStyle = '#34d399';
+        ctx.fillRect(22, 4, 4, 4);
+        ctx.fillStyle = '#065f46';
+        ctx.fillRect(23, 5, 2, 2);
       }
 
     } else if (facing === 'N') {

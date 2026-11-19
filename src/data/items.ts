@@ -189,9 +189,83 @@ export const ITEMS: Record<string, Item> = {
     description: 'Gleaming sapphire ring pulsing with inner magical reserves.',
     price: 220,
     stats: { magic: 4, mp: 25 }
+  },
+
+  // --- Added in 0.7.0: campaign rewards and Trials of the Zodiac drops ---
+  gaia_staff: {
+    id: 'gaia_staff',
+    name: 'Gaia Staff',
+    slot: 'weapon',
+    weaponType: 'staff',
+    description: 'Living oak staff that hums with the pulse of the earth. Favored by Geomancers.',
+    price: 300,
+    stats: { magic: 5, attack: 3, hp: 10 },
+    range: 1
+  },
+  sniper_bow: {
+    id: 'sniper_bow',
+    name: 'Windslayer Bow',
+    slot: 'weapon',
+    weaponType: 'bow',
+    description: 'Recurved yew longbow with a sighting notch. Reaches 6 tiles.',
+    price: 420,
+    stats: { attack: 7, speed: 1 },
+    range: 6
+  },
+  zodiac_blade: {
+    id: 'zodiac_blade',
+    name: 'Zodiac Blade',
+    slot: 'weapon',
+    weaponType: 'sword',
+    description: 'The champion\'s sealed sword, still warm with starlight. The finest blade in the realm.',
+    price: 900,
+    stats: { attack: 13, magic: 4, speed: 1 },
+    range: 1
+  },
+  crystal_helm: {
+    id: 'crystal_helm',
+    name: 'Crystal Helm',
+    slot: 'head',
+    description: 'Faceted helm cut from a single sky-crystal.',
+    price: 380,
+    stats: { hp: 30, mp: 10, evasion: 3 }
+  },
+  dragon_mail: {
+    id: 'dragon_mail',
+    name: 'Wyrmscale Mail',
+    slot: 'body',
+    description: 'Overlapping dragon scales that turn aside blade and flame alike.',
+    price: 520,
+    stats: { hp: 55, attack: 2, evasion: 4 }
+  },
+  ribbon: {
+    id: 'ribbon',
+    name: 'Zodiac Ribbon',
+    slot: 'accessory',
+    description: 'A silk ribbon stitched with all twelve signs. Strengthens body and mind.',
+    price: 800,
+    stats: { hp: 20, mp: 20, speed: 1, evasion: 5 }
   }
 };
 
-export function getItemsForSlot(slot: EquipmentSlot): Item[] {
-  return Object.values(ITEMS).filter((item) => item.slot === slot);
+/** Gear the squad owns at the start of a new campaign. */
+export const STARTING_ARMORY: string[] = [
+  'iron_sword', 'dragon_lance', 'hunting_bow', 'chrono_rod',
+  'buckler', 'iron_helm', 'wizard_hat', 'shinobi_band',
+  'chainmail', 'silk_robe', 'shinobi_garb',
+  'battle_boots', 'feather_boots'
+];
+
+/** Pool used for random Trials of the Zodiac drops (excludes starter gear). */
+export const RARE_DROP_POOL: string[] = [
+  'platinum_blade', 'kite_shield', 'aegis_shield', 'platinum_armor', 'hermes_shoes', 'power_wrist',
+  'mage_ring', 'assassin_daggers', 'gaia_staff', 'sniper_bow', 'crystal_helm', 'dragon_mail', 'ribbon'
+];
+
+/**
+ * Items for a gear slot. When an armory (list of owned item ids) is passed, only owned
+ * items are returned; without one, every item in the game is returned (map editor / tests).
+ */
+export function getItemsForSlot(slot: EquipmentSlot, armory?: string[]): Item[] {
+  return Object.values(ITEMS).filter((item) => item.slot === slot && (!armory || armory.includes(item.id)));
 }
