@@ -16,6 +16,8 @@ import { SaveManager, GameSaveData } from './core/SaveManager';
 import { resolveTerrainAbility } from './core/Geomancy';
 import { planTurn, unitsInBlast, faceTowards } from './core/EnemyAI';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
+import { GamepadInput, PadAction } from './input/GamepadInput';
+import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
 
 type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
 
@@ -48,6 +50,7 @@ class TacticsGame {
 
   // Interaction state
   private currentMode: InputMode = 'dialogue';
+  private pad = new GamepadInput();
   private selectedAbility: Ability | null = null;
   private currentForecast: CombatForecast | null = null;
   private targetTile: { x: number; z: number } | null = null;
@@ -304,53 +307,7 @@ class TacticsGame {
     document.getElementById('btn-zoom-in')?.addEventListener('click', () => this.scene.zoomIn(1.8));
     document.getElementById('btn-zoom-out')?.addEventListener('click', () => this.scene.zoomOut(1.8));
 
-    window.addEventListener('keydown', (e) => {
-      if (this.ui.isResultModalOpen) return; // buttons handle Enter/Space themselves
-      if (this.currentMode === 'dialogue') {
-        if (e.key === ' ' || e.key === 'Enter') {
-          e.preventDefault();
-          SoundFX.playMenuBlip();
-          this.dialogueIndex++;
-          this.advanceDialogue();
-        }
-        return;
-      }
-
-      const k = e.key;
-      if (k === 'q' || k === 'Q') {
-        this.scene.rotateLeft();
-        this.scene.updateUnits(this.units);
-      } else if (k === 'e' || k === 'E') {
-        this.scene.rotateRight();
-        this.scene.updateUnits(this.units);
-      } else if (k === '+' || k === '=') {
-        this.scene.zoomIn(1.5);
-      } else if (k === '-' || k === '_') {
-        this.scene.zoomOut(1.5);
-      } else if (k === 'w' || k === 'W' || k === 'ArrowUp') {
-        this.scene.panBy(0, -1.0);
-      } else if (k === 's' || k === 'S' || k === 'ArrowDown') {
-        this.scene.panBy(0, 1.0);
-      } else if (k === 'a' || k === 'A' || k === 'ArrowLeft') {
-        this.scene.panBy(-1.0, 0);
-      } else if (k === 'd' || k === 'D' || k === 'ArrowRight') {
-        this.scene.panBy(1.0, 0);
-      } else if (k === 'r' || k === 'R' || k === 'Home') {
-        const active = this.turnManager.activeUnit;
-        if (active) this.scene.focusOn(active.x, this.grid.getHeight(active.x, active.z), active.z);
-      } else if ((k === 't' || k === 'T') && this.currentMode === 'idle') {
-        this.handleAutoCommand();
-      } else if (k === 'Escape') {
-        if (this.currentMode === 'targeting') {
-          this.cancelTargeting();
-        } else if (this.currentMode === 'moving') {
-          this.currentMode = 'idle';
-          this.scene.clearHighlights();
-        }
-      }
-    });
-
-    this.scene.canvas.addEventListener('click', () => this.onCanvasClick());
+    this.bindInputs();
 
     this.ui.onMoveClicked = () => this.handleMoveCommand();
     this.ui.onAbilitySelected = (ability) => this.handleAbilityCommand(ability);
@@ -368,6 +325,237 @@ class TacticsGame {
 
     this.ui.onSaveGame = () => this.saveGame(true);
     this.ui.onLoadGame = () => this.loadGame();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Unified input: keyboard, mouse, touch, pen and controller all end up here
+  // ---------------------------------------------------------------------------
+
+  private bindInputs(): void {
+    // Canvas taps/clicks (mouse, touch, pen) select tiles; gestures handled in TacticsScene
+    this.scene.onTileTap = () => this.onCanvasClick();
+    this.scene.onCancelGesture = () => this.cancelAction();
+    this.scene.onPointerKind = (kind) => this.ui.setInputMode(kind === 'pen' ? 'pen' : kind === 'touch' ? 'touch' : 'mouse');
+
+    // Track the input the player is using right now so hints and focus rings match it
+    window.addEventListener('pointerdown', (e) => this.ui.setInputMode(e.pointerType === 'pen' ? 'pen' : e.pointerType === 'touch' ? 'touch' : 'mouse'), true);
+
+    window.addEventListener('keydown', (e) => this.onKeyDown(e));
+
+    this.pad.onAction = (a) => {
+      this.ui.setInputMode('gamepad');
+      this.handlePad(a);
+    };
+    this.pad.onPan = (dx, dz) => this.scene.panBy(dx, dz);
+    this.pad.onZoom = (d) => (d > 0 ? this.scene.zoomOut(d) : this.scene.zoomIn(-d));
+    this.pad.onConnect = () => {
+      this.ui.setInputMode('gamepad');
+      this.ui.showBanner('CONTROLLER CONNECTED');
+      this.ui.addLogEntry('[SYSTEM] Controller connected. Press View/Back for the controls.', 'system');
+    };
+    this.pad.onDisconnect = () => this.ui.showBanner('CONTROLLER DISCONNECTED');
+
+    this.ui.onStatusClicked = () => this.openTeamFor(this.turnManager.activeUnit);
+    this.ui.onRecenterClicked = () => this.recenter();
+
+    this.ui.setInputMode(matchMedia('(pointer: coarse)').matches ? 'touch' : 'mouse');
+  }
+
+  private recenter(): void {
+    const active = this.turnManager.activeUnit;
+    if (!active) return;
+    this.scene.focusOn(active.x, this.grid.getHeight(active.x, active.z), active.z);
+    this.scene.setCursor(active.x, active.z);
+  }
+
+  private openTeamFor(unit: Unit | null): void {
+    const idx = unit ? this.squad.findIndex((u) => u.id === unit.id) : 0;
+    this.ui.populateJobCustomizer(this.squad, Math.max(0, idx));
+    this.ui.openJobModal();
+  }
+
+  private isPlayerIdle(): boolean {
+    return this.currentMode === 'idle' && this.turnManager.activeUnit?.team === 'player' && !this.battleOver;
+  }
+
+  /** Esc, controller B, two-finger tap, pen eraser: close the top thing, or step back. */
+  private cancelAction(): void {
+    if (this.ui.isHelpOpen) return this.ui.toggleHelp(false);
+    if (this.ui.isSystemMenuOpen) return this.ui.toggleSystemMenu(false);
+    if (this.ui.isJobModalOpen) return this.ui.closeJobModal();
+    if (this.ui.isResultModalOpen || this.currentMode === 'dialogue') return;
+    if (!document.getElementById('combat-forecast')!.classList.contains('hidden')) {
+      document.getElementById('btn-forecast-cancel')!.click();
+      return;
+    }
+    if (this.currentMode === 'facing') {
+      const active = this.turnManager.activeUnit;
+      // Facing is mandatory once a unit has both moved and acted; otherwise WAIT can be backed out of
+      if (active && !(active.hasMoved && active.hasActed)) {
+        document.getElementById('facing-selector')!.classList.add('hidden');
+        this.currentMode = 'idle';
+        this.ui.focusForNav(document.getElementById('btn-action-wait'));
+      }
+      return;
+    }
+    if (!document.getElementById('sub-menu')!.classList.contains('hidden')) return this.ui.toggleSubMenu(false);
+    if (this.currentMode === 'targeting') {
+      this.cancelTargeting();
+      this.ui.focusForNav(document.getElementById('btn-action-act'));
+      return;
+    }
+    if (this.currentMode === 'moving') {
+      this.currentMode = 'idle';
+      this.scene.clearHighlights();
+      this.ui.focusForNav(document.getElementById('btn-action-move'));
+      return;
+    }
+    if (this.ui.isCombatLogOpen) return this.ui.toggleCombatLog(false);
+    if (this.ui.isEditorOpen) return this.ui.toggleEditor(false);
+    (document.activeElement as HTMLElement | null)?.blur();
+  }
+
+  /** Enter / Space / controller A on the battlefield (no menu has focus). */
+  private confirmOnBattlefield(): void {
+    if (this.currentMode === 'dialogue') {
+      SoundFX.playMenuBlip();
+      this.dialogueIndex++;
+      this.advanceDialogue();
+      return;
+    }
+    const tile = this.scene.hoveredTile;
+    if (!tile) return;
+    const active = this.turnManager.activeUnit;
+    // Confirming on your own active unit while idle opens its command menu
+    if (this.isPlayerIdle() && active && active.x === tile.x && active.z === tile.z) {
+      this.ui.focusCommands();
+      return;
+    }
+    this.onCanvasClick();
+  }
+
+  private moveCursor(dir: Dir): void {
+    if (this.currentMode === 'dialogue' || this.ui.isResultModalOpen) return;
+    const t = this.scene.moveCursor(dir);
+    if (t) {
+      SoundFX.playMoveStep();
+      const tile = this.grid.getTile(t.x, t.z);
+      if (tile) this.ui.updateTileInfo(t.x, t.z, tile.height, tile.terrain);
+      const unit = this.units.find((u) => !u.isDead && u.x === t.x && u.z === t.z);
+      if (unit && this.currentMode !== 'targeting') this.ui.updateUnitCard(unit, this.grid.getHeight(unit.x, unit.z));
+    }
+  }
+
+  private handleDirection(dir: Dir): void {
+    const layer = this.ui.activeLayer();
+    if (layer && focusablesIn(layer).length > 0) {
+      moveFocus(layer, dir);
+      SoundFX.playMenuBlip();
+    } else {
+      this.moveCursor(dir);
+    }
+  }
+
+  private handleConfirm(): void {
+    const layer = this.ui.activeLayer();
+    const focused = document.activeElement as HTMLElement | null;
+    if (layer) {
+      if (focused && layer.contains(focused) && focused !== document.body) focused.click();
+      else moveFocus(layer, 'down');
+      return;
+    }
+    if (focused && focused !== document.body && focused.closest('button, [role="button"]')) {
+      focused.click();
+      return;
+    }
+    this.confirmOnBattlefield();
+  }
+
+  private handlePad(a: PadAction): void {
+    switch (a) {
+      case 'up': case 'down': case 'left': case 'right':
+        return this.handleDirection(a);
+      case 'confirm': return this.handleConfirm();
+      case 'cancel': return this.cancelAction();
+      case 'commands':
+        if (this.isPlayerIdle()) this.ui.focusCommands();
+        return;
+      case 'team':
+        if (this.ui.isJobModalOpen) this.ui.closeJobModal();
+        else if (this.currentMode !== 'dialogue' && !this.ui.isResultModalOpen) this.openTeamFor(this.turnManager.activeUnit);
+        return;
+      case 'rotateLeft': this.scene.rotateLeft(); this.scene.updateUnits(this.units); return;
+      case 'rotateRight': this.scene.rotateRight(); this.scene.updateUnits(this.units); return;
+      case 'zoomIn': this.scene.zoomIn(1.5); return;
+      case 'zoomOut': this.scene.zoomOut(1.5); return;
+      case 'recenter': return this.recenter();
+      case 'menu': return this.ui.toggleSystemMenu();
+      case 'help': return this.ui.toggleHelp();
+    }
+  }
+
+  private onKeyDown(e: KeyboardEvent): void {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    this.ui.setInputMode('keyboard');
+    const target = e.target as HTMLElement;
+    const typing = target.matches?.('input, textarea, select');
+    const k = e.key;
+
+    if (k === 'Escape') {
+      e.preventDefault();
+      this.cancelAction();
+      return;
+    }
+    if (typing) return;
+
+    if (this.ui.isResultModalOpen) {
+      // Buttons handle Enter/Space natively; arrows move between them
+      const dir = ({ ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' } as Record<string, Dir>)[k];
+      if (dir) { e.preventDefault(); this.handleDirection(dir); }
+      return;
+    }
+
+    const arrows: Record<string, Dir> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+    if (arrows[k]) {
+      e.preventDefault();
+      this.handleDirection(arrows[k]);
+      return;
+    }
+
+    if (k === 'Enter' || k === ' ') {
+      // A focused button handles Enter/Space itself
+      if (target && target !== document.body && target.closest('button, [role="button"], a')) return;
+      e.preventDefault();
+      this.handleConfirm();
+      return;
+    }
+
+    if (this.currentMode === 'dialogue') return;
+
+    const lower = k.toLowerCase();
+    if (lower === 'q') { this.scene.rotateLeft(); this.scene.updateUnits(this.units); }
+    else if (lower === 'e') { this.scene.rotateRight(); this.scene.updateUnits(this.units); }
+    else if (k === '+' || k === '=') this.scene.zoomIn(1.5);
+    else if (k === '-' || k === '_') this.scene.zoomOut(1.5);
+    else if (lower === 'w') this.scene.panBy(0, -1.0);
+    else if (lower === 's') this.scene.panBy(0, 1.0);
+    else if (lower === 'a') this.scene.panBy(-1.0, 0);
+    else if (lower === 'd') this.scene.panBy(1.0, 0);
+    else if (lower === 'r' || k === 'Home') this.recenter();
+    else if (lower === 'h' || k === '?') this.ui.toggleHelp();
+    else if (lower === 'l') this.ui.toggleCombatLog();
+    else if (lower === 'j') { if (this.ui.isJobModalOpen) this.ui.closeJobModal(); else this.openTeamFor(this.turnManager.activeUnit); }
+    else if (this.isPlayerIdle() && !this.ui.activeLayer()) {
+      if (k === '1') this.clickIfEnabled('btn-action-move');
+      else if (k === '2') this.clickIfEnabled('btn-action-act');
+      else if (k === '3') this.clickIfEnabled('btn-action-wait');
+      else if (k === '4' || lower === 't') this.handleAutoCommand();
+    }
+  }
+
+  private clickIfEnabled(id: string): void {
+    const b = document.getElementById(id) as HTMLButtonElement | null;
+    if (b && !b.disabled) b.click();
   }
 
   // ---------------------------------------------------------------------------
@@ -503,7 +691,9 @@ class TacticsGame {
     if (!active || active.hasMoved || active.team !== 'player' || active.move === 0 || this.currentMode === 'busy') return;
 
     this.currentMode = 'moving';
+    (document.activeElement as HTMLElement | null)?.blur();
     this.scene.setHighlights(this.grid.getReachableTiles(active, this.units), 0x3b82f6);
+    this.scene.setCursor(active.x, active.z);
   }
 
   private handleAbilityCommand(raw: Ability): void {
@@ -520,6 +710,7 @@ class TacticsGame {
     }
 
     this.currentMode = 'targeting';
+    (document.activeElement as HTMLElement | null)?.blur();
     const supportive = CombatEngine.isSupportive(ability);
     const tiles = this.grid.mapData.tiles.filter((t) =>
       this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive)
@@ -804,6 +995,7 @@ class TacticsGame {
     if (result.isCrit) {
       SoundFX.playCrit();
       this.scene.vfx.triggerScreenShake(0.6);
+      this.pad.rumble(0.5, 160);
       this.scene.spawnFloatingDamage(target.x, h, target.z, `CRIT! -${result.damageDealt}`, 'crit');
       this.ui.addLogEntry(`[CRIT] ${target.name} takes ${result.damageDealt} DMG (${forecast.facingType}).`, 'crit');
     } else {
@@ -831,6 +1023,7 @@ class TacticsGame {
     if (result.bossEnraged) {
       SoundFX.playCrit();
       this.scene.vfx.triggerScreenShake(1.0);
+      this.pad.rumble(1.0, 400);
       this.scene.vfx.spawnFireFX(pos);
       this.ui.showBanner(`${target.name.toUpperCase()} IS ENRAGED!`);
       this.ui.addLogEntry(`[BOSS] ${target.name} is enraged: Haste and +20% power!`, 'crit');
@@ -1087,6 +1280,7 @@ class TacticsGame {
 
   private gameLoop(): void {
     requestAnimationFrame(() => this.gameLoop());
+    this.pad.poll();
 
     if (this.scene && this.scene.hoveredTile) {
       const { x, z } = this.scene.hoveredTile;

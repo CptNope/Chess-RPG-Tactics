@@ -3,6 +3,8 @@ import { JOBS } from '../data/jobs';
 import { JobSystem } from '../core/JobSystem';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
+import { createUnitSpriteTexture } from '../graphics/PixelTextures';
+import { ensureFocusable, focusablesIn, focusVisible } from '../input/FocusNav';
 import { SoundFX } from '../audio/SoundEffects';
 
 export class UIManager {
@@ -113,6 +115,19 @@ export class UIManager {
   private resultBodyEl = document.getElementById('result-body')!;
   private resultActionsEl = document.getElementById('result-actions')!;
 
+  // Menu, help and status
+  private btnMenu = document.getElementById('btn-menu') as HTMLButtonElement;
+  private systemMenuEl = document.getElementById('system-menu')!;
+  private btnHelp = document.getElementById('btn-help') as HTMLButtonElement;
+  private helpModalEl = document.getElementById('help-modal')!;
+  private btnStatus = document.getElementById('btn-action-status') as HTMLButtonElement;
+  private portraitEl = document.getElementById('unit-portrait') as HTMLCanvasElement;
+  private dialogueHintEl = document.querySelector('.dialogue-hint') as HTMLElement | null;
+  /** Element focused before a modal opened, restored when it closes. */
+  private returnFocus: HTMLElement | null = null;
+  public onStatusClicked?: () => void;
+  public onRecenterClicked?: () => void;
+
   /** Item ids the squad owns. The gear tab only offers these. */
   public armory: string[] = [];
 
@@ -139,13 +154,35 @@ export class UIManager {
 
   constructor() {
     this.setupListeners();
+    // Keep Tab inside an open modal so keyboard players can't wander into the HUD behind it
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const modal = [...document.querySelectorAll<HTMLElement>('.modal-overlay')].find((m) => !m.classList.contains('hidden'));
+      if (!modal) return;
+      const items = focusablesIn(modal);
+      if (items.length === 0) return;
+      const idx = items.indexOf(document.activeElement as HTMLElement);
+      if (e.shiftKey && idx <= 0) { e.preventDefault(); focusVisible(items[items.length - 1]); }
+      else if (!e.shiftKey && (idx === -1 || idx === items.length - 1)) { e.preventDefault(); focusVisible(items[0]); }
+    }, true);
+
+    // Enter / Space activate focusable non-button controls (cards, list items, slots)
+    document.addEventListener('keydown', (e) => {
+      const t = e.target as HTMLElement;
+      if ((e.key === 'Enter' || e.key === ' ') && t && t.getAttribute('role') === 'button' && t.tagName !== 'BUTTON') {
+        e.preventDefault();
+        e.stopPropagation();
+        t.click();
+      }
+    }, true);
   }
 
   private setupListeners(): void {
     // SFX toggle
     this.btnToggleSound.addEventListener('click', () => {
       const isMuted = SoundFX.toggleMute();
-      this.btnToggleSound.textContent = isMuted ? '🔇 MUTED' : '🔊 SFX';
+      this.btnToggleSound.textContent = `Sound FX: ${isMuted ? 'Off' : 'On'}`;
+      this.btnToggleSound.setAttribute('aria-pressed', String(!isMuted));
       if (!isMuted) SoundFX.playMenuBlip();
     });
 
@@ -295,12 +332,12 @@ export class UIManager {
     // Job Modal Buttons
     this.btnOpenJobModal.addEventListener('click', () => {
       SoundFX.playMenuBlip();
-      this.jobModalEl.classList.remove('hidden');
+      this.openJobModal();
     });
 
     this.btnCloseJobModal.addEventListener('click', () => {
       SoundFX.playMenuBlip();
-      this.jobModalEl.classList.add('hidden');
+      this.closeJobModal();
     });
 
     // Modal Subtabs (Jobs vs Equip)
@@ -325,6 +362,141 @@ export class UIManager {
       SoundFX.playMenuBlip();
       this.onDialogueNext?.();
     });
+
+    // System menu dropdown
+    this.btnMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      SoundFX.playMenuBlip();
+      this.toggleSystemMenu();
+    });
+    this.systemMenuEl.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('button')) this.toggleSystemMenu(false);
+    });
+    document.addEventListener('pointerdown', (e) => {
+      const t = e.target as HTMLElement;
+      if (this.isSystemMenuOpen && !this.systemMenuEl.contains(t) && !this.btnMenu.contains(t)) this.toggleSystemMenu(false);
+    });
+
+    // Controls help
+    this.btnHelp.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.toggleHelp(true);
+    });
+    document.getElementById('btn-close-help')?.addEventListener('click', () => this.toggleHelp(false));
+
+    // STATUS: open this unit's jobs and gear
+    this.btnStatus.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.onStatusClicked?.();
+    });
+    document.getElementById('btn-recenter')?.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.onRecenterClicked?.();
+    });
+
+    // Clicking the dark backdrop of a modal closes the ones that are safe to dismiss
+    for (const modal of [this.jobModalEl, this.helpModalEl]) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          if (modal === this.jobModalEl) this.closeJobModal();
+          else this.toggleHelp(false);
+        }
+      });
+    }
+
+    this.dialogueBoxEl.tabIndex = 0;
+    this.dialogueBoxEl.setAttribute('role', 'button');
+    this.dialogueBoxEl.setAttribute('aria-label', 'Continue dialogue');
+    document.getElementById('battle-banner')?.setAttribute('role', 'status');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Menus, modals and focus
+  // ---------------------------------------------------------------------------
+
+  public get isSystemMenuOpen(): boolean {
+    return !this.systemMenuEl.classList.contains('hidden');
+  }
+
+  public toggleSystemMenu(open: boolean = !this.isSystemMenuOpen): void {
+    this.systemMenuEl.classList.toggle('hidden', !open);
+    this.btnMenu.setAttribute('aria-expanded', String(open));
+    if (open) {
+      this.returnFocus = document.activeElement as HTMLElement | null;
+      const first = focusablesIn(this.systemMenuEl)[0];
+      if (first) focusVisible(first);
+    } else if (this.returnFocus && document.activeElement && this.systemMenuEl.contains(document.activeElement)) {
+      this.returnFocus.focus();
+    }
+  }
+
+  public get isHelpOpen(): boolean {
+    return !this.helpModalEl.classList.contains('hidden');
+  }
+
+  public toggleHelp(open: boolean = !this.isHelpOpen): void {
+    if (open) this.openModal(this.helpModalEl);
+    else this.closeModal(this.helpModalEl);
+  }
+
+  public get isJobModalOpen(): boolean {
+    return !this.jobModalEl.classList.contains('hidden');
+  }
+
+  public openJobModal(): void {
+    this.openModal(this.jobModalEl);
+  }
+
+  public closeJobModal(): void {
+    this.closeModal(this.jobModalEl);
+  }
+
+  private openModal(el: HTMLElement): void {
+    if (el.classList.contains('hidden')) this.returnFocus = document.activeElement as HTMLElement | null;
+    el.classList.remove('hidden');
+    ensureFocusable(el);
+    const first = focusablesIn(el)[0];
+    if (first) focusVisible(first);
+  }
+
+  private closeModal(el: HTMLElement): void {
+    el.classList.add('hidden');
+    if (this.returnFocus && document.contains(this.returnFocus) && !this.returnFocus.closest('.hidden')) this.returnFocus.focus();
+    else (document.activeElement as HTMLElement | null)?.blur();
+    this.returnFocus = null;
+  }
+
+  /**
+   * The topmost open layer that should capture arrow keys / d-pad, if any.
+   * Battlefield input (tile cursor) is used when this returns null.
+   */
+  public activeLayer(): HTMLElement | null {
+    const order = ['result-modal', 'choice-modal', 'help-modal', 'job-modal', 'system-menu', 'facing-selector', 'combat-forecast', 'sub-menu'];
+    for (const id of order) {
+      const el = document.getElementById(id);
+      if (el && !el.classList.contains('hidden')) return el;
+    }
+    const focused = document.activeElement;
+    for (const id of ['action-menu', 'top-bar', 'camera-controls', 'combat-log-drawer', 'editor-panel']) {
+      const el = document.getElementById(id);
+      if (el && focused && el.contains(focused)) return el;
+    }
+    return null;
+  }
+
+  /** Focuses the first enabled command (controller X / keyboard focus into the command menu). */
+  public focusCommands(): void {
+    const first = focusablesIn(document.getElementById('action-menu')!)[0];
+    if (first) focusVisible(first);
+  }
+
+  /** Words the dialogue hint uses for the input the player is using right now. */
+  public setInputMode(mode: 'mouse' | 'touch' | 'pen' | 'keyboard' | 'gamepad'): void {
+    document.documentElement.dataset.input = mode;
+    if (this.dialogueHintEl) {
+      const verb = mode === 'touch' || mode === 'pen' ? 'Tap to continue' : mode === 'gamepad' ? 'Press A to continue' : mode === 'keyboard' ? 'Press Enter to continue' : 'Click or press Space to continue';
+      this.dialogueHintEl.textContent = `${verb} ▶`;
+    }
   }
 
   public toggleEditor(open: boolean): void {
@@ -373,13 +545,13 @@ export class UIManager {
       `;
       card.addEventListener('click', () => {
         SoundFX.playTurnChime();
-        this.choiceModalEl.classList.add('hidden');
+        this.closeModal(this.choiceModalEl);
         onSelect(choice);
       });
       this.choiceCardsContainerEl.appendChild(card);
     });
 
-    this.choiceModalEl.classList.remove('hidden');
+    this.openModal(this.choiceModalEl);
   }
 
   /**
@@ -428,7 +600,8 @@ export class UIManager {
   }
 
   public updateBgmButton(isMuted: boolean): void {
-    this.btnToggleBgm.textContent = isMuted ? '🔇 BGM' : '🎵 BGM';
+    this.btnToggleBgm.textContent = `Music: ${isMuted ? 'Off' : 'On'}`;
+    this.btnToggleBgm.setAttribute('aria-pressed', String(!isMuted));
   }
 
   public toggleCombatLog(forceOpen?: boolean): void {
@@ -469,6 +642,7 @@ export class UIManager {
     const job = JOBS[unit.jobId] || JOBS.squire;
     this.unitNameEl.textContent = unit.name;
     this.unitJobEl.textContent = `${job.name} Lv. ${unit.level}`;
+    this.drawPortrait(unit);
 
     this.unitStatusesEl.innerHTML = '';
     if (unit.team === 'player') {
@@ -508,6 +682,17 @@ export class UIManager {
     this.btnAct.disabled = unit.hasActed || unit.team !== 'player';
     this.btnWait.disabled = unit.team !== 'player';
     this.btnAuto.disabled = unit.team !== 'player';
+    this.btnStatus.disabled = unit.team !== 'player';
+  }
+
+  private drawPortrait(unit: Unit): void {
+    const ctx = this.portraitEl.getContext('2d');
+    if (!ctx) return;
+    const job = JOBS[unit.jobId] || JOBS.squire;
+    const tex = createUnitSpriteTexture(job.spriteClass || unit.jobId, 'S', unit.team === 'enemy');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, 32, 32);
+    ctx.drawImage(tex.image as CanvasImageSource, 0, 0, 32, 32);
   }
 
   public updateTileInfo(x: number, z: number, height: number, terrain: string): void {
@@ -546,9 +731,19 @@ export class UIManager {
   public toggleSubMenu(show: boolean): void {
     if (show) {
       this.subMenuEl.classList.remove('hidden');
+      this.focusForNav(focusablesIn(this.subMenuItemsEl)[0]);
     } else {
+      const hadFocus = this.subMenuEl.contains(document.activeElement);
       this.subMenuEl.classList.add('hidden');
+      if (hadFocus) this.focusForNav(this.btnAct.disabled ? focusablesIn(document.getElementById('action-menu')!)[0] : this.btnAct);
     }
+  }
+
+  /** Moves focus only when the player is driving the UI with keys or a controller. */
+  public focusForNav(el: HTMLElement | null | undefined): void {
+    if (!el) return;
+    const mode = document.documentElement.dataset.input;
+    if (mode === 'keyboard' || mode === 'gamepad') focusVisible(el);
   }
 
   public showFacingSelector(currentFacing: FacingDirection): void {
@@ -564,6 +759,7 @@ export class UIManager {
     });
 
     this.facingSelectorEl.classList.remove('hidden');
+    this.focusForNav(this.facingSelectorEl.querySelector<HTMLElement>(`.compass-btn[data-facing="${currentFacing}"]`));
   }
 
   public showCombatForecast(forecast: CombatForecast, extraTargets: number = 0): void {
@@ -580,6 +776,7 @@ export class UIManager {
       : `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP${dualText}`;
 
     this.forecastEl.classList.remove('hidden');
+    this.focusForNav(this.btnForecastConfirm as HTMLElement);
   }
 
   public showBanner(text: string): void {
@@ -593,6 +790,7 @@ export class UIManager {
   public populateJobCustomizer(units: Unit[], selectedUnitIndex: number = 0): void {
     const unit = units[selectedUnitIndex];
     if (!unit) return;
+    queueMicrotask(() => ensureFocusable(this.jobModalEl));
 
     this.jobUnitTabsEl.innerHTML = '';
     units.forEach((u, i) => {

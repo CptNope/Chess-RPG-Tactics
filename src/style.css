@@ -43,6 +43,7 @@ body, html {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -1304,26 +1305,481 @@ body, html {
 .ability-slot-box.cyclable { cursor: pointer; }
 .ability-slot-box.cyclable:hover { border-color: var(--gold); }
 
-/* Keep the camera toolbar from covering the turn order strip on narrower screens */
-@media (max-width: 1700px) {
-  #turn-timeline {
-    top: 64px;
-    min-width: 0;
-    max-width: calc(100vw - 32px);
-  }
-}
-@media (max-width: 1100px) {
-  #camera-controls {
-    left: 12px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-  #turn-timeline { top: 108px; }
-}
-
-.unit-overhead-hp.boss { border-color: #f59e0b !important; transform-origin: center; }
-.unit-overhead-hp.enraged { border-color: #ef4444 !important; box-shadow: 0 0 6px #ef4444; }
-
 /* Dialogue box is opaque so HUD cards beneath it don't show through the text */
 #dialogue-box { background: #0c1626; }
 .status-badge.status-exp { background: #1e3a5f; color: #bfdbfe; }
+
+
+/* =========================================================================
+   0.8.0 — Responsive layout & input
+   Breakpoints follow where the HUD actually collides, not device names:
+   - ≤1100px wide: tile info moves under the turn order; Team screen goes 2-up
+   - ≤700px wide (phones, portrait): bottom command bar, stacked unit card,
+     full-screen sheets and modals
+   - ≤520px tall (phones, landscape): compact side rails
+   ========================================================================= */
+
+:root {
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --edge: 12px;
+  --btn-bg: #16243b;
+  --btn-bg-hover: #25406b;
+  --focus-ring: #ffe27a;
+}
+
+/* ---- Browser surfaces ---- */
+::selection { background: var(--gold); color: #0a0c10; }
+* { scrollbar-width: thin; scrollbar-color: var(--panel-border) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+input, textarea { user-select: text; -webkit-user-select: text; }
+html { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+:where(button, select, [role="button"], .story-choice-card, .learn-item, .job-item, .gear-slot-box, #dialogue-box):focus { outline: none; }
+:where(button, select, [role="button"], .story-choice-card, .learn-item, .job-item, .gear-slot-box, #dialogue-box):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(244, 196, 48, 0.25);
+}
+
+/* ---- Top bar: turn order (left) and the four everyday buttons (right) ---- */
+#turn-timeline {
+  top: calc(var(--edge) + var(--safe-t));
+  left: calc(var(--edge) + var(--safe-l));
+  transform: none;
+  min-width: 0;
+  max-width: calc(100vw - 460px);
+  padding: 6px 12px;
+}
+.timeline-queue {
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.timeline-queue::-webkit-scrollbar { display: none; }
+.timeline-unit { flex-shrink: 0; }
+
+#top-bar {
+  top: calc(var(--edge) + var(--safe-t));
+  right: calc(var(--edge) + var(--safe-r));
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 6px 10px;
+  background: var(--btn-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--gold);
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
+}
+.icon-btn:hover { background: var(--btn-bg-hover); border-color: var(--gold); color: #fff; }
+.icon-btn:active { transform: translateY(1px); }
+.icon-btn[aria-expanded="true"] { background: var(--btn-bg-hover); border-color: var(--gold); }
+.px-icon { width: 16px; height: 16px; flex-shrink: 0; shape-rendering: crispEdges; }
+
+/* ---- System menu dropdown ---- */
+#system-menu {
+  top: calc(var(--edge) + var(--safe-t) + 58px);
+  right: calc(var(--edge) + var(--safe-r));
+  width: 250px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 55;
+}
+#system-menu button {
+  text-align: left;
+  min-height: 38px;
+  padding: 8px 12px;
+  background: var(--btn-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--text-light);
+  font-family: var(--font-retro);
+  font-size: 18px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+#system-menu button:hover { background: var(--btn-bg-hover); border-color: var(--gold); }
+.menu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--text-muted);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--panel-border-inner);
+}
+.menu-field .hud-select { width: 100%; min-height: 38px; font-size: 10px; }
+
+/* ---- Camera cluster: right edge, vertically centered ---- */
+#camera-controls {
+  top: auto;
+  right: calc(var(--edge) + var(--safe-r));
+  /* Sits above the command menu so the two never collide on short laptop screens */
+  bottom: calc(var(--edge) + var(--safe-b) + 300px);
+  transform: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+}
+#camera-controls .icon-btn { padding: 0; width: 40px; height: 40px; }
+
+/* ---- Unit card portrait (drawn from the unit's sprite) ---- */
+canvas.unit-portrait { image-rendering: pixelated; padding: 2px; }
+
+/* ---- Hotkey hints appear only for keyboard players ---- */
+.hk {
+  display: none;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--text-muted);
+  border: 1px solid var(--panel-border-inner);
+  border-radius: 2px;
+  padding: 2px 4px;
+  margin-right: 8px;
+}
+html[data-input="keyboard"] .hk { display: inline-block; }
+
+/* ---- Overlap fixes at every size ---- */
+#turn-timeline:has(.timeline-queue:empty) { display: none; }
+.stat-grid { grid-template-columns: repeat(4, auto); justify-content: space-between; }
+.stat-grid > div { white-space: nowrap; }
+body:has(#dialogue-box:not(.hidden)) #tile-info-card { display: none; }
+.combat-log-panel { bottom: calc(16px + var(--safe-b)); right: calc(188px + var(--safe-r)); }
+#editor-panel { top: calc(84px + var(--safe-t)); }
+
+/* ---- Controls help ---- */
+.help-window { width: min(980px, 95vw); overflow-y: auto; }
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.help-card {
+  background: rgba(10, 16, 26, 0.7);
+  border: 1px solid var(--panel-border-inner);
+  border-radius: 4px;
+  padding: 12px;
+}
+.help-card h3 {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.help-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: 17px;
+  line-height: 1.15;
+}
+.help-card dt { color: var(--gold-glow); }
+.help-card dd { color: var(--text-light); }
+kbd {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  border: 1px solid var(--panel-border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 2px 4px;
+  background: #0f1a2b;
+  color: var(--text-light);
+}
+/* The card for the input you're using leads, and is outlined */
+html[data-input="touch"] .help-card[data-input="touch"],
+html[data-input="pen"] .help-card[data-input="pen"],
+html[data-input="mouse"] .help-card[data-input="mouse"],
+html[data-input="keyboard"] .help-card[data-input="keyboard"],
+html[data-input="gamepad"] .help-card[data-input="gamepad"] { order: -1; border-color: var(--gold); }
+
+/* ---- Touch screens: 44px targets everywhere ---- */
+@media (pointer: coarse) {
+  button, select, .menu-btn, .icon-btn, .compass-btn, .close-btn, .action-item-btn,
+  .learn-item, .job-item, .job-unit-tab, .modal-subtab, .story-choice-card,
+  .ability-slot-box, .gear-slot-box, .hud-btn-mini, .editor-tool-btn {
+    min-height: 44px;
+  }
+  .icon-btn, .close-btn { min-width: 44px; }
+  #system-menu button, .menu-field .hud-select { min-height: 44px; }
+  #camera-controls .icon-btn { width: 44px; height: 44px; }
+}
+
+/* ---- Tablets & small laptops ---- */
+@media (max-width: 1100px) {
+  #tile-info-card {
+    top: calc(var(--edge) + var(--safe-t) + 62px);
+    left: calc(var(--edge) + var(--safe-l));
+    bottom: auto;
+    transform: none;
+    min-width: 0;
+    text-align: left;
+    padding: 6px 10px;
+    font-size: 15px;
+  }
+  .job-config-columns {
+    grid-template-columns: 1fr 1fr;
+    height: auto;
+  }
+  .job-config-columns > :last-child { grid-column: 1 / -1; }
+  .job-column { max-height: 46dvh; }
+  .modal-window { overflow-y: auto; }
+}
+
+@media (max-width: 900px) {
+  #top-bar .btn-label { display: none; }
+  #turn-timeline { max-width: calc(100vw - 260px); }
+  .timeline-label { display: none; }
+}
+
+/* ---- Phones, portrait ---- */
+@media (max-width: 700px) {
+  :root { --edge: 8px; --cmd-h: 60px; }
+
+  #top-bar { padding: 4px; gap: 4px; }
+
+  #turn-timeline {
+    top: calc(var(--edge) + var(--safe-t) + 60px);
+    left: calc(var(--edge) + var(--safe-l));
+    right: calc(var(--edge) + var(--safe-r));
+    max-width: none;
+    padding: 4px 6px;
+  }
+
+  #tile-info-card {
+    top: calc(var(--edge) + var(--safe-t) + 118px);
+    font-size: 14px;
+    padding: 4px 8px;
+  }
+  #tile-terrain { font-size: 13px; }
+
+  /* Command bar across the bottom, in thumb reach */
+  #action-menu {
+    left: calc(var(--edge) + var(--safe-l));
+    right: calc(var(--edge) + var(--safe-r));
+    bottom: calc(var(--edge) + var(--safe-b));
+    width: auto;
+    flex-direction: row;
+    gap: 4px;
+    padding: 6px;
+  }
+  #action-menu .menu-title { display: none; }
+  #action-menu .hk { display: none; }
+  #action-menu .menu-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 2px;
+    font-size: 8px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Unit card stacks above the command bar */
+  #unit-card {
+    left: calc(var(--edge) + var(--safe-l));
+    right: calc(var(--edge) + var(--safe-r));
+    bottom: calc(var(--edge) + var(--safe-b) + var(--cmd-h) + 6px);
+    width: auto;
+    padding: 8px 10px;
+  }
+  #unit-card .card-header { margin-bottom: 6px; padding-bottom: 6px; gap: 10px; }
+  #unit-card .unit-portrait { width: 36px; height: 36px; }
+  #unit-card .card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  #unit-card .stat-bar-group { margin: 0; }
+  #unit-card .stat-label { font-size: 14px; }
+  #unit-card .stat-grid { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 14px; margin-top: 0; padding-top: 4px; }
+
+  #camera-controls {
+    top: auto;
+    transform: none;
+    right: calc(var(--edge) + var(--safe-r));
+    bottom: calc(var(--edge) + var(--safe-b) + var(--cmd-h) + 152px);
+  }
+
+  /* Bottom sheets for actions, forecast and the log */
+  #sub-menu, #combat-forecast, .combat-log-panel {
+    left: calc(var(--edge) + var(--safe-l));
+    right: calc(var(--edge) + var(--safe-r));
+    bottom: calc(var(--edge) + var(--safe-b) + var(--cmd-h) + 6px);
+    top: auto;
+    width: auto;
+    max-width: none;
+    transform: none;
+    z-index: 46;
+  }
+  #sub-menu { max-height: 55dvh; }
+  .combat-log-panel { max-height: 45dvh; }
+
+  #facing-selector { width: min(320px, calc(100vw - 16px)); min-width: 0; }
+
+  #dialogue-box {
+    left: calc(var(--edge) + var(--safe-l));
+    right: calc(var(--edge) + var(--safe-r));
+    bottom: calc(var(--edge) + var(--safe-b));
+    width: auto;
+    max-width: none;
+    transform: none;
+    animation: dialogRise 0.25s ease-out;
+    padding: 12px;
+    gap: 10px;
+  }
+  .dialogue-portrait { width: 44px; height: 44px; font-size: 24px; flex-shrink: 0; }
+  .dialogue-text { font-size: 19px; }
+
+  #editor-panel {
+    top: calc(var(--edge) + var(--safe-t) + 60px);
+    left: calc(var(--edge) + var(--safe-l));
+    right: calc(var(--edge) + var(--safe-r));
+    width: auto;
+    max-height: 60dvh;
+    overflow-y: auto;
+  }
+
+  #system-menu { right: calc(var(--edge) + var(--safe-r)); top: calc(var(--edge) + var(--safe-t) + 56px); width: min(280px, calc(100vw - 16px)); }
+
+  /* Modals become full-screen sheets */
+  .modal-overlay { align-items: stretch; }
+  .modal-window, .result-window, .help-window, .choice-window {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    padding: calc(12px + var(--safe-t)) calc(12px + var(--safe-r)) calc(16px + var(--safe-b)) calc(12px + var(--safe-l));
+    overflow-y: auto;
+  }
+  .job-config-columns { grid-template-columns: 1fr; }
+  .job-column { max-height: none; overflow: visible; }
+  .job-unit-tabs { flex-wrap: wrap; }
+  .modal-header h2 { font-size: 11px; line-height: 1.5; }
+  .result-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .result-row .result-detail { text-align: left; }
+  .result-actions button { flex: 1 1 auto; min-height: 48px; }
+
+  #banner-text { font-size: 12px; letter-spacing: 1px; }
+  .battle-banner { padding: 10px 8px; }
+}
+
+/* ---- Phones, landscape (short screens) ---- */
+@media (max-height: 520px) and (min-width: 560px) {
+  :root { --edge: 6px; }
+
+  #top-bar .btn-label { display: none; }
+  #top-bar { padding: 4px; gap: 4px; }
+  #turn-timeline { max-width: calc(100vw - 240px); padding: 4px 6px; }
+  .timeline-label { display: none; }
+
+  #tile-info-card {
+    top: calc(var(--edge) + var(--safe-t) + 56px);
+    left: calc(var(--edge) + var(--safe-l));
+    bottom: auto;
+    transform: none;
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  #unit-card {
+    left: calc(var(--edge) + var(--safe-l));
+    bottom: calc(var(--edge) + var(--safe-b));
+    width: 230px;
+    padding: 6px 8px;
+  }
+  #unit-card .card-header { margin-bottom: 4px; padding-bottom: 4px; }
+  #unit-card .unit-portrait { width: 32px; height: 32px; }
+  #unit-card .stat-label { font-size: 14px; }
+  #unit-card .stat-bar-group { margin-bottom: 2px; }
+  #unit-card .stat-grid { font-size: 13px; }
+
+  #action-menu {
+    right: calc(var(--edge) + var(--safe-r));
+    bottom: calc(var(--edge) + var(--safe-b));
+    width: 128px;
+    padding: 6px;
+    gap: 4px;
+  }
+  #action-menu .menu-title { display: none; }
+  #action-menu .menu-btn { min-height: 42px; padding: 0 10px; font-size: 9px; }
+
+  #camera-controls {
+    top: auto;
+    left: 50%;
+    right: auto;
+    bottom: calc(var(--edge) + var(--safe-b));
+    transform: translateX(-50%);
+    flex-direction: row;
+  }
+
+  #sub-menu, .combat-log-panel {
+    right: calc(var(--edge) + var(--safe-r) + 136px);
+    bottom: calc(var(--edge) + var(--safe-b));
+    top: calc(var(--edge) + var(--safe-t) + 56px);
+    width: min(340px, 50vw);
+    max-height: none;
+  }
+  #combat-forecast { width: 300px; }
+
+  #dialogue-box {
+    bottom: calc(var(--edge) + var(--safe-b));
+    width: min(620px, calc(100vw - 12px));
+    padding: 10px;
+    z-index: 60;
+  }
+  .dialogue-text { font-size: 18px; }
+
+  #editor-panel { top: calc(var(--edge) + var(--safe-t) + 56px); max-height: calc(100dvh - 70px); overflow-y: auto; }
+
+  .modal-overlay { align-items: stretch; }
+  .modal-window, .result-window, .help-window, .choice-window {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    padding: calc(10px + var(--safe-t)) calc(16px + var(--safe-r)) calc(10px + var(--safe-b)) calc(16px + var(--safe-l));
+    overflow-y: auto;
+  }
+  .job-config-columns { grid-template-columns: repeat(3, 1fr); height: auto; }
+  .job-config-columns > :last-child { grid-column: auto; }
+  .job-column { max-height: none; }
+  #banner-text { font-size: 13px; }
+  .battle-banner { top: 22%; padding: 8px; }
+}
+
+@keyframes dialogRise {
+  0% { transform: translateY(16px); opacity: 0; }
+}
+
+/* ---- Reduced motion: keep state changes, drop travel ---- */
+@media (prefers-reduced-motion: reduce) {
+  .battle-banner { animation: bannerFadeOnly 2.2s forwards linear; }
+  #dialogue-box { animation: none; }
+  .icon-btn, .menu-btn { transition: none; }
+}
+@keyframes bannerFadeOnly {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; }
+}

@@ -4,22 +4,45 @@ This document outlines the camera mathematics, projection systems, and complete 
 
 ---
 
-## 1. Input Controls Reference Matrix
+## 1. Input Controls Reference Matrix (0.8.0)
 
-| Category | Input / Trigger | Action | Behavior & Context |
-| :--- | :--- | :--- | :--- |
-| **Camera Rotation** | **`Q`** key / `⟲ Q` button | Rotate $+90^\circ$ (Counter-Clockwise) | Smoothly pivots isometric view to the next quadrant. |
-| **Camera Rotation** | **`E`** key / `⟳ E` button | Rotate $-90^\circ$ (Clockwise) | Smoothly pivots isometric view to the previous quadrant. |
-| **Zoom In** | **Mouse Wheel Up** / **`+`** / **`=`** / `+` button | Zoom In (Macro View) | Extends camera down to `2.0` zoom level for close-up pixel art inspection. |
-| **Zoom Out** | **Mouse Wheel Down** / **`-`** / **`_`** / `-` button | Zoom Out (Overview) | Expands camera up to `22.0` zoom level for broad tactical map view. |
-| **Camera Pan** | **Right-Click Drag** / **Middle-Click Drag** | Pan Camera in World Space | Translates camera target smoothly across the terrain. |
-| **Camera Pan** | **`W`** / **`S`** / **`A`** / **`D`** or **Arrow Keys** | Keyboard Camera Pan | Moves camera target forward, backward, left, or right. |
-| **Camera Reset**| **`R`** / **`Home`** key | Center Camera on Active Unit | Glides camera focus directly onto the unit currently taking its turn. |
-| **Tile Selection**| **Hover Cursor** | Highlight & Snap Cursor | Snaps 3D cursor bracket to terrain height level $(x, z, h)$. |
-| **Inspection** | **Left-Click on Unit** (Idle mode) | Inspect Unit Card | Smoothly focuses camera on selected unit and updates HUD stats. |
-| **Movement** | **Left-Click on Blue Tile** | Execute Move | Steps unit to valid path tile within Move and Jump constraints. |
-| **Targeting** | **Left-Click on Red Tile** | Open Battle Forecast | Displays Hit %, Expected Damage, and Facing Advantage badge. |
-| **Cancel** | **`Escape`** key / `CANCEL` button | Cancel Targeting / Submenu | Exits targeting mode and restores command menu. |
+Every action is reachable from **mouse, keyboard, touch, pen and controller**. All five feed one dispatcher in `src/main.ts` (`handleDirection`, `handleConfirm`, `cancelAction`). Canvas gestures live in `TacticsScene.setupInteractions()` (Pointer Events), controller polling in `src/input/GamepadInput.ts`, and menu focus movement in `src/input/FocusNav.ts`. The in-game **Controls** screen (`H`, the ? button, or View/Back on a controller) lists all of this and puts the card for your current input first.
+
+| Action | Mouse / trackpad | Keyboard | Touch | Pen | Controller |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Select tile / unit | Click | Arrows + `Enter`/`Space` | Tap | Tap | D-pad / left stick + **A** |
+| Preview tile | Hover | Arrows | Tap | Hover | D-pad / left stick |
+| Cancel / back | `CANCEL` / × buttons | `Esc` | Two-finger tap | Eraser or barrel button + tap | **B** |
+| Command menu | Click | `1` Move · `2` Act · `3` Wait · `4`/`T` Auto | Tap | Tap | **X**, then d-pad + **A** |
+| Move between menu buttons | — | Arrows, `Tab` | — | — | D-pad / left stick |
+| Pan camera | Left-drag, right/middle-drag | `W` `A` `S` `D` | One-finger drag | Drag | Right stick |
+| Zoom | Wheel, trackpad pinch | `+` / `-` | Pinch | — | **LT** out / **RT** in |
+| Rotate 90° | Rotate buttons | `Q` / `E` | Two-finger twist (50°) | Rotate buttons | **LB** / **RB** |
+| Re-center on active unit | Center button | `R` / `Home` | Center button | Center button | Click right stick (**R3**) |
+| Team (jobs & gear) | Team button / STATUS | `J` | Team button | Team button | **Y** |
+| Battle log | Log button | `L` | Log button | Log button | via Menu |
+| Menu (map, sound, save, load, editor) | Menu button | — | Menu button | Menu button | **Start** |
+| Controls help | ? button | `H` / `?` | ? button | ? button | **View / Back** |
+
+Notes:
+* **Arrow keys and the d-pad are context-aware.** With a menu, modal, forecast or facing picker open (or a HUD button focused), they move focus between buttons. Otherwise they move the tile cursor. "Up" moves along the grid axis that points toward the top-right of the screen for the current camera angle.
+* **Confirming on your own active unit** (Enter / A) while idle jumps focus into its command menu.
+* A drag never counts as a tap: pointers must move less than 10px (touch) or 6px (mouse/pen) to select.
+* The canvas sets `touch-action: none`, so the page itself never scrolls or browser-zooms during gestures. Interrupted gestures (`pointercancel`, lost capture, window blur) reset cleanly.
+* Controllers use the standard Gamepad mapping (Xbox, PlayStation, Switch Pro, 8BitDo…). Held directions repeat after 320ms every 110ms. Crits and boss enrage trigger a short rumble where the browser supports it.
+* Hotkey badges on the command buttons appear only while you're using a keyboard; the dialogue hint says "Tap", "Press A" or "Press Enter" to match your input.
+* Modals trap `Tab`, restore focus when closed, and every HUD control has a visible gold focus ring.
+
+## 1b. Responsive Layout (0.8.0)
+
+| Screen | Layout |
+| :--- | :--- |
+| Desktop (> 1100px) | Turn order top-left, Team/Log/Controls/Menu top-right, camera cluster on the right above the command menu, unit card bottom-left, tile info bottom-center. |
+| Tablet / small laptop (≤ 1100px) | Tile info moves under the turn order; Team screen goes two-column. Icon-only top bar at ≤ 900px. |
+| Phone portrait (≤ 700px) | Command bar across the bottom (thumb reach), unit card stacked above it, turn order as its own row, actions / forecast / log as bottom sheets, every modal full-screen. |
+| Phone landscape (≤ 520px tall) | Unit card bottom-left, command rail bottom-right, camera row bottom-center, side sheets for actions and log. |
+
+All edges respect iPhone/Android safe areas (`viewport-fit=cover`, `env(safe-area-inset-*)`), heights use `dvh`, and touch screens get 44px minimum targets. Portrait screens fit the camera zoom to the screen *width*, so phones see the whole battlefield instead of a narrow slice.
 
 ---
 
