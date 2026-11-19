@@ -1,14 +1,16 @@
 {
   "name": "chess-rpg-tactics",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.8.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:build": "vitest run && node scripts/check-dist.mjs"
+    "test:build": "vitest run && node scripts/check-dist.mjs",
+    "docs:gen": "vite-node scripts/gen-docs.ts",
+    "docs:check": "vite-node scripts/gen-docs.ts --check"
   },
   "dependencies": {
     "three": "^0.170.0"

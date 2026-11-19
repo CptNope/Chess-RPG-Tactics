@@ -1,86 +1,119 @@
-# Chess RPG Tactics (Tactics JRPG Engine)
+# Chess RPG Tactics
 
-A 2.5D turn-based tactical RPG built in the style of *Final Fantasy Tactics* and *Tactics Ogre*, featuring:
-- **3D Isometric Rotatable View**: 90° camera rotation (`Q` / `E`), extreme close-up zoom (`2.0` to `22.0`), mouse drag panning, and stepped terrain elevation.
-- **Elevation & Physics**: Movement governed by unit Jump and height difference; physical & ranged attacks modified by elevation advantages.
-- **Directional Facing & Combat Geometry**: Front, Flank (+15% hit, damage bonus), and Back (+30% hit, backstab criticals).
-- **Speed / CT (Charge Time) Engine**: Tick-based speed timeline rather than rigid team turns; remaining CT refund for moving without acting or waiting.
-- **Deep Job & Ability System**: 5-slot ability equipping (Primary Action, Secondary Action, Reaction, Support, Movement), JP earning, and skill unlocking.
-- **Billboard Pixel Art Sprites**: Dynamic 2D sprites facing camera perspective with 4-way relative orientation and idle breathing animation.
-- **Branching Campaign with a Persistent Squad**: Levels, JP, abilities and gear carry from chapter to chapter. Win battles for EXP, level-ups and new armory gear on the Spoils of War screen.
-- **9 Jobs** including the **Geomancer**, whose *Elemental* spell changes with the terrain underfoot (grass, stone, dirt, water, swamp, wood).
-- **Boss Battles**: commanders with an enrage phase at half HP, ending on the new **Zodiac Summit** map.
-- **Trials of the Zodiac**: endless post-game floors with rare drops and a Warden boss every fifth floor, plus **New Game+**.
-- **Planning Enemy AI**: enemies focus wounded units, heal and buff each other, and drop area spells on clusters. Press **AUTO** (`T`) to let the same AI play one of your turns.
+[![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
+![Version](https://img.shields.io/badge/version-0.8.1-f4c430)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
+![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 
-▶ **Play it:** https://cptnope.github.io/Chess-RPG-Tactics/
+A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, nine mix-and-match jobs, a branching campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
+
+### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/)
+
+![A battle on Riverside Ruins](docs/images/battle-desktop.webp)
 
 ---
 
-## 📚 Technical Documentation & Architecture
+## Features
 
-Comprehensive design guides, Mermaid sequence & class diagrams, and Architectural Decision Records:
+| | |
+| :--- | :--- |
+| **Tactics** | Speed-based turn order (CT), front / flank / back attacks, height advantage, terrain movement costs, area spells |
+| **Squad building** | 9 jobs, 41 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
+| **Campaign** | A branching campaign (four chapters, three per playthrough) with a recruit, boss fights with enrage phases, and gear rewards |
+| **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
+| **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters. **AUTO** lets it play your turn |
+| **Play anywhere** | Phone (portrait and landscape), tablet and desktop layouts; mouse, keyboard, touch, pen and controller |
+| **Built-ins** | 3D map editor, procedural pixel art, synthesized music and SFX, browser saves |
 
-* 🗺️ **[System Architecture & Data Flow](docs/ARCHITECTURE.md)**: Component topology, turn lifecycle sequence, and class diagrams.
-* ⚔️ **[Combat Engine & Formulas](docs/COMBAT_SYSTEM.md)**: Speed ticks, CT refunds, facing vector dot products, and damage equations.
-* 🛡️ **[Job & Ability System](docs/JOB_SYSTEM.md)**: 5-slot equipping model, job progression tree, and ability database.
-* 🎥 **[Controls & Isometric Camera](docs/CONTROLS_AND_CAMERA.md)**: Mouse drag panning, wheel zoom, and camera math.
-* 🏛️ **[Architectural Decision Records (ADRs)](docs/README.md#architectural-decision-records-adrs)**: ADRs 0001–0015 detailing all engine decisions.
-* 📜 **[Changelog](CHANGELOG.md)**: Semantic release notes following the Keep a Changelog standard.
-
----
-
-## 🚀 Live GitHub Pages Deployment
-
-This repository includes an automated GitHub Actions deployment workflow ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
-
-### How to Enable GitHub Pages:
-1. Push your code to your repository on GitHub:
-   ```bash
-   git add .
-   git commit -m "docs: add comprehensive documentation, mermaid diagrams, changelogs, and ADRs"
-   git push origin main
-   ```
-2. Go to your repository on GitHub: `https://github.com/CptNope/Chess-RPG-Tactics`
-3. Click **Settings** $\to$ **Pages** (in the left sidebar under *Code and automation*).
-4. Under **Build and deployment** $\to$ **Source**, choose:
-   - **GitHub Actions**
-5. That's it! Every push to `main` will build and publish automatically to:
-   - `https://cptnope.github.io/Chess-RPG-Tactics/`
+<p>
+  <img src="docs/images/phone-portrait.webp" alt="Phone layout" width="200">
+  <img src="docs/images/summit.webp" alt="Zodiac Summit final battle" width="560">
+</p>
 
 ---
 
-## 🎮 How to Play Locally
+## How a battle flows
 
-### Development Server
+```mermaid
+flowchart LR
+    CT(["Fastest unit<br/>reaches CT 100"]) --> Cmd{"Command"}
+    Cmd --> Move["MOVE"]
+    Cmd --> Act["ACT → forecast → execute"]
+    Cmd --> Auto["AUTO (AI plays)"]
+    Move --> Act
+    Act --> Wait["WAIT → choose facing"]
+    Move --> Wait
+    Auto --> Next
+    Wait --> Next(["Next unit"])
+    Next --> Win{"All foes down?"}
+    Win -- yes --> Spoils["Spoils: EXP, JP, gear"]
+    Win -- no --> CT
+```
+
+New to the game? Read the **[Gameplay Guide](docs/GAMEPLAY_GUIDE.md)**.
+
+---
+
+## Controls
+
+Press **H**, the **?** button, or **View/Back** on a controller for the in-game list.
+
+| | Select | Back | Pan | Zoom | Rotate |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Mouse** | Click | × / Cancel | Drag | Wheel | ⟲ ⟳ buttons |
+| **Keyboard** | Arrows + Enter | Esc | W A S D | + / − | Q / E |
+| **Touch** | Tap | Two-finger tap | Drag | Pinch | Twist |
+| **Pen** | Tap (hover previews) | Eraser / barrel button | Drag | — | ⟲ ⟳ buttons |
+| **Controller** | D-pad + A | B | Right stick | LT / RT | LB / RB |
+
+Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `R` re-center · `J` Team · `L` Log · `H` Controls. Full matrix: **[Controls & Camera](docs/CONTROLS_AND_CAMERA.md)**.
+
+---
+
+## Run it locally
+
 ```bash
 npm install
-npm run dev
+npm run dev          # http://localhost:5173
+npm test             # 28 rule tests
+npm run build        # type-check + production build
+npm run docs:gen     # regenerate the content reference
 ```
 
-### Tests
-```bash
-npm test            # Vitest unit tests for combat, AI, pathfinding, data and Trials
-npm run build       # type-check + production build
-npm run test:build  # tests + check every built asset exists (what CI runs)
+`?debug` exposes the running game as `window.__tactics`; `?debug&fast` also speeds up animations.
+
+Every push to `main` builds, tests and deploys to GitHub Pages; pull requests run the same checks without deploying.
+
+---
+
+## Documentation
+
+| | |
+| :--- | :--- |
+| 🎮 **[Gameplay Guide](docs/GAMEPLAY_GUIDE.md)** | How to play, campaign map, bosses, Trials, tips |
+| 📖 **[Content Reference](docs/CONTENT_REFERENCE.md)** | Every job, ability, item, map, chapter and Trial floor (generated from the game data) |
+| 🕹️ **[Controls & Camera](docs/CONTROLS_AND_CAMERA.md)** | All five input methods, gestures, layouts, camera math |
+| 🏗️ **[Architecture](docs/ARCHITECTURE.md)** | Modules, state machine, action pipeline, input flow, saves, build |
+| ⚔️ **[Combat](docs/COMBAT_SYSTEM.md)** · 🛡️ **[Jobs](docs/JOB_SYSTEM.md)** · 🧠 **[Enemy AI](docs/ENEMY_AI.md)** | System deep dives |
+| 🧪 **[Testing](docs/TESTING.md)** | CI, unit tests, play-tests, release checklist |
+| 🗺️ **[Roadmap](docs/ROADMAP.md)** | Release history, Now / Next / Later, known issues |
+| 🤝 **[Contributing](CONTRIBUTING.md)** | Setup and recipes for adding jobs, maps, chapters, items |
+| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 16 architectural decisions |
+| 📜 **[Changelog](CHANGELOG.md)** | Every release |
+
+---
+
+## Project layout
+
+```text
+src/
+  main.ts        game flow, action pipeline, input dispatch
+  core/          rules: turns, grid, combat, jobs, AI, Trials, saves (no DOM)
+  data/          jobs, items, maps, campaign
+  renderer/      Three.js scene, gestures, VFX
+  ui/ input/     HUD, menus, focus navigation, controller
+  audio/ graphics/
+tests/           Vitest rule tests
+scripts/         build check, docs generator
+docs/            guides, ADRs, images
 ```
-Add `?debug` to the URL to expose the running game as `window.__tactics` for automated play-testing (`?debug&fast` also speeds up animations).
-Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
-
-### Controls: mouse, keyboard, touch, pen or controller
-Play with whatever you have; press **H** (or the **?** button, or **View/Back** on a controller) for the full list in-game.
-* **Mouse**: click to select, drag (left, right or middle) to pan, wheel to zoom.
-* **Keyboard**: arrows move the cursor (or between menu buttons), `Enter` selects, `Esc` backs out, `1`–`4` = Move/Act/Wait/Auto, `Q`/`E` rotate, `+`/`-` zoom, `R` re-center, `J` Team, `L` Log.
-* **Touch**: tap to select, drag to pan, pinch to zoom, twist two fingers to rotate, two-finger tap to cancel.
-* **Pen**: hover to preview a tile, tap to select, drag to pan, eraser or barrel button to cancel.
-* **Controller**: d-pad/left stick + A to select, B back, X commands, Y Team, LB/RB rotate, LT/RT zoom, right stick pan.
-
-Works on phones (portrait and landscape), tablets and desktops. See [Controls & Camera](docs/CONTROLS_AND_CAMERA.md) for the full matrix and layout breakpoints.
-
-### Combat Commands
-* **MOVE**: Click `MOVE` to highlight blue reachable tiles based on Move and Jump stats. Click a blue tile to step there.
-* **ACT**: Open action menu (Attack, Throw Stone, Rend Armor, Aim, Fire, Cure, etc.). Click a target unit to view the **Battle Forecast** (Hit %, Expected Damage, Facing advantage), then confirm execution.
-* **WAIT**: Choose one of 4 facing directions (North, East, South, West) to protect your rear from critical backstabs!
-* **AUTO** (`T`): Let the AI plan and play this unit's turn.
-* **Terrain**: Water and swamp cost 2 Move (Water Walk ignores this). Spells ignore facing; physical attacks from the side or back hit harder and more often.
-* **★ JOBS**: Open the character customization window to inspect unlocked jobs, equip secondary skillsets, and spend JP to learn new abilities.

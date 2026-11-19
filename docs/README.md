@@ -1,42 +1,93 @@
-# Chess RPG Tactics — Documentation Hub
+# Documentation
 
-Welcome to the comprehensive technical documentation and design specifications for **Chess RPG Tactics**.
+Start with whichever box describes you.
+
+```mermaid
+flowchart LR
+    You{"I want to…"} --> Play["play the game"]
+    You --> Build["change the code"]
+    You --> Plan["see what's next"]
+    Play --> GG["Gameplay Guide"]
+    Play --> CC["Controls & Camera"]
+    Play --> CR["Content Reference"]
+    Build --> AR["Architecture"]
+    Build --> CO["Contributing"]
+    Build --> TE["Testing"]
+    Build --> SYS["Combat · Jobs · Enemy AI"]
+    Build --> ADR["ADRs"]
+    Plan --> RM["Roadmap"]
+    Plan --> CL["Changelog"]
+    click GG "GAMEPLAY_GUIDE.md"
+    click CC "CONTROLS_AND_CAMERA.md"
+    click CR "CONTENT_REFERENCE.md"
+    click AR "ARCHITECTURE.md"
+    click CO "../CONTRIBUTING.md"
+    click TE "TESTING.md"
+    click RM "ROADMAP.md"
+    click CL "../CHANGELOG.md"
+```
 
 ---
 
-## 📚 Core System Guides
+## Guides
 
-| Guide | Description |
+| Guide | For | What's inside |
+| :--- | :--- | :--- |
+| **[Gameplay Guide](GAMEPLAY_GUIDE.md)** | Players | Commands, positioning, campaign map, bosses, growth, Trials, devices, tips |
+| **[Controls & Camera](CONTROLS_AND_CAMERA.md)** | Players · devs | Full input matrix for mouse, keyboard, touch, pen and controller; gesture state machine; responsive breakpoints; camera math |
+| **[Content Reference](CONTENT_REFERENCE.md)** | Players · designers | *Generated from the game data:* every job, ability, status, item, map, chapter and Trial floor |
+| **[Architecture](ARCHITECTURE.md)** | Developers | Module map, game state machine, turn sequence, action pipeline, input flow, data model, saves, build |
+| **[Combat System](COMBAT_SYSTEM.md)** | Developers · designers | CT clock, facing geometry, height, damage formulas, terrain costs, bosses, reactions, hit resolution |
+| **[Job & Ability System](JOB_SYSTEM.md)** | Developers · designers | Five slots, jobs at a glance, prerequisites, EXP/JP/levels, effective stats, armory |
+| **[Enemy AI](ENEMY_AI.md)** | Developers | Planner search, scoring table, guarantees, known limits |
+| **[Testing](TESTING.md)** | Developers | CI layers, unit test map, browser play-tests, release checklist |
+| **[Roadmap](ROADMAP.md)** | Everyone | Release timeline, Now / Next / Later, impact vs effort, known issues |
+| **[Contributing](../CONTRIBUTING.md)** | Developers | Setup, workflow, recipes for abilities, jobs, maps, chapters, items and UI |
+| **[Changelog](../CHANGELOG.md)** | Everyone | Every release |
+
+---
+
+## Architectural Decision Records
+
+```mermaid
+timeline
+    title ADRs by release
+    0.1.0 : 0001 Vite + Three.js : 0002 CT turns : 0003 Five slots : 0004 Pixel sprites : 0005 Height pathfinding : 0006 Pages CI
+    0.3.0 : 0007 Synth audio : 0008 Multi-map themes
+    0.4.0 : 0009 Map editor : 0010 Equipment : 0011 Branching campaign
+    0.5.x : 0012 VFX and HUD overlays : 0013 Performance
+    0.6.0 : 0014 Reactions, BGM, log, saves
+    0.7.0 : 0015 Action pipeline, AI, progression, Trials
+    0.8.0 : 0016 Multi-device input, responsive HUD
+```
+
+| # | Decision | Release |
+| :---: | :--- | :---: |
+| [0001](adr/0001-vite-threejs-isometric-engine.md) | Vite + TypeScript + Three.js for a 2.5D isometric engine | 0.1.0 |
+| [0002](adr/0002-ct-speed-tick-turn-system.md) | Speed-based CT turns instead of team turns | 0.1.0 |
+| [0003](adr/0003-five-slot-ability-architecture.md) | Five-slot ability equipping | 0.1.0 |
+| [0004](adr/0004-billboard-pixel-art-sprites.md) | Procedural pixel-art textures and directional billboards | 0.1.0 |
+| [0005](adr/0005-height-jump-pathfinding.md) | Height-constrained Dijkstra pathfinding | 0.1.0 |
+| [0006](adr/0006-github-actions-pages-deployment.md) | GitHub Actions deploy to GitHub Pages | 0.1.0 |
+| [0007](adr/0007-web-audio-api-sound-synthesizer.md) | Web Audio retro sound synthesis | 0.3.0 |
+| [0008](adr/0008-multi-map-theme-architecture.md) | Multi-map generator and thematic lighting | 0.3.0 |
+| [0009](adr/0009-in-game-3d-map-editor.md) | In-game 3D map editor | 0.4.0 |
+| [0010](adr/0010-equipment-and-inventory-architecture.md) | Five-slot equipment and weapon range | 0.4.0 |
+| [0011](adr/0011-branching-campaign-state-machine.md) | Branching campaign and dialogue engine | 0.4.0 |
+| [0012](adr/0012-vfx-particles-and-projected-hud.md) | VFX, camera shake, projected overlays | 0.5.0 |
+| [0013](adr/0013-engine-performance-and-memory-pooling.md) | Performance, pooling, decoupled animation loop | 0.5.1 |
+| [0014](adr/0014-reactions-bgm-combat-log-persistence.md) | Reactions, procedural BGM, battle log, saves | 0.6.0 |
+| [0015](adr/0015-action-pipeline-ai-progression-trials.md) | Unified action pipeline, planning AI, persistent squad, Trials | 0.7.0 |
+| [0016](adr/0016-multi-device-input-and-responsive-hud.md) | Multi-device input and responsive HUD | 0.8.0 |
+
+New ADRs use the template in [Contributing](../CONTRIBUTING.md#adr-template).
+
+---
+
+## Keeping docs current
+
+| Doc | Kept current by |
 | :--- | :--- |
-| **[System Architecture](ARCHITECTURE.md)** | High-level topology, component interaction, turn lifecycle sequence diagram, and class relationship model. |
-| **[Combat System Specifications](COMBAT_SYSTEM.md)** | Speed tick formulas, CT refund matrix, facing vector dot-product geometry, elevation bonuses, and damage formulas. |
-| **[Job & Ability System](JOB_SYSTEM.md)** | 5-slot ability equipping model (FFT paradigm), job progression tree, stat multipliers, and full ability database including Dragoon, Ninja, and Time Weaver. |
-| **[Controls & Camera Guide](CONTROLS_AND_CAMERA.md)** | Orthographic isometric camera mathematics, zoom bounds (2.0x to 22.0x), mouse drag panning, and keyboard mapping. |
-
----
-
-## 🏛️ Architectural Decision Records (ADRs)
-
-Documenting the architectural choices, tradeoffs, and context of the engine:
-
-* **[ADR 0001: Vite + TypeScript + Three.js for 2.5D Isometric Engine](adr/0001-vite-threejs-isometric-engine.md)**
-* **[ADR 0002: Speed-Based CT Turn System vs Team Turn System](adr/0002-ct-speed-tick-turn-system.md)**
-* **[ADR 0003: Five-Slot Ability Equipping Architecture](adr/0003-five-slot-ability-architecture.md)**
-* **[ADR 0004: Procedural Canvas Pixel Art Textures & Directional Billboarding](adr/0004-billboard-pixel-art-sprites.md)**
-* **[ADR 0005: 3D Height-Constrained Dijkstra Pathfinding](adr/0005-height-jump-pathfinding.md)**
-* **[ADR 0006: GitHub Actions CI/CD for Automated GitHub Pages Deployment](adr/0006-github-actions-pages-deployment.md)**
-* **[ADR 0007: Web Audio API Retro 16-Bit Sound Synthesis](adr/0007-web-audio-api-sound-synthesizer.md)**
-* **[ADR 0008: Multi-Map Generator & Dynamic Thematic Lighting](adr/0008-multi-map-theme-architecture.md)**
-* **[ADR 0009: In-Game 3D Map Editor & Live Mesh Mutation](adr/0009-in-game-3d-map-editor.md)**
-* **[ADR 0010: Five-Slot Equipment & Weapon Range System](adr/0010-equipment-and-inventory-architecture.md)**
-* **[ADR 0011: Multi-Stage Branching Campaign & Dialogue Engine](adr/0011-branching-campaign-state-machine.md)**
-* **[ADR 0012: Visual Effects, Camera Trauma Shake, and 3D Projected Overlays](adr/0012-vfx-particles-and-projected-hud.md)**
-* **[ADR 0013: Engine Performance, Object Pooling, and Animation Loop Optimization](adr/0013-engine-performance-and-memory-pooling.md)**
-* **[ADR 0014: Reactions, Procedural BGM, Battle Chronicle, and Persistence](adr/0014-reactions-bgm-combat-log-persistence.md)**
-* **[ADR 0015: Unified Action Pipeline, Planning AI, Persistent Squad, and Trials of the Zodiac](adr/0015-action-pipeline-ai-progression-trials.md)**
-* **[ADR 0016: Unified Multi-Device Input and Responsive HUD](adr/0016-multi-device-input-and-responsive-hud.md)**
-
----
-
-## 📜 Project History
-* **[Changelog](../CHANGELOG.md)**: Semantic versioning history of features, changes, and refinements.
+| Content Reference | `npm run docs:gen`; CI fails if it's stale |
+| Everything else | Updated in the same PR as the change (see the [definition of done](ROADMAP.md#5-definition-of-done-any-roadmap-item)) |
+| Screenshots in `docs/images/` | Re-captured when the HUD changes visibly |

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.1] - 2026-11-19
+
+### Documentation
+- Rewrote the README (feature table, battle flow diagram, controls table, docs index, screenshots).
+- New guides: **Gameplay Guide**, **Roadmap** (release timeline, Now / Next / Later, impact vs effort, known issues), **Enemy AI**, **Testing**, **Contributing** (recipes for jobs, abilities, maps, chapters, items, UI).
+- **Content Reference** generated from the game data by `scripts/gen-docs.ts` (`npm run docs:gen`): every job, ability, status, item, map, chapter and the first 15 Trial floors, with a campaign diagram. CI runs `npm run docs:check` so it can't go stale.
+- Architecture rewritten for the current code: module map, game state machine, turn sequence, action pipeline, input flow, data model, persistence and build diagrams.
+- Job System corrected: the old progression tree listed jobs that don't exist (Chemist, Summoner, Warmage); it now shows the real prerequisites and notes they aren't enforced yet.
+- Combat and Controls guides gained hit-resolution, gesture and controller diagrams; the docs hub routes players and developers and indexes ADRs by release.
+- Screenshots in `docs/images/` (WebP).
+
+### Fixed
+- Chapter II-A's branch choice still said the final battle was at Night Battlement; it is at the Zodiac Summit.
+
+---
+
 ## [0.8.0] - 2026-11-19
 
 ### Added
