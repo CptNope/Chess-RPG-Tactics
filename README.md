@@ -40,6 +40,8 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 
 ![Every job in both team colours, a knight's animation frames, and the character portraits](docs/images/character-art.webp)
 
+![Pixel-art battle effects: sword arc, critical hit, fire, ice, lightning, holy, dark, rockslide, and heal, poison, haste and protect wrapping the unit's own sprite](docs/images/effects.webp)
+
 <details><summary><b>0.8 vs 0.9 graphics</b></summary>
 
 ![Before and after the 0.9 graphics upgrade](docs/images/graphics-before-after.webp)

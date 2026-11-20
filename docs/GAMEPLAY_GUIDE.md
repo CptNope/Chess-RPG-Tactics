@@ -31,6 +31,10 @@ flowchart LR
 
 **Turn order is by speed, not by team.** A turn where you only move *or* only act leaves CT at 20, and doing neither leaves it at 40, so you act again sooner. The turn-order strip shows the next 8 turns.
 
+**What you see when you act:** every element has its own effect, so you can read a fight at a glance. Heals, buffs and ailments wrap the unit itself: it greys and regains its colour when healed, turns green when poisoned, trails after-images when Hasted.
+
+![Battle effects](images/effects.webp)
+
 ---
 
 ## 2. Positioning
