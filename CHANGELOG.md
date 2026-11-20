@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.12.0] - 2026-11-20
+
+### Added — ready for itch.io
+- **Title screen** over the live battlefield: New Game, Continue (when there's a save), Workshop, Controls and Fullscreen, with the version and links to support the game, the source and jeremyanderson.tech. Works with mouse, touch, keyboard and controller. The first press is what lets browsers play the music, and it gives an embedded game keyboard focus. *Quit to title* is in Menu.
+- **Fullscreen**: a button on the title screen and in Menu, and the **F** key (shown only where the browser allows it; on itch.io that's the embed's fullscreen option).
+- **Support the game ♥** link in Menu and on the title screen (opens the itch.io page in a new tab).
+- `npm run build:itch` → `release/chess-rpg-tactics-<version>-html5.zip`, with `index.html` at the root. It first checks that every path is relative, that nothing is loaded from another site, and that it's within itch's file limits. 318 KB zipped.
+- CI builds the itch zip on every push (artifact *itch-html5*) and, once the `BUTLER_API_KEY` repository secret is set, publishes `main` to itch.io with butler.
+- `docs/ITCH_PAGE.md`: the store page's settings, description and tags; `docs/itch/`: cover and screenshots.
+
+### Changed
+- **Fonts are bundled** (Press Start 2P and VT323 via Fontsource, latin subset, OFL) instead of loaded from Google Fonts: no third-party requests, and they work offline and in the itch app.
+- Inside an iframe, arrow keys, Space, Page Up/Down, Home and End no longer scroll the page around the game, and clicking the game gives it keyboard focus.
+- Workshop share links made inside an embed point at the web version, which can open them (itch's page can't pass a link into the game).
+- The page title is now "Chess RPG Tactics" with a description for search and link previews.
+
+---
+
 ## [0.11.0] - 2026-11-20
 
 ### Added — pixel-art battle effects

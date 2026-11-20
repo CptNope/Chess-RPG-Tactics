@@ -44,6 +44,17 @@ jobs:
       - name: Check generated docs are current
         run: npm run docs:check
 
+      # The same build, zipped for itch.io (relative paths, no remote fonts or scripts)
+      - name: Package the itch.io HTML5 zip
+        run: node scripts/package-itch.mjs
+
+      - name: Upload the itch.io zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: itch-html5
+          path: release/*.zip
+          retention-days: 30
+
       - name: Setup Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
@@ -53,6 +64,36 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: './dist'
+
+  # Publishes main to itch.io with butler, itch's upload tool, once an API key is stored as the
+  # repository secret BUTLER_API_KEY (itch.io → Settings → API keys). Without it this job skips.
+  itch:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+      ITCH_TARGET: cptnope/chess-rpg-tactics:html5
+    steps:
+      - name: Skip (no BUTLER_API_KEY secret yet)
+        if: env.BUTLER_API_KEY == ''
+        run: echo "Add the BUTLER_API_KEY repository secret to publish to itch.io automatically."
+
+      - name: Download the itch.io zip
+        if: env.BUTLER_API_KEY != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: itch-html5
+          path: release
+
+      - name: Push to itch.io
+        if: env.BUTLER_API_KEY != ''
+        run: |
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          ZIP=$(ls release/*.zip)
+          VERSION=$(node -p "require('./package.json').version" 2>/dev/null || basename "$ZIP" | sed -E 's/.*-([0-9.]+)-html5.zip/\1/')
+          ./butler/butler push "$ZIP" "$ITCH_TARGET" --userversion "$VERSION"
 
   # Deploy is a separate job (GitHub's recommended layout). Splitting it out gives the
   # uploaded artifact time to register; deploying in the same job as the upload can fail
