@@ -1,9 +1,5 @@
 import { CampaignChapter } from '../core/types';
 
-/** Where each squad member deploys at the start of a battle (index = squad order). */
-export const PLAYER_DEPLOY: { x: number; z: number }[] = [
-  { x: 3, z: 8 }, { x: 4, z: 8 }, { x: 5, z: 9 }, { x: 2, z: 7 }, { x: 6, z: 9 }, { x: 4, z: 10 }
-];
 
 export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
   chapter_1: {
@@ -38,10 +34,11 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     ],
     rewardItemIds: ['power_wrist'],
     enemyRoster: [
-      { name: 'Bandit Chief', jobId: 'knight', level: 3, x: 8, z: 3, isBoss: true },
-      { name: 'Shadow Shinobi', jobId: 'ninja', level: 3, x: 7, z: 2 },
-      { name: 'Rogue Warlock', jobId: 'time_mage', level: 3, x: 6, z: 4 },
-      { name: 'Brigand Bowman', jobId: 'archer', level: 3, x: 9, z: 2 }
+      { name: 'Bandit Chief', jobId: 'knight', level: 3, x: 13, z: 2, isBoss: true },
+      { name: 'Rogue Warlock', jobId: 'time_mage', level: 3, x: 12, z: 3 },
+      { name: 'Brigand Bowman', jobId: 'archer', level: 3, x: 14, z: 3 },
+      { name: 'Shadow Shinobi', jobId: 'ninja', level: 3, x: 5, z: 4 },
+      { name: 'Bridge Cutthroat', jobId: 'squire', level: 3, x: 3, z: 3 }
     ]
   },
 
@@ -73,10 +70,11 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       }
     ],
     enemyRoster: [
-      { name: 'Arch-Warlock', jobId: 'time_mage', level: 4, x: 5, z: 2, isBoss: true },
-      { name: 'Swamp Shinobi', jobId: 'ninja', level: 4, x: 3, z: 4 },
-      { name: 'Bog Poisoner', jobId: 'black_mage', level: 4, x: 7, z: 3 },
-      { name: 'Mire Skirmisher', jobId: 'ninja', level: 4, x: 8, z: 2 }
+      { name: 'Arch-Warlock', jobId: 'time_mage', level: 4, x: 2, z: 0, isBoss: true },
+      { name: 'Bog Poisoner', jobId: 'black_mage', level: 4, x: 3, z: 1 },
+      { name: 'Swamp Shinobi', jobId: 'ninja', level: 4, x: 7, z: 4 },
+      { name: 'Mire Skirmisher', jobId: 'ninja', level: 4, x: 12, z: 2 },
+      { name: 'Reed Stalker', jobId: 'archer', level: 4, x: 6, z: 7 }
     ]
   },
 
@@ -106,10 +104,11 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       }
     ],
     enemyRoster: [
-      { name: 'Dragoon Commander', jobId: 'dragoon', level: 4, x: 5, z: 1, isBoss: true },
-      { name: 'Rampart Sniper', jobId: 'archer', level: 4, x: 2, z: 1 },
-      { name: 'Tower Sniper', jobId: 'archer', level: 4, x: 8, z: 1 },
-      { name: 'Iron Vanguard', jobId: 'knight', level: 4, x: 5, z: 4 }
+      { name: 'Dragoon Commander', jobId: 'dragoon', level: 4, x: 7, z: 1, isBoss: true },
+      { name: 'Rampart Sniper', jobId: 'archer', level: 4, x: 1, z: 0 },
+      { name: 'Tower Sniper', jobId: 'archer', level: 4, x: 12, z: 0 },
+      { name: 'Iron Vanguard', jobId: 'knight', level: 4, x: 7, z: 7 },
+      { name: 'Gate Warden', jobId: 'knight', level: 4, x: 8, z: 7 }
     ]
   },
 
@@ -132,11 +131,12 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The stone is quiet, but not empty. I can hear twelve more seals beneath the mountain... The Trials of the Zodiac await anyone brave enough.' }
     ],
     enemyRoster: [
-      { name: 'Zodiac Champion', jobId: 'dragoon', level: 5, x: 5, z: 1, isBoss: true },
-      { name: 'Grand Chronomancer', jobId: 'time_mage', level: 5, x: 3, z: 2 },
-      { name: 'Shadow Assassin', jobId: 'ninja', level: 5, x: 7, z: 2 },
-      { name: 'Black Archmage', jobId: 'black_mage', level: 5, x: 5, z: 3 },
-      { name: 'Zealot Medic', jobId: 'white_mage', level: 5, x: 6, z: 0 }
+      { name: 'Zodiac Champion', jobId: 'dragoon', level: 5, x: 7, z: 2, isBoss: true },
+      { name: 'Zealot Medic', jobId: 'white_mage', level: 5, x: 8, z: 0 },
+      { name: 'Grand Chronomancer', jobId: 'time_mage', level: 5, x: 5, z: 3 },
+      { name: 'Black Archmage', jobId: 'black_mage', level: 5, x: 10, z: 3 },
+      { name: 'Shadow Assassin', jobId: 'ninja', level: 5, x: 7, z: 6 },
+      { name: 'Altar Sentinel', jobId: 'knight', level: 5, x: 9, z: 6 }
     ]
   }
 };

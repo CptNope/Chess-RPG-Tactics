@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { JOBS, BASIC_ATTACK } from '../src/data/jobs';
 import { ITEMS, STARTING_ARMORY, RARE_DROP_POOL, getItemsForSlot } from '../src/data/items';
-import { MAPS } from '../src/data/maps';
-import { CAMPAIGN_CHAPTERS, PLAYER_DEPLOY } from '../src/data/campaign';
+import { MAPS, spawnsFor, MapData } from '../src/data/maps';
+import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { JobSystem } from '../src/core/JobSystem';
 import { CombatEngine } from '../src/core/CombatEngine';
 import { BattleGrid } from '../src/core/Grid';
@@ -49,10 +49,53 @@ describe('data integrity', () => {
     }
   });
 
-  it('player deployment tiles are walkable on every map', () => {
+  it('player deployment tiles are walkable and distinct on every map', () => {
     for (const make of Object.values(MAPS)) {
-      const grid = new BattleGrid(make());
-      for (const p of PLAYER_DEPLOY) expect(grid.isWalkable(p.x, p.z), `${grid.mapData.id} ${p.x},${p.z}`).toBe(true);
+      const map = make();
+      const grid = new BattleGrid(map);
+      const spawns = spawnsFor(map);
+      expect(spawns.length).toBeGreaterThanOrEqual(6);
+      expect(new Set(spawns.map((p) => `${p.x},${p.z}`)).size).toBe(spawns.length);
+      for (const p of spawns) expect(grid.isWalkable(p.x, p.z), `${map.id} ${p.x},${p.z}`).toBe(true);
+    }
+  });
+
+  it('every enemy (campaign and Trials 1-20) can be reached on foot from the deployment zone', () => {
+    // Flood fill from the first spawn with Jump 3 (the lowest base Jump among melee jobs)
+    const reachable = (map: MapData) => {
+      const grid = new BattleGrid(map);
+      const start = spawnsFor(map)[0];
+      const seen = new Set([`${start.x},${start.z}`]);
+      const queue = [start];
+      while (queue.length) {
+        const c = queue.shift()!;
+        const h = grid.getHeight(c.x, c.z);
+        for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const n = { x: c.x + dx, z: c.z + dz };
+          const k = `${n.x},${n.z}`;
+          if (seen.has(k) || !grid.isWalkable(n.x, n.z) || Math.abs(grid.getHeight(n.x, n.z) - h) > 3) continue;
+          seen.add(k);
+          queue.push(n);
+        }
+      }
+      return seen;
+    };
+    for (const ch of Object.values(CAMPAIGN_CHAPTERS)) {
+      const ok = reachable(MAPS[ch.mapId]());
+      for (const e of ch.enemyRoster) expect(ok.has(`${e.x},${e.z}`), `${ch.id} ${e.name} at ${e.x},${e.z}`).toBe(true);
+    }
+    for (let f = 1; f <= 20; f++) {
+      const t = buildTrialFloor(f);
+      const ok = reachable(MAPS[t.mapId]());
+      for (const e of t.enemyRoster) expect(ok.has(`${e.x},${e.z}`), `trial ${f} ${e.name} at ${e.x},${e.z}`).toBe(true);
+    }
+  });
+
+  it('battlefields are at least 16×16', () => {
+    for (const make of Object.values(MAPS)) {
+      const m = make();
+      expect(m.width * m.depth).toBeGreaterThanOrEqual(256);
+      expect(m.tiles.length).toBe(m.width * m.depth);
     }
   });
 

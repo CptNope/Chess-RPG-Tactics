@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MAPS } from './data/maps';
+import { MAPS, spawnsFor } from './data/maps';
 import { BattleGrid } from './core/Grid';
 import { TacticsScene } from './renderer/TacticsScene';
 import { UIManager } from './ui/UIManager';
@@ -7,7 +7,7 @@ import { TurnManager } from './core/TurnManager';
 import { JobSystem } from './core/JobSystem';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter, Element } from './core/types';
-import { CAMPAIGN_CHAPTERS, PLAYER_DEPLOY } from './data/campaign';
+import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { ITEMS, STARTING_ARMORY } from './data/items';
 import { JOBS } from './data/jobs';
 import { SoundFX } from './audio/SoundEffects';
@@ -120,8 +120,9 @@ class TacticsGame {
     const taken = new Set<string>();
     for (const e of this.units.filter((u) => u.team === 'enemy')) taken.add(`${e.x},${e.z}`);
 
+    const spawns = spawnsFor(this.grid.mapData);
     this.squad.forEach((member, i) => {
-      let spot = PLAYER_DEPLOY[i % PLAYER_DEPLOY.length];
+      let spot = spawns[i % spawns.length];
       const ok = (x: number, z: number) => this.grid.isWalkable(x, z) && !taken.has(`${x},${z}`);
       if (!ok(spot.x, spot.z)) {
         // Fall back to the nearest open tile on the southern edge of the map

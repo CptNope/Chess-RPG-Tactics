@@ -210,13 +210,15 @@ export class TacticsScene {
   /** Lights, sky, fog, shadow frustum and torches for the current map. */
   private applyAtmosphere(): void {
     const md = this.grid.mapData;
-    const p = presetFor(md.id, md.theme);
+    const p = presetFor(md.look || md.id, md.theme);
     this.atmosphere = p;
 
     const oldSky = this.scene.background as THREE.Texture | null;
     if (oldSky && (oldSky as THREE.Texture).isTexture) oldSky.dispose();
     this.scene.background = createSkyTexture(p);
-    this.scene.fog = new THREE.Fog(p.fog, p.fogNear, p.fogFar);
+    // Push the fog back on bigger maps so the far edge stays readable
+    const extra = Math.max(0, Math.hypot(md.width, md.depth) / 2 - 8);
+    this.scene.fog = new THREE.Fog(p.fog, p.fogNear + extra, p.fogFar + extra * 1.5);
     this.renderer.toneMappingExposure = p.exposure;
 
     this.hemiLight.color.setHex(p.hemiSky);
@@ -383,7 +385,10 @@ export class TacticsScene {
     this.applyAtmosphere();
     this.vfx.setWeatherTheme(newGrid.mapData.theme);
     this.buildMap();
-    this.targetCameraTarget.set(5, 1, 5);
+    const md = newGrid.mapData;
+    this.targetCameraTarget.set((md.width - 1) / 2, 1, (md.depth - 1) / 2);
+    // Bigger maps start a little further out
+    this.targetZoomLevel = Math.min(this.maxZoomLevel, Math.max(8.5, Math.max(md.width, md.depth) * 0.62));
   }
 
   public updateTile(x: number, z: number, newHeight: number, newTerrain: TerrainType, walkable: boolean): void {

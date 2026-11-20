@@ -9,8 +9,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { JOBS, BASIC_ATTACK } from '../src/data/jobs';
 import { ITEMS, STARTING_ARMORY, RARE_DROP_POOL } from '../src/data/items';
-import { MAPS } from '../src/data/maps';
-import { CAMPAIGN_CHAPTERS, PLAYER_DEPLOY } from '../src/data/campaign';
+import { MAPS, spawnsFor } from '../src/data/maps';
+import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { TERRAIN_SPELLS } from '../src/core/Geomancy';
 import { STATUS_DURATION } from '../src/core/CombatEngine';
 import { buildTrialFloor, isBossFloor } from '../src/core/Trials';
@@ -162,18 +162,16 @@ w();
 // ---------------------------------------------------------------- Maps
 w('## Battlefields');
 w();
-w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles |');
-w('| :--- | :--- | :---: | :--- | :---: | :--- | :---: |');
+w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Squad deploys on |');
+w('| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- |');
 for (const [id, make] of Object.entries(MAPS)) {
   const m = make();
   const hs = m.tiles.map((t) => t.height);
   const mix: Record<string, number> = {};
   for (const t of m.tiles) mix[t.terrain] = (mix[t.terrain] || 0) + 1;
   const mixText = Object.entries(mix).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${Math.round((n / m.tiles.length) * 100)}%`).join(', ');
-  w(`| **${m.name}** | \`${id}\` | ${m.width}×${m.depth} | ${m.theme} | ${Math.min(...hs)}–${Math.max(...hs)} | ${mixText} | ${m.tiles.filter((t) => !t.walkable).length} |`);
+  w(`| **${m.name}** | \`${id}\` | ${m.width}×${m.depth} | ${m.theme} | ${Math.min(...hs)}–${Math.max(...hs)} | ${mixText} | ${m.tiles.filter((t) => !t.walkable).length} | ${spawnsFor(m).map((p) => `(${p.x}, ${p.z})`).join(' ')} |`);
 }
-w();
-w(`Your squad deploys on: ${PLAYER_DEPLOY.map((p) => `(${p.x}, ${p.z})`).join(', ')} (in squad order).`);
 w();
 
 // ---------------------------------------------------------------- Campaign
