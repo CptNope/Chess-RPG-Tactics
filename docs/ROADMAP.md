@@ -25,6 +25,7 @@ timeline
         0.8.0 : Phone, tablet, desktop layouts : Touch, pen, keyboard, controller
         0.8.1 : Documentation overhaul : Generated content reference
         0.9.0 : Original character names : MIT license : Graphics upgrade : 20x fewer draw calls
+        0.10.0 : 16x16 battlefields : Workshop map and scenario editor : Share links : Animated 48px sprites : Drawn portraits
 ```
 
 | Version | Theme | Highlights |
@@ -37,6 +38,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.10 | Make your own | 16×16 battlefields, the Workshop (map + scenario editor with objectives, library, share links), animated 48px sprites, drawn portraits |
 
 ---
 
@@ -44,14 +46,14 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.10)"]
+    subgraph NOW["Now (0.11)"]
         direction TB
         N1["Job prerequisites enforced"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Release on itch.io<br/>free + donations"]
     end
-    subgraph NEXT["Next (0.11 – 0.13)"]
+    subgraph NEXT["Next (0.12 – 0.14)"]
         direction TB
         X1["Equipment rules:<br/>Equip Heavy Armor works"]
         X2["Shop + gil economy"]
@@ -64,16 +66,16 @@ flowchart LR
         direction TB
         L1["Chapter IV+ campaign arc"]
         L2["New jobs: Monk, Summoner, Thief"]
-        L3["Share custom maps by link"]
+        L3["Workshop: community<br/>scenario gallery"]
         L4["Remappable controls"]
         L5["Localization"]
         L6["Async online duels"]
-        L7["Hand-drawn 64px sprites<br/>and portraits"]
+        L7["Spell VFX upgrade<br/>(pixel-art particles)"]
     end
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.10): finish and ship what exists
+### Now (0.11): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
@@ -83,7 +85,7 @@ flowchart LR
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
 | **itch.io release** | Reach players | S | HTML5 zip build, cover art, free with donations; project post on jeremyanderson.tech |
 
-### Next (0.11 – 0.13): depth
+### Next (0.12 – 0.14): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
@@ -102,11 +104,12 @@ flowchart LR
 | :--- | :---: |
 | Campaign Chapters IV–VI with new maps and a third recruit | L |
 | New jobs (Monk, Summoner, Thief) with new reactions | L |
-| Share editor maps by URL; play custom maps as skirmishes | M |
+| Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns) | M |
 | Remappable keyboard and controller bindings | M |
 | Localization (strings out of code) | M |
 | Asynchronous online duels (exchange turns via a back end) | XL |
-| Higher-resolution unit sprites with walk/attack frames and dialogue portraits (today: procedural 32px sprites, emoji portraits) | L |
+| Spell VFX redrawn as pixel-art particle sheets to match the 48px sprites (a candidate library: *pixelfx*) | M |
+| Workshop: place props (trees, crates) and per-tile decorations; multi-wave enemies; ally guests | M |
 
 ---
 
@@ -148,13 +151,14 @@ quadrantChart
 | Rules | Item `price` unused | Low | Next (shop) |
 | Rules | Speed Save's +2 Speed is lost at the unit's next end of turn (stats are recalculated) | Low | Make it a status |
 | Balance | Final Chapter is hard for a squad that never re-gears; AUTO-only play needs retries | Low | Tune after real playtests |
-| Code | `main.ts` (1.3k lines) and `UIManager.ts` (1k lines) are large | Medium | Split battle flow, spoils/chapters and input into modules |
-| Code | Map editor changes aren't persisted to the save | Low | Wire `SaveManager.saveCustomMap` into the editor |
+| Code | `main.ts` (1.5k lines) and `UIManager.ts` (1k lines) are large | Medium | Split battle flow, spoils/chapters and input into modules |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |
 | QA | High-quality graphics frame rate not yet measured on real GPUs (CI has none); Auto steps down if slow | Medium | Now (device QA) |
 | QA | Browser play-tests not in CI | Medium | Now |
 | A11y | Font sizes are fixed px; no text-size setting | Low | Next |
-| Content | Dialogue portraits are emoji, not art | Low | Later (portrait sprites) |
+| Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
+| Workshop | Brush strokes are tap-per-tile (no drag painting) | Low | Next |
+| Art | Units slide in a straight line between tiles instead of following their path | Low | Next |
 
 ---
 

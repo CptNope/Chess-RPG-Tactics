@@ -3,7 +3,7 @@ import { JOBS } from '../data/jobs';
 import { JobSystem } from '../core/JobSystem';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
-import { createUnitSpriteTexture } from '../graphics/PixelTextures';
+import { portraitCanvas, portraitDataUrl, portraitForSpeaker } from '../graphics/CharacterArt';
 import { ensureFocusable, focusablesIn, focusVisible } from '../input/FocusNav';
 import { SoundFX } from '../audio/SoundEffects';
 
@@ -33,7 +33,7 @@ export class UIManager {
   private btnToggleLog = document.getElementById('btn-toggle-log') as HTMLButtonElement;
   private btnSaveGame = document.getElementById('btn-save-game') as HTMLButtonElement;
   private btnLoadGame = document.getElementById('btn-load-game') as HTMLButtonElement;
-  private btnToggleEditor = document.getElementById('btn-toggle-editor') as HTMLButtonElement;
+  private btnWorkshop = document.getElementById('btn-workshop') as HTMLButtonElement;
 
   // Combat Chronicle & Reaction Log Drawer
   private combatLogDrawerEl = document.getElementById('combat-log-drawer')!;
@@ -42,18 +42,6 @@ export class UIManager {
   private btnCloseLog = document.getElementById('btn-close-log')!;
   public isCombatLogOpen: boolean = false;
 
-  // 3D Map Editor Panel
-  private editorPanelEl = document.getElementById('editor-panel')!;
-  private btnCloseEditor = document.getElementById('btn-close-editor')!;
-  private editorTerrainSelect = document.getElementById('editor-terrain-select') as HTMLSelectElement;
-  private btnEditorExport = document.getElementById('btn-editor-export')!;
-  private btnEditorImport = document.getElementById('btn-editor-import')!;
-  private btnEditorTest = document.getElementById('btn-editor-test')!;
-  private editorStatusEl = document.getElementById('editor-status')!;
-
-  public isEditorOpen: boolean = false;
-  public currentEditorTool: 'raise' | 'lower' | 'paint' | 'walkable' = 'raise';
-  public currentPaintTerrain: TerrainType = 'grass';
 
   // Menus
   private btnMove = document.getElementById('btn-action-move') as HTMLButtonElement;
@@ -144,10 +132,7 @@ export class UIManager {
   public onExecuteAttack?: () => void;
   public onCancelAttack?: () => void;
   public onMapChanged?: (mapId: string) => void;
-  public onEditorToggled?: (isOpen: boolean) => void;
-  public onEditorExport?: () => void;
-  public onEditorImport?: (jsonString: string) => void;
-  public onEditorTestBattle?: () => void;
+  public onWorkshop?: () => void;
   public onToggleBgm?: () => void;
   public onSaveGame?: () => void;
   public onLoadGame?: () => void;
@@ -220,51 +205,10 @@ export class UIManager {
       if (this.onLoadGame) this.onLoadGame();
     });
 
-    // Editor toggle
-    this.btnToggleEditor.addEventListener('click', () => {
+    this.btnWorkshop.addEventListener('click', () => {
       SoundFX.playMenuBlip();
-      this.toggleEditor(!this.isEditorOpen);
-    });
-
-    this.btnCloseEditor.addEventListener('click', () => {
-      SoundFX.playMenuBlip();
-      this.toggleEditor(false);
-    });
-
-    // Editor Tools
-    const toolButtons = document.querySelectorAll('.editor-tool-btn');
-    toolButtons.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        SoundFX.playMenuBlip();
-        toolButtons.forEach((b) => b.classList.remove('active'));
-        const target = e.currentTarget as HTMLElement;
-        target.classList.add('active');
-        this.currentEditorTool = target.dataset.tool as 'raise' | 'lower' | 'paint' | 'walkable';
-        this.editorStatusEl.textContent = `Tool: ${this.currentEditorTool.toUpperCase()} active. Click tiles.`;
-      });
-    });
-
-    this.editorTerrainSelect.addEventListener('change', (e) => {
-      const select = e.target as HTMLSelectElement;
-      this.currentPaintTerrain = select.value as TerrainType;
-    });
-
-    this.btnEditorExport.addEventListener('click', () => {
-      SoundFX.playMenuBlip();
-      this.onEditorExport?.();
-    });
-
-    this.btnEditorImport.addEventListener('click', () => {
-      SoundFX.playMenuBlip();
-      const input = prompt('Paste your exported Map JSON:');
-      if (input) {
-        this.onEditorImport?.(input);
-      }
-    });
-
-    this.btnEditorTest.addEventListener('click', () => {
-      SoundFX.playTurnChime();
-      this.onEditorTestBattle?.();
+      this.toggleSystemMenu(false);
+      this.onWorkshop?.();
     });
 
     // Map selection change
@@ -477,7 +421,7 @@ export class UIManager {
       if (el && !el.classList.contains('hidden')) return el;
     }
     const focused = document.activeElement;
-    for (const id of ['action-menu', 'top-bar', 'camera-controls', 'combat-log-drawer', 'editor-panel']) {
+    for (const id of ['action-menu', 'top-bar', 'camera-controls', 'combat-log-drawer', 'workshop']) {
       const el = document.getElementById(id);
       if (el && focused && el.contains(focused)) return el;
     }
@@ -499,24 +443,23 @@ export class UIManager {
     }
   }
 
-  public toggleEditor(open: boolean): void {
-    this.isEditorOpen = open;
-    if (open) {
-      this.editorPanelEl.classList.remove('hidden');
-      this.btnToggleEditor.style.background = '#2563eb';
-      this.btnToggleEditor.style.color = '#fff';
-    } else {
-      this.editorPanelEl.classList.add('hidden');
-      this.btnToggleEditor.style.background = '#16243b';
-      this.btnToggleEditor.style.color = 'var(--gold)';
-    }
-    this.onEditorToggled?.(open);
-  }
-
   public showDialogue(line: DialogueLine, onNext: () => void): void {
     this.dialogueSpeakerEl.textContent = line.speaker;
     this.dialogueTextEl.textContent = line.text;
-    this.dialoguePortraitEl.textContent = line.portraitClass;
+    const pid = line.portrait || portraitForSpeaker(line.speaker);
+    if (pid) {
+      const img = document.createElement('img');
+      img.src = portraitDataUrl(pid);
+      img.alt = '';
+      img.width = 64;
+      img.height = 64;
+      this.dialoguePortraitEl.replaceChildren(img);
+      this.dialoguePortraitEl.classList.add('drawn');
+    } else {
+      this.dialoguePortraitEl.textContent = line.portraitClass;
+      this.dialoguePortraitEl.classList.remove('drawn');
+    }
+    this.dialogueBoxEl.classList.toggle('speaker-right', line.side === 'right');
     this.dialogueBoxEl.classList.remove('hidden');
     this.onDialogueNext = onNext;
   }
@@ -688,12 +631,17 @@ export class UIManager {
   private drawPortrait(unit: Unit): void {
     const ctx = this.portraitEl.getContext('2d');
     if (!ctx) return;
-    const job = JOBS[unit.jobId] || JOBS.squire;
-    const tex = createUnitSpriteTexture(job.spriteClass || unit.jobId, 'S', unit.team === 'enemy');
+    // Named heroes get their drawn portrait; everyone else gets their job's (red for foes)
+    const job = JOBS[unit.jobId] ? unit.jobId : 'squire';
+    const named = unit.team === 'player' ? portraitForSpeaker(unit.name) : undefined;
+    const pid = named || (unit.team === 'enemy' ? `foe_${job}` : job);
+    this.portraitEl.width = 64;
+    this.portraitEl.height = 64;
     ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, 32, 32);
-    ctx.drawImage(tex.image as CanvasImageSource, 0, 0, 32, 32);
+    ctx.clearRect(0, 0, 64, 64);
+    ctx.drawImage(portraitCanvas(pid), 0, 0);
   }
+
 
   public updateTileInfo(x: number, z: number, height: number, terrain: string): void {
     this.tileCoordsEl.textContent = `X: ${x}, Z: ${z} | Height: ${height.toFixed(1)}h`;

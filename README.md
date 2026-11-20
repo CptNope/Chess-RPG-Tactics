@@ -1,7 +1,7 @@
 # Chess RPG Tactics
 
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.9.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.10.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -20,17 +20,25 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | :--- | :--- |
 | **Tactics** | Speed-based turn order (CT), front / flank / back attacks, height advantage, terrain movement costs, area spells |
 | **Squad building** | 9 jobs, 41 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
-| **Campaign** | A branching campaign (four chapters, three per playthrough) with a recruit, boss fights with enrage phases, and gear rewards |
+| **Campaign** | A branching campaign (four chapters, three per playthrough) on 16×16 battlefields, with a recruit, boss fights with enrage phases, and gear rewards |
 | **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters. **AUTO** lets it play your turn |
 | **Play anywhere** | Phone (portrait and landscape), tablet and desktop layouts; mouse, keyboard, touch, pen and controller |
 | **Graphics** | Per-map skies, fog and lighting, soft shadows, flowing water, torches, bloom; Auto / High / Medium / Low quality that adapts to your device |
-| **Built-ins** | 3D map editor, procedural pixel art, synthesized music and SFX, browser saves |
+| **Workshop** | Build your own battles: sculpt terrain, place enemies and bosses, write dialogue, pick an objective (rout, defeat the boss, survive N rounds), then play it or share it as a link |
+| **Art & sound** | Animated 48px pixel-art units (walk, strike, flinch), drawn character portraits, synthesized music and SFX; all drawn in code |
 
 <p>
   <img src="docs/images/phone-portrait.webp" alt="Phone layout" width="200">
   <img src="docs/images/summit.webp" alt="Zodiac Summit final battle" width="560">
 </p>
+
+<p>
+  <img src="docs/images/workshop-desktop.webp" alt="The Workshop: editing enemies on Riverside Ruins" width="560">
+  <img src="docs/images/workshop-phone.webp" alt="The Workshop on a phone" width="200">
+</p>
+
+![Every job in both team colours, a knight's animation frames, and the character portraits](docs/images/character-art.webp)
 
 <details><summary><b>0.8 vs 0.9 graphics</b></summary>
 
@@ -98,7 +106,7 @@ Every push to `main` builds, tests and deploys to GitHub Pages; pull requests ru
 
 | | |
 | :--- | :--- |
-| 🎮 **[Gameplay Guide](docs/GAMEPLAY_GUIDE.md)** | How to play, campaign map, bosses, Trials, tips |
+| 🎮 **[Gameplay Guide](docs/GAMEPLAY_GUIDE.md)** | How to play, campaign map, bosses, Trials, the Workshop, tips |
 | 📖 **[Content Reference](docs/CONTENT_REFERENCE.md)** | Every job, ability, item, map, chapter and Trial floor (generated from the game data) |
 | 🕹️ **[Controls & Camera](docs/CONTROLS_AND_CAMERA.md)** | All five input methods, gestures, layouts, camera math |
 | 🏗️ **[Architecture](docs/ARCHITECTURE.md)** | Modules, state machine, action pipeline, input flow, saves, build |
@@ -106,7 +114,7 @@ Every push to `main` builds, tests and deploys to GitHub Pages; pull requests ru
 | 🧪 **[Testing](docs/TESTING.md)** | CI, unit tests, play-tests, release checklist |
 | 🗺️ **[Roadmap](docs/ROADMAP.md)** | Release history, Now / Next / Later, known issues |
 | 🤝 **[Contributing](CONTRIBUTING.md)** | Setup and recipes for adding jobs, maps, chapters, items |
-| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 17 architectural decisions |
+| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 18 architectural decisions |
 | 📜 **[Changelog](CHANGELOG.md)** | Every release |
 
 ---

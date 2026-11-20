@@ -30,7 +30,7 @@
       <button id="btn-job-menu" class="icon-btn" title="Team: jobs, abilities and gear (J)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M5 2h6v2h2v4h-2v2H5V8H3V4h2z M2 12h12v2H2z"/></g></svg><span class="btn-label">Team</span></button>
       <button id="btn-toggle-log" class="icon-btn" title="Battle log (L)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M3 1h10v14H3z M5 4h6v1.5H5z M5 7h6v1.5H5z M5 10h4v1.5H5z" fill-rule="evenodd"/></g></svg><span class="btn-label">Log</span></button>
       <button id="btn-help" class="icon-btn" title="Controls (H)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M5 2h6v2h2v4h-2v2H9v2H7V9h2V7h2V4H5v2H3V4h2z M7 13h2v2H7z"/></g></svg><span class="btn-label">Controls</span></button>
-      <button id="btn-menu" class="icon-btn" title="Menu: map, sound, save, load, editor" aria-haspopup="true" aria-expanded="false" aria-controls="system-menu"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M2 3h12v2H2z M2 7h12v2H2z M2 11h12v2H2z"/></g></svg><span class="btn-label">Menu</span></button>
+      <button id="btn-menu" class="icon-btn" title="Menu: map, sound, save, load, Workshop" aria-haspopup="true" aria-expanded="false" aria-controls="system-menu"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M2 3h12v2H2z M2 7h12v2H2z M2 11h12v2H2z"/></g></svg><span class="btn-label">Menu</span></button>
     </nav>
 
     <!-- System menu (dropdown) -->
@@ -48,7 +48,7 @@
       <button id="btn-graphics" role="menuitem" title="Auto picks Medium on phones and High elsewhere">Graphics: Auto</button>
       <button id="btn-save-game" role="menuitem">Save game</button>
       <button id="btn-load-game" role="menuitem">Load game</button>
-      <button id="btn-toggle-editor" role="menuitem">Map editor</button>
+      <button id="btn-workshop" role="menuitem" title="Build your own battlefields and scenarios">Workshop: map &amp; scenario editor</button>
     </div>
 
     <!-- Camera cluster -->
@@ -128,37 +128,6 @@
       </div>
     </div>
 
-    <!-- 3D Map Editor Tool Palette (Top Left) -->
-    <div id="editor-panel" class="hud-panel hidden">
-      <div class="editor-header">
-        <span>3D MAP EDITOR</span>
-        <button id="btn-close-editor" class="close-btn">×</button>
-      </div>
-      <div class="editor-tools-grid">
-        <button class="editor-tool-btn active" data-tool="raise">▲ Raise (+0.5h)</button>
-        <button class="editor-tool-btn" data-tool="lower">▼ Lower (-0.5h)</button>
-        <button class="editor-tool-btn" data-tool="paint">🎨 Paint Material</button>
-        <button class="editor-tool-btn" data-tool="walkable">⛔ Toggle Walk</button>
-      </div>
-      <div class="editor-terrain-row">
-        <label>Terrain:</label>
-        <select id="editor-terrain-select" class="hud-select">
-          <option value="grass">Grassland</option>
-          <option value="stone">Stone Ruins</option>
-          <option value="dirt">Dirt Soil</option>
-          <option value="water">Water Bed</option>
-          <option value="swamp">Poison Swamp</option>
-          <option value="parapet">Castle Stone</option>
-          <option value="wood">Wood Bridge</option>
-        </select>
-      </div>
-      <div class="editor-actions-row">
-        <button id="btn-editor-export" class="hud-btn-mini">💾 Export</button>
-        <button id="btn-editor-import" class="hud-btn-mini">📥 Import</button>
-        <button id="btn-editor-test" class="hud-btn-mini highlight">⚔ Test Battle</button>
-      </div>
-      <div id="editor-status" class="editor-status-text">Click any tile in 3D to edit height & terrain.</div>
-    </div>
 
     <!-- Active Unit Status Card (Bottom Left) -->
     <section id="unit-card" class="hud-panel" aria-label="Selected unit" aria-live="polite">

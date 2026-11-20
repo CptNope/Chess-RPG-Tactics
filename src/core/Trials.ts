@@ -42,8 +42,9 @@ export function buildTrialFloor(floor: number): CampaignChapter {
   const level = 3 + floor;
   const count = Math.min(6, 4 + Math.floor((floor - 1) / 4));
 
-  // Enemies deploy on the northern half (z <= 3), on walkable tiles, never stacked
-  const spawnTiles = map.tiles.filter((t) => t.walkable && t.z <= 3);
+  // Enemies deploy on the northern quarter of the map, on walkable tiles, never stacked
+  const zone = Math.max(3, Math.floor(map.depth / 4));
+  const spawnTiles = map.tiles.filter((t) => t.walkable && t.z <= zone);
   const used = new Set<string>();
   const pickTile = () => {
     for (let tries = 0; tries < 200; tries++) {

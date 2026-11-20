@@ -1,7 +1,7 @@
 # ADR 0009: In-Game 3D Map Editor & Live Mesh Mutation
 
 ## Status
-**Accepted**
+**Superseded** by [ADR 0018](0018-workshop-scenarios-and-character-art.md) in 0.10.0: the Workshop replaced this editor.
 
 ## Date
 2026-11-17

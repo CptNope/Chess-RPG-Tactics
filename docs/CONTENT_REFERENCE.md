@@ -239,21 +239,19 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Battlefields
 
-| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles |
-| :--- | :--- | :---: | :--- | :---: | :--- | :---: |
-| **Ruins by the River** | `river_ruins` | 11×11 | day | 0–4 | grass 58%, dirt 17%, water 14%, stone 12% | 0 |
-| **Night Battlement** | `night_fortress` | 11×11 | night | 0.2–4.5 | parapet 87%, water 9%, wood 2%, stone 2% | 0 |
-| **Gloomy Mire & Marsh** | `gloomy_swamp` | 11×11 | swamp | 0.1–3 | swamp 66%, wood 17%, dirt 16%, grass 1% | 0 |
-| **Zodiac Summit** | `zodiac_summit` | 11×11 | night | 1–5 | grass 35%, parapet 26%, stone 22%, dirt 14%, wood 2%, water 2% | 2 |
-
-Your squad deploys on: (3, 8), (4, 8), (5, 9), (2, 7), (6, 9), (4, 10) (in squad order).
+| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Squad deploys on |
+| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- |
+| **Riverside Ruins** | `river_ruins` | 16×16 | day | 0.6–3.4 | grass 68%, stone 14%, water 11%, dirt 6%, wood 2% | 7 | (5, 14) (6, 14) (4, 13) (6, 13) (5, 15) (3, 14) |
+| **Night Battlement** | `night_fortress` | 16×16 | night | 0.5–4.5 | stone 61%, parapet 17%, water 12%, dirt 9%, wood 1% | 4 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Gloomy Mire** | `gloomy_swamp` | 16×16 | swamp | 0.4–3 | swamp 41%, grass 36%, wood 14%, dirt 5%, stone 2%, water 2% | 5 | (6, 14) (7, 14) (8, 14) (7, 15) (6, 15) (8, 15) |
+| **Zodiac Summit** | `zodiac_summit` | 16×16 | night | 1–5 | parapet 35%, grass 24%, stone 16%, dirt 12%, water 11%, wood 2% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 
 ## Campaign
 
 ```mermaid
 flowchart LR
-  chapter_1["CHAPTER I<br/>Ambush at Riverside Ruins<br/><i>Ruins by the River</i>"]
-  chapter_2a["CHAPTER II-A<br/>The Sunken Crypts (Gloomy Mire)<br/><i>Gloomy Mire & Marsh</i>"]
+  chapter_1["CHAPTER I<br/>Ambush at Riverside Ruins<br/><i>Riverside Ruins</i>"]
+  chapter_2a["CHAPTER II-A<br/>The Sunken Crypts (Gloomy Mire)<br/><i>Gloomy Mire</i>"]
   chapter_2b["CHAPTER II-B<br/>The Siege of Night Battlement<br/><i>Night Battlement</i>"]
   chapter_3["FINAL CHAPTER<br/>The Awakening at the Summit<br/><i>Zodiac Summit</i>"]
   epilogue(["Epilogue<br/>New Game+ / Trials"])
@@ -266,19 +264,20 @@ flowchart LR
 
 | Chapter | Map | Enemies | Boss | Recruit | Win reward | Branch rewards |
 | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
-| **CHAPTER I**: Ambush at Riverside Ruins | Ruins by the River | 4 | Bandit Chief (Knight L3) | — | Gauntlet of Might | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
-| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire & Marsh | 4 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff | Hermes Slippers + Windslayer Bow |
-| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 4 | Dragoon Commander (Dragoon L4) | Bria (Geomancer) | Crystal Helm | Aegis Barrier + Platinum Blade |
-| **FINAL CHAPTER**: The Awakening at the Summit | Zodiac Summit | 5 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | — |
+| **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
+| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 5 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff | Hermes Slippers + Windslayer Bow |
+| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L4) | Bria (Geomancer) | Crystal Helm | Aegis Barrier + Platinum Blade |
+| **FINAL CHAPTER**: The Awakening at the Summit | Zodiac Summit | 6 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | — |
 
 <details><summary><b>CHAPTER I</b> enemy roster</summary>
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
-| Bandit Chief | Knight | 3 | (8, 3) | ★ |
-| Shadow Shinobi | Ninja | 3 | (7, 2) |  |
-| Rogue Warlock | Time Weaver | 3 | (6, 4) |  |
-| Brigand Bowman | Archer | 3 | (9, 2) |  |
+| Bandit Chief | Knight | 3 | (13, 2) | ★ |
+| Rogue Warlock | Time Weaver | 3 | (12, 3) |  |
+| Brigand Bowman | Archer | 3 | (14, 3) |  |
+| Shadow Shinobi | Ninja | 3 | (5, 4) |  |
+| Bridge Cutthroat | Squire | 2 | (3, 3) |  |
 
 </details>
 
@@ -286,10 +285,11 @@ flowchart LR
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
-| Arch-Warlock | Time Weaver | 4 | (5, 2) | ★ |
-| Swamp Shinobi | Ninja | 4 | (3, 4) |  |
-| Bog Poisoner | Black Mage | 4 | (7, 3) |  |
-| Mire Skirmisher | Ninja | 4 | (8, 2) |  |
+| Arch-Warlock | Time Weaver | 4 | (2, 0) | ★ |
+| Bog Poisoner | Black Mage | 4 | (3, 1) |  |
+| Swamp Shinobi | Ninja | 4 | (7, 4) |  |
+| Mire Skirmisher | Ninja | 4 | (12, 2) |  |
+| Reed Stalker | Archer | 3 | (6, 7) |  |
 
 </details>
 
@@ -297,10 +297,11 @@ flowchart LR
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
-| Dragoon Commander | Dragoon | 4 | (5, 1) | ★ |
-| Rampart Sniper | Archer | 4 | (2, 1) |  |
-| Tower Sniper | Archer | 4 | (8, 1) |  |
-| Iron Vanguard | Knight | 4 | (5, 4) |  |
+| Dragoon Commander | Dragoon | 4 | (7, 1) | ★ |
+| Rampart Sniper | Archer | 4 | (1, 0) |  |
+| Tower Sniper | Archer | 4 | (12, 0) |  |
+| Iron Vanguard | Knight | 4 | (7, 7) |  |
+| Gate Warden | Knight | 3 | (8, 7) |  |
 
 </details>
 
@@ -308,11 +309,12 @@ flowchart LR
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
-| Zodiac Champion | Dragoon | 5 | (5, 1) | ★ |
-| Grand Chronomancer | Time Weaver | 5 | (3, 2) |  |
-| Shadow Assassin | Ninja | 5 | (7, 2) |  |
-| Black Archmage | Black Mage | 5 | (5, 3) |  |
-| Zealot Medic | White Mage | 5 | (6, 0) |  |
+| Zodiac Champion | Dragoon | 5 | (7, 2) | ★ |
+| Zealot Medic | White Mage | 5 | (8, 0) |  |
+| Grand Chronomancer | Time Weaver | 5 | (5, 3) |  |
+| Black Archmage | Black Mage | 5 | (10, 3) |  |
+| Shadow Assassin | Ninja | 5 | (7, 6) |  |
+| Altar Sentinel | Knight | 4 | (9, 6) |  |
 
 </details>
 
@@ -322,20 +324,20 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
-| 1 | Seal of Aries | Ruins by the River | 4 | 4 |  | Knight, Archer |
-| 2 | Seal of Taurus | Gloomy Mire & Marsh | 4 | 5 |  | Archer, Squire, Ninja |
+| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, White Mage |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Archer, Squire, Ninja |
 | 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Geomancer, Knight, Time Weaver |
 | 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Squire, Dragoon |
-| 5 | Seal of Leo: The Warden Wakes | Ruins by the River | 5 | 8 | ★ | Dragoon, Squire, Ninja, Black Mage, Geomancer |
-| 6 | Seal of Virgo | Gloomy Mire & Marsh | 5 | 9 |  | Squire, Time Weaver, Ninja, White Mage |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Squire, Ninja, Black Mage, Geomancer |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Squire, Time Weaver, Ninja, White Mage |
 | 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Time Weaver, Squire, White Mage, Geomancer |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Archer, Squire, Ninja |
-| 9 | Seal of Sagittarius | Ruins by the River | 6 | 12 |  | Time Weaver, Ninja, Black Mage, Geomancer, Dragoon |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire & Marsh | 6 | 13 | ★ | Dragoon, White Mage, Ninja, Knight, Black Mage |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Archer, Squire, Ninja, Dragoon, Black Mage |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Time Weaver, Ninja, Black Mage, Geomancer, Dragoon |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, White Mage, Ninja, Knight, Black Mage |
 | 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Squire, Black Mage, Archer |
 | 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Ninja, Time Weaver, Black Mage, Knight, White Mage |
-| 13 | Seal of Aries | Ruins by the River | 6 | 16 |  | Geomancer, Squire, Black Mage, Archer, Dragoon |
-| 14 | Seal of Taurus | Gloomy Mire & Marsh | 6 | 17 |  | Squire, White Mage, Dragoon, Black Mage, Geomancer |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Geomancer, Squire, Black Mage, Archer, Dragoon |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Squire, White Mage, Dragoon, Black Mage, Geomancer |
 | 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Squire, Black Mage, Time Weaver, Archer |
 
 *Floors continue forever; the table shows the first 15.*

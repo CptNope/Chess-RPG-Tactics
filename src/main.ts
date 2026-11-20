@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MAPS } from './data/maps';
+import { MAPS, spawnsFor } from './data/maps';
 import { BattleGrid } from './core/Grid';
 import { TacticsScene } from './renderer/TacticsScene';
 import { UIManager } from './ui/UIManager';
@@ -7,7 +7,7 @@ import { TurnManager } from './core/TurnManager';
 import { JobSystem } from './core/JobSystem';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter, Element } from './core/types';
-import { CAMPAIGN_CHAPTERS, PLAYER_DEPLOY } from './data/campaign';
+import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { ITEMS, STARTING_ARMORY } from './data/items';
 import { JOBS } from './data/jobs';
 import { SoundFX } from './audio/SoundEffects';
@@ -19,6 +19,8 @@ import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
 import { getQualitySetting, setQualitySetting, resolveQuality, QualitySetting, PROFILES } from './renderer/GraphicsQuality';
 import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
+import { Workshop } from './ui/Workshop';
+import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 
 type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
 
@@ -42,7 +44,23 @@ class TacticsGame {
   /** Item ids the squad owns. */
   private armory: string[] = [...STARTING_ARMORY];
 
-  private mode: 'campaign' | 'trials' = 'campaign';
+  private mode: 'campaign' | 'trials' | 'custom' = 'campaign';
+  /** The campaign chapter to return to after Workshop battles (and to save). */
+  private campaignChapterId = 'chapter_1';
+
+  // Workshop
+  private workshop!: Workshop;
+  private customScenario: Scenario | null = null;
+  /** The battle that was in progress when the Workshop opened, restored when it closes. */
+  private suspended: {
+    grid: BattleGrid; units: Unit[]; turnManager: TurnManager; chapter: CampaignChapter;
+    mode: 'campaign' | 'trials' | 'custom'; inputMode: InputMode; kills: Record<string, number>;
+    round: number; roundActed: Set<string>;
+  } | null = null;
+
+  /** Rounds for the "survive" objective: a round ends once every living unit has had a turn. */
+  private round = 1;
+  private roundActed = new Set<string>();
   private trialsFloor = 0;
   private campaignCleared = false;
   private battleOver = false;
@@ -72,11 +90,27 @@ class TacticsGame {
     const canvas = document.getElementById('viewport-canvas') as HTMLCanvasElement;
     this.scene = new TacticsScene(canvas, this.grid);
     this.scene.updateUnits(this.units);
-    this.applyAtmosphereForMap(this.currentChapter.mapId);
+    this.applyAtmosphereForMap();
+    // The first battle was set up before the scene existed: fill the HUD now
+    const lead = this.squad[0];
+    this.ui.updateUnitCard(lead, this.grid.getHeight(lead.x, lead.z));
+    this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), null);
+    this.scene.focusOn(lead.x, this.grid.getHeight(lead.x, lead.z), lead.z);
+
+    this.workshop = new Workshop({
+      scene: this.scene,
+      banner: (t) => this.ui.showBanner(t),
+      squad: () => this.squad.map((u) => ({ name: u.name, jobId: u.jobId })),
+      chapters: () => Object.values(CAMPAIGN_CHAPTERS),
+      currentChapter: () => CAMPAIGN_CHAPTERS[this.campaignChapterId] || CAMPAIGN_CHAPTERS.chapter_1,
+      play: (s) => this.playScenario(s),
+      closed: () => this.workshopClosed()
+    });
 
     this.bindEvents();
     this.playChapterIntro();
     this.gameLoop();
+    this.openShareLink();
 
     // Debug / automated play-testing hook: add ?debug to the URL
     if (new URLSearchParams(location.search).has('debug')) {
@@ -110,9 +144,8 @@ class TacticsGame {
     return squad;
   }
 
-  private applyAtmosphereForMap(mapId: string): void {
-    const theme = MAPS[mapId] ? MAPS[mapId]().theme : 'day';
-    this.scene.vfx.setWeatherTheme(theme);
+  private applyAtmosphereForMap(): void {
+    this.scene.vfx.setWeatherTheme(this.grid.mapData.theme);
   }
 
   /** Puts every squad member on a free, walkable deployment tile with full HP/MP. */
@@ -120,8 +153,9 @@ class TacticsGame {
     const taken = new Set<string>();
     for (const e of this.units.filter((u) => u.team === 'enemy')) taken.add(`${e.x},${e.z}`);
 
+    const spawns = spawnsFor(this.grid.mapData);
     this.squad.forEach((member, i) => {
-      let spot = PLAYER_DEPLOY[i % PLAYER_DEPLOY.length];
+      let spot = spawns[i % spawns.length];
       const ok = (x: number, z: number) => this.grid.isWalkable(x, z) && !taken.has(`${x},${z}`);
       if (!ok(spot.x, spot.z)) {
         // Fall back to the nearest open tile on the southern edge of the map
@@ -137,7 +171,7 @@ class TacticsGame {
 
   private spawnEnemies(chapter: CampaignChapter): Unit[] {
     return chapter.enemyRoster.map((e, idx) => {
-      const u = JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, 'S', e.level);
+      const u = JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', e.level);
       if (e.isBoss) JobSystem.makeBoss(u);
       // Enemy casters get their job's reaction/support so they fight like the player's units
       this.equipEnemyPassives(u);
@@ -174,7 +208,8 @@ class TacticsGame {
   private setupBattle(chapter: CampaignChapter, mapOverride?: string): void {
     this.currentChapter = chapter;
     const mapId = mapOverride || chapter.mapId;
-    this.grid = new BattleGrid((MAPS[mapId] || MAPS.river_ruins)());
+    // Workshop chapters carry their own battlefield (a copy, so replays start fresh)
+    this.grid = new BattleGrid(chapter.mapData && !mapOverride ? JSON.parse(JSON.stringify(chapter.mapData)) : (MAPS[mapId] || MAPS.river_ruins)());
 
     if (chapter.recruit && !this.squad.some((u) => u.id === chapter.recruit!.id)) {
       const r = chapter.recruit;
@@ -194,7 +229,7 @@ class TacticsGame {
     if (this.scene) {
       this.scene.loadMap(this.grid);
       this.scene.updateUnits(this.units);
-      this.applyAtmosphereForMap(mapId);
+      this.applyAtmosphereForMap();
       // Clear the previous battle's HUD before the intro dialogue plays
       this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), null);
       const lead = this.squad[0];
@@ -205,6 +240,8 @@ class TacticsGame {
 
   private loadChapter(chapterId: string): void {
     this.mode = 'campaign';
+    this.customScenario = null;
+    this.campaignChapterId = CAMPAIGN_CHAPTERS[chapterId] ? chapterId : 'chapter_1';
     this.setupBattle(CAMPAIGN_CHAPTERS[chapterId] || CAMPAIGN_CHAPTERS.chapter_1);
     this.playChapterIntro();
   }
@@ -255,45 +292,7 @@ class TacticsGame {
   private bindEvents(): void {
     this.ui.onMapChanged = (mapId) => this.switchBattlefield(mapId);
 
-    this.ui.onEditorToggled = (isOpen) => {
-      this.currentMode = isOpen ? 'editor' : 'idle';
-      this.scene.clearHighlights();
-    };
-
-    this.ui.onEditorExport = () => {
-      const json = JSON.stringify(this.grid.mapData, null, 2);
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(json);
-        this.ui.showBanner('MAP JSON COPIED TO CLIPBOARD!');
-      } else {
-        prompt('Copy your Map JSON:', json);
-      }
-    };
-
-    this.ui.onEditorImport = (jsonString) => {
-      try {
-        const parsed = JSON.parse(jsonString);
-        if (parsed.tiles && parsed.width) {
-          this.grid = new BattleGrid(parsed);
-          this.scene.loadMap(this.grid);
-          this.ui.showBanner('CUSTOM MAP LOADED SUCCESSFULLY!');
-        }
-      } catch {
-        this.ui.showBanner('INVALID MAP JSON');
-      }
-    };
-
-    this.ui.onEditorTestBattle = () => {
-      this.ui.toggleEditor(false);
-      const enemies = this.spawnEnemies(this.currentChapter);
-      this.units = [...enemies];
-      this.deploySquad();
-      this.units = [...this.squad, ...enemies];
-      this.turnManager = new TurnManager(this.units);
-      this.battleOver = false;
-      this.scene.updateUnits(this.units);
-      this.startBattle();
-    };
+    this.ui.onWorkshop = () => this.openWorkshop();
 
     document.getElementById('btn-rot-left')?.addEventListener('click', () => {
       SoundFX.playMenuBlip();
@@ -401,6 +400,12 @@ class TacticsGame {
     if (this.ui.isHelpOpen) return this.ui.toggleHelp(false);
     if (this.ui.isSystemMenuOpen) return this.ui.toggleSystemMenu(false);
     if (this.ui.isJobModalOpen) return this.ui.closeJobModal();
+    if (this.workshop.isOpen) {
+      // From the panel, B / Esc steps back to the map cursor; from the map it closes the Workshop
+      if (this.workshop.focusIsInPanel()) (document.activeElement as HTMLElement).blur();
+      else this.workshop.close();
+      return;
+    }
     if (this.ui.isResultModalOpen || this.currentMode === 'dialogue') return;
     if (!document.getElementById('combat-forecast')!.classList.contains('hidden')) {
       document.getElementById('btn-forecast-cancel')!.click();
@@ -429,7 +434,6 @@ class TacticsGame {
       return;
     }
     if (this.ui.isCombatLogOpen) return this.ui.toggleCombatLog(false);
-    if (this.ui.isEditorOpen) return this.ui.toggleEditor(false);
     (document.activeElement as HTMLElement | null)?.blur();
   }
 
@@ -457,8 +461,9 @@ class TacticsGame {
     const t = this.scene.moveCursor(dir);
     if (t) {
       SoundFX.playMoveStep();
-      const tile = this.grid.getTile(t.x, t.z);
+      const tile = this.scene.grid.getTile(t.x, t.z);
       if (tile) this.ui.updateTileInfo(t.x, t.z, tile.height, tile.terrain);
+      this.workshop.describeTile(t.x, t.z);
       const unit = this.units.find((u) => !u.isDead && u.x === t.x && u.z === t.z);
       if (unit && this.currentMode !== 'targeting') this.ui.updateUnitCard(unit, this.grid.getHeight(unit.x, unit.z));
     }
@@ -496,7 +501,8 @@ class TacticsGame {
       case 'confirm': return this.handleConfirm();
       case 'cancel': return this.cancelAction();
       case 'commands':
-        if (this.isPlayerIdle()) this.ui.focusCommands();
+        if (this.workshop.isOpen) this.workshop.focusPanel();
+        else if (this.isPlayerIdle()) this.ui.focusCommands();
         return;
       case 'team':
         if (this.ui.isJobModalOpen) this.ui.closeJobModal();
@@ -581,9 +587,11 @@ class TacticsGame {
   // ---------------------------------------------------------------------------
 
   private saveGame(announce: boolean): void {
-    const ok = SaveManager.saveGame(this.currentChapter.id, this.squad, {
+    // Workshop battles never overwrite campaign progress: save the chapter you'll return to
+    const custom = this.mode === 'custom';
+    const ok = SaveManager.saveGame(custom ? this.campaignChapterId : this.currentChapter.id, this.squad, {
       armory: this.armory,
-      mode: this.mode,
+      mode: this.mode === 'custom' ? 'campaign' : this.mode,
       trialsFloor: this.trialsFloor,
       campaignCleared: this.campaignCleared
     });
@@ -638,7 +646,9 @@ class TacticsGame {
       this.startTrial(data.trialsFloor);
     } else {
       this.mode = 'campaign';
-      this.setupBattle(CAMPAIGN_CHAPTERS[data.currentChapterId] || CAMPAIGN_CHAPTERS.chapter_1);
+      this.customScenario = null;
+      this.campaignChapterId = CAMPAIGN_CHAPTERS[data.currentChapterId] ? data.currentChapterId : 'chapter_1';
+      this.setupBattle(CAMPAIGN_CHAPTERS[this.campaignChapterId]);
       this.ui.showBanner('SAVE FILE RESTORED!');
       this.startBattle();
     }
@@ -663,6 +673,11 @@ class TacticsGame {
     this.ui.addLogEntry(`=== ${this.currentChapter.title}: ${this.currentChapter.subtitle} ===`, 'system');
     const boss = this.units.find((u) => u.isBoss && u.team === 'enemy');
     if (boss) this.ui.addLogEntry(`[BOSS] ${boss.name} commands the enemy. It will enrage at half HP!`, 'system');
+    this.round = 1;
+    this.roundActed.clear();
+    const obj = this.currentChapter.objective;
+    if (obj?.type === 'boss') this.ui.addLogEntry(`[OBJECTIVE] Defeat ${boss ? boss.name : 'the boss'}.`, 'system');
+    else if (obj?.type === 'survive') this.ui.addLogEntry(`[OBJECTIVE] Hold out for ${obj.rounds || 6} rounds. Round 1 begins!`, 'system');
     this.updateTimeline();
     this.advanceTurn();
   }
@@ -677,6 +692,7 @@ class TacticsGame {
     }
 
     const { activeUnit, poisonDamage } = result;
+    if (!activeUnit.hasMoved && !activeUnit.hasActed && this.trackRound(activeUnit)) return;
     this.scene.setActiveUnit(activeUnit.id);
     this.currentMode = 'idle';
     this.scene.clearHighlights();
@@ -767,20 +783,8 @@ class TacticsGame {
     const tile = this.scene.hoveredTile;
     if (!tile) return;
 
-    if (this.ui.isEditorOpen) {
-      const targetTile = this.grid.getTile(tile.x, tile.z);
-      if (!targetTile) return;
-      SoundFX.playMoveStep();
-      const tool = this.ui.currentEditorTool;
-      if (tool === 'raise') {
-        this.scene.updateTile(tile.x, tile.z, targetTile.height + 0.5, targetTile.terrain, targetTile.walkable);
-      } else if (tool === 'lower') {
-        this.scene.updateTile(tile.x, tile.z, Math.max(0, targetTile.height - 0.5), targetTile.terrain, targetTile.walkable);
-      } else if (tool === 'paint') {
-        this.scene.updateTile(tile.x, tile.z, targetTile.height, this.ui.currentPaintTerrain, targetTile.walkable);
-      } else if (tool === 'walkable') {
-        this.scene.updateTile(tile.x, tile.z, targetTile.height, targetTile.terrain, !targetTile.walkable);
-      }
+    if (this.workshop.isOpen) {
+      this.workshop.applyAt(tile.x, tile.z);
       return;
     }
 
@@ -1138,13 +1142,141 @@ class TacticsGame {
   }
 
   // ---------------------------------------------------------------------------
+  // Workshop
+  // ---------------------------------------------------------------------------
+
+  private openWorkshop(scenario?: Scenario): void {
+    if (this.workshop.isOpen) return;
+    if (!this.battleOver && this.currentMode !== 'idle' && this.currentMode !== 'dialogue') {
+      this.ui.showBanner('OPEN THE WORKSHOP ON YOUR TURN');
+      return;
+    }
+    // Park the battle in progress so closing the Workshop puts you straight back into it
+    this.suspended = this.battleOver ? null : {
+      grid: this.grid, units: this.units, turnManager: this.turnManager, chapter: this.currentChapter, mode: this.mode,
+      inputMode: this.currentMode, kills: this.kills, round: this.round, roundActed: this.roundActed
+    };
+    this.ui.hideDialogue();
+    this.ui.hideResultModal();
+    this.ui.toggleSystemMenu(false);
+    this.ui.toggleSubMenu(false);
+    this.currentMode = 'editor';
+    this.units = [];
+    this.scene.setActiveUnit(null);
+    Music.playTrack('dialogue');
+    this.workshop.open(scenario);
+  }
+
+  private workshopClosed(): void {
+    const s = this.suspended;
+    this.suspended = null;
+    if (!s) return this.returnToCampaign();
+    this.grid = s.grid;
+    this.units = s.units;
+    this.turnManager = s.turnManager;
+    this.currentChapter = s.chapter;
+    this.mode = s.mode;
+    this.kills = s.kills;
+    this.round = s.round;
+    this.roundActed = s.roundActed;
+    this.scene.loadMap(this.grid);
+    this.scene.updateUnits(this.units);
+    this.currentMode = s.inputMode;
+    if (s.inputMode === 'dialogue') {
+      this.advanceDialogue(); // re-shows the line you were on
+      return;
+    }
+    Music.playTrack('battle');
+    const active = this.turnManager.activeUnit;
+    if (active) {
+      this.scene.setActiveUnit(active.id);
+      this.recenter();
+      this.ui.updateUnitCard(active, this.grid.getHeight(active.x, active.z));
+    }
+  }
+
+  private playScenario(s: Scenario): void {
+    this.suspended = null;
+    this.customScenario = s;
+    this.mode = 'custom';
+    this.setupBattle(scenarioToChapter(s));
+    this.ui.addLogEntry(`[WORKSHOP] Playing "${s.title}"${s.author ? ` by ${s.author}` : ''}.`, 'system');
+    this.playChapterIntro();
+  }
+
+  private returnToCampaign(): void {
+    this.ui.addLogEntry('[SYSTEM] Back to the campaign: the chapter starts fresh.', 'system');
+    this.loadChapter(this.campaignChapterId);
+  }
+
+  /** End of a Workshop battle: replay, edit, or go back to the campaign. */
+  private showCustomEnd(won: boolean): void {
+    const s = this.customScenario;
+    this.currentMode = 'menu';
+    this.ui.showResultModal({
+      title: won ? 'SCENARIO COMPLETE' : 'DEFEAT',
+      subtitle: won ? `You won "${s?.title || 'the scenario'}". Your squad keeps its EXP, JP and any reward gear.` : 'Your squad keeps the EXP and JP it earned. Try again, or tweak the scenario.',
+      buttons: [
+        { label: won ? 'Play again' : 'Retry', primary: true, onClick: () => s && this.playScenario(s) },
+        { label: 'Back to Workshop', onClick: () => this.openWorkshop(s || undefined) },
+        { label: 'Return to campaign', onClick: () => this.returnToCampaign() }
+      ]
+    });
+  }
+
+  /** Opens a scenario shared as a link (#s=…) in the Workshop. */
+  private openShareLink(): void {
+    const m = /^#s=([\w-]+)$/.exec(location.hash);
+    if (!m) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    decodeShare(m[1])
+      .then((s) => {
+        this.openWorkshop(s);
+        this.ui.showBanner(`SHARED SCENARIO: ${s.title.toUpperCase()}`);
+      })
+      .catch((e: Error) => this.ui.showBanner(e.message.toUpperCase()));
+  }
+
+  // ---------------------------------------------------------------------------
   // Victory, defeat, spoils, epilogue, Trials
   // ---------------------------------------------------------------------------
+
+  /**
+   * Counts rounds for the survive objective. Returns true when the battle ended because the
+   * squad held out long enough.
+   */
+  private trackRound(unit: Unit): boolean {
+    const alive = this.units.filter((u) => !u.isDead);
+    if (alive.every((u) => this.roundActed.has(u.id))) {
+      this.round++;
+      this.roundActed.clear();
+      const obj = this.currentChapter.objective;
+      if (obj?.type === 'survive') {
+        const goal = obj.rounds || 6;
+        if (this.round > goal) return this.checkBattleStatus();
+        this.ui.addLogEntry(`[OBJECTIVE] Round ${this.round} of ${goal}.`, 'system');
+        if (this.round === goal) this.ui.showBanner('FINAL ROUND!');
+      }
+    }
+    this.roundActed.add(unit.id);
+    return false;
+  }
 
   private checkBattleStatus(): boolean {
     if (this.battleOver) return true;
     const playersAlive = this.units.some((u) => !u.isDead && u.team === 'player');
-    const enemiesAlive = this.units.some((u) => !u.isDead && u.team === 'enemy');
+    let enemiesAlive = this.units.some((u) => !u.isDead && u.team === 'enemy');
+    const obj = this.currentChapter.objective;
+    let winText = 'VICTORY! BATTLEFIELD SECURED';
+    if (playersAlive && obj?.type === 'boss' && this.units.some((u) => u.isBoss && u.team === 'enemy') && !this.units.some((u) => u.isBoss && u.team === 'enemy' && !u.isDead)) {
+      enemiesAlive = false;
+      winText = 'VICTORY! THE BOSS HAS FALLEN';
+      this.ui.addLogEntry('[OBJECTIVE] Their leader is down. The rest of the enemy flees!', 'system');
+    }
+    if (playersAlive && obj?.type === 'survive' && this.round > (obj.rounds || 6)) {
+      enemiesAlive = false;
+      winText = 'VICTORY! YOU HELD THE LINE';
+    }
 
     if (!playersAlive) {
       this.battleOver = true;
@@ -1160,7 +1292,7 @@ class TacticsGame {
       this.currentMode = 'menu';
       Music.playTrack('victory');
       SoundFX.playVictoryFanfare();
-      this.ui.showBanner('VICTORY! BATTLEFIELD SECURED');
+      this.ui.showBanner(winText);
       this.ui.addLogEntry('=== VICTORY! All hostiles defeated. ===', 'system');
       later(() => this.showSpoils(), 1500);
       return true;
@@ -1169,6 +1301,7 @@ class TacticsGame {
   }
 
   private showDefeat(): void {
+    if (this.mode === 'custom') return this.showCustomEnd(false);
     const retry = () => {
       if (this.mode === 'trials') this.startTrial(this.trialsFloor);
       else {
@@ -1204,7 +1337,7 @@ class TacticsGame {
     }
 
     const newItems: string[] = [];
-    if (this.mode === 'campaign') {
+    if (this.mode === 'campaign' || this.mode === 'custom') {
       for (const id of this.currentChapter.rewardItemIds || []) {
         if (!this.armory.includes(id)) newItems.push(id);
       }
@@ -1217,7 +1350,7 @@ class TacticsGame {
       rows.push(`<div class="result-loot"><b>NEW GEAR:</b> ${newItems.map((id) => esc(ITEMS[id].name)).join(', ')}<br><small>Equip it from ★ Team → Equipment.</small></div>`);
     }
 
-    let subtitle = `${this.currentChapter.title}: ${this.currentChapter.subtitle}`;
+    let subtitle = this.currentChapter.subtitle ? `${this.currentChapter.title}: ${this.currentChapter.subtitle}` : this.currentChapter.title;
     if (this.mode === 'trials') {
       const isRecord = SaveManager.recordTrialFloor(this.trialsFloor);
       subtitle += isRecord ? ` · New record: floor ${this.trialsFloor}!` : ` · Best: floor ${SaveManager.getBestTrialFloor()}`;
@@ -1237,7 +1370,7 @@ class TacticsGame {
     }
 
     this.ui.showResultModal({
-      title: 'VICTORY — SPOILS OF WAR',
+      title: this.mode === 'custom' ? 'SCENARIO CLEARED' : 'VICTORY — SPOILS OF WAR',
       subtitle,
       bodyHtml: rows.join(''),
       buttons: [{ label: 'Continue', primary: true, onClick: () => this.afterSpoils() }]
@@ -1245,7 +1378,7 @@ class TacticsGame {
   }
 
   private afterSpoils(): void {
-    const next = () => this.handleChapterVictoryChoices();
+    const next = () => (this.mode === 'custom' ? this.showCustomEnd(true) : this.handleChapterVictoryChoices());
     if (this.currentChapter.victoryDialogue.length > 0) {
       this.playDialogueSequence(this.currentChapter.victoryDialogue, next);
     } else {
@@ -1333,8 +1466,9 @@ class TacticsGame {
       const key = `${x},${z}`;
       if (key !== this.lastHoveredKey) {
         this.lastHoveredKey = key;
-        const tile = this.grid.getTile(x, z);
+        const tile = this.scene.grid.getTile(x, z);
         if (tile) this.ui.updateTileInfo(x, z, tile.height, tile.terrain);
+        this.workshop?.describeTile(x, z);
       }
     }
 

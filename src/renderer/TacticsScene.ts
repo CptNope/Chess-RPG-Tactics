@@ -11,6 +11,7 @@ import {
   createUnitSpriteTexture
 } from '../graphics/PixelTextures';
 import { VFXManager } from './VFXManager';
+import type { SpriteFrame } from '../graphics/CharacterArt';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -52,6 +53,9 @@ export class TacticsScene {
   public currentUnits: Unit[] = [];
   private unitSpritePlanes: Map<string, THREE.Mesh> = new Map();
   private unitTweens: Map<string, UnitTween> = new Map();
+  /** Walk animation between tiles: last tile each unit stood on, and the walk in progress. */
+  private lastTiles: Map<string, { x: number; z: number; h: number }> = new Map();
+  private walks: Map<string, { fromX: number; fromZ: number; fromH: number; t: number; dur: number }> = new Map();
   private overheadHpElements: Map<string, HTMLElement> = new Map();
 
   // Highlight overlays (pooled)
@@ -210,13 +214,15 @@ export class TacticsScene {
   /** Lights, sky, fog, shadow frustum and torches for the current map. */
   private applyAtmosphere(): void {
     const md = this.grid.mapData;
-    const p = presetFor(md.id, md.theme);
+    const p = presetFor(md.look || md.id, md.theme);
     this.atmosphere = p;
 
     const oldSky = this.scene.background as THREE.Texture | null;
     if (oldSky && (oldSky as THREE.Texture).isTexture) oldSky.dispose();
     this.scene.background = createSkyTexture(p);
-    this.scene.fog = new THREE.Fog(p.fog, p.fogNear, p.fogFar);
+    // Push the fog back on bigger maps so the far edge stays readable
+    const extra = Math.max(0, Math.hypot(md.width, md.depth) / 2 - 8);
+    this.scene.fog = new THREE.Fog(p.fog, p.fogNear + extra, p.fogFar + extra * 1.5);
     this.renderer.toneMappingExposure = p.exposure;
 
     this.hemiLight.color.setHex(p.hemiSky);
@@ -382,8 +388,13 @@ export class TacticsScene {
 
     this.applyAtmosphere();
     this.vfx.setWeatherTheme(newGrid.mapData.theme);
+    this.lastTiles.clear();
+    this.walks.clear();
     this.buildMap();
-    this.targetCameraTarget.set(5, 1, 5);
+    const md = newGrid.mapData;
+    this.targetCameraTarget.set((md.width - 1) / 2, 1, (md.depth - 1) / 2);
+    // Bigger maps start a little further out
+    this.targetZoomLevel = Math.min(this.maxZoomLevel, Math.max(8.5, Math.max(md.width, md.depth) * 0.62));
   }
 
   public updateTile(x: number, z: number, newHeight: number, newTerrain: TerrainType, walkable: boolean): void {
@@ -399,6 +410,14 @@ export class TacticsScene {
     this.decorations.rebuild(this.grid.mapData, this.quality.decorationDensity, this.grid.mapData.theme);
 
     this.setCursor(x, z);
+  }
+
+  /** Rebuilds terrain and props after several tiles were changed directly on the grid. */
+  public refreshTerrain(): void {
+    this.disposeTerrain();
+    this.buildTerrainMeshes();
+    this.decorations.rebuild(this.grid.mapData, this.quality.decorationDensity, this.grid.mapData.theme);
+    if (this.hoveredTile) this.setCursor(this.hoveredTile.x, this.hoveredTile.z);
   }
 
   private buildMap(): void {
@@ -797,24 +816,43 @@ export class TacticsScene {
       const spriteMesh = this.unitSpritePlanes.get(unit.id);
       if (!spriteMesh) continue;
 
-      const height = this.grid.getHeight(unit.x, unit.z);
+      let height = this.grid.getHeight(unit.x, unit.z);
       const bob = Math.sin(time + unit.x * 2 + unit.z) * 0.035;
 
+      // Start a walk when the unit's tile changed since the last frame (short hops only)
+      const last = this.lastTiles.get(unit.id);
+      if (last && (last.x !== unit.x || last.z !== unit.z)) {
+        const dist = Math.abs(last.x - unit.x) + Math.abs(last.z - unit.z);
+        if (dist <= 12) this.walks.set(unit.id, { fromX: last.x, fromZ: last.z, fromH: last.h, t: 0, dur: 6 + dist * 7 });
+      }
+      this.lastTiles.set(unit.id, { x: unit.x, z: unit.z, h: height });
+      const walk = this.walks.get(unit.id);
+      let walkX = 0, walkZ = 0;
+      if (walk) {
+        walk.t++;
+        const p = Math.min(1, walk.t / walk.dur);
+        walkX = (walk.fromX - unit.x) * (1 - p);
+        walkZ = (walk.fromZ - unit.z) * (1 - p);
+        // Climb or drop smoothly, with a little hop over height changes
+        height = walk.fromH + (height - walk.fromH) * p + Math.sin(p * Math.PI) * Math.min(0.6, 0.12 + Math.abs(height - walk.fromH) * 0.3);
+        if (p >= 1) this.walks.delete(unit.id);
+      }
+
       // Handle Lunge / Recoil Tweens
-      let offsetX = 0;
-      let offsetZ = 0;
+      let offsetX = walkX;
+      let offsetZ = walkZ;
       const tween = this.unitTweens.get(unit.id);
       if (tween) {
         tween.progress++;
         const p = tween.progress / tween.maxProgress;
         if (tween.type === 'lunge') {
           const lungeDist = Math.sin(p * Math.PI) * 0.45;
-          offsetX = tween.dirX * lungeDist;
-          offsetZ = tween.dirZ * lungeDist;
+          offsetX += tween.dirX * lungeDist;
+          offsetZ += tween.dirZ * lungeDist;
         } else if (tween.type === 'recoil') {
           const recoilDist = Math.sin(p * Math.PI) * 0.25;
-          offsetX = -tween.dirX * recoilDist;
-          offsetZ = -tween.dirZ * recoilDist;
+          offsetX += -tween.dirX * recoilDist;
+          offsetZ += -tween.dirZ * recoilDist;
         }
 
         if (tween.progress >= tween.maxProgress) {
@@ -839,7 +877,12 @@ export class TacticsScene {
 
       const relativeFacing = this.calculateRelativeFacing(unit.facing);
       const isEnemy = unit.team === 'enemy';
-      const tex = createUnitSpriteTexture(unit.jobId, relativeFacing, isEnemy);
+      // Animation frame: strike while lunging, flinch on recoil, stride while walking, else breathe
+      const frame: SpriteFrame = tween?.type === 'lunge' ? 'attack'
+        : tween?.type === 'recoil' ? 'hurt'
+        : walk ? (Math.floor(walk.t / 6) % 2 ? 'walk1' : 'walk0')
+        : Math.floor(now / 520 + unit.x * 0.7 + unit.z * 0.3) % 2 ? 'idle1' : 'idle0';
+      const tex = createUnitSpriteTexture(unit.jobId, relativeFacing, isEnemy, frame);
       const mat = spriteMesh.material as THREE.MeshBasicMaterial;
       if (mat.map !== tex) {
         mat.map = tex;
@@ -908,6 +951,16 @@ export class TacticsScene {
       const height = this.grid.getHeight(t.x, t.z);
       const mesh = new THREE.Mesh(this.sharedHighlightGeom, mat);
       mesh.position.set(t.x, height + 0.02, t.z);
+      this.highlightGroup.add(mesh);
+    }
+  }
+
+  /** Adds highlighted tiles without clearing the existing ones (Workshop markers). */
+  public addHighlights(tiles: { x: number; z: number }[], color: number): void {
+    const mat = this.highlightMaterial(color);
+    for (const t of tiles) {
+      const mesh = new THREE.Mesh(this.sharedHighlightGeom, mat);
+      mesh.position.set(t.x, this.grid.getHeight(t.x, t.z) + 0.02, t.z);
       this.highlightGroup.add(mesh);
     }
   }
@@ -985,11 +1038,22 @@ export class TacticsScene {
     // Fit the zoom to the shorter screen side so portrait phones see as much map as landscape
     const halfW = aspect >= 1 ? this.zoomLevel * aspect : this.zoomLevel;
     const halfH = aspect >= 1 ? this.zoomLevel : this.zoomLevel / aspect;
-    this.camera.left = -halfW;
-    this.camera.right = halfW;
-    this.camera.top = halfH;
-    this.camera.bottom = -halfH;
+    // Keep the map centred in the part of the screen a side panel or bottom sheet leaves free
+    const sx = halfW * (this.screenInset.left / window.innerWidth);
+    const sy = halfH * (this.screenInset.bottom / window.innerHeight);
+    this.camera.left = -halfW - sx;
+    this.camera.right = halfW - sx;
+    this.camera.top = halfH - sy;
+    this.camera.bottom = -halfH - sy;
     this.camera.updateProjectionMatrix();
+  }
+
+  private screenInset = { left: 0, bottom: 0 };
+
+  /** Pixels covered by a panel on the left or a sheet at the bottom (the Workshop). */
+  public setScreenInset(left: number, bottom: number): void {
+    this.screenInset = { left: Math.max(0, left), bottom: Math.max(0, bottom) };
+    this.updateCameraFrustum();
   }
 
   private onPointerMove(e: PointerEvent): void {

@@ -1,6 +1,6 @@
 # Gameplay Guide
 
-Everything a player needs: how a battle works, the campaign, the Trials, and tips. Exact numbers live in the [Content Reference](CONTENT_REFERENCE.md).
+Everything a player needs: how a battle works, the campaign, the Trials, the Workshop, and tips. Exact numbers live in the [Content Reference](CONTENT_REFERENCE.md).
 
 ![Battle on Riverside Ruins](images/battle-desktop.webp)
 
@@ -140,7 +140,48 @@ Press **H**, the **?** button, or **View/Back** on a controller in-game for the 
 
 ---
 
-## 8. Tips
+## 8. The Workshop: build your own battles
+
+Menu → **Workshop**. Everything saves in this browser as you work.
+
+```mermaid
+flowchart LR
+    Start(["New blank field<br/>or copy a campaign map<br/>or remix a chapter"]) --> Terrain["Terrain<br/>raise · lower · level<br/>paint · block · fill"]
+    Terrain --> Units["Units<br/>6 squad tiles<br/>up to 16 enemies"]
+    Units --> Story["Story<br/>title · intro · victory lines"]
+    Story --> Rules["Rules<br/>objective · look · rewards"]
+    Rules --> Check{"Check passes?"}
+    Check -- no --> Terrain
+    Check -- yes --> Play["▶ Play with your squad"]
+    Play --> End{"After the battle"}
+    End --> Play
+    End --> Terrain
+    End --> Camp(["Back to the campaign"])
+    Rules --> Share["Export .json<br/>or copy a share link"]
+```
+
+| Tab | What you do there |
+| :--- | :--- |
+| **Terrain** | Tap tiles to raise or lower them by half a step, set them to a height (Level), paint terrain, block them, or flood-fill an area. Brushes: 1×1, 3×3, 5×5. Undo/redo with ↶ ↷ or Ctrl+Z / Ctrl+Y. |
+| **Units** | **Squad** tiles are where your squad deploys, in squad order (up to 6). **Enemy** places an enemy with the name, job, level, facing and boss flag set below; tap an existing enemy to select and edit it. **Erase** removes either. |
+| **Story** | Title, subtitle, author, and the dialogue before the battle and after victory. Each line has a speaker, a side, a portrait (Auto uses the hero's portrait when the speaker is Rowan, Maren, Tobin, Corvin or Bria) and text. |
+| **Rules** | **Rout all** enemies; **Defeat the boss** (the rest flee when it falls); or **Survive** N rounds (a round ends once every unit has had a turn). Pick the look (daylight, night, swamp, summit) and up to six reward items. |
+| **File** | The check, your library, new blank fields (8–24 tiles a side), copies of campaign maps and chapters, export/import `.json`, and **share links**: anyone who opens the link gets the scenario in their Workshop. |
+
+**Rules of thumb for good scenarios:** keep 4–6 tiles of open ground between the squad and the first enemies; give archers and mages high ground to fight over; make at least one route melee units can walk (the check warns you otherwise); a single boss with 3–4 escorts at the squad's level is a fair fight.
+
+**Controls:** tap or click tiles with the tool you picked. With a keyboard, Tab into the panel and use arrows and Enter; Esc steps back to the map, where arrows move the cursor and Enter applies the tool. On a controller, **B** steps out to the map, **A** applies the tool, **X** jumps back into the panel. On phones the panel is a bottom sheet; ▾ collapses it.
+
+<p>
+  <img src="images/workshop-desktop.webp" alt="Editing enemies in the Workshop" width="520">
+  <img src="images/workshop-phone.webp" alt="The Workshop on a phone" width="190">
+</p>
+
+Workshop battles use your real squad, which keeps any EXP, JP and reward gear, but they never change your campaign progress or save slot.
+
+---
+
+## 9. Tips
 
 1. **Face your enemies when you WAIT.** Back attacks are +30% damage with a 30% crit chance.
 2. **Take the high ground** with archers and mages.
