@@ -11,6 +11,15 @@ import {
   createUnitSpriteTexture
 } from '../graphics/PixelTextures';
 import { VFXManager } from './VFXManager';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { createTileMaterials, buildMergedTerrain, sharedTime } from './TileShading';
+import { Decorations } from './Decorations';
+import { presetFor, createSkyTexture, AtmospherePreset } from './Atmosphere';
+import { QualityProfile, resolveQuality } from './GraphicsQuality';
 
 export interface FloatingText {
   element: HTMLElement;
@@ -36,7 +45,7 @@ export class TacticsScene {
 
   // Grid & Map
   public grid: BattleGrid;
-  private tileMeshes: Map<string, THREE.Mesh> = new Map();
+  /** Merged terrain meshes (one per material); also the raycast targets for tile picking. */
   private tileMeshList: THREE.Mesh[] = [];
 
   // Unit meshes & sprites
@@ -49,8 +58,6 @@ export class TacticsScene {
   private highlightGroup: THREE.Group = new THREE.Group();
   private cursorMesh: THREE.Group;
   private sharedHighlightGeom = new THREE.PlaneGeometry(0.95, 0.95);
-  private moveHighlightMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.55, depthWrite: false });
-  private attackHighlightMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.55, depthWrite: false });
 
   // Camera & Zoom System
   public cameraTarget: THREE.Vector3 = new THREE.Vector3(5, 1, 5);
@@ -75,17 +82,23 @@ export class TacticsScene {
   private swampTex = createSwampTexture();
 
   // Shared Tile Materials (Avoid instantiating hundreds of material instances)
-  private stoneMat!: THREE.MeshLambertMaterial;
-  private parapetMat!: THREE.MeshLambertMaterial;
-  private swampTopMat!: THREE.MeshLambertMaterial;
-  private swampSideMat!: THREE.MeshLambertMaterial;
-  private waterTopMat!: THREE.MeshLambertMaterial;
-  private waterSideMat!: THREE.MeshLambertMaterial;
-  private dirtMat!: THREE.MeshLambertMaterial;
-  private grassTopMat!: THREE.MeshLambertMaterial;
 
   // Lighting
-  private ambientLight!: THREE.AmbientLight;
+  private hemiLight!: THREE.HemisphereLight;
+  private tileMats!: ReturnType<typeof createTileMaterials>;
+  private decorations = new Decorations();
+  private quality: QualityProfile = resolveQuality();
+  private atmosphere!: AtmospherePreset;
+  private composer: EffectComposer | null = null;
+  private bloomPass: UnrealBloomPass | null = null;
+  private torches: { light: THREE.PointLight; flame: THREE.Mesh; base: number; seed: number }[] = [];
+  private flameTex = this.createFlameTexture();
+  private unitBlobs = new Map<string, THREE.Mesh>();
+  private blobGeom = new THREE.PlaneGeometry(0.9, 0.9).rotateX(-Math.PI / 2);
+  private blobMat = new THREE.MeshBasicMaterial({ map: this.createBlobTexture(), transparent: true, depthWrite: false });
+  private activeRing!: THREE.Mesh;
+  private activeUnitId: string | null = null;
+  private highlightMats = new Map<number, THREE.ShaderMaterial>();
   private sunLight!: THREE.DirectionalLight;
   private fillLight!: THREE.DirectionalLight;
 
@@ -106,13 +119,15 @@ export class TacticsScene {
 
     this.renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: false,
+      antialias: this.quality.level !== 'low',
       powerPreference: 'high-performance'
     });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.quality.pixelRatioCap));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+    this.renderer.shadowMap.enabled = this.quality.shadows;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0e17);
@@ -151,96 +166,221 @@ export class TacticsScene {
   }
 
   private initTileMaterials(): void {
-    this.stoneMat = new THREE.MeshLambertMaterial({ map: this.stoneTex });
-    this.parapetMat = new THREE.MeshLambertMaterial({ map: this.parapetTex });
-    this.swampTopMat = new THREE.MeshLambertMaterial({ map: this.swampTex, transparent: true, opacity: 0.9 });
-    this.swampSideMat = new THREE.MeshLambertMaterial({ map: this.swampTex });
-    this.waterTopMat = new THREE.MeshLambertMaterial({ map: this.waterTex, transparent: true, opacity: 0.85 });
-    this.waterSideMat = new THREE.MeshLambertMaterial({ map: this.waterTex });
-    this.dirtMat = new THREE.MeshLambertMaterial({ map: this.dirtSideTex });
-    this.grassTopMat = new THREE.MeshLambertMaterial({ map: this.grassTopTex });
-  }
-
-  private getTileMaterials(terrain: TerrainType): THREE.Material[] {
-    let topMat: THREE.Material;
-    let sideMat: THREE.Material;
-
-    if (terrain === 'stone') {
-      topMat = this.stoneMat;
-      sideMat = this.stoneMat;
-    } else if (terrain === 'parapet') {
-      topMat = this.parapetMat;
-      sideMat = this.parapetMat;
-    } else if (terrain === 'swamp') {
-      topMat = this.swampTopMat;
-      sideMat = this.swampSideMat;
-    } else if (terrain === 'water') {
-      topMat = this.waterTopMat;
-      sideMat = this.waterSideMat;
-    } else if (terrain === 'wood') {
-      topMat = this.dirtMat;
-      sideMat = this.dirtMat;
-    } else {
-      topMat = this.grassTopMat;
-      sideMat = this.dirtMat;
-    }
-
-    return [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
+    this.tileMats = createTileMaterials({
+      grass: this.grassTopTex,
+      dirt: this.dirtSideTex,
+      stone: this.stoneTex,
+      parapet: this.parapetTex,
+      water: this.waterTex,
+      swamp: this.swampTex
+    });
   }
 
   private setupLighting(): void {
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-    this.scene.add(this.ambientLight);
+    this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    this.scene.add(this.hemiLight);
 
-    this.sunLight = new THREE.DirectionalLight(0xfff5ea, 1.3);
-    this.sunLight.position.set(20, 40, 20);
-    this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.width = 1024;
-    this.sunLight.shadow.mapSize.height = 1024;
-    this.sunLight.shadow.camera.near = 10;
-    this.sunLight.shadow.camera.far = 80;
-    const d = 15;
-    this.sunLight.shadow.camera.left = -d;
-    this.sunLight.shadow.camera.right = d;
-    this.sunLight.shadow.camera.top = d;
-    this.sunLight.shadow.camera.bottom = -d;
+    this.sunLight = new THREE.DirectionalLight(0xffffff, 2);
+    this.sunLight.castShadow = this.quality.shadows;
+    this.sunLight.shadow.mapSize.set(this.quality.shadowMapSize, this.quality.shadowMapSize);
+    this.sunLight.shadow.normalBias = 0.03;
+    this.sunLight.shadow.bias = -0.0004;
+    this.sunLight.shadow.radius = 3;
+    this.sunLight.shadow.intensity = 0.75;
     this.scene.add(this.sunLight);
+    this.scene.add(this.sunLight.target);
 
     this.fillLight = new THREE.DirectionalLight(0x60a5fa, 0.45);
-    this.fillLight.position.set(-20, 20, -20);
     this.scene.add(this.fillLight);
+
+    this.scene.add(this.decorations.group);
+
+    this.activeRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.34, 0.44, 32).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: 0xf4c430, transparent: true, opacity: 0.85, depthWrite: false })
+    );
+    this.activeRing.renderOrder = 5;
+    this.activeRing.visible = false;
+    this.scene.add(this.activeRing);
+
+    this.applyAtmosphere();
+    this.setupPostProcessing();
+  }
+
+  /** Lights, sky, fog, shadow frustum and torches for the current map. */
+  private applyAtmosphere(): void {
+    const md = this.grid.mapData;
+    const p = presetFor(md.id, md.theme);
+    this.atmosphere = p;
+
+    const oldSky = this.scene.background as THREE.Texture | null;
+    if (oldSky && (oldSky as THREE.Texture).isTexture) oldSky.dispose();
+    this.scene.background = createSkyTexture(p);
+    this.scene.fog = new THREE.Fog(p.fog, p.fogNear, p.fogFar);
+    this.renderer.toneMappingExposure = p.exposure;
+
+    this.hemiLight.color.setHex(p.hemiSky);
+    this.hemiLight.groundColor.setHex(p.hemiGround);
+    this.hemiLight.intensity = p.hemiIntensity;
+
+    // Fit the sun and its shadow camera around the whole map
+    const cx = (md.width - 1) / 2;
+    const cz = (md.depth - 1) / 2;
+    const radius = Math.hypot(md.width, md.depth) / 2 + 2;
+    this.sunLight.color.setHex(p.sunColor);
+    this.sunLight.intensity = p.sunIntensity;
+    this.sunLight.position.set(cx + p.sunDir[0], p.sunDir[1], cz + p.sunDir[2]);
+    this.sunLight.target.position.set(cx, 0, cz);
+    const sc = this.sunLight.shadow.camera;
+    sc.left = -radius;
+    sc.right = radius;
+    sc.top = radius;
+    sc.bottom = -radius;
+    sc.near = 1;
+    sc.far = Math.hypot(...p.sunDir) + radius * 2;
+    sc.updateProjectionMatrix();
+
+    this.fillLight.color.setHex(p.rimColor);
+    this.fillLight.intensity = p.rimIntensity;
+    this.fillLight.position.set(cx - p.sunDir[0], 18, cz - p.sunDir[2]);
+
+    if (this.bloomPass) this.bloomPass.strength = p.bloom;
+    this.placeTorches();
+  }
+
+  /** Night maps get flickering torches on the highest edge stone/parapet tiles; the summit gets an altar glow. */
+  private placeTorches(): void {
+    for (const t of this.torches) {
+      this.scene.remove(t.light);
+      this.scene.remove(t.flame);
+      t.light.dispose();
+    }
+    this.torches = [];
+    const md = this.grid.mapData;
+    if (!this.quality.torches || (md.theme !== 'night' && md.id !== 'zodiac_summit')) return;
+
+    const candidates = md.tiles
+      .filter((t) => (t.terrain === 'parapet' || t.terrain === 'stone') && t.walkable)
+      .sort((a, b) => b.height - a.height || (a.x + a.z) - (b.x + b.z));
+    const picked: TileData[] = [];
+    for (const t of candidates) {
+      if (picked.every((p) => Math.abs(p.x - t.x) + Math.abs(p.z - t.z) >= 5)) picked.push(t);
+      if (picked.length >= 4) break;
+    }
+    const flameMat = new THREE.MeshBasicMaterial({ map: this.flameTex, color: this.atmosphere.torchColor, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    picked.forEach((t, i) => {
+      const y = Math.max(0.2, t.height);
+      const light = new THREE.PointLight(this.atmosphere.torchColor, 9, 6.5, 1.5);
+      light.position.set(t.x + 0.38, y + 0.9, t.z + 0.38);
+      const flame = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.8), flameMat);
+      flame.position.set(t.x + 0.38, y + 0.45, t.z + 0.38);
+      flame.renderOrder = 12;
+      flame.raycast = () => undefined;
+      this.scene.add(light);
+      this.scene.add(flame);
+      this.torches.push({ light, flame, base: 9, seed: i * 1.7 });
+    });
+  }
+
+  private createFlameTexture(): THREE.CanvasTexture {
+    const c = document.createElement('canvas');
+    c.width = 16;
+    c.height = 24;
+    const ctx = c.getContext('2d')!;
+    const g = ctx.createRadialGradient(8, 17, 1, 8, 15, 10);
+    g.addColorStop(0, 'rgba(255,255,220,1)');
+    g.addColorStop(0.35, 'rgba(255,200,90,0.9)');
+    g.addColorStop(1, 'rgba(255,80,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(8, 1);
+    ctx.quadraticCurveTo(15, 14, 8, 23);
+    ctx.quadraticCurveTo(1, 14, 8, 1);
+    ctx.fill();
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  private createBlobTexture(): THREE.CanvasTexture {
+    const size = 64;
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d')!;
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    g.addColorStop(0, 'rgba(0,0,0,0.55)');
+    g.addColorStop(0.6, 'rgba(0,0,0,0.25)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  /** Bloom + vignette on High; plain rendering otherwise. */
+  private setupPostProcessing(): void {
+    this.composer?.dispose();
+    this.composer = null;
+    this.bloomPass = null;
+    if (!this.quality.bloom) return;
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const target = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: this.quality.msaa });
+    this.composer = new EffectComposer(this.renderer, target);
+    this.composer.setSize(w, h);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), this.atmosphere?.bloom ?? 0.5, 0.45, 0.82);
+    this.composer.addPass(this.bloomPass);
+    this.composer.addPass(
+      new ShaderPass({
+        uniforms: { tDiffuse: { value: null }, uStrength: { value: 0.32 } },
+        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader:
+          'uniform sampler2D tDiffuse; uniform float uStrength; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); vec2 d = vUv - 0.5; float v = 1.0 - dot(d, d) * uStrength * 2.2; gl_FragColor = vec4(c.rgb * clamp(v, 0.0, 1.0), c.a); }'
+      })
+    );
+    this.composer.addPass(new OutputPass());
+  }
+
+  /** Switches graphics quality live (Menu → Graphics). */
+  public setQuality(profile: QualityProfile): void {
+    this.quality = profile;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, profile.pixelRatioCap));
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.shadowMap.enabled = profile.shadows;
+    this.sunLight.castShadow = profile.shadows;
+    this.sunLight.shadow.mapSize.set(profile.shadowMapSize, profile.shadowMapSize);
+    this.sunLight.shadow.map?.dispose();
+    this.sunLight.shadow.map = null as unknown as THREE.WebGLRenderTarget;
+    // Materials must recompile when shadow support changes
+    this.scene.traverse((o) => {
+      const mats = (o as THREE.Mesh).material;
+      if (!mats) return;
+      for (const m of Array.isArray(mats) ? mats : [mats]) m.needsUpdate = true;
+    });
+    this.setupPostProcessing();
+    this.placeTorches();
+    this.decorations.rebuild(this.grid.mapData, profile.decorationDensity, this.grid.mapData.theme);
+  }
+
+  public get qualityLevel(): string {
+    return this.quality.level;
+  }
+
+  /** Gold ring under the unit whose turn it is. */
+  public setActiveUnit(id: string | null): void {
+    this.activeUnitId = id;
   }
 
   public loadMap(newGrid: BattleGrid): void {
     this.grid = newGrid;
 
-    for (const mesh of this.tileMeshes.values()) {
-      if (mesh.geometry) mesh.geometry.dispose();
-      this.scene.remove(mesh);
-    }
-    this.tileMeshes.clear();
+    this.disposeTerrain();
     this.clearHighlights();
 
-    if (newGrid.mapData.theme === 'night') {
-      this.scene.background = new THREE.Color(0x04060d);
-      this.ambientLight.color.setHex(0x38bdf8);
-      this.ambientLight.intensity = 0.55;
-      this.sunLight.color.setHex(0x93c5fd);
-      this.sunLight.intensity = 0.75;
-    } else if (newGrid.mapData.theme === 'swamp') {
-      this.scene.background = new THREE.Color(0x06140e);
-      this.ambientLight.color.setHex(0xa7f3d0);
-      this.ambientLight.intensity = 0.65;
-      this.sunLight.color.setHex(0x6ee7b7);
-      this.sunLight.intensity = 0.85;
-    } else {
-      this.scene.background = new THREE.Color(0x0a0e17);
-      this.ambientLight.color.setHex(0xffffff);
-      this.ambientLight.intensity = 0.85;
-      this.sunLight.color.setHex(0xfff5ea);
-      this.sunLight.intensity = 1.3;
-    }
-
+    this.applyAtmosphere();
     this.vfx.setWeatherTheme(newGrid.mapData.theme);
     this.buildMap();
     this.targetCameraTarget.set(5, 1, 5);
@@ -254,48 +394,37 @@ export class TacticsScene {
     tile.terrain = newTerrain;
     tile.walkable = walkable;
 
-    const oldMesh = this.tileMeshes.get(this.grid.key(x, z));
-    if (oldMesh) {
-      if (oldMesh.geometry) oldMesh.geometry.dispose();
-      this.scene.remove(oldMesh);
-    }
-
-    const height = Math.max(0.2, tile.height);
-    const geom = new THREE.BoxGeometry(1, height, 1);
-    const materials = this.getTileMaterials(tile.terrain);
-
-    const mesh = new THREE.Mesh(geom, materials);
-    mesh.position.set(tile.x, height / 2, tile.z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.userData = { tile };
-
-    this.scene.add(mesh);
-    this.tileMeshes.set(this.grid.key(tile.x, tile.z), mesh);
-    this.tileMeshList = Array.from(this.tileMeshes.values());
+    this.disposeTerrain();
+    this.buildTerrainMeshes();
+    this.decorations.rebuild(this.grid.mapData, this.quality.decorationDensity, this.grid.mapData.theme);
 
     this.setCursor(x, z);
   }
 
   private buildMap(): void {
-    const { tiles } = this.grid.mapData;
+    this.buildTerrainMeshes();
+    this.decorations.rebuild(this.grid.mapData, this.quality.decorationDensity, this.grid.mapData.theme);
+  }
 
-    for (const t of tiles) {
-      const height = Math.max(0.2, t.height);
-      const geom = new THREE.BoxGeometry(1, height, 1);
-      const materials = this.getTileMaterials(t.terrain);
+  private buildTerrainMeshes(): void {
+    this.tileMeshList = buildMergedTerrain(this.grid.mapData.tiles, this.tileMats);
+    for (const m of this.tileMeshList) this.scene.add(m);
+  }
 
-      const mesh = new THREE.Mesh(geom, materials);
-      mesh.position.set(t.x, height / 2, t.z);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.userData = { tile: t };
-
-      this.scene.add(mesh);
-      this.tileMeshes.set(this.grid.key(t.x, t.z), mesh);
+  private disposeTerrain(): void {
+    for (const m of this.tileMeshList) {
+      this.scene.remove(m);
+      m.geometry.dispose();
     }
+    this.tileMeshList = [];
+  }
 
-    this.tileMeshList = Array.from(this.tileMeshes.values());
+  /** Converts a raycast hit on the merged terrain into the tile column that was hit. */
+  private tileFromHit(hit: THREE.Intersection | undefined): TileData | undefined {
+    if (!hit || !hit.face) return undefined;
+    // Step slightly into the surface so hits on side faces land inside the right column
+    const p = hit.point.clone().addScaledVector(hit.face.normal, -0.02);
+    return this.grid.getTile(Math.round(p.x), Math.round(p.z));
   }
 
   private buildCursor(): THREE.Group {
@@ -370,8 +499,7 @@ export class TacticsScene {
     this.mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    const hit = this.raycaster.intersectObjects(this.tileMeshList)[0];
-    const tile = hit?.object.userData.tile as TileData | undefined;
+    const tile = this.tileFromHit(this.raycaster.intersectObjects(this.tileMeshList)[0]);
     return tile ? { x: tile.x, z: tile.z } : null;
   }
 
@@ -584,6 +712,12 @@ export class TacticsScene {
         this.unitSpritePlanes.delete(id);
       }
     }
+    for (const [id, blob] of this.unitBlobs) {
+      if (!liveIds.has(id)) {
+        this.scene.remove(blob);
+        this.unitBlobs.delete(id);
+      }
+    }
     for (const [id, el] of this.overheadHpElements) {
       if (!liveIds.has(id)) {
         el.remove();
@@ -603,6 +737,11 @@ export class TacticsScene {
           bar.remove();
           this.overheadHpElements.delete(unit.id);
         }
+        const deadBlob = this.unitBlobs.get(unit.id);
+        if (deadBlob) {
+          this.scene.remove(deadBlob);
+          this.unitBlobs.delete(unit.id);
+        }
         continue;
       }
 
@@ -618,6 +757,12 @@ export class TacticsScene {
         spriteMesh.renderOrder = 10;
         this.scene.add(spriteMesh);
         this.unitSpritePlanes.set(unit.id, spriteMesh);
+
+        const blob = new THREE.Mesh(this.blobGeom, this.blobMat);
+        blob.renderOrder = 4;
+        blob.raycast = () => undefined;
+        this.scene.add(blob);
+        this.unitBlobs.set(unit.id, blob);
       }
 
       // Update Overhead Mini HP Bar stat fills
@@ -645,6 +790,7 @@ export class TacticsScene {
 
   private animateUnits(now: number): void {
     const time = now * 0.0035;
+    this.activeRing.visible = false;
 
     for (const unit of this.currentUnits) {
       if (unit.isDead) continue;
@@ -677,6 +823,19 @@ export class TacticsScene {
       }
 
       spriteMesh.position.set(unit.x + offsetX, height + 0.68 + bob, unit.z + offsetZ);
+
+      // Contact shadow shrinks slightly as the sprite bobs up
+      const blob = this.unitBlobs.get(unit.id);
+      if (blob) {
+        blob.position.set(unit.x + offsetX, height + 0.015, unit.z + offsetZ);
+        const k = 1 - bob * 2;
+        blob.scale.set(k, 1, k);
+      }
+      if (unit.id === this.activeUnitId) {
+        this.activeRing.visible = true;
+        this.activeRing.position.set(unit.x + offsetX, height + 0.02, unit.z + offsetZ);
+        (this.activeRing.material as THREE.MeshBasicMaterial).color.setHex(unit.team === 'player' ? 0xf4c430 : 0xef4444);
+      }
 
       const relativeFacing = this.calculateRelativeFacing(unit.facing);
       const isEnemy = unit.team === 'enemy';
@@ -718,9 +877,32 @@ export class TacticsScene {
     return directions[relativeIndex];
   }
 
+  /** Glowing, gently pulsing highlight material (bright rim, soft fill) per color. */
+  private highlightMaterial(color: number): THREE.ShaderMaterial {
+    let mat = this.highlightMats.get(color);
+    if (!mat) {
+      mat = new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: new THREE.Color(color) }, uTime: sharedTime },
+        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `uniform vec3 uColor; uniform float uTime; varying vec2 vUv;
+          void main(){
+            float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+            float rim = 1.0 - smoothstep(0.0, 0.09, e);
+            float pulse = 0.5 + 0.5 * sin(uTime * 3.2);
+            float a = 0.22 + 0.12 * pulse + rim * 0.65;
+            gl_FragColor = vec4(uColor * (1.0 + rim * 0.9), a);
+          }`,
+        transparent: true,
+        depthWrite: false
+      });
+      this.highlightMats.set(color, mat);
+    }
+    return mat;
+  }
+
   public setHighlights(tiles: { x: number; z: number }[], color: number = 0x3b82f6): void {
     this.clearHighlights();
-    const mat = color === 0xef4444 ? this.attackHighlightMat : this.moveHighlightMat;
+    const mat = this.highlightMaterial(color === 0xdc2626 ? 0xef4444 : color);
 
     for (const t of tiles) {
       const height = this.grid.getHeight(t.x, t.z);
@@ -818,12 +1000,8 @@ export class TacticsScene {
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersects = this.raycaster.intersectObjects(this.tileMeshList);
 
-    if (intersects.length > 0) {
-      const tileData = intersects[0].object.userData.tile as TileData;
-      if (tileData) {
-        this.setCursor(tileData.x, tileData.z);
-      }
-    }
+    const tileData = this.tileFromHit(intersects[0]);
+    if (tileData) this.setCursor(tileData.x, tileData.z);
   }
 
   public spawnFloatingDamage(x: number, y: number, z: number, text: string, type: 'damage' | 'heal' | 'crit' | 'miss'): void {
@@ -872,6 +1050,7 @@ export class TacticsScene {
   private onResize(): void {
     this.updateCameraFrustum();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.composer?.setSize(window.innerWidth, window.innerHeight);
   }
 
   public render(): void {
@@ -884,16 +1063,27 @@ export class TacticsScene {
     this.updateFloatingNumbers();
     this.vfx.update(delta);
 
-    // Subtle water caustics wave animation
-    const time = now * 0.003;
-    this.waterTex.offset.x = Math.sin(time * 0.6) * 0.06;
-    this.waterTex.offset.y = Math.cos(time * 0.6) * 0.06;
+    // Shared clock for water, swamp, grass sway and highlights
+    sharedTime.value = now / 1000;
+
+    // Torch flicker
+    for (const t of this.torches) {
+      const f = Math.sin(now * 0.017 + t.seed) * 0.5 + Math.sin(now * 0.041 + t.seed * 3) * 0.3;
+      t.light.intensity = t.base * (0.85 + f * 0.15);
+      t.flame.scale.set(1 + f * 0.06, 1 + f * 0.12, 1);
+      t.flame.rotation.y = this.currentRotationAngle; // billboard, like unit sprites
+    }
+
+    // Active-unit ring breathes
+    const ringPulse = 1 + Math.sin(now * 0.004) * 0.08;
+    this.activeRing.scale.set(ringPulse, 1, ringPulse);
 
     // Pulse cursor
     const cursorTime = now * 0.005;
     const scale = 1 + Math.sin(cursorTime) * 0.06;
     this.cursorMesh.scale.set(scale, 1, scale);
 
-    this.renderer.render(this.scene, this.camera);
+    if (this.composer) this.composer.render(delta);
+    else this.renderer.render(this.scene, this.camera);
   }
 }

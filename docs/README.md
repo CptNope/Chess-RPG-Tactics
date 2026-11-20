@@ -59,6 +59,7 @@ timeline
     0.6.0 : 0014 Reactions, BGM, log, saves
     0.7.0 : 0015 Action pipeline, AI, progression, Trials
     0.8.0 : 0016 Multi-device input, responsive HUD
+    0.9.0 : 0017 Lighting, atmosphere and quality tiers
 ```
 
 | # | Decision | Release |
@@ -79,6 +80,7 @@ timeline
 | [0014](adr/0014-reactions-bgm-combat-log-persistence.md) | Reactions, procedural BGM, battle log, saves | 0.6.0 |
 | [0015](adr/0015-action-pipeline-ai-progression-trials.md) | Unified action pipeline, planning AI, persistent squad, Trials | 0.7.0 |
 | [0016](adr/0016-multi-device-input-and-responsive-hud.md) | Multi-device input and responsive HUD | 0.8.0 |
+| [0017](adr/0017-lighting-atmosphere-and-quality-tiers.md) | Lighting, atmosphere, merged terrain and quality tiers | 0.9.0 |
 
 New ADRs use the template in [Contributing](../CONTRIBUTING.md#adr-template).
 

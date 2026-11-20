@@ -2,7 +2,7 @@
 
 How Chess RPG Tactics is put together: modules, the game's state machine, how a turn and an action flow through the code, input, persistence, and the build.
 
-> Stack: **TypeScript + Vite + Three.js** (orthographic 3D), DOM/CSS HUD, Web Audio, no runtime framework. ~8k lines of TypeScript, one 120 KB app chunk plus a 476 KB Three.js chunk.
+> Stack: **TypeScript + Vite + Three.js** (orthographic 3D), DOM/CSS HUD, Web Audio, no runtime framework. ~8k lines of TypeScript, a ~190 KB app chunk (including Three's post-processing passes) plus a 485 KB Three.js chunk.
 
 ---
 
@@ -33,7 +33,7 @@ flowchart TB
 
     subgraph View["Presentation"]
         direction LR
-        Scene["TacticsScene<br/>Three.js"] ~~~ VFX["VFXManager"] ~~~ Tex["PixelTextures"] ~~~ UI["UIManager"] ~~~ Audio["SoundFX · Music"]
+        Scene["TacticsScene<br/>Three.js"] ~~~ Look["Atmosphere · TileShading<br/>Decorations · Quality"] ~~~ VFX["VFXManager"] ~~~ Tex["PixelTextures"] ~~~ UI["UIManager"] ~~~ Audio["SoundFX · Music"]
     end
 
     Input ==>|"intents"| Game
@@ -55,6 +55,10 @@ flowchart TB
 | **Trials** | `src/core/Trials.ts` | Seeded floor generator, drops | data |
 | **SaveManager** | `src/core/SaveManager.ts` | Save/load, best Trial floor, custom maps | — |
 | **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor | Grid, VFX, PixelTextures |
+| **Atmosphere** | `src/renderer/Atmosphere.ts` | Per-map presets: sky gradient, fog, hemisphere/sun/rim lights, exposure, bloom, torch colour | — |
+| **TileShading** | `src/renderer/TileShading.ts` | Terrain materials with injected shader tweaks (bevels, cliff AO, water, swamp); merged terrain meshes | — |
+| **Decorations** | `src/renderer/Decorations.ts` | Instanced grass, reeds and pebbles with wind sway | TileShading |
+| **GraphicsQuality** | `src/renderer/GraphicsQuality.ts` | High / Medium / Low profiles, device detection, saved setting | — |
 | **VFXManager** | `src/renderer/VFXManager.ts` | Weather, spell particles, screen shake (reduced-motion aware) | — |
 | **PixelTextures** | `src/graphics/PixelTextures.ts` | Procedural tile textures and 4-facing unit sprites (cached) | — |
 | **UIManager** | `src/ui/UIManager.ts` | HUD, menus, Team screen, modals, focus management, input-aware hints | JobSystem, FocusNav |
@@ -292,15 +296,33 @@ All storage calls are wrapped in `try/catch`, so private browsing or an embedded
 
 ---
 
-## 8. Rendering notes
+## 8. Rendering
+
+```mermaid
+flowchart LR
+    Map["MapData"] --> Atm["Atmosphere preset<br/>(by map id, else theme)"]
+    Map --> Terr["buildMergedTerrain<br/>1 mesh per material"]
+    Map --> Deco["Decorations<br/>InstancedMesh ×3"]
+    Atm --> Scene["Scene: sky · fog · hemi · sun · rim · torches"]
+    Terr & Deco --> Scene
+    Units["Unit sprites + contact shadows<br/>+ active ring"] --> Scene
+    Scene --> Q{"Quality"}
+    Q -- High --> Comp["EffectComposer<br/>Render → Bloom → Vignette → Output<br/>(4× MSAA, half-float)"]
+    Q -- "Medium / Low" --> Direct["renderer.render()"]
+```
 
 | Concern | Approach |
 | :--- | :--- |
-| Camera | Orthographic, 4 fixed azimuths (90° steps), smooth lerp. Zoom fits the *shorter* screen side, so portrait phones see the full map width |
-| Tiles | One box mesh per tile, shared materials per terrain, cached `tileMeshList` for raycasts |
-| Units | Billboard planes with procedurally drawn, cached 32×32 sprite textures per job/facing/team |
+| Camera | Orthographic, 4 fixed azimuths (90° steps), smooth lerp. Zoom fits the *shorter* screen side so portrait phones see the full map width |
+| Terrain | Each tile is a box whose top and side faces are bucketed by material and merged: ~10 terrain draw calls for a whole map. Picking raycasts the merged meshes and steps 0.02 into the surface along the face normal to find the column |
+| Materials | Built-in Lambert/Phong materials with `onBeforeCompile` injections, so lights, shadows and fog still work. One shared `uTime` uniform drives water, swamp, grass sway and highlights |
+| Lighting | Hemisphere + directional sun (PCF shadows framed to the map) + rim light; ACES filmic tone mapping; per-map exposure |
+| Atmosphere | Canvas-painted gradient sky with a seeded star field; `THREE.Fog` from ~44 to ~92 units (the camera sits 45 units out) |
+| Units | Billboard planes with procedural 32×32 sprites, radial-gradient contact shadows, and a ring under the active unit |
+| Post | High only: `UnrealBloomPass` (strength per map), a vignette `ShaderPass`, `OutputPass` |
+| Quality | High 2048 shadows, bloom, 4× MSAA, DPR ≤ 2 · Medium 1024 shadows, half decorations, DPR ≤ 1.5 · Low no shadow maps or torches, DPR 1. Auto drops a tier after two 3-second windows under 40 fps |
 | Overlays | DOM HP/CT bars and floating numbers projected from 3D positions each frame |
-| Frame loop | `requestAnimationFrame` → poll gamepad → hover tile info (only on change) → `scene.render()` |
+| Frame loop | `requestAnimationFrame` → poll gamepad → watch frame rate → hover tile info (on change) → `scene.render()` |
 | Motion | `prefers-reduced-motion` cuts screen shake to 15% and swaps sliding banners for fades |
 
 ---
@@ -343,7 +365,8 @@ src/
 │   ├── Trials.ts           Seeded post-game floors
 │   └── SaveManager.ts      localStorage
 ├── data/                   Content: jobs, items, maps, campaign
-├── renderer/               TacticsScene (Three.js + gestures), VFXManager
+├── renderer/               TacticsScene (Three.js + gestures), VFXManager,
+│                           Atmosphere, TileShading, Decorations, GraphicsQuality
 ├── graphics/               PixelTextures
 ├── ui/                     UIManager
 ├── input/                  GamepadInput, FocusNav

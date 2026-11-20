@@ -1,9 +1,10 @@
 # Chess RPG Tactics
 
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.8.1-f4c430)
+![Version](https://img.shields.io/badge/version-0.9.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, nine mix-and-match jobs, a branching campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
 
@@ -23,12 +24,19 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters. **AUTO** lets it play your turn |
 | **Play anywhere** | Phone (portrait and landscape), tablet and desktop layouts; mouse, keyboard, touch, pen and controller |
+| **Graphics** | Per-map skies, fog and lighting, soft shadows, flowing water, torches, bloom; Auto / High / Medium / Low quality that adapts to your device |
 | **Built-ins** | 3D map editor, procedural pixel art, synthesized music and SFX, browser saves |
 
 <p>
   <img src="docs/images/phone-portrait.webp" alt="Phone layout" width="200">
   <img src="docs/images/summit.webp" alt="Zodiac Summit final battle" width="560">
 </p>
+
+<details><summary><b>0.8 vs 0.9 graphics</b></summary>
+
+![Before and after the 0.9 graphics upgrade](docs/images/graphics-before-after.webp)
+
+</details>
 
 ---
 
@@ -98,7 +106,7 @@ Every push to `main` builds, tests and deploys to GitHub Pages; pull requests ru
 | 🧪 **[Testing](docs/TESTING.md)** | CI, unit tests, play-tests, release checklist |
 | 🗺️ **[Roadmap](docs/ROADMAP.md)** | Release history, Now / Next / Later, known issues |
 | 🤝 **[Contributing](CONTRIBUTING.md)** | Setup and recipes for adding jobs, maps, chapters, items |
-| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 16 architectural decisions |
+| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 17 architectural decisions |
 | 📜 **[Changelog](CHANGELOG.md)** | Every release |
 
 ---
@@ -117,3 +125,16 @@ tests/           Vitest rule tests
 scripts/         build check, docs generator
 docs/            guides, ADRs, images
 ```
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE) © 2026 Jeremy Anderson. You're free to use, modify and share the code; keep the copyright notice.
+
+| Third-party | License |
+| :--- | :--- |
+| [three.js](https://threejs.org) | MIT |
+| [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P), [VT323](https://fonts.google.com/specimen/VT323) fonts (Google Fonts) | SIL Open Font License 1.1 |
+
+All characters, story, art, music and sound are original to this project and generated in code. *Chess RPG Tactics* is a fan-made homage to the tactics-RPG genre and is not affiliated with or endorsed by Square Enix or the makers of *Final Fantasy Tactics* or *Tactics Ogre*.

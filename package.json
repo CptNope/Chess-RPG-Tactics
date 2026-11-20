@@ -1,7 +1,7 @@
 {
   "name": "chess-rpg-tactics",
   "private": true,
-  "version": "0.8.1",
+  "version": "0.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,5 +20,7 @@
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vitest": "^2.1.9"
-  }
+  },
+  "license": "MIT",
+  "author": "Jeremy Anderson"
 }

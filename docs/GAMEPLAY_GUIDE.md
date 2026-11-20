@@ -134,6 +134,8 @@ Unlocked after the Final Chapter.
 
 Press **H**, the **?** button, or **View/Back** on a controller in-game for the full list.
 
+**Graphics:** Menu → Graphics cycles Auto, High, Medium and Low. Auto uses Medium on phones and High elsewhere, and lowers itself if the game starts to stutter.
+
 ![Controls screen](images/controls.webp)
 
 ---
