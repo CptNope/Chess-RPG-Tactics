@@ -165,7 +165,10 @@ export interface CombatForecast {
 
 export interface DialogueLine {
   speaker: string;
+  /** Emoji fallback shown when no drawn portrait matches. */
   portraitClass: string;
+  /** Drawn portrait id (a named character like 'rowan', or a job id like 'knight'). */
+  portrait?: string;
   side: 'left' | 'right';
   text: string;
 }
@@ -191,6 +194,16 @@ export interface CampaignChapter {
   rewardItemIds?: string[];
   /** A new ally who joins the squad at the start of this chapter (if not already recruited). */
   recruit?: { id: string; name: string; jobId: string; level: number };
+  /** Custom battlefield (Workshop scenarios); when set it is used instead of mapId. */
+  mapData?: import('../data/maps').MapData;
+  /** How the battle is won. Defaults to routing every enemy. */
+  objective?: BattleObjective;
+}
+
+/** rout: defeat every enemy · boss: defeat the boss · survive: keep one ally standing for N rounds */
+export interface BattleObjective {
+  type: 'rout' | 'boss' | 'survive';
+  rounds?: number;
 }
 
 export interface EnemySpawn {
@@ -200,4 +213,5 @@ export interface EnemySpawn {
   x: number;
   z: number;
   isBoss?: boolean;
+  facing?: FacingDirection;
 }
