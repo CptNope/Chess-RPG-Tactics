@@ -60,7 +60,7 @@ gitGraph
 | 1 | `src/core/types.ts` | Add the role to `Job['role']` if it's new |
 | 2 | `src/data/jobs.ts` | Add the job (stats, move/jump, abilities, `prerequisites`) |
 | 3 | `src/core/JobSystem.ts` | Starting gear in `createUnit`, starting JP entry |
-| 4 | `src/graphics/PixelTextures.ts` | Palette and weapon drawing in `createUnitSpriteTexture` |
+| 4 | `src/graphics/CharacterArt.ts` | A `lookFor` palette (ally and enemy), headgear in `headFront` and `drawSide`, and the weapon in `weapon()`. Check every view and frame with a contact sheet; the portrait comes from the same look |
 | 5 | `src/main.ts` | Optional: veteran enemy passives in `equipEnemyPassives` |
 | 6 | `src/core/Trials.ts` | Add to `TRIAL_JOBS` and `TITLES` to appear in the Trials |
 | 7 | — | Tests, `npm run docs:gen`, update [Job System](docs/JOB_SYSTEM.md) |
@@ -69,10 +69,12 @@ gitGraph
 
 | Step | File | What to do |
 | :---: | :--- | :--- |
-| 1 | `src/data/maps.ts` | Write `createXxxMap(): MapData` and register it in `MAPS` |
+| 0 | Workshop | Easiest: sculpt it in the Workshop, then **Export .json** and use the tiles as a reference |
+| 1 | `src/data/maps.ts` | Write `createXxxMap(): MapData` with `MapBuilder` (`rect`, `set`, `each`), 16×16 or larger, north (z = 0) for enemies, and pass `playerSpawns` (6 tiles) to `build()`. Register it in `MAPS` |
 | 2 | `index.html` | Add an `<option>` to `#map-select` |
-| 3 | `src/core/Trials.ts` | Optional: add to `TRIAL_MAP_ROTATION` |
-| 4 | — | The test "player deployment tiles are walkable on every map" must pass |
+| 3 | `src/renderer/Atmosphere.ts` | Optional: a preset keyed by the map id (else the theme's preset is used) |
+| 4 | `src/core/Trials.ts` | Optional: add to `TRIAL_MAP_ROTATION` |
+| 5 | — | The deploy, size and reachability tests in `tests/core.test.ts` must pass |
 
 ### Add a chapter
 

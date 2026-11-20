@@ -23,7 +23,7 @@ flowchart TB
     subgraph Core["Rules · src/core (no DOM, unit-tested)"]
         direction LR
         TM["TurnManager"] ~~~ Grid["BattleGrid"] ~~~ CE["CombatEngine"] ~~~ JS["JobSystem"]
-        AI["EnemyAI"] ~~~ Geo["Geomancy"] ~~~ Tr["Trials"] ~~~ Save["SaveManager"]
+        AI["EnemyAI"] ~~~ Geo["Geomancy"] ~~~ Tr["Trials"] ~~~ Save["SaveManager"] ~~~ Scn["Scenario"]
     end
 
     subgraph Data["Content · src/data"]
@@ -33,7 +33,7 @@ flowchart TB
 
     subgraph View["Presentation"]
         direction LR
-        Scene["TacticsScene<br/>Three.js"] ~~~ Look["Atmosphere · TileShading<br/>Decorations · Quality"] ~~~ VFX["VFXManager"] ~~~ Tex["PixelTextures"] ~~~ UI["UIManager"] ~~~ Audio["SoundFX · Music"]
+        Scene["TacticsScene<br/>Three.js"] ~~~ Look["Atmosphere · TileShading<br/>Decorations · Quality"] ~~~ VFX["VFXManager"] ~~~ Tex["CharacterArt<br/>PixelTextures"] ~~~ UI["UIManager<br/>Workshop"] ~~~ Audio["SoundFX · Music"]
     end
 
     Input ==>|"intents"| Game
@@ -53,15 +53,18 @@ flowchart TB
 | **EnemyAI** | `src/core/EnemyAI.ts` | Scores every tile × ability × target; also powers AUTO | Grid, CombatEngine, Geomancy |
 | **Geomancy** | `src/core/Geomancy.ts` | Terrain → spell mapping | types |
 | **Trials** | `src/core/Trials.ts` | Seeded floor generator, drops | data |
-| **SaveManager** | `src/core/SaveManager.ts` | Save/load, best Trial floor, custom maps | — |
+| **SaveManager** | `src/core/SaveManager.ts` | Save/load, best Trial floor | — |
+| **Scenario** | `src/core/Scenario.ts` | Workshop scenario format: create, copy, sanitise untrusted input, validate, turn into a chapter, share-link encoding, library | data |
 | **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor | Grid, VFX, PixelTextures |
 | **Atmosphere** | `src/renderer/Atmosphere.ts` | Per-map presets: sky gradient, fog, hemisphere/sun/rim lights, exposure, bloom, torch colour | — |
 | **TileShading** | `src/renderer/TileShading.ts` | Terrain materials with injected shader tweaks (bevels, cliff AO, water, swamp); merged terrain meshes | — |
 | **Decorations** | `src/renderer/Decorations.ts` | Instanced grass, reeds and pebbles with wind sway | TileShading |
 | **GraphicsQuality** | `src/renderer/GraphicsQuality.ts` | High / Medium / Low profiles, device detection, saved setting | — |
 | **VFXManager** | `src/renderer/VFXManager.ts` | Weather, spell particles, screen shake (reduced-motion aware) | — |
-| **PixelTextures** | `src/graphics/PixelTextures.ts` | Procedural tile textures and 4-facing unit sprites (cached) | — |
+| **CharacterArt** | `src/graphics/CharacterArt.ts` | Pixel painter + outline pass: 48×48 unit sprites (3 views × 6 frames) and 64×64 portraits | — |
+| **PixelTextures** | `src/graphics/PixelTextures.ts` | Procedural tile textures; wraps CharacterArt sprites as cached textures | CharacterArt |
 | **UIManager** | `src/ui/UIManager.ts` | HUD, menus, Team screen, modals, focus management, input-aware hints | JobSystem, FocusNav |
+| **Workshop** | `src/ui/Workshop.ts` | Map & scenario editor panel; edits a scenario and its preview on the live scene; talks to the game through a host interface | Scenario, TacticsScene |
 | **GamepadInput** | `src/input/GamepadInput.ts` | Standard-mapping polling, repeat, rumble | — |
 | **FocusNav** | `src/input/FocusNav.ts` | Arrow / d-pad focus movement between visible controls | — |
 | **Audio** | `src/audio/*.ts` | SFX and three procedural music tracks | — |
@@ -90,8 +93,11 @@ stateDiagram-v2
     busy --> facing: moved and acted
     facing --> idle: back out (if not forced)
     facing --> busy: confirm → endTurn
-    idle --> editor: Map editor
-    editor --> idle: close
+    idle --> editor: Workshop (battle suspended)
+    dialogue --> editor: Workshop / share link
+    editor --> idle: close (battle restored)
+    editor --> dialogue: Play scenario
+    menu --> editor: Back to Workshop
     busy --> menu: victory / defeat
     menu --> dialogue: next chapter
     menu --> busy: retry / next Trial
@@ -104,7 +110,7 @@ stateDiagram-v2
 | `moving` | Move if reachable | Move cursor | Move to cursor | Back to idle |
 | `targeting` | Forecast if in range | Move cursor | Forecast at cursor | Back to idle |
 | `facing` | — | Move focus on compass | Pick / confirm | Back out unless forced |
-| `editor` | Edit tile | Move cursor | Edit cursor tile | Close editor |
+| `editor` | Apply the Workshop tool | Move cursor (or panel focus) | Apply tool at cursor | Leave panel, then close Workshop |
 | `busy` / `menu` | — | Modal focus only | Modal buttons | — |
 
 ---
@@ -256,18 +262,29 @@ classDiagram
         enemyRoster: EnemySpawn[]
         choices?: StoryChoice[]
         rewardItemIds?, recruit?
+        mapData?, objective?
+    }
+    class Scenario {
+        id, title, subtitle, author
+        map: MapData
+        enemies: EnemySpawn[]
+        intro, victory
+        objective, rewardItemIds
     }
     class MapData {
         id, name, theme
         width, depth
         tiles: TileData[]
+        playerSpawns?, look?
     }
     Unit *-- EquippedAbilities
     Unit *-- EquippedGear
     EquippedGear o-- Item
     Unit ..> Job : jobId
     Job *-- Ability
-    CampaignChapter ..> MapData : mapId
+    CampaignChapter ..> MapData : mapId or mapData
+    Scenario *-- MapData
+    Scenario ..> CampaignChapter : scenarioToChapter()
     CampaignChapter ..> Item : rewards
 ```
 
@@ -290,9 +307,11 @@ flowchart LR
 | :--- | :--- |
 | `chess_rpg_tactics_save_v1` | `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared }` |
 | `chess_rpg_tactics_best_trial_v1` | Highest Trial floor cleared |
-| `chess_rpg_tactics_custom_maps_v1` | Sculpted maps from the editor |
+| `chess_rpg_tactics_workshop_v1` | Workshop library: up to 50 scenarios, newest first, each re-sanitised on load |
+| `chess_rpg_tactics_graphics_v1` | Graphics setting (auto / high / medium / low) |
+| URL `#s=…` | A shared scenario: packed tiles, deflate-raw, base64url. Read once on load, then removed from the address bar |
 
-All storage calls are wrapped in `try/catch`, so private browsing or an embedded iframe without storage degrades to "save failed" instead of crashing.
+Workshop battles save the campaign chapter you'll return to (`mode: 'campaign'`), never the custom scenario. All storage calls are wrapped in `try/catch`, so private browsing or an embedded iframe without storage degrades to "save failed" instead of crashing.
 
 ---
 
@@ -318,7 +337,8 @@ flowchart LR
 | Materials | Built-in Lambert/Phong materials with `onBeforeCompile` injections, so lights, shadows and fog still work. One shared `uTime` uniform drives water, swamp, grass sway and highlights |
 | Lighting | Hemisphere + directional sun (PCF shadows framed to the map) + rim light; ACES filmic tone mapping; per-map exposure |
 | Atmosphere | Canvas-painted gradient sky with a seeded star field; `THREE.Fog` from ~44 to ~92 units (the camera sits 45 units out) |
-| Units | Billboard planes with procedural 32×32 sprites, radial-gradient contact shadows, and a ring under the active unit |
+| Units | Billboard planes with procedural 48×48 sprites (CharacterArt), radial-gradient contact shadows, and a ring under the active unit. The frame follows the action: breathing idle, walk while tweening between tiles (with a hop over height changes), strike during a lunge, flinch on recoil |
+| Workshop view | `setScreenInset(left, bottom)` shifts the orthographic frustum so the map stays centred beside the side panel or above the bottom sheet |
 | Post | High only: `UnrealBloomPass` (strength per map), a vignette `ShaderPass`, `OutputPass` |
 | Quality | High 2048 shadows, bloom, 4× MSAA, DPR ≤ 2 · Medium 1024 shadows, half decorations, DPR ≤ 1.5 · Low no shadow maps or torches, DPR 1. Auto drops a tier after two 3-second windows under 40 fps |
 | Overlays | DOM HP/CT bars and floating numbers projected from 3D positions each frame |
@@ -363,15 +383,16 @@ src/
 │   ├── EnemyAI.ts          Turn planner (also AUTO)
 │   ├── Geomancy.ts         Terrain spells
 │   ├── Trials.ts           Seeded post-game floors
-│   └── SaveManager.ts      localStorage
+│   ├── SaveManager.ts      localStorage
+│   └── Scenario.ts         Workshop format, sanitising, share links, library
 ├── data/                   Content: jobs, items, maps, campaign
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager,
 │                           Atmosphere, TileShading, Decorations, GraphicsQuality
-├── graphics/               PixelTextures
-├── ui/                     UIManager
+├── graphics/               PixelTextures, CharacterArt (sprites + portraits)
+├── ui/                     UIManager, Workshop
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/core.test.ts          28 rule tests
+tests/                      core.test.ts (30 rule tests), scenario.test.ts (11)
 scripts/                    check-dist.mjs, gen-docs.ts
 docs/                       This documentation + ADRs
 ```
