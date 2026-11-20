@@ -17,6 +17,7 @@ import { resolveTerrainAbility } from './core/Geomancy';
 import { planTurn, unitsInBlast, faceTowards } from './core/EnemyAI';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
+import { getQualitySetting, setQualitySetting, resolveQuality, QualitySetting, PROFILES } from './renderer/GraphicsQuality';
 import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
 
 type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
@@ -89,10 +90,10 @@ class TacticsGame {
 
   private createStartingSquad(): Unit[] {
     const squad = [
-      JobSystem.createUnit('p1', 'Ramza', 'player', 'squire', 3, 8, 'N', 3),
-      JobSystem.createUnit('p2', 'Agrias', 'player', 'knight', 4, 8, 'N', 3),
-      JobSystem.createUnit('p3', 'Mustadio', 'player', 'archer', 5, 9, 'N', 3),
-      JobSystem.createUnit('p4', 'Kain', 'player', 'dragoon', 2, 7, 'N', 3)
+      JobSystem.createUnit('p1', 'Rowan', 'player', 'squire', 3, 8, 'N', 3),
+      JobSystem.createUnit('p2', 'Maren', 'player', 'knight', 4, 8, 'N', 3),
+      JobSystem.createUnit('p3', 'Tobin', 'player', 'archer', 5, 9, 'N', 3),
+      JobSystem.createUnit('p4', 'Corvin', 'player', 'dragoon', 2, 7, 'N', 3)
     ];
 
     JobSystem.setSecondarySkillset(squad[0], 'knight');
@@ -355,6 +356,23 @@ class TacticsGame {
     };
     this.pad.onDisconnect = () => this.ui.showBanner('CONTROLLER DISCONNECTED');
 
+    // Graphics quality: Auto → High → Medium → Low
+    const gfxBtn = document.getElementById('btn-graphics');
+    const labelGfx = (this.labelGfx = () => {
+      const setting = getQualitySetting();
+      const name = (v: string) => v[0].toUpperCase() + v.slice(1);
+      if (gfxBtn) gfxBtn.textContent = setting === 'auto' ? `Graphics: Auto (${name(this.scene.qualityLevel)})` : `Graphics: ${name(setting)}`;
+    });
+    labelGfx();
+    gfxBtn?.addEventListener('click', () => {
+      const order: QualitySetting[] = ['auto', 'high', 'medium', 'low'];
+      const next = order[(order.indexOf(getQualitySetting()) + 1) % order.length];
+      setQualitySetting(next);
+      this.scene.setQuality(resolveQuality(next));
+      labelGfx();
+      this.ui.showBanner(`GRAPHICS: ${this.scene.qualityLevel.toUpperCase()}`);
+    });
+
     this.ui.onStatusClicked = () => this.openTeamFor(this.turnManager.activeUnit);
     this.ui.onRecenterClicked = () => this.recenter();
 
@@ -599,7 +617,9 @@ class TacticsGame {
           const it = u.equipment[slot];
           u.equipment[slot] = it && ITEMS[it.id] ? ITEMS[it.id] : it;
         }
-        // 0.6.x saves stored Focus as a permanent +3 ATK; nothing to undo, but clear battle flags
+        // 0.8.2 renamed the starting squad; migrate saves that still carry the old names
+        const renamed: Record<string, string> = { Ramza: 'Rowan', Agrias: 'Maren', Mustadio: 'Tobin', Kain: 'Corvin' };
+        if (renamed[u.name]) u.name = renamed[u.name];
         u.isBoss = false;
         u.isEnraged = false;
         return u;
@@ -657,6 +677,7 @@ class TacticsGame {
     }
 
     const { activeUnit, poisonDamage } = result;
+    this.scene.setActiveUnit(activeUnit.id);
     this.currentMode = 'idle';
     this.scene.clearHighlights();
 
@@ -1277,10 +1298,35 @@ class TacticsGame {
   }
 
   private lastHoveredKey = '';
+  private labelGfx: () => void = () => undefined;
+  private fpsWindow = { start: performance.now(), frames: 0, slowWindows: 0 };
+
+  /**
+   * Adaptive quality: on "Auto", if the frame rate stays under 40 fps for two 3-second windows
+   * in a row, step down one tier (High → Medium → Low). Manual settings are never changed.
+   */
+  private watchFrameRate(now: number): void {
+    const w = this.fpsWindow;
+    w.frames++;
+    const elapsed = now - w.start;
+    if (elapsed < 3000) return;
+    const fps = (w.frames * 1000) / elapsed;
+    w.start = now;
+    w.frames = 0;
+    if (document.hidden || getQualitySetting() !== 'auto' || this.scene.qualityLevel === 'low') return;
+    w.slowWindows = fps < 40 ? w.slowWindows + 1 : 0;
+    if (w.slowWindows < 2) return;
+    w.slowWindows = 0;
+    const next = this.scene.qualityLevel === 'high' ? 'medium' : 'low';
+    this.scene.setQuality(PROFILES[next]);
+    this.labelGfx();
+    this.ui.addLogEntry(`[SYSTEM] Graphics lowered to ${next} to keep the game smooth (${Math.round(fps)} fps). Change it in Menu.`, 'system');
+  }
 
   private gameLoop(): void {
     requestAnimationFrame(() => this.gameLoop());
     this.pad.poll();
+    this.watchFrameRate(performance.now());
 
     if (this.scene && this.scene.hoveredTile) {
       const { x, z } = this.scene.hoveredTile;

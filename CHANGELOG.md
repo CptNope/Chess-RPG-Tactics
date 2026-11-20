@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.0] - 2026-11-19
+
+### Changed
+- **Original characters.** The starting squad's names came from Square's games (Ramza, Agrias, Mustadio, Kain); they are now **Rowan, Maren, Tobin and Corvin**. FFT's "Zodiac Stones" became **Zodiac Seals**, matching the Trials' "Seal of …" floors. Saves from earlier versions are renamed automatically on load.
+- **MIT License** added (`LICENSE`, `package.json`), with third-party credits and a not-affiliated note in the README.
+
+### Added — graphics upgrade
+- **Lighting:** hemisphere sky/ground light, a warm key light and cool rim light per battlefield, ACES filmic tone mapping, soft PCF shadows fitted to each map.
+- **Atmosphere:** painted gradient skies (stars at night), distance fog, and a distinct look per map: golden Riverside Ruins, moonlit Night Battlement, murky Gloomy Mire, violet Zodiac Summit.
+- **Terrain shading:** bevelled tile edges, ambient occlusion down cliff sides, cliff textures that repeat instead of stretching, flowing water with sun glints, bubbling swamp, tinted wooden boardwalks.
+- **Set dressing:** swaying grass, cattail reeds and pebbles (instanced, kept off the tile centers).
+- **Units:** soft contact shadows under every unit and a pulsing gold (or red) ring under the unit whose turn it is.
+- **Night lighting:** flickering torches with warm light pools on Night Battlement and an altar glow on the Zodiac Summit.
+- **Effects:** bloom (spells, torches, water glints and highlights glow) and a gentle vignette on High.
+- **Highlights:** glowing, pulsing move/attack/support tiles with bright rims; support abilities now show green tiles (they were blue).
+- **Graphics setting** in Menu: Auto, High, Medium, Low (saved). Auto picks Medium on phones and High elsewhere, and steps down a tier if the frame rate stays under 40 fps.
+
+### Performance
+- Terrain is now merged into one mesh per material: **~760 draw calls per frame → ~37**, and hidden tile bottoms are no longer drawn. Tile picking works from the hit point on the merged mesh.
+
+---
+
 ## [0.8.1] - 2026-11-19
 
 ### Documentation

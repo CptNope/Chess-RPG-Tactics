@@ -64,7 +64,7 @@ These scripts ran during 0.7–0.8 development against `npm run preview` with `?
 | :--- | :--- | :--- |
 | **Campaign bot** | Clicks through dialogue, presses AUTO every turn, takes either branch, retries on defeat, continues into the Trials | Cleared Chapter I → II-A / II-B → Final → Trials 1–5, zero console errors |
 | **Device matrix** | Loads 7 viewports (375×667 to 1920×1080, touch on for phones and tablets) and opens 11 screens; measures off-screen panels, overlapping HUD panels, and touch targets under 40px | No off-screen panels, no unintended overlaps, no small targets |
-| **Input suite** | CDP multi-touch (tap, drag, pinch, twist, two-finger tap), pen pointer events (hover, tap, barrel button, drag), mouse (wheel, left/right drag, click), a full keyboard-only turn, and a full turn on an emulated standard gamepad | 47 / 47 |
+| **Input suite** (run on Low graphics, since CI machines have no GPU) | CDP multi-touch (tap, drag, pinch, twist, two-finger tap), pen pointer events (hover, tap, barrel button, drag), mouse (wheel, left/right drag, click), a full keyboard-only turn, and a full turn on an emulated standard gamepad | 47 / 47 |
 
 Committing these to the repo and running them in CI is on the [roadmap](ROADMAP.md).
 
