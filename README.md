@@ -1,7 +1,7 @@
 # Chess RPG Tactics
 
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.10.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.11.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -26,7 +26,7 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | **Play anywhere** | Phone (portrait and landscape), tablet and desktop layouts; mouse, keyboard, touch, pen and controller |
 | **Graphics** | Per-map skies, fog and lighting, soft shadows, flowing water, torches, bloom; Auto / High / Medium / Low quality that adapts to your device |
 | **Workshop** | Build your own battles: sculpt terrain, place enemies and bosses, write dialogue, pick an objective (rout, defeat the boss, survive N rounds), then play it or share it as a link |
-| **Art & sound** | Animated 48px pixel-art units (walk, strike, flinch), drawn character portraits, synthesized music and SFX; all drawn in code |
+| **Art & sound** | Animated 48px pixel-art units (walk, strike, flinch), drawn character portraits, hand-animated pixel-art spell and hit effects, synthesized music and SFX; no image files |
 
 <p>
   <img src="docs/images/phone-portrait.webp" alt="Phone layout" width="200">
@@ -39,6 +39,8 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 </p>
 
 ![Every job in both team colours, a knight's animation frames, and the character portraits](docs/images/character-art.webp)
+
+![Pixel-art battle effects: sword arc, critical hit, fire, ice, lightning, holy, dark, rockslide, and heal, poison, haste and protect wrapping the unit's own sprite](docs/images/effects.webp)
 
 <details><summary><b>0.8 vs 0.9 graphics</b></summary>
 
@@ -114,7 +116,7 @@ Every push to `main` builds, tests and deploys to GitHub Pages; pull requests ru
 | 🧪 **[Testing](docs/TESTING.md)** | CI, unit tests, play-tests, release checklist |
 | 🗺️ **[Roadmap](docs/ROADMAP.md)** | Release history, Now / Next / Later, known issues |
 | 🤝 **[Contributing](CONTRIBUTING.md)** | Setup and recipes for adding jobs, maps, chapters, items |
-| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 18 architectural decisions |
+| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 19 architectural decisions |
 | 📜 **[Changelog](CHANGELOG.md)** | Every release |
 
 ---
@@ -143,6 +145,7 @@ Released under the [MIT License](LICENSE) © 2026 Jeremy Anderson. You're free t
 | Third-party | License |
 | :--- | :--- |
 | [three.js](https://threejs.org) | MIT |
+| [pixelfx](https://github.com/patch-gg/pixelfx) spell and hit effects (vendored in `src/vendor/pixelfx`, which adapts parts of [Sprite Fusion's VFX](https://www.spritefusion.com/pixel-art-vfx)) | MIT |
 | [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P), [VT323](https://fonts.google.com/specimen/VT323) fonts (Google Fonts) | SIL Open Font License 1.1 |
 
-All characters, story, art, music and sound are original to this project and generated in code. *Chess RPG Tactics* is a fan-made homage to the tactics-RPG genre and is not affiliated with or endorsed by Square Enix or the makers of *Final Fantasy Tactics* or *Tactics Ogre*.
+All characters, story, unit art, portraits, maps, music and sound are original to this project and generated in code; the spell and hit effects are pixelfx's (above). *Chess RPG Tactics* is a fan-made homage to the tactics-RPG genre and is not affiliated with or endorsed by Square Enix or the makers of *Final Fantasy Tactics* or *Tactics Ogre*.

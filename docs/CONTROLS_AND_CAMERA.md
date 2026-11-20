@@ -38,6 +38,8 @@ Notes:
 | Action | Mouse / touch / pen | Keyboard | Controller |
 | :--- | :--- | :--- | :--- |
 | Apply the current tool | Tap / click a tile | Arrows move the cursor, `Enter` applies | D-pad + **A** |
+| Brush stroke (raise, lower, level, paint, block) | Drag across tiles (one undo step) | — | — |
+| Pan while editing | Right/middle-drag, two fingers, or set *Drag on the map: Pans* | `W` `A` `S` `D` | Right stick |
 | Move around the panel | Tap | `Tab`, arrows, `Enter` | **X** to enter the panel, d-pad + **A** |
 | Leave the panel for the map | Tap the map | `Esc` | **B** |
 | Close the Workshop | × button | `Esc` from the map | **B** from the map |

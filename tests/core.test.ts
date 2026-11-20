@@ -385,3 +385,44 @@ describe('turn manager', () => {
     expect(tm.advanceToNextActiveTurn()!.activeUnit.id).toBe('f');
   });
 });
+
+describe('Walking paths', () => {
+  const setup = () => {
+    const grid = new BattleGrid(MAPS.river_ruins());
+    const unit = JobSystem.createUnit('p', 'Walker', 'player', 'knight', 5, 14, 'N', 3);
+    return { grid, unit };
+  };
+
+  it('every reachable tile has a path of adjacent, climbable steps within Move', () => {
+    const { grid, unit } = setup();
+    const units = [unit];
+    const reach = grid.getReachableTiles(unit, units);
+    expect(reach.length).toBeGreaterThan(5);
+    for (const r of reach) {
+      const path = grid.findPath(unit, units, r.x, r.z)!;
+      expect(path, `${r.x},${r.z}`).not.toBeNull();
+      expect(path[0]).toEqual({ x: unit.x, z: unit.z });
+      expect(path[path.length - 1]).toEqual({ x: r.x, z: r.z });
+      for (let i = 1; i < path.length; i++) {
+        const a = path[i - 1], b = path[i];
+        expect(Math.abs(a.x - b.x) + Math.abs(a.z - b.z)).toBe(1);
+        expect(grid.isWalkable(b.x, b.z)).toBe(true);
+        expect(Math.abs(grid.getHeight(a.x, a.z) - grid.getHeight(b.x, b.z))).toBeLessThanOrEqual(unit.jump);
+      }
+    }
+  });
+
+  it('routes around enemies and returns null where it cannot walk', () => {
+    const { grid, unit } = setup();
+    const foe = JobSystem.createUnit('e', 'Foe', 'enemy', 'knight', 5, 13, 'S', 3);
+    const path = grid.findPath(unit, [unit, foe], 5, 12);
+    if (path) expect(path.some((p) => p.x === 5 && p.z === 13)).toBe(false);
+    expect(grid.findPath(unit, [unit], 15, 0)).toBeNull(); // far beyond Move
+  });
+
+  it('teleporters have no walking path', () => {
+    const { grid, unit } = setup();
+    unit.equippedAbilities.movement = 'tm_teleport';
+    expect(grid.findPath(unit, [unit], 5, 12)).toBeNull();
+  });
+});

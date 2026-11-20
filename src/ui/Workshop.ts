@@ -48,6 +48,9 @@ const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
   erase: { label: 'Erase', icon: '✕', hint: 'Remove an enemy or deploy tile.' }
 };
 
+/** Tools a drag can paint with (fill and the unit tools work per tap). */
+const STROKE_TOOLS: Tool[] = ['raise', 'lower', 'level', 'paint', 'block'];
+
 const TERRAIN_COLORS: Record<TerrainType, string> = {
   grass: '#4f9a3a', stone: '#8d95a3', dirt: '#8a5a32', water: '#2f6fd6', wood: '#a0703d', swamp: '#3f5a2c', parapet: '#5f6b84'
 };
@@ -91,6 +94,9 @@ export class Workshop {
   private redoStack: string[] = [];
   private autosaveTimer = 0;
   private collapsed = false;
+  /** One-finger / left-button drag on the map: paint with the brush, or pan the camera. */
+  private dragMode: 'paint' | 'pan' = 'paint';
+  private stroke: { visited: Set<string>; block: boolean; dirty: boolean; timer: number; changed: boolean } | null = null;
   private confirmDelete = '';
   // File-tab form state
   private newForm = { width: 16, depth: 16, look: 0, terrain: 0 };
@@ -139,6 +145,26 @@ export class Workshop {
     document.getElementById('game-container')!.append(this.root);
 
     window.addEventListener('resize', () => this.fitCamera());
+
+    // Brush strokes: drag across tiles to sculpt or paint them in one undoable step
+    host.scene.dragPaint = {
+      wants: () => this.isOpen && this.dragMode === 'paint' && STROKE_TOOLS.includes(this.tool),
+      begin: (x, z) => {
+        const t = this.grid.getTile(x, z);
+        this.checkpoint();
+        this.stroke = { visited: new Set(), block: t ? !t.walkable : true, dirty: false, timer: 0, changed: false };
+        this.strokeAt(x, z);
+      },
+      over: (x, z) => this.strokeAt(x, z),
+      end: () => {
+        const st = this.stroke;
+        this.stroke = null;
+        if (!st) return;
+        clearTimeout(st.timer);
+        if (!st.changed) this.undoStack.pop(); // nothing changed: drop the checkpoint
+        else this.changed(true);
+      }
+    };
 
     window.addEventListener('keydown', (e) => {
       if (!this.isOpen || !(e.ctrlKey || e.metaKey) || (e.target as HTMLElement).matches?.('input, textarea')) return;
@@ -304,6 +330,38 @@ export class Workshop {
         SoundFX.playMenuBlip();
         this.changed(false);
         break;
+    }
+  }
+
+  /** Applies the current terrain tool to the brush at (x, z) once per stroke per tile. */
+  private strokeAt(x: number, z: number): void {
+    const st = this.stroke;
+    if (!st) return;
+    let any = false;
+    for (const p of this.brushTiles(x, z)) {
+      const k = `${p.x},${p.z}`;
+      if (st.visited.has(k)) continue;
+      st.visited.add(k);
+      const t = this.grid.getTile(p.x, p.z)!;
+      const before = `${t.height}|${t.terrain}|${t.walkable}`;
+      if (this.tool === 'raise') t.height = Math.min(MAX_HEIGHT, Math.round((t.height + 0.5) * 10) / 10);
+      else if (this.tool === 'lower') t.height = Math.max(0, Math.round((t.height - 0.5) * 10) / 10);
+      else if (this.tool === 'level') t.height = this.levelHeight;
+      else if (this.tool === 'paint') t.terrain = this.paintTerrain;
+      else if (this.tool === 'block') t.walkable = st.block;
+      if (`${t.height}|${t.terrain}|${t.walkable}` !== before) any = true;
+    }
+    if (!any) return;
+    st.changed = true;
+    SoundFX.playMoveStep();
+    // Rebuilding the terrain is the costly part: do it at most ~12 times a second while dragging
+    if (!st.dirty) {
+      st.dirty = true;
+      st.timer = window.setTimeout(() => {
+        if (this.stroke === st) st.dirty = false;
+        this.host.scene.refreshTerrain();
+        this.refreshMarkers();
+      }, 80);
     }
   }
 
@@ -538,6 +596,7 @@ export class Workshop {
     return [
       this.toolButtons(['raise', 'lower', 'level', 'paint', 'block', 'fill']),
       this.tool !== 'fill' ? this.segmented('brush', 'Brush', [[1, '1×1'], [2, '3×3'], [3, '5×5']], this.brush, (v) => (this.brush = v)) : null,
+      this.tool !== 'fill' ? this.segmented('drag', 'Drag on the map', [['paint', 'Paints'], ['pan', 'Pans']], this.dragMode, (v) => (this.dragMode = v)) : null,
       this.tool === 'level' ? this.stepper('lvl', 'Height', this.levelHeight.toFixed(1), (d) => (this.levelHeight = Math.min(MAX_HEIGHT, Math.max(0, this.levelHeight + d * 0.5)))) : null,
       showTerrain ? h('div', { class: 'ws-field' },
         h('span', { class: 'ws-label' }, 'Terrain'),
@@ -546,6 +605,7 @@ export class Workshop {
             class: 'ws-swatch' + (this.paintTerrain === t ? ' active' : ''), 'data-k': `ter-${t}`, 'aria-pressed': String(this.paintTerrain === t),
             onclick: () => { this.paintTerrain = t; SoundFX.playMenuBlip(); this.render(); }
           }, h('span', { class: 'ws-chip', style: `background:${TERRAIN_COLORS[t]}` }), t)))) : null,
+      h('p', { class: 'ws-note' }, this.dragMode === 'paint' ? 'Drag across tiles to paint a stroke (one undo step). Pan with two fingers, the right mouse button, WASD or the camera buttons.' : 'Tap tiles to edit them one at a time; dragging moves the camera.'),
       h('p', { class: 'ws-note' }, 'Water and swamp cost 2 movement. Height differences above a unit\'s Jump block the step. Wood is a bridge or boardwalk; parapet is battlement stone.')
     ].filter(Boolean) as Node[];
   }

@@ -266,7 +266,7 @@ flowchart LR
 | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
 | **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
 | **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 5 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff | Hermes Slippers + Windslayer Bow |
-| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L4) | Bria (Geomancer) | Crystal Helm | Aegis Barrier + Platinum Blade |
+| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm | Aegis Barrier + Platinum Blade |
 | **FINAL CHAPTER**: The Awakening at the Summit | Zodiac Summit | 6 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | — |
 
 <details><summary><b>CHAPTER I</b> enemy roster</summary>
@@ -297,10 +297,10 @@ flowchart LR
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
-| Dragoon Commander | Dragoon | 4 | (7, 1) | ★ |
-| Rampart Sniper | Archer | 4 | (1, 0) |  |
-| Tower Sniper | Archer | 4 | (12, 0) |  |
-| Iron Vanguard | Knight | 4 | (7, 7) |  |
+| Dragoon Commander | Dragoon | 3 | (7, 1) | ★ |
+| Rampart Sniper | Archer | 3 | (4, 8) |  |
+| Tower Sniper | Archer | 3 | (10, 8) |  |
+| Iron Vanguard | Knight | 3 | (7, 7) |  |
 | Gate Warden | Knight | 3 | (8, 7) |  |
 
 </details>

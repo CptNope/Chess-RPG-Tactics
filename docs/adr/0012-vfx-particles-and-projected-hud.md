@@ -1,7 +1,7 @@
 # ADR 0012: Visual Effects, Camera Trauma Shake, and 3D Projected Overlays
 
 ## Status
-Accepted
+Accepted. Spell and hit particles were replaced by pixel-art effects in 0.11.0 ([ADR 0019](0019-pixel-art-effects-and-path-walking.md)); weather, screen shake and the projected HUD remain.
 
 ## Context
 Tactical RPGs like *Final Fantasy Tactics* rely heavily on visceral sensory feedback to convey the kinetic impact of physical attacks, the awe of powerful elemental magic, and the immediate spatial awareness of unit vital statistics without cluttering the screen.

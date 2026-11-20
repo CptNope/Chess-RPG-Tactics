@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.11.0] - 2026-11-20
+
+### Added — pixel-art battle effects
+- Every hit, spell, heal and status now plays a **hand-animated pixel-art effect** from [pixelfx](https://github.com/patch-gg/pixelfx) (MIT), drawn at the same pixel size as the 48px units so effects and characters read as one picture. They replace the old particle bursts.
+  - Weapon blows: a sword arc (dagger flurry for ninjas) that sweeps across the target, then a hit spark; critical hits burst.
+  - Spells by element: fire pillar, falling icicle, lightning strike (the scene darkens under a sigil), holy smite, grasping shadow hands, a time-stop clock.
+  - Geomancy by terrain: Rockslide raises an earth spike, Sandstorm shakes the ground, Hell Ivy snares the target in roots, Quicksand poisons.
+  - Heals, Haste, Slow, Protect, Poison and boss enrage **wrap the unit's own sprite**: a heal greys the target and restores *its* colours, poison turns *it* green, Haste trails *its* after-images. (pixelfx effects are written around a stand-in character; the game passes each unit's real sprite instead.)
+  - Level-ups throw a burst of feathers.
+- Effects step at 30 fps like hand-drawn animation, glow additively (bloom picks them up on High), and skip into their wind-ups so the impact lands with the damage number.
+
+### Changed
+- **Units walk their path** tile by tile, turning to face each step and hopping up and down ledges, instead of sliding straight to the destination. Enemies finish walking before they act.
+- **Workshop brush strokes:** drag across the map to sculpt or paint with raise, lower, level, paint or block. A stroke touches each tile once and is one undo step. Pan with two fingers, the right mouse button, WASD or the camera buttons, or switch "Drag on the map" to *Pans*.
+- **Chapter II-B (Night Battlement) rebalanced.** The 0.10 fortress made it close to unwinnable on AUTO; the snipers now hold the wall walk by the gate (reachable by stairs) and every defender is level 3. In headless AUTO battles the branch is back to roughly its 0.9 difficulty, between Chapter I and II-A.
+
+### Developer
+- `npm run balance`: headless AUTO-vs-AI battles with the game's own rules, printing each chapter's win rate at several levels (`scripts/balance-sim.ts`).
+- `BattleGrid.findPath()` (shares its Dijkstra with `getReachableTiles`); 3 new tests (44 total).
+- Input suite: Workshop brush strokes by mouse and touch, one-step undo, and panning without painting (63 checks).
+
+### Credits
+- Pixel effects: pixelfx © 2026 Patch and Hugo Duprez, MIT; parts adapt Sprite Fusion's open-source VFX (Hugo Duprez, MIT). Vendored unchanged in `src/vendor/pixelfx` with its licence and notices.
+
+---
+
 ## [0.10.0] - 2026-11-19
 
 ### Added — bigger battlefields

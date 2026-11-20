@@ -26,6 +26,8 @@ timeline
         0.8.1 : Documentation overhaul : Generated content reference
         0.9.0 : Original character names : MIT license : Graphics upgrade : 20x fewer draw calls
         0.10.0 : 16x16 battlefields : Workshop map and scenario editor : Share links : Animated 48px sprites : Drawn portraits
+    section Nov 20
+        0.11.0 : Pixel-art spell effects : Path walking : Workshop brush strokes : Balance sim
 ```
 
 | Version | Theme | Highlights |
@@ -38,6 +40,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.11 | Feel | Pixel-art spell and hit effects (pixelfx) wrapping the real sprites, units walk their path, Workshop brush strokes, Chapter II-B rebalanced with a headless balance sim |
 | 0.10 | Make your own | 16×16 battlefields, the Workshop (map + scenario editor with objectives, library, share links), animated 48px sprites, drawn portraits |
 
 ---
@@ -46,14 +49,14 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.11)"]
+    subgraph NOW["Now (0.12)"]
         direction TB
         N1["Job prerequisites enforced"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Release on itch.io<br/>free + donations"]
     end
-    subgraph NEXT["Next (0.12 – 0.14)"]
+    subgraph NEXT["Next (0.13 – 0.15)"]
         direction TB
         X1["Equipment rules:<br/>Equip Heavy Armor works"]
         X2["Shop + gil economy"]
@@ -70,12 +73,12 @@ flowchart LR
         L4["Remappable controls"]
         L5["Localization"]
         L6["Async online duels"]
-        L7["Spell VFX upgrade<br/>(pixel-art particles)"]
+        L7["Effects for every ability<br/>(per-weapon arcs, projectiles)"]
     end
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.11): finish and ship what exists
+### Now (0.12): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
@@ -85,7 +88,7 @@ flowchart LR
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
 | **itch.io release** | Reach players | S | HTML5 zip build, cover art, free with donations; project post on jeremyanderson.tech |
 
-### Next (0.12 – 0.14): depth
+### Next (0.13 – 0.15): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
@@ -108,7 +111,7 @@ flowchart LR
 | Remappable keyboard and controller bindings | M |
 | Localization (strings out of code) | M |
 | Asynchronous online duels (exchange turns via a back end) | XL |
-| Spell VFX redrawn as pixel-art particle sheets to match the 48px sprites (a candidate library: *pixelfx*) | M |
+| Effects per ability, not just per element: arrows and thrown stones in flight, spear thrusts, a chain lightning for area spells (more pixelfx effects are available) | M |
 | Workshop: place props (trees, crates) and per-tile decorations; multi-wave enemies; ally guests | M |
 
 ---
@@ -150,15 +153,13 @@ quadrantChart
 | Rules | *Equip Heavy Armor* support has no effect | Low | Next (equipment rules) |
 | Rules | Item `price` unused | Low | Next (shop) |
 | Rules | Speed Save's +2 Speed is lost at the unit's next end of turn (stats are recalculated) | Low | Make it a status |
-| Balance | Final Chapter is hard for a squad that never re-gears; AUTO-only play needs retries | Low | Tune after real playtests |
 | Code | `main.ts` (1.5k lines) and `UIManager.ts` (1k lines) are large | Medium | Split battle flow, spoils/chapters and input into modules |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |
 | QA | High-quality graphics frame rate not yet measured on real GPUs (CI has none); Auto steps down if slow | Medium | Now (device QA) |
 | QA | Browser play-tests not in CI | Medium | Now |
 | A11y | Font sizes are fixed px; no text-size setting | Low | Next |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
-| Workshop | Brush strokes are tap-per-tile (no drag painting) | Low | Next |
-| Art | Units slide in a straight line between tiles instead of following their path | Low | Next |
+| Balance | `npm run balance` ignores reactions and gear, so its numbers are relative; the Final Chapter is near 0% on pure AUTO (as in 0.9) and needs re-geared or hands-on play | Low | Tune after real playtests |
 
 ---
 

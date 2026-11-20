@@ -74,7 +74,16 @@ gitGraph
 | 2 | `index.html` | Add an `<option>` to `#map-select` |
 | 3 | `src/renderer/Atmosphere.ts` | Optional: a preset keyed by the map id (else the theme's preset is used) |
 | 4 | `src/core/Trials.ts` | Optional: add to `TRIAL_MAP_ROTATION` |
-| 5 | — | The deploy, size and reachability tests in `tests/core.test.ts` must pass |
+| 5 | — | The deploy, size and reachability tests in `tests/core.test.ts` must pass; run `npm run balance` for its chapter |
+
+### Add or change a battle effect
+
+| Step | File | What to do |
+| :---: | :--- | :--- |
+| 1 | — | Find one in the pixelfx catalog ([docs/CATALOG.md](https://github.com/patch-gg/pixelfx/blob/main/docs/CATALOG.md)); prefer short one-shots |
+| 2 | `src/vendor/pixelfx/fx/` | Copy the effect file unchanged (and its category's `_lib.js`), read it, add it to `registry.js` |
+| 3 | `src/renderer/BattleFx.ts` | Add or change the cue: anchor, mirror, `speed`, `startAt` (the impact time from the constants at the top of the effect file, minus ~0.15 s), `wrap` for effects that recolour the unit |
+| 4 | — | Look at it in game on High and Low, beside a 48px unit, before shipping |
 
 ### Add a chapter
 

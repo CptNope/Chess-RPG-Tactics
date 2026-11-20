@@ -72,6 +72,41 @@ export class BattleGrid {
       return out;
     }
 
+    const { best, startKey } = this.flood(unit, occupiedMap);
+
+    const reachable: PathNode[] = [];
+    for (const [key, node] of best) {
+      if (key === startKey) continue;
+      if (occupiedMap.has(key)) continue; // can pass through allies, not stop on them
+      reachable.push(node);
+    }
+    return reachable;
+  }
+
+  /**
+   * The tiles a unit walks through to reach (tx, tz), start and end included, following the same
+   * rules as getReachableTiles. Null if it can't walk there (or teleports).
+   */
+  public findPath(unit: Unit, allUnits: Unit[], tx: number, tz: number): { x: number; z: number }[] | null {
+    if (unit.equippedAbilities.movement === 'tm_teleport') return null;
+    const occupiedMap = new Map<string, Unit>();
+    for (const u of allUnits) if (!u.isDead && u !== unit) occupiedMap.set(this.key(u.x, u.z), u);
+    const { best, parent } = this.flood(unit, occupiedMap);
+    let k = this.key(tx, tz);
+    if (!best.has(k)) return null;
+    const path: { x: number; z: number }[] = [];
+    for (let guard = 0; k && guard < 400; guard++) {
+      const n = best.get(k)!;
+      path.unshift({ x: n.x, z: n.z });
+      k = parent.get(k)!;
+    }
+    return path;
+  }
+
+  /** Dijkstra over walkable tiles within the unit's Move, respecting Jump and enemy blocking. */
+  private flood(unit: Unit, occupiedMap: Map<string, Unit>): { best: Map<string, PathNode>; parent: Map<string, string>; startKey: string } {
+    const startTile = this.getTile(unit.x, unit.z)!;
+    const parent = new Map<string, string>();
     const best = new Map<string, PathNode>();
     const startKey = this.key(unit.x, unit.z);
     best.set(startKey, { x: unit.x, z: unit.z, height: startTile.height, cost: 0 });
@@ -111,18 +146,12 @@ export class BattleGrid {
         if (!prev || newCost < prev.cost) {
           const node = { x: nx, z: nz, height: nextTile.height, cost: newCost };
           best.set(key, node);
+          parent.set(key, this.key(current.x, current.z));
           frontier.push(node);
         }
       }
     }
-
-    const reachable: PathNode[] = [];
-    for (const [key, node] of best) {
-      if (key === startKey) continue;
-      if (occupiedMap.has(key)) continue; // can pass through allies, not stop on them
-      reachable.push(node);
-    }
-    return reachable;
+    return { best, parent, startKey };
   }
 
   /**
