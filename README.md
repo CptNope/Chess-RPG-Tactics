@@ -1,14 +1,14 @@
 # Chess RPG Tactics
 
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.11.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.12.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, nine mix-and-match jobs, a branching campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
 
-### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/)
+### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/) · [on itch.io](https://cptnope.itch.io/chess-rpg-tactics)
 
 ![A battle on Riverside Ruins](docs/images/battle-desktop.webp)
 
@@ -93,14 +93,16 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `R` re-ce
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 28 rule tests
+npm test             # 44 rule tests
 npm run build        # type-check + production build
+npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
+npm run balance      # headless AUTO battles: win rate per chapter
 npm run docs:gen     # regenerate the content reference
 ```
 
-`?debug` exposes the running game as `window.__tactics`; `?debug&fast` also speeds up animations.
+`?debug` exposes the running game as `window.__tactics`; `?debug&fast` also speeds up animations and skips the title screen (`?notitle` skips it alone).
 
-Every push to `main` builds, tests and deploys to GitHub Pages; pull requests run the same checks without deploying.
+Every push to `main` builds, tests and deploys to GitHub Pages and builds the itch.io zip; pull requests run the same checks without deploying. With the `BUTLER_API_KEY` secret set, `main` is also published to itch.io.
 
 ---
 
@@ -114,9 +116,10 @@ Every push to `main` builds, tests and deploys to GitHub Pages; pull requests ru
 | 🏗️ **[Architecture](docs/ARCHITECTURE.md)** | Modules, state machine, action pipeline, input flow, saves, build |
 | ⚔️ **[Combat](docs/COMBAT_SYSTEM.md)** · 🛡️ **[Jobs](docs/JOB_SYSTEM.md)** · 🧠 **[Enemy AI](docs/ENEMY_AI.md)** | System deep dives |
 | 🧪 **[Testing](docs/TESTING.md)** | CI, unit tests, play-tests, release checklist |
+| 🛒 **[itch.io page](docs/ITCH_PAGE.md)** | Upload settings, store text, tags; `npm run build:itch` |
 | 🗺️ **[Roadmap](docs/ROADMAP.md)** | Release history, Now / Next / Later, known issues |
 | 🤝 **[Contributing](CONTRIBUTING.md)** | Setup and recipes for adding jobs, maps, chapters, items |
-| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 19 architectural decisions |
+| 🏛️ **[ADRs](docs/README.md#architectural-decision-records)** | 20 architectural decisions |
 | 📜 **[Changelog](CHANGELOG.md)** | Every release |
 
 ---
@@ -145,6 +148,7 @@ Released under the [MIT License](LICENSE) © 2026 Jeremy Anderson. You're free t
 | Third-party | License |
 | :--- | :--- |
 | [three.js](https://threejs.org) | MIT |
+| [Fontsource](https://fontsource.org) packaging of the fonts above | MIT (fonts OFL 1.1) |
 | [pixelfx](https://github.com/patch-gg/pixelfx) spell and hit effects (vendored in `src/vendor/pixelfx`, which adapts parts of [Sprite Fusion's VFX](https://www.spritefusion.com/pixel-art-vfx)) | MIT |
 | [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P), [VT323](https://fonts.google.com/specimen/VT323) fonts (Google Fonts) | SIL Open Font License 1.1 |
 

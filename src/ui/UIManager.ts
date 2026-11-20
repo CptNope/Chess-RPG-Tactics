@@ -415,7 +415,7 @@ export class UIManager {
    * Battlefield input (tile cursor) is used when this returns null.
    */
   public activeLayer(): HTMLElement | null {
-    const order = ['result-modal', 'choice-modal', 'help-modal', 'job-modal', 'system-menu', 'facing-selector', 'combat-forecast', 'sub-menu'];
+    const order = ['help-modal', 'title-screen', 'result-modal', 'choice-modal', 'job-modal', 'system-menu', 'facing-selector', 'combat-forecast', 'sub-menu'];
     for (const id of order) {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) return el;

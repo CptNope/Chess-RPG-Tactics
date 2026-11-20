@@ -6,7 +6,7 @@
 export type Dir = 'up' | 'down' | 'left' | 'right';
 
 const FOCUSABLE =
-  'button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), .story-choice-card, .learn-item, .job-item';
+  'button:not([disabled]), a[href], select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), .story-choice-card, .learn-item, .job-item';
 
 export function isVisible(el: Element): boolean {
   if (!(el instanceof HTMLElement)) return false;

@@ -21,6 +21,9 @@ import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
 import { Workshop } from './ui/Workshop';
 import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
+import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll } from './platform';
+import '@fontsource/press-start-2p/latin-400.css';
+import '@fontsource/vt323/latin-400.css';
 
 type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
 
@@ -111,9 +114,17 @@ class TacticsGame {
     });
 
     this.bindEvents();
-    this.playChapterIntro();
+    this.bindPlatform();
     this.gameLoop();
-    this.openShareLink();
+    // Automated play-tests (?fast) and share links skip the title screen
+    const params = new URLSearchParams(location.search);
+    if (params.has('fast') || params.has('notitle') || /^#s=/.test(location.hash)) {
+      this.hideTitle();
+      if (!/^#s=/.test(location.hash)) this.playChapterIntro();
+      this.openShareLink();
+    } else {
+      this.showTitle();
+    }
 
     // Debug / automated play-testing hook: add ?debug to the URL
     if (new URLSearchParams(location.search).has('debug')) {
@@ -401,6 +412,7 @@ class TacticsGame {
   /** Esc, controller B, two-finger tap, pen eraser: close the top thing, or step back. */
   private cancelAction(): void {
     if (this.ui.isHelpOpen) return this.ui.toggleHelp(false);
+    if (this.isTitleOpen) return;
     if (this.ui.isSystemMenuOpen) return this.ui.toggleSystemMenu(false);
     if (this.ui.isJobModalOpen) return this.ui.closeJobModal();
     if (this.workshop.isOpen) {
@@ -498,6 +510,7 @@ class TacticsGame {
   }
 
   private handlePad(a: PadAction): void {
+    if (this.isTitleOpen && !['up', 'down', 'left', 'right', 'confirm', 'cancel', 'help'].includes(a)) return;
     switch (a) {
       case 'up': case 'down': case 'left': case 'right':
         return this.handleDirection(a);
@@ -534,6 +547,14 @@ class TacticsGame {
       return;
     }
     if (typing) return;
+
+    // On the title screen only menu keys work (H opens Controls)
+    if (this.isTitleOpen && !this.ui.isHelpOpen) {
+      const dir = ({ ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' } as Record<string, Dir>)[k];
+      if (dir) { e.preventDefault(); this.handleDirection(dir); }
+      else if (k.toLowerCase() === 'h' || k === '?') this.ui.toggleHelp(true);
+      return;
+    }
 
     if (this.ui.isResultModalOpen) {
       // Buttons handle Enter/Space natively; arrows move between them
@@ -1137,6 +1158,98 @@ class TacticsGame {
   private updateTimeline(): void {
     this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), this.turnManager.activeUnit);
     this.ui.populateJobCustomizer(this.squad);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Title screen, fullscreen, links (itch.io / web embeds)
+  // ---------------------------------------------------------------------------
+
+  private get titleEl(): HTMLElement {
+    return document.getElementById('title-screen')!;
+  }
+
+  public get isTitleOpen(): boolean {
+    return !this.titleEl.classList.contains('hidden');
+  }
+
+  private showTitle(): void {
+    this.currentMode = 'menu';
+    this.ui.hideDialogue();
+    this.ui.hideResultModal();
+    this.ui.toggleSystemMenu(false);
+    Music.stop();
+    const cont = document.getElementById('title-continue') as HTMLButtonElement;
+    cont.classList.toggle('hidden', !SaveManager.hasSave());
+    this.titleEl.classList.remove('hidden');
+    document.body.classList.add('title-open');
+    const first = (SaveManager.hasSave() ? cont : document.getElementById('title-new')) as HTMLElement;
+    this.ui.focusForNav(first);
+  }
+
+  private hideTitle(): void {
+    this.titleEl.classList.add('hidden');
+    document.body.classList.remove('title-open');
+  }
+
+  /** Runs `start` from a title-screen press: that press is what lets the browser play audio. */
+  private fromTitle(start: () => void): void {
+    SoundFX.playMenuBlip();
+    this.hideTitle();
+    start();
+  }
+
+  private bindPlatform(): void {
+    const on = (id: string, fn: () => void) => document.getElementById(id)?.addEventListener('click', fn);
+    for (const id of ['title-continue', 'title-new', 'title-workshop', 'title-controls', 'title-fullscreen']) {
+      (document.getElementById(id) as HTMLButtonElement).disabled = false;
+    }
+    document.getElementById('title-new')!.textContent = 'New Game';
+    document.getElementById('title-version')!.textContent = `v${__APP_VERSION__}`;
+    for (const [id, url] of [['title-support', ITCH_URL], ['btn-support', ITCH_URL], ['title-source', SOURCE_URL], ['title-author', AUTHOR_URL]]) {
+      (document.getElementById(id) as HTMLAnchorElement).href = url;
+    }
+
+    on('title-new', () => this.fromTitle(() => this.loadChapter('chapter_1')));
+    on('title-continue', () => this.fromTitle(() => this.loadGame()));
+    on('title-workshop', () => this.fromTitle(() => {
+      // Start the campaign underneath, so closing the Workshop lands in Chapter I
+      this.playChapterIntro();
+      this.openWorkshop();
+    }));
+    on('title-controls', () => {
+      SoundFX.playMenuBlip();
+      this.ui.toggleHelp(true);
+    });
+    on('btn-title', () => {
+      SoundFX.playMenuBlip();
+      if (!this.battleOver && !['idle', 'dialogue', 'menu', 'editor'].includes(this.currentMode)) {
+        this.ui.showBanner('WAIT FOR YOUR TURN');
+        return;
+      }
+      this.ui.toggleSystemMenu(false);
+      if (this.workshop.isOpen) this.workshop.close();
+      this.showTitle();
+    });
+
+    // Fullscreen (itch.io shows its own button too; this one also works in the web version)
+    const fsButtons = ['title-fullscreen', 'btn-fullscreen'].map((id) => document.getElementById(id) as HTMLButtonElement);
+    const labelFs = () => fsButtons.forEach((b) => (b.textContent = isFullscreen() ? 'Exit fullscreen' : 'Fullscreen'));
+    if (canFullscreen()) {
+      fsButtons.forEach((b) => {
+        b.classList.remove('hidden');
+        b.addEventListener('click', () => {
+          SoundFX.playMenuBlip();
+          toggleFullscreen();
+        });
+      });
+      document.addEventListener('fullscreenchange', labelFs);
+      document.addEventListener('webkitfullscreenchange', labelFs);
+    }
+    window.addEventListener('keydown', (e) => {
+      const typing = (e.target as HTMLElement)?.matches?.('input, textarea, select');
+      if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'f' && canFullscreen()) toggleFullscreen();
+    });
+    guardPageScroll();
   }
 
   // ---------------------------------------------------------------------------

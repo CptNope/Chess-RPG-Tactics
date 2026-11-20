@@ -28,6 +28,7 @@ timeline
         0.10.0 : 16x16 battlefields : Workshop map and scenario editor : Share links : Animated 48px sprites : Drawn portraits
     section Nov 20
         0.11.0 : Pixel-art spell effects : Path walking : Workshop brush strokes : Balance sim
+        0.12.0 : itch.io release : Title screen : Bundled fonts : Fullscreen
 ```
 
 | Version | Theme | Highlights |
@@ -40,6 +41,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.12 | Ship it | itch.io release (HTML5 zip, store page, butler publishing), title screen, fullscreen, bundled fonts, iframe-safe input |
 | 0.11 | Feel | Pixel-art spell and hit effects (pixelfx) wrapping the real sprites, units walk their path, Workshop brush strokes, Chapter II-B rebalanced with a headless balance sim |
 | 0.10 | Make your own | 16×16 battlefields, the Workshop (map + scenario editor with objectives, library, share links), animated 48px sprites, drawn portraits |
 
@@ -49,14 +51,14 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.12)"]
+    subgraph NOW["Now (0.13)"]
         direction TB
         N1["Job prerequisites enforced"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
-        N4["Release on itch.io<br/>free + donations"]
+        N4["Devlog + site post<br/>for the itch release"]
     end
-    subgraph NEXT["Next (0.13 – 0.15)"]
+    subgraph NEXT["Next (0.14 – 0.16)"]
         direction TB
         X1["Equipment rules:<br/>Equip Heavy Armor works"]
         X2["Shop + gil economy"]
@@ -78,7 +80,7 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.12): finish and ship what exists
+### Now (0.13): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
@@ -86,9 +88,9 @@ flowchart LR
 | **Job levels** | Prerequisites need a job level; today only JP exists | S | Job level from total JP earned in a job |
 | **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **itch.io release** | Reach players | S | HTML5 zip build, cover art, free with donations; project post on jeremyanderson.tech |
+| **Devlog + site post** | Tell people it's out | S | itch devlog for 0.12, a project post on jeremyanderson.tech linking the itch page |
 
-### Next (0.13 – 0.15): depth
+### Next (0.14 – 0.16): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
@@ -128,7 +130,7 @@ quadrantChart
     quadrant-3 "Fill-ins"
     quadrant-4 "Reconsider"
     "Job prerequisites": [0.2, 0.7]
-    "itch.io release": [0.15, 0.8]
+    "Devlog + site post": [0.1, 0.55]
     "Device QA": [0.25, 0.75]
     "Play-tests in CI": [0.36, 0.65]
     "Undo move": [0.1, 0.6]

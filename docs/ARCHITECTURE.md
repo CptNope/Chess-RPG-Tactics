@@ -45,6 +45,7 @@ flowchart TB
 
 | Module | File(s) | Responsibility | Depends on |
 | :--- | :--- | :--- | :--- |
+| **platform** | `src/platform.ts` | Where the game runs (itch.io, embedded, web): store links, share-link base, fullscreen, page-scroll guard | — |
 | **TacticsGame** | `src/main.ts` | Owns all state; turn flow, action pipeline, input dispatch, spoils, chapters, Trials, save/load | everything |
 | **TurnManager** | `src/core/TurnManager.ts` | CT clock, turn order prediction, CT refunds, status ticking, poison | JobSystem |
 | **BattleGrid** | `src/core/Grid.ts` | Tile lookup, Dijkstra movement (Jump, terrain cost, Teleport), `findPath` for walking, `canTarget` range rule | types |
