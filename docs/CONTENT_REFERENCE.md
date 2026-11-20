@@ -277,7 +277,7 @@ flowchart LR
 | Rogue Warlock | Time Weaver | 3 | (12, 3) |  |
 | Brigand Bowman | Archer | 3 | (14, 3) |  |
 | Shadow Shinobi | Ninja | 3 | (5, 4) |  |
-| Bridge Cutthroat | Squire | 3 | (3, 3) |  |
+| Bridge Cutthroat | Squire | 2 | (3, 3) |  |
 
 </details>
 
@@ -289,7 +289,7 @@ flowchart LR
 | Bog Poisoner | Black Mage | 4 | (3, 1) |  |
 | Swamp Shinobi | Ninja | 4 | (7, 4) |  |
 | Mire Skirmisher | Ninja | 4 | (12, 2) |  |
-| Reed Stalker | Archer | 4 | (6, 7) |  |
+| Reed Stalker | Archer | 3 | (6, 7) |  |
 
 </details>
 
@@ -301,7 +301,7 @@ flowchart LR
 | Rampart Sniper | Archer | 4 | (1, 0) |  |
 | Tower Sniper | Archer | 4 | (12, 0) |  |
 | Iron Vanguard | Knight | 4 | (7, 7) |  |
-| Gate Warden | Knight | 4 | (8, 7) |  |
+| Gate Warden | Knight | 3 | (8, 7) |  |
 
 </details>
 
@@ -314,7 +314,7 @@ flowchart LR
 | Grand Chronomancer | Time Weaver | 5 | (5, 3) |  |
 | Black Archmage | Black Mage | 5 | (10, 3) |  |
 | Shadow Assassin | Ninja | 5 | (7, 6) |  |
-| Altar Sentinel | Knight | 5 | (9, 6) |  |
+| Altar Sentinel | Knight | 4 | (9, 6) |  |
 
 </details>
 

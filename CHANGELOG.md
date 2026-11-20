@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.10.0] - 2026-11-19
+
+### Added — bigger battlefields
+- **All four maps are now 16×16** (2.1× the area of 11×11), redesigned around the extra room: Riverside Ruins has a winding river with two bridges and a ford below a hilltop temple; Night Battlement adds a moat, drawbridge, curtain wall and keep; Gloomy Mire is islands joined by boardwalks; the Zodiac Summit climbs five terraces past twin pools.
+- **Per-map deploy zones**: each map says where your squad starts (`playerSpawns`).
+- Each campaign chapter gained one enemy (one level below the chapter) and every enemy was re-placed for the new terrain. A test checks every campaign and Trials enemy can be reached on foot.
+- The camera, zoom and fog fit the map's size; Trials spawn enemies in the northern quarter of any map.
+
+### Added — the Workshop (map & scenario editor)
+Replaces the old map editor (Menu → **Workshop**).
+- **Terrain**: raise, lower, level to a height, paint, block, flood fill; 1×1 / 3×3 / 5×5 brushes; undo and redo (Ctrl+Z / Ctrl+Y).
+- **Units**: up to 6 squad deploy tiles and 16 enemies with name, job, level, facing and a boss flag. Enemies appear as real sprites while you edit.
+- **Story**: title, subtitle, author, and the dialogue before the battle and after victory, with drawn portraits.
+- **Rules**: three objectives (rout all, defeat the boss, survive N rounds), the look (daylight, night, swamp, summit) and up to six reward items.
+- **File**: a library that saves as you work, new blank battlefields (8–24 tiles a side), copy any campaign map or remix any chapter, export/import `.json`, and **share links** (`#s=…`, compressed) that open the scenario in anyone's Workshop.
+- A **check** lists what blocks play (no deploy tiles, enemies on blocked tiles, a boss objective with no boss) and warns about enemies melee units can't walk to.
+- **Play** runs the scenario with your current squad. Afterwards: play again, back to the Workshop, or return to the campaign. Workshop battles never overwrite your campaign save; opening the Workshop mid-battle and closing it puts you back exactly where you were.
+- Works with mouse, touch, pen, keyboard and controller (B steps out to the map cursor, X jumps back into the panel); a side panel on desktop, a collapsible bottom sheet on phones.
+- Imported files and links are rebuilt field by field: numbers clamped, ids checked as own properties, text kept as plain text.
+
+### Added — character art
+- **48×48 sprites** (were 32×32) with shading, outlines and per-job silhouettes, headgear and weapons, in front, back and side views.
+- **Animation frames**: breathing idle, a two-step walk, a weapon strike and a flinch. Units now **walk between tiles** (with a hop over height changes) instead of teleporting.
+- **Drawn 64×64 portraits** for Rowan, Maren, Tobin, Corvin and Bria and for every job (ally and enemy colours), in the dialogue box (which now puts right-side speakers on the right) and on the unit card. They replace the emoji portraits.
+
+### Fixed
+- The unit card and turn order showed placeholder text until the first turn started.
+
+---
+
 ## [0.9.0] - 2026-11-19
 
 ### Changed

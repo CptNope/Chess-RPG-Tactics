@@ -20,4 +20,4 @@ The design-skills tracker's vetted **CloudAI-X/threejs-skills** (lighting, shade
 - Each battlefield has its own identity, and spells, torches and glints glow on High.
 - Phones get a lighter default and the game protects itself on weak GPUs; editing a tile rebuilds the merged terrain (cheap at this map size).
 - High-tier cost on real integrated GPUs is still unmeasured; software-rendered CI runs at ~3 fps on High (30 on Low), so automated browser tests use Low.
-- Unit art (procedural 32px sprites, emoji portraits) is now the weakest visual element; higher-resolution sprites are on the roadmap.
+- Unit art (procedural 32px sprites, emoji portraits) is now the weakest visual element; higher-resolution sprites are on the roadmap. (Done in 0.10.0, [ADR 0018](0018-workshop-scenarios-and-character-art.md).)

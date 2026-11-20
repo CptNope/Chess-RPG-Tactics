@@ -21,7 +21,7 @@ Every action is reachable from **mouse, keyboard, touch, pen and controller**. A
 | Re-center on active unit | Center button | `R` / `Home` | Center button | Center button | Click right stick (**R3**) |
 | Team (jobs & gear) | Team button / STATUS | `J` | Team button | Team button | **Y** |
 | Battle log | Log button | `L` | Log button | Log button | via Menu |
-| Menu (map, sound, save, load, editor) | Menu button | — | Menu button | Menu button | **Start** |
+| Menu (map, sound, save, load, Workshop) | Menu button | — | Menu button | Menu button | **Start** |
 | Controls help | ? button | `H` / `?` | ? button | ? button | **View / Back** |
 
 Notes:
@@ -32,6 +32,19 @@ Notes:
 * Controllers use the standard Gamepad mapping (Xbox, PlayStation, Switch Pro, 8BitDo…). Held directions repeat after 320ms every 110ms. Crits and boss enrage trigger a short rumble where the browser supports it.
 * Hotkey badges on the command buttons appear only while you're using a keyboard; the dialogue hint says "Tap", "Press A" or "Press Enter" to match your input.
 * Modals trap `Tab`, restore focus when closed, and every HUD control has a visible gold focus ring.
+
+### Workshop controls (0.10.0)
+
+| Action | Mouse / touch / pen | Keyboard | Controller |
+| :--- | :--- | :--- | :--- |
+| Apply the current tool | Tap / click a tile | Arrows move the cursor, `Enter` applies | D-pad + **A** |
+| Move around the panel | Tap | `Tab`, arrows, `Enter` | **X** to enter the panel, d-pad + **A** |
+| Leave the panel for the map | Tap the map | `Esc` | **B** |
+| Close the Workshop | × button | `Esc` from the map | **B** from the map |
+| Undo / redo | ↶ ↷ buttons | `Ctrl+Z` / `Ctrl+Y` (or `Ctrl+Shift+Z`) | ↶ ↷ buttons |
+| Hide / show the panel | ▾ button | — | ▾ button |
+
+Values are changed with ◀ ▶ steppers and segmented buttons rather than dropdowns or number fields, so a controller never needs a text cursor. Only names and dialogue need typing. On desktop the panel runs down the left side and the camera frustum shifts so the map stays centred in the free space; on phones it's a bottom sheet and the camera buttons move above it.
 
 ## 1b. Responsive Layout (0.8.0)
 
@@ -130,8 +143,10 @@ The camera view frustum is computed using:
 $$\text{Half Height} = \text{Zoom Level}$$
 $$\text{Half Width} = \text{Zoom Level} \times \frac{\text{Viewport Width}}{\text{Viewport Height}}$$
 
+(On portrait screens the two are swapped so the shorter side sets the scale.) While the Workshop is open, the frustum is also shifted by the panel's share of the screen, so the map is centred in the space left beside a side panel or above a bottom sheet.
+
 * **At Zoom 2.0**: The screen height captures only 4 world units, bringing character sprites up to hundreds of pixels tall, displaying retro pixel art details, weapon hilts, and facial profiles clearly.
-* **At Zoom 8.5**: The screen balances the tactical 11x11 battlefield with ample breathing room, mirroring the PS1/PSP *War of the Lions* aesthetic.
+* **At Zoom 8.5**: The minimum starting zoom. When a map loads, the camera centres on it and starts at `max(8.5, 0.62 × the longer side)`, about 9.9 for the 16×16 maps and 14.9 for a 24×24 Workshop map, so the whole field fits with breathing room.
 * **At Zoom 22.0**: The entire map and surrounding backdrop fit comfortably inside any display aspect ratio.
 
 ---

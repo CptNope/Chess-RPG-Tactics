@@ -6,7 +6,7 @@
 
 ## 1. Search
 
-The planner is exhaustive. Maps are 11×11 and squads are 4–6 units, so it simply tries everything.
+The planner is exhaustive. Maps are 16×16 (Workshop maps up to 24×24), squads are 4–6 units, and a unit can only reach the tiles within its Move, so it simply tries everything.
 
 ```mermaid
 flowchart TD

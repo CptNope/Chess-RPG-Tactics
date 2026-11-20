@@ -91,6 +91,11 @@ class TacticsGame {
     this.scene = new TacticsScene(canvas, this.grid);
     this.scene.updateUnits(this.units);
     this.applyAtmosphereForMap();
+    // The first battle was set up before the scene existed: fill the HUD now
+    const lead = this.squad[0];
+    this.ui.updateUnitCard(lead, this.grid.getHeight(lead.x, lead.z));
+    this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), null);
+    this.scene.focusOn(lead.x, this.grid.getHeight(lead.x, lead.z), lead.z);
 
     this.workshop = new Workshop({
       scene: this.scene,
