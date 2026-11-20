@@ -61,6 +61,7 @@ timeline
     0.8.0 : 0016 Multi-device input, responsive HUD
     0.9.0 : 0017 Lighting, atmosphere and quality tiers
     0.10.0 : 0018 Workshop scenarios, 16x16 maps, character art
+    0.11.0 : 0019 Pixel-art effects, path walking, balance sim
 ```
 
 | # | Decision | Release |
@@ -76,13 +77,14 @@ timeline
 | [0009](adr/0009-in-game-3d-map-editor.md) | In-game 3D map editor (superseded by 0018) | 0.4.0 |
 | [0010](adr/0010-equipment-and-inventory-architecture.md) | Five-slot equipment and weapon range | 0.4.0 |
 | [0011](adr/0011-branching-campaign-state-machine.md) | Branching campaign and dialogue engine | 0.4.0 |
-| [0012](adr/0012-vfx-particles-and-projected-hud.md) | VFX, camera shake, projected overlays | 0.5.0 |
+| [0012](adr/0012-vfx-particles-and-projected-hud.md) | VFX, camera shake, projected overlays (spell particles replaced by 0019) | 0.5.0 |
 | [0013](adr/0013-engine-performance-and-memory-pooling.md) | Performance, pooling, decoupled animation loop | 0.5.1 |
 | [0014](adr/0014-reactions-bgm-combat-log-persistence.md) | Reactions, procedural BGM, battle log, saves | 0.6.0 |
 | [0015](adr/0015-action-pipeline-ai-progression-trials.md) | Unified action pipeline, planning AI, persistent squad, Trials | 0.7.0 |
 | [0016](adr/0016-multi-device-input-and-responsive-hud.md) | Multi-device input and responsive HUD | 0.8.0 |
 | [0017](adr/0017-lighting-atmosphere-and-quality-tiers.md) | Lighting, atmosphere, merged terrain and quality tiers | 0.9.0 |
 | [0018](adr/0018-workshop-scenarios-and-character-art.md) | Workshop scenarios, 16×16 battlefields, procedural character art (supersedes 0009) | 0.10.0 |
+| [0019](adr/0019-pixel-art-effects-and-path-walking.md) | Pixel-art battle effects (pixelfx), path walking, Workshop strokes, balance sim (replaces 0012's spell particles) | 0.11.0 |
 
 New ADRs use the template in [Contributing](../CONTRIBUTING.md#adr-template).
 

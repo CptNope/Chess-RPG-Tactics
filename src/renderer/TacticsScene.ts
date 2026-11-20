@@ -11,6 +11,8 @@ import {
   createUnitSpriteTexture
 } from '../graphics/PixelTextures';
 import { VFXManager } from './VFXManager';
+import { PixelEffects, FxActor, actorFromSprite } from './PixelEffects';
+import { drawSprite } from '../graphics/CharacterArt';
 import type { SpriteFrame } from '../graphics/CharacterArt';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -29,6 +31,17 @@ export interface FloatingText {
   maxLifetime: number;
 }
 
+/** A walk along tiles: one segment per step, with a hop where the height changes. */
+interface Walk {
+  pts: { x: number; z: number; h: number }[];
+  seg: number;
+  t: number;
+}
+/** Frames per walked tile (60 fps), plus extra for a climb or drop. */
+const STEP_FRAMES = 9;
+const HOP_FRAMES = 4;
+const segFrames = (a: { h: number }, b: { h: number }) => STEP_FRAMES + (Math.abs(a.h - b.h) > 0.3 ? HOP_FRAMES : 0);
+
 interface UnitTween {
   type: 'lunge' | 'recoil';
   progress: number;
@@ -43,6 +56,8 @@ export class TacticsScene {
   public scene: THREE.Scene;
   public camera: THREE.OrthographicCamera;
   public vfx: VFXManager;
+  /** Pixel-art spell and hit effects (pixelfx). */
+  public pfx: PixelEffects;
 
   // Grid & Map
   public grid: BattleGrid;
@@ -55,7 +70,9 @@ export class TacticsScene {
   private unitTweens: Map<string, UnitTween> = new Map();
   /** Walk animation between tiles: last tile each unit stood on, and the walk in progress. */
   private lastTiles: Map<string, { x: number; z: number; h: number }> = new Map();
-  private walks: Map<string, { fromX: number; fromZ: number; fromH: number; t: number; dur: number }> = new Map();
+  private walks: Map<string, Walk> = new Map();
+  /** Paths queued by the game just before it moves a unit (consumed when the tile change is seen). */
+  private queuedPaths: Map<string, { x: number; z: number }[]> = new Map();
   private overheadHpElements: Map<string, HTMLElement> = new Map();
 
   // Highlight overlays (pooled)
@@ -108,6 +125,12 @@ export class TacticsScene {
 
   // Interaction
   public hoveredTile: { x: number; z: number } | null = null;
+  /**
+   * When set and `wants()` is true, a one-pointer drag paints tiles (Workshop brushes) instead of
+   * panning: begin() once, over() for each tile the pointer enters, end() on release.
+   */
+  public dragPaint?: { wants(): boolean; begin(x: number, z: number): void; over(x: number, z: number): void; end(): void };
+  private painting: { id: number; last: string } | null = null;
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
 
@@ -157,6 +180,7 @@ export class TacticsScene {
       0.1,
       1000
     );
+    this.pfx = new PixelEffects(this.scene, this.camera);
 
     this.setupLighting();
     this.buildMap();
@@ -390,6 +414,8 @@ export class TacticsScene {
     this.vfx.setWeatherTheme(newGrid.mapData.theme);
     this.lastTiles.clear();
     this.walks.clear();
+    this.queuedPaths.clear();
+    this.pfx.clear();
     this.buildMap();
     const md = newGrid.mapData;
     this.targetCameraTarget.set((md.width - 1) / 2, 1, (md.depth - 1) / 2);
@@ -578,6 +604,11 @@ export class TacticsScene {
       }
 
       if (this.pointers.size === 2) {
+        // A second finger turns a stroke into a camera gesture (what was painted stays)
+        if (this.painting) {
+          this.painting = null;
+          this.dragPaint?.end();
+        }
         const [a, b] = [...this.pointers.values()];
         this.multiTouchGesture = true;
         this.pinch = {
@@ -628,6 +659,30 @@ export class TacticsScene {
         return;
       }
 
+      // Workshop brush strokes: a one-pointer drag paints the tiles it crosses
+      if (this.painting?.id === e.pointerId) {
+        const t = this.pickTile(e.clientX, e.clientY);
+        if (t && `${t.x},${t.z}` !== this.painting.last) {
+          this.painting.last = `${t.x},${t.z}`;
+          this.setCursor(t.x, t.z);
+          this.dragPaint!.over(t.x, t.z);
+        }
+        return;
+      }
+      if (p.moved && !this.isPanning && !this.multiTouchGesture && this.pointers.size === 1 && !p.cancel && this.dragPaint?.wants()) {
+        const start = this.pickTile(p.sx, p.sy);
+        if (start) {
+          this.painting = { id: e.pointerId, last: `${start.x},${start.z}` };
+          this.dragPaint.begin(start.x, start.z);
+          const t = this.pickTile(e.clientX, e.clientY);
+          if (t && `${t.x},${t.z}` !== this.painting.last) {
+            this.painting.last = `${t.x},${t.z}`;
+            this.dragPaint.over(t.x, t.z);
+          }
+          return;
+        }
+      }
+
       if (this.isPanning || (p.moved && !this.multiTouchGesture)) {
         this.panByPixels(dx, dy);
       } else if (e.pointerType !== 'touch') {
@@ -640,6 +695,11 @@ export class TacticsScene {
       if (!p) return;
       this.pointers.delete(e.pointerId);
       if (e.pointerType === 'mouse' && (e.button === 1 || e.button === 2)) this.isPanning = false;
+      if (this.painting?.id === e.pointerId) {
+        this.painting = null;
+        this.dragPaint?.end();
+        return;
+      }
 
       if (this.multiTouchGesture) {
         // Two-finger tap (quick, no pinch/pan/twist) = cancel / back
@@ -819,23 +879,39 @@ export class TacticsScene {
       let height = this.grid.getHeight(unit.x, unit.z);
       const bob = Math.sin(time + unit.x * 2 + unit.z) * 0.035;
 
-      // Start a walk when the unit's tile changed since the last frame (short hops only)
+      // Start a walk when the unit's tile changed since the last frame
       const last = this.lastTiles.get(unit.id);
       if (last && (last.x !== unit.x || last.z !== unit.z)) {
+        const queued = this.queuedPaths.get(unit.id);
+        this.queuedPaths.delete(unit.id);
+        const fits = queued && queued.length > 1 && queued[0].x === last.x && queued[0].z === last.z
+          && queued[queued.length - 1].x === unit.x && queued[queued.length - 1].z === unit.z;
         const dist = Math.abs(last.x - unit.x) + Math.abs(last.z - unit.z);
-        if (dist <= 12) this.walks.set(unit.id, { fromX: last.x, fromZ: last.z, fromH: last.h, t: 0, dur: 6 + dist * 7 });
+        const pts = fits
+          ? queued!.map((q) => ({ x: q.x, z: q.z, h: this.grid.getHeight(q.x, q.z) }))
+          : dist <= 12 ? [{ x: last.x, z: last.z, h: last.h }, { x: unit.x, z: unit.z, h: height }] : null;
+        if (pts) this.walks.set(unit.id, { pts, seg: 0, t: 0 });
       }
       this.lastTiles.set(unit.id, { x: unit.x, z: unit.z, h: height });
       const walk = this.walks.get(unit.id);
       let walkX = 0, walkZ = 0;
+      let walkFacing: FacingDirection | null = null;
       if (walk) {
+        let a = walk.pts[walk.seg], b = walk.pts[walk.seg + 1];
         walk.t++;
-        const p = Math.min(1, walk.t / walk.dur);
-        walkX = (walk.fromX - unit.x) * (1 - p);
-        walkZ = (walk.fromZ - unit.z) * (1 - p);
+        if (walk.t > segFrames(a, b) && walk.seg < walk.pts.length - 2) {
+          walk.seg++;
+          walk.t = 1;
+          a = walk.pts[walk.seg];
+          b = walk.pts[walk.seg + 1];
+        }
+        const p = Math.min(1, walk.t / segFrames(a, b));
+        walkX = a.x + (b.x - a.x) * p - unit.x;
+        walkZ = a.z + (b.z - a.z) * p - unit.z;
         // Climb or drop smoothly, with a little hop over height changes
-        height = walk.fromH + (height - walk.fromH) * p + Math.sin(p * Math.PI) * Math.min(0.6, 0.12 + Math.abs(height - walk.fromH) * 0.3);
-        if (p >= 1) this.walks.delete(unit.id);
+        height = a.h + (b.h - a.h) * p + Math.sin(p * Math.PI) * Math.min(0.6, 0.06 + Math.abs(b.h - a.h) * 0.3);
+        walkFacing = b.x > a.x ? 'E' : b.x < a.x ? 'W' : b.z > a.z ? 'S' : 'N';
+        if (p >= 1 && walk.seg >= walk.pts.length - 2) this.walks.delete(unit.id);
       }
 
       // Handle Lunge / Recoil Tweens
@@ -875,7 +951,7 @@ export class TacticsScene {
         (this.activeRing.material as THREE.MeshBasicMaterial).color.setHex(unit.team === 'player' ? 0xf4c430 : 0xef4444);
       }
 
-      const relativeFacing = this.calculateRelativeFacing(unit.facing);
+      const relativeFacing = this.calculateRelativeFacing(walkFacing || unit.facing);
       const isEnemy = unit.team === 'enemy';
       // Animation frame: strike while lunging, flinch on recoil, stride while walking, else breathe
       const frame: SpriteFrame = tween?.type === 'lunge' ? 'attack'
@@ -953,6 +1029,27 @@ export class TacticsScene {
       mesh.position.set(t.x, height + 0.02, t.z);
       this.highlightGroup.add(mesh);
     }
+  }
+
+  /** The unit as it looks on screen right now, as an effect actor (for heals, poison, haste...). */
+  public fxActorFor(unit: Unit): FxActor {
+    const view = this.calculateRelativeFacing(unit.facing);
+    const team = unit.team === 'enemy';
+    return actorFromSprite(`${unit.jobId}|${view}|${team}`, drawSprite(unit.jobId, view, team, 'idle0'));
+  }
+
+  /**
+   * Call just before changing a unit's tile: it will walk this path (start and end included)
+   * instead of sliding straight there. Returns how long the walk takes, in milliseconds.
+   */
+  public walkPath(unitId: string, path: { x: number; z: number }[] | null): number {
+    if (!path || path.length < 2) return 0;
+    this.queuedPaths.set(unitId, path);
+    let frames = 0;
+    for (let i = 1; i < path.length; i++) {
+      frames += segFrames({ h: this.grid.getHeight(path[i - 1].x, path[i - 1].z) }, { h: this.grid.getHeight(path[i].x, path[i].z) });
+    }
+    return (frames / 60) * 1000;
   }
 
   /** Adds highlighted tiles without clearing the existing ones (Workshop markers). */
@@ -1126,6 +1223,8 @@ export class TacticsScene {
     this.animateUnits(now);
     this.updateFloatingNumbers();
     this.vfx.update(delta);
+    this.pfx.facing = this.currentRotationAngle;
+    this.pfx.update(delta);
 
     // Shared clock for water, swamp, grass sway and highlights
     sharedTime.value = now / 1000;

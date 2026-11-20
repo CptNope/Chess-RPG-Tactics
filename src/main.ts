@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { MAPS, spawnsFor } from './data/maps';
 import { BattleGrid } from './core/Grid';
 import { TacticsScene } from './renderer/TacticsScene';
@@ -6,7 +5,7 @@ import { UIManager } from './ui/UIManager';
 import { TurnManager } from './core/TurnManager';
 import { JobSystem } from './core/JobSystem';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
-import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter, Element } from './core/types';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { ITEMS, STARTING_ARMORY } from './data/items';
 import { JOBS } from './data/jobs';
@@ -20,6 +19,7 @@ import { GamepadInput, PadAction } from './input/GamepadInput';
 import { getQualitySetting, setQualitySetting, resolveQuality, QualitySetting, PROFILES } from './renderer/GraphicsQuality';
 import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
 import { Workshop } from './ui/Workshop';
+import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 
 type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
@@ -50,6 +50,7 @@ class TacticsGame {
 
   // Workshop
   private workshop!: Workshop;
+  private fx!: BattleFx;
   private customScenario: Scenario | null = null;
   /** The battle that was in progress when the Workshop opened, restored when it closes. */
   private suspended: {
@@ -96,6 +97,8 @@ class TacticsGame {
     this.ui.updateUnitCard(lead, this.grid.getHeight(lead.x, lead.z));
     this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), null);
     this.scene.focusOn(lead.x, this.grid.getHeight(lead.x, lead.z), lead.z);
+
+    this.fx = new BattleFx(this.scene);
 
     this.workshop = new Workshop({
       scene: this.scene,
@@ -804,6 +807,7 @@ class TacticsGame {
       if (!dest) return;
 
       SoundFX.playMoveStep();
+      this.scene.walkPath(active.id, this.grid.findPath(active, this.units, tile.x, tile.z));
       active.x = tile.x;
       active.z = tile.z;
       active.hasMoved = true;
@@ -912,20 +916,6 @@ class TacticsGame {
     );
   }
 
-  private playElementFx(element: Element, pos: THREE.Vector3): void {
-    if (element === 'physical') {
-      SoundFX.playSwordSlash();
-      this.scene.vfx.spawnSlashFX(pos);
-    } else {
-      SoundFX.playMagicCast();
-      if (element === 'fire') this.scene.vfx.spawnFireFX(pos);
-      else if (element === 'ice') this.scene.vfx.spawnIceFX(pos);
-      else if (element === 'lightning') this.scene.vfx.spawnLightningFX(pos);
-      else if (element === 'holy' || element === 'time') this.scene.vfx.spawnHolyFX(pos);
-      else this.scene.vfx.spawnSlashFX(pos);
-    }
-  }
-
   /**
    * Resolves an ability: spends MP once, then rolls it against every unit it touches,
    * plays effects, handles reactions, boss enrage, and awards EXP/JP to player units.
@@ -972,6 +962,7 @@ class TacticsGame {
       if (levels > 0) {
         const h = this.grid.getHeight(caster.x, caster.z);
         this.scene.spawnFloatingDamage(caster.x, h + 0.4, caster.z, `LEVEL UP! Lv ${caster.level}`, 'heal');
+        this.fx.levelUp(caster);
         this.ui.addLogEntry(`[LEVEL] ${caster.name} reached level ${caster.level}!`, 'system');
         SoundFX.playVictoryFanfare();
       }
@@ -983,7 +974,6 @@ class TacticsGame {
 
   private presentResult(target: Unit, forecast: CombatForecast, result: AttackResult): void {
     const h = this.grid.getHeight(target.x, target.z);
-    const pos = new THREE.Vector3(target.x, h, target.z);
     const ability = forecast.ability;
 
     if (!result.hit) {
@@ -1000,7 +990,7 @@ class TacticsGame {
 
     if (result.isHeal) {
       SoundFX.playHeal();
-      this.scene.vfx.spawnHolyFX(pos);
+      this.fx.heal(target);
       this.scene.spawnFloatingDamage(target.x, h, target.z, `+${result.damageDealt}`, 'heal');
       this.ui.addLogEntry(`[HEAL] ${target.name} recovers ${result.damageDealt} HP.`, 'heal');
       return;
@@ -1008,14 +998,18 @@ class TacticsGame {
 
     if (result.damageDealt === 0) {
       SoundFX.playMagicCast();
-      this.scene.vfx.spawnHolyFX(pos);
+      this.fx.status(target, result.appliedStatus || ability.appliesStatus);
       this.scene.spawnFloatingDamage(target.x, h, target.z, `[${result.appliedStatus || 'OK'}]`, 'heal');
       this.ui.addLogEntry(`[STATUS] ${target.name} receives ${result.appliedStatus}.`, 'spell');
       return;
     }
 
     this.scene.triggerUnitRecoil(target.id);
-    this.playElementFx(ability.element, pos);
+    if (ability.element === 'physical') SoundFX.playSwordSlash();
+    else SoundFX.playMagicCast();
+    this.fx.hit(forecast.attacker, target, ability, !!result.isCrit);
+    // A status that rides on a damaging spell (Hell Ivy, Quicksand, Leg Shot...) shows after the hit
+    if (result.appliedStatus && !ability.name.includes(': ')) later(() => this.fx.status(target, result.appliedStatus), 350);
 
     if (result.isCrit) {
       SoundFX.playCrit();
@@ -1036,7 +1030,7 @@ class TacticsGame {
       later(() => {
         if (ss.hit) {
           SoundFX.playSwordSlash();
-          this.scene.vfx.spawnSlashFX(pos);
+          this.fx.strike(forecast.attacker, target);
           this.scene.triggerUnitRecoil(target.id);
           this.scene.spawnFloatingDamage(target.x, h + 0.3, target.z, `-${ss.damageDealt}`, 'damage');
           this.ui.addLogEntry(`[DUAL WIELD] Second strike for ${ss.damageDealt} DMG.`, 'attack');
@@ -1049,7 +1043,7 @@ class TacticsGame {
       SoundFX.playCrit();
       this.scene.vfx.triggerScreenShake(1.0);
       this.pad.rumble(1.0, 400);
-      this.scene.vfx.spawnFireFX(pos);
+      this.fx.enrage(target);
       this.ui.showBanner(`${target.name.toUpperCase()} IS ENRAGED!`);
       this.ui.addLogEntry(`[BOSS] ${target.name} is enraged: Haste and +20% power!`, 'crit');
     }
@@ -1064,7 +1058,6 @@ class TacticsGame {
     this.ui.showBanner(`REACTION: ${rx.name.toUpperCase()}!`);
     this.ui.addLogEntry(`[REACTION] ${rx.description}`, 'reaction');
     const th = this.grid.getHeight(target.x, target.z);
-    const tpos = new THREE.Vector3(target.x, th, target.z);
 
     if (rx.type === 'counter_attack' && rx.damage) {
       this.scene.triggerUnitLunge(target.id, caster.x, caster.z);
@@ -1072,21 +1065,23 @@ class TacticsGame {
       SoundFX.playSwordSlash();
       const ch = this.grid.getHeight(caster.x, caster.z);
       this.scene.spawnFloatingDamage(caster.x, ch, caster.z, `-${rx.damage}`, 'damage');
-      this.scene.vfx.spawnSlashFX(new THREE.Vector3(caster.x, ch, caster.z));
+      this.fx.strike(target, caster);
       if (caster.isDead) this.ui.addLogEntry(`[DEFEAT] The counter felled ${caster.name}!`, 'defeat');
     } else if (rx.type === 'auto_potion' && rx.heal) {
       SoundFX.playHeal();
-      this.scene.vfx.spawnHolyFX(tpos);
+      this.fx.heal(target);
       this.scene.spawnFloatingDamage(target.x, th, target.z, `+${rx.heal}`, 'heal');
     } else if (rx.type === 'dragonheart') {
       SoundFX.playHeal();
-      this.scene.vfx.spawnHolyFX(tpos);
+      this.fx.heal(target);
       this.scene.spawnFloatingDamage(target.x, th, target.z, 'REVIVED!', 'heal');
     } else if (rx.type === 'earthen_ward') {
       SoundFX.playHeal();
+      this.fx.status(target, 'protect');
       this.scene.spawnFloatingDamage(target.x, th, target.z, 'PROTECT', 'heal');
     } else if (rx.type === 'speed_save') {
       SoundFX.playTurnChime();
+      this.fx.status(target, 'haste');
       this.scene.spawnFloatingDamage(target.x, th, target.z, 'SPD +2', 'heal');
     } else if (rx.type === 'critical_quick') {
       SoundFX.playTurnChime();
@@ -1114,13 +1109,16 @@ class TacticsGame {
     const plan = planTurn(enemy, this.units, this.grid);
 
     if (plan.moveTo.x !== enemy.x || plan.moveTo.z !== enemy.z) {
+      const walkMs = this.scene.walkPath(enemy.id, this.grid.findPath(enemy, this.units, plan.moveTo.x, plan.moveTo.z));
       enemy.x = plan.moveTo.x;
       enemy.z = plan.moveTo.z;
       enemy.hasMoved = true;
       SoundFX.playMoveStep();
       this.scene.updateUnits(this.units);
       this.scene.focusOn(enemy.x, this.grid.getHeight(enemy.x, enemy.z), enemy.z);
+      // Let the walk finish before acting (the walk runs on frames, so it isn't sped up by ?fast)
       await wait(550);
+      if (walkMs > 550 * SPEED) await new Promise((r) => setTimeout(r, walkMs - 550 * SPEED));
     }
 
     if (plan.ability && plan.targetTile) {

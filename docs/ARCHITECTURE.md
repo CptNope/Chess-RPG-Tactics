@@ -33,7 +33,7 @@ flowchart TB
 
     subgraph View["Presentation"]
         direction LR
-        Scene["TacticsScene<br/>Three.js"] ~~~ Look["Atmosphere · TileShading<br/>Decorations · Quality"] ~~~ VFX["VFXManager"] ~~~ Tex["CharacterArt<br/>PixelTextures"] ~~~ UI["UIManager<br/>Workshop"] ~~~ Audio["SoundFX · Music"]
+        Scene["TacticsScene<br/>Three.js"] ~~~ Look["Atmosphere · TileShading<br/>Decorations · Quality"] ~~~ VFX["VFXManager<br/>PixelEffects · BattleFx"] ~~~ Tex["CharacterArt<br/>PixelTextures"] ~~~ UI["UIManager<br/>Workshop"] ~~~ Audio["SoundFX · Music"]
     end
 
     Input ==>|"intents"| Game
@@ -47,7 +47,7 @@ flowchart TB
 | :--- | :--- | :--- | :--- |
 | **TacticsGame** | `src/main.ts` | Owns all state; turn flow, action pipeline, input dispatch, spoils, chapters, Trials, save/load | everything |
 | **TurnManager** | `src/core/TurnManager.ts` | CT clock, turn order prediction, CT refunds, status ticking, poison | JobSystem |
-| **BattleGrid** | `src/core/Grid.ts` | Tile lookup, Dijkstra movement (Jump, terrain cost, Teleport), `canTarget` range rule | types |
+| **BattleGrid** | `src/core/Grid.ts` | Tile lookup, Dijkstra movement (Jump, terrain cost, Teleport), `findPath` for walking, `canTarget` range rule | types |
 | **CombatEngine** | `src/core/CombatEngine.ts` | Facing, forecast, hit/crit rolls, statuses, reactions, boss enrage | JobSystem |
 | **JobSystem** | `src/core/JobSystem.ts` | Unit creation, effective stats, EXP/levels, bosses, passives lookup | data |
 | **EnemyAI** | `src/core/EnemyAI.ts` | Scores every tile × ability × target; also powers AUTO | Grid, CombatEngine, Geomancy |
@@ -60,7 +60,10 @@ flowchart TB
 | **TileShading** | `src/renderer/TileShading.ts` | Terrain materials with injected shader tweaks (bevels, cliff AO, water, swamp); merged terrain meshes | — |
 | **Decorations** | `src/renderer/Decorations.ts` | Instanced grass, reeds and pebbles with wind sway | TileShading |
 | **GraphicsQuality** | `src/renderer/GraphicsQuality.ts` | High / Medium / Low profiles, device detection, saved setting | — |
-| **VFXManager** | `src/renderer/VFXManager.ts` | Weather, spell particles, screen shake (reduced-motion aware) | — |
+| **VFXManager** | `src/renderer/VFXManager.ts` | Weather particles and screen shake (reduced-motion aware) | — |
+| **PixelEffects** | `src/renderer/PixelEffects.ts` | Plays pixelfx effects as camera-facing billboards at sprite pixel density (back/front layers, colour + additive light); builds effect actors from unit sprites | vendor/pixelfx |
+| **BattleFx** | `src/renderer/BattleFx.ts` | The cue table: which effect plays for each hit, element, geomancy spell, status, heal, enrage and level-up, where it stands and how far to skip its wind-up | PixelEffects |
+| **pixelfx** (vendored) | `src/vendor/pixelfx/` | Third-party MIT library: effect drawing core + the 21 effects the game uses, unchanged; `registry.js` is ours | — |
 | **CharacterArt** | `src/graphics/CharacterArt.ts` | Pixel painter + outline pass: 48×48 unit sprites (3 views × 6 frames) and 64×64 portraits | — |
 | **PixelTextures** | `src/graphics/PixelTextures.ts` | Procedural tile textures; wraps CharacterArt sprites as cached textures | CharacterArt |
 | **UIManager** | `src/ui/UIManager.ts` | HUD, menus, Team screen, modals, focus management, input-aware hints | JobSystem, FocusNav |
@@ -339,6 +342,8 @@ flowchart LR
 | Atmosphere | Canvas-painted gradient sky with a seeded star field; `THREE.Fog` from ~44 to ~92 units (the camera sits 45 units out) |
 | Units | Billboard planes with procedural 48×48 sprites (CharacterArt), radial-gradient contact shadows, and a ring under the active unit. The frame follows the action: breathing idle, walk while tweening between tiles (with a hop over height changes), strike during a lunge, flinch on recoil |
 | Workshop view | `setScreenInset(left, bottom)` shifts the orthographic frustum so the map stays centred beside the side panel or above the bottom sheet |
+| Effects | pixelfx frames (30 fps steps) on billboards 1.35 units per 48 px; back and front layers offset along the view direction so they never slide on screen; colour textures blend normally, light textures add (and bloom on High). Body effects get the unit's own sprite as their actor |
+| Walking | `findPath` → `scene.walkPath()` queued before the tile changes; the sprite walks each segment (9 frames, +4 for a climb or drop), faces the step and hops ledges |
 | Post | High only: `UnrealBloomPass` (strength per map), a vignette `ShaderPass`, `OutputPass` |
 | Quality | High 2048 shadows, bloom, 4× MSAA, DPR ≤ 2 · Medium 1024 shadows, half decorations, DPR ≤ 1.5 · Low no shadow maps or torches, DPR 1. Auto drops a tier after two 3-second windows under 40 fps |
 | Overlays | DOM HP/CT bars and floating numbers projected from 3D positions each frame |
@@ -386,13 +391,14 @@ src/
 │   ├── SaveManager.ts      localStorage
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
 ├── data/                   Content: jobs, items, maps, campaign
-├── renderer/               TacticsScene (Three.js + gestures), VFXManager,
-│                           Atmosphere, TileShading, Decorations, GraphicsQuality
+├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
+│                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality
+├── vendor/pixelfx/         Third-party pixel effects (MIT), unchanged + our registry
 ├── graphics/               PixelTextures, CharacterArt (sprites + portraits)
 ├── ui/                     UIManager, Workshop
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core.test.ts (30 rule tests), scenario.test.ts (11)
-scripts/                    check-dist.mjs, gen-docs.ts
+tests/                      core.test.ts (33 rule tests), scenario.test.ts (11)
+scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts
 docs/                       This documentation + ADRs
 ```

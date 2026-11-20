@@ -104,10 +104,12 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       }
     ],
     enemyRoster: [
-      { name: 'Dragoon Commander', jobId: 'dragoon', level: 4, x: 7, z: 1, isBoss: true },
-      { name: 'Rampart Sniper', jobId: 'archer', level: 4, x: 1, z: 0 },
-      { name: 'Tower Sniper', jobId: 'archer', level: 4, x: 12, z: 0 },
-      { name: 'Iron Vanguard', jobId: 'knight', level: 4, x: 7, z: 7 },
+      // Snipers hold the wall walk either side of the gate (reachable by the stairs). Tuned with
+      // `npm run balance` back to roughly this chapter's 0.9 difficulty (see CHANGELOG 0.11.0)
+      { name: 'Dragoon Commander', jobId: 'dragoon', level: 3, x: 7, z: 1, isBoss: true },
+      { name: 'Rampart Sniper', jobId: 'archer', level: 3, x: 4, z: 8 },
+      { name: 'Tower Sniper', jobId: 'archer', level: 3, x: 10, z: 8 },
+      { name: 'Iron Vanguard', jobId: 'knight', level: 3, x: 7, z: 7 },
       { name: 'Gate Warden', jobId: 'knight', level: 3, x: 8, z: 7 }
     ]
   },
