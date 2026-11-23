@@ -59,6 +59,8 @@ quadrantChart
     Thief: [0.62, 0.9]
     Summoner: [0.05, 0.2]
     Oracle: [0.2, 0.42]
+    Paladin: [0.72, 0.35]
+    Spellblade: [0.5, 0.5]
 ```
 
 | Job | Plays like | Signature tools |
@@ -75,13 +77,17 @@ quadrantChart
 | **Monk** *(0.13)* | Fist fighter and field medic | Aura Wave (range 3), Chakra (free area heal + cleanse, from ATK), Pummel, Iron Will, Brawler, Ki Flow |
 | **Thief** *(0.13)* | Fast skirmisher | Steal (gear into your armory), Sand Toss (Blind), Hamstring (Slow), Quick Hands, Backstab, Fleet Foot |
 | **Summoner** *(0.13)* | Radius-2 spells | Salamander, Undine, Storm Roc, Sylph (heal + Regen), Golem (area Protect), Mana Spring, Conserve |
+| **Paladin** *(0.14, advanced)* | Holy front-liner | Holy Blade, Lay on Hands, Rebuke (Silence), Aegis (area Shell), Divine Grace, Zeal |
+| **Spellblade** *(0.14, advanced)* | Elemental duelist | Flame Edge, Frost Edge (Slow), Thunder Lunge (reach 2), Runic, Arcane Edge |
 | **Oracle** *(0.13)* | Ailments | Dim Sight (Blind), Hush (Silence), Lullaby (area Sleep), Soul Drain, Hex Ward, Hex Mastery |
 
 Older jobs gained an action each in 0.13: Squire *Rally*, Knight *Bulwark*, Archer *Arrow Rain*, Black Mage *Firestorm*, White Mage *Shell*, *Purify* and *Healing Circle*, Ninja *Smoke Bomb*, Time Weaver *Regen*. The Knight's support is now **Armor Mastery** (+50% HP from armor, helms and shields).
 
-### Prerequisites (defined, not yet enforced)
+### Job levels and the job tree (0.14)
 
-`src/data/jobs.ts` declares which job unlocks which, but **the Team screen currently lets any unit switch to any job**. Enforcing this tree is on the [roadmap](ROADMAP.md).
+Each job a unit works in has a **job level** from 1 to 8 (Master), set by the lifetime JP earned in that job: 100 JP for Lv 2, 250 for Lv 3, then 450, 700, 1000, 1400 and 1900. Spending JP on abilities doesn't lower it. An action earns 24 JP and a won battle 60, so a level takes about one battle early on.
+
+A job is **locked** until the unit has the job levels it requires. The Team screen lists every job with its level, a progress bar, and what a locked job still needs. Every unit starts at Squire Lv 2, so Knight and Archer are open from the start; a unit already in a job (a recruit, or one from an older save) keeps it.
 
 ```mermaid
 flowchart LR
@@ -95,8 +101,14 @@ flowchart LR
     WhiteMage["White Mage"] --> |Lv 2| Summoner
     BlackMage --> |Lv 2| Summoner
     TimeWeaver --> |Lv 2| Oracle
+    Knight --> |Lv 3| Paladin
+    WhiteMage --> |Lv 2| Paladin
+    Knight --> |Lv 2| Spellblade
+    BlackMage --> |Lv 2| Spellblade
     Geomancer
 ```
+
+`JobSystem.canChangeJob` is the single check; `gainJp` reports level-ups and the jobs they unlock, and `grantPrerequisites` gives units created in an advanced job the levels it needs.
 
 ---
 
@@ -167,5 +179,17 @@ Some gear carries a **trait** on top of its stats (`Item.traits`):
 ### Steal
 
 The Thief's **Steal** takes one piece of an adjacent foe's gear (accessory first, then head, weapon, shield, body) and adds it to your armory if you don't have one. The foe loses its stats. It's harder than a blow (−25 hit, −45 against a boss) and, like any attack, easier from the side or behind. Gear stolen in a battle is listed on the spoils screen.
+
+### Gil and the shop (0.14)
+
+| Source | Gil |
+| :--- | :--- |
+| New game | 300 |
+| Defeated enemy | 20 + 10 × level (×3 for a boss) |
+| Battle won | +150 (campaign), +100 + 20 × floor (Trials) |
+| Stealing gear you already own | half its price |
+| Workshop battles | none |
+
+**Team → Shop** sells gear for the armory; one purchase outfits the whole squad. The shelves grow with the campaign: items up to 380 gil in Chapter I, 480 in Chapter II, 580 in the Final Chapter, and everything after the campaign is cleared or in the Trials. The Zodiac Blade, Zodiac Ribbon and Wyrmscale Mail are never sold. Rules live in `src/core/Economy.ts`.
 
 The gear tab lists only items in the squad's **armory**. You start with 17 items. Chapter wins, branch choices and Trials drops add more ([where each item comes from](CONTENT_REFERENCE.md#items)). Any number of units can equip the same item.

@@ -31,6 +31,7 @@ timeline
         0.12.0 : itch.io release : Title screen : Bundled fonts : Fullscreen
     section Nov 23
         0.13.0 : Monk, Thief, Summoner, Oracle : 6 new statuses : Gear traits : Steal
+        0.14.0 : Job levels and job tree : Paladin, Spellblade : Gil and shop : Status pips
 ```
 
 | Version | Theme | Highlights |
@@ -43,6 +44,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.14 | Progression | Job levels and an enforced job tree, Paladin and Spellblade (15 jobs, 86 abilities), gil and a shop that grows with the campaign, status pips over units, readable HP bars |
 | 0.13 | Bigger squad | Monk, Thief, Summoner and Oracle (13 jobs, 75 abilities), Shell / Regen / Blind / Silence / Sleep / Breach, 25 new items with traits, Steal, Rend Armor and Armor Mastery fixed |
 | 0.12 | Ship it | itch.io release (HTML5 zip, store page, butler publishing), title screen, fullscreen, bundled fonts, iframe-safe input |
 | 0.11 | Feel | Pixel-art spell and hit effects (pixelfx) wrapping the real sprites, units walk their path, Workshop brush strokes, Chapter II-B rebalanced with a headless balance sim |
@@ -54,17 +56,17 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.14)"]
+    subgraph NOW["Now (0.15)"]
         direction TB
-        N1["Job prerequisites enforced"]
+        N1["Job mastery rewards"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Devlog + site post<br/>for the itch release"]
     end
-    subgraph NEXT["Next (0.15 – 0.17)"]
+    subgraph NEXT["Next (0.16 – 0.18)"]
         direction TB
         X1["Equipment rules:<br/>weapon types per job"]
-        X2["Shop + gil economy"]
+        X2["Consumable items:<br/>potions, remedies"]
         X3["Smarter AI:<br/>reactions, facing, 2-ply"]
         X4["Undo move"]
         X5["Multiple save slots"]
@@ -83,23 +85,21 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.14): finish and ship what exists
+### Now (0.15): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
-| **Enforce job prerequisites** | The tree is in `jobs.ts` (now 13 jobs deep) but any unit can take any job, which flattens progression | S | Lock jobs in the Team screen until the required job level; show the requirement |
-| **Job levels** | Prerequisites need a job level; today only JP exists | S | Job level from total JP earned in a job |
+| **Job mastery rewards** | Job levels 4–8 unlock nothing yet | S | A small permanent bonus or a mastery ability per job at Master |
 | **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **Devlog** | Tell people what's new | S | itch devlog for 0.13 (the site's project page is live) |
-| **Status icons over units** | Six new statuses only show on the unit card | S | Small pixel icons above the HP bar |
+| **Devlog** | Tell people what's new | S | itch devlog for 0.13 and 0.14 (the site's project page is live) |
 
-### Next (0.15 – 0.17): depth
+### Next (0.16 – 0.18): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
 | **Equipment rules**: weapon and armor types per job | Every job can wear everything; Armor Mastery (0.13) could become "wear plate as any job" once rules exist | M |
-| **Shop and gil** | Items have prices that nothing uses; gives Trials rewards and stolen duplicates a second outlet | M |
+| **Consumables** (potions, remedies, a revive) and an Item command | Gil has little to buy once the armory is full | M |
 | **AI: reactions and facing** | AI ignores Weapon Guard and leaves its back open ([details](ENEMY_AI.md#5-known-limits)) | M |
 | **AI: two-ply look-ahead** | Lets enemies set up combos and retreat to heal | L |
 | **Undo move** (before acting) | Standard tactics-game comfort | S |
@@ -134,7 +134,7 @@ quadrantChart
     quadrant-2 "Quick wins"
     quadrant-3 "Fill-ins"
     quadrant-4 "Reconsider"
-    "Job prerequisites": [0.2, 0.7]
+    "Job mastery rewards": [0.2, 0.55]
     "Devlog + site post": [0.1, 0.55]
     "Device QA": [0.25, 0.75]
     "Play-tests in CI": [0.36, 0.65]
@@ -142,10 +142,10 @@ quadrantChart
     "Save slots": [0.22, 0.36]
     "PWA offline": [0.3, 0.52]
     "Equipment rules": [0.55, 0.53]
-    "Shop + gil": [0.62, 0.62]
+    "Consumable items": [0.6, 0.62]
     "AI 2-ply": [0.75, 0.6]
     "New chapters": [0.8, 0.85]
-    "New jobs": [0.7, 0.7]
+    "More jobs": [0.7, 0.7]
     "Online duels": [0.86, 0.68]
     "Localization": [0.6, 0.3]
 ```
@@ -156,8 +156,6 @@ quadrantChart
 
 | Area | Issue | Impact | Plan |
 | :--- | :--- | :---: | :--- |
-| Rules | Job prerequisites defined but not enforced | Medium | Now |
-| Rules | Item `price` unused | Low | Next (shop) |
 | Rules | Speed Save's +2 Speed is lost at the unit's next end of turn (stats are recalculated) | Low | Make it a status |
 | Code | `main.ts` (1.5k lines) and `UIManager.ts` (1k lines) are large | Medium | Split battle flow, spoils/chapters and input into modules |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |

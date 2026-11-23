@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { BENEFICIAL_STATUSES } from '../core/CombatEngine';
 import { TileData, Unit, FacingDirection, TerrainType } from '../core/types';
 import { BattleGrid } from '../core/Grid';
 import {
@@ -864,6 +865,23 @@ export class TacticsScene {
       const ctFill = barEl.querySelector('.overhead-ct-fill') as HTMLElement;
       if (hpFill) hpFill.style.width = `${Math.max(0, (unit.currentHp / unit.maxHp) * 100)}%`;
       if (ctFill) ctFill.style.width = `${Math.min(100, unit.ct)}%`;
+
+      // Status pips above the bar: round = buff, square = ailment, coloured like the unit card's badges
+      const key = unit.statuses.map((st) => st.type).join(',');
+      if (barEl.dataset.st !== key) {
+        barEl.dataset.st = key;
+        barEl.querySelector('.overhead-status')?.remove();
+        if (key) {
+          const row = document.createElement('div');
+          row.className = 'overhead-status';
+          for (const st of unit.statuses.slice(0, 6)) {
+            const pip = document.createElement('i');
+            pip.className = `status-${st.type} ${BENEFICIAL_STATUSES.includes(st.type) ? 'buff' : 'ailment'}`;
+            row.appendChild(pip);
+          }
+          barEl.appendChild(row);
+        }
+      }
     }
   }
 

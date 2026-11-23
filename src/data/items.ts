@@ -478,6 +478,25 @@ export const ITEMS: Record<string, Item> = {
     price: 620,
     stats: { move: 1, jump: 1 }
   },
+  runeblade: {
+    id: 'runeblade',
+    name: 'Runeblade',
+    slot: 'weapon',
+    weaponType: 'sword',
+    description: 'Glyphs run the length of the fuller. A sword for those who fight with spell and steel alike.',
+    price: 560,
+    stats: { attack: 8, magic: 6, mp: 15 },
+    range: 1
+  },
+  oath_shield: {
+    id: 'oath_shield',
+    name: 'Oathkeeper',
+    slot: 'shield',
+    description: 'A templar\'s shield, sworn never to waver. Guards against Sleep and Blind.',
+    price: 500,
+    stats: { evasion: 20, hp: 20 },
+    traits: { guard: ['sleep', 'blind'] }
+  },
   berserker_band: {
     id: 'berserker_band',
     name: 'Berserker Band',
@@ -503,7 +522,8 @@ export const RARE_DROP_POOL: string[] = [
   'mage_ring', 'assassin_daggers', 'gaia_staff', 'sniper_bow', 'crystal_helm', 'dragon_mail', 'ribbon',
   'tiger_claws', 'moonfang', 'halberd', 'dawn_blade', 'siege_crossbow', 'flame_rod', 'frost_rod', 'storm_rod',
   'sage_staff', 'mirror_shield', 'barbute', 'sage_circlet', 'clarity_circlet', 'brawler_gi', 'summoner_robe',
-  'templar_mail', 'verdant_charm', 'warding_amulet', 'purity_bangle', 'sprinter_anklet', 'berserker_band'
+  'templar_mail', 'verdant_charm', 'warding_amulet', 'purity_bangle', 'sprinter_anklet', 'berserker_band',
+  'runeblade', 'oath_shield'
 ];
 
 /**

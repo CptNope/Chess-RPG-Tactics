@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.0] - 2026-11-23
+
+### Added — the job tree
+- **Jobs level up.** Every job has a level from 1 to 8 (Master), earned from the lifetime JP a unit gains in it. Spending JP never lowers it. Level-ups show in the battle log, over the unit, and on the spoils screen.
+- **Advanced jobs must be unlocked.** The Team screen now lists every job with its level and a progress bar; locked jobs show what they need ("Needs Knight Lv 2 (now Lv 1)"). Squire, Black Mage, White Mage and Geomancer are open to everyone, and every unit starts at Squire Lv 2, which opens Knight and Archer. A job level takes about one battle, so a new job opens up roughly every fight.
+- **Two advanced jobs** (15 in all), each needing two other jobs:
+  - **Paladin** (Knight Lv 3 + White Mage Lv 2): *Holy Blade* (holy damage from ATK that Protect and facing don't change), *Lay on Hands* (a heal from ATK), *Rebuke* (ranged Silence), *Aegis* (area Shell); reaction *Divine Grace*; support *Zeal* (+20% holy damage and healing).
+  - **Spellblade** (Knight Lv 2 + Black Mage Lv 2): *Flame Edge*, *Frost Edge* (Slow) and *Thunder Lunge* (reach 2), elemental strikes that hit with weapon strength; reaction *Runic* (MP back when struck by a spell); support *Arcane Edge* (Attack gains damage from MAG).
+- New gear: **Runeblade** and the **Oathkeeper** shield (guards against Sleep and Blind). 86 abilities and 54 items in all.
+
+### Added — gil and the shop
+- **Gil.** Defeated enemies pay a bounty (more for higher levels, triple for bosses), and each win adds a bonus. A new game starts with 300 gil. Stealing gear you already own now fences it for half its price.
+- **Shop** tab in Team: buy gear for the armory, which the whole squad shares. Stock grows after each chapter; everything but three relics is on sale once the campaign is cleared or in the Trials. Your purse shows in the Team header and on the spoils screen, and is saved.
+
+### Added — battlefield readability
+- **Status pips over units:** every active status shows above the unit's HP bar, round for buffs and square for ailments, in the same colours as the unit card's badges.
+
+### Fixed
+- **Overhead HP bars were nearly invisible:** the green HP fill was clipped to a 1px sliver. The bar is now tall enough to show HP and the CT line.
+- **New Game** from the title screen now starts with a fresh squad, armory and purse even after a save was loaded.
+- The secondary-skillset slot only cycles through other jobs where the unit has learned an action, instead of every job.
+
+### Changed
+- Team tabs are shorter on phones (Jobs / Gear / Shop), so the header stays on one line.
+- Old saves are brought up to date on load: job levels are rebuilt from the JP each unit holds and has spent, the jobs and secondary skillsets in use stay unlocked, and the purse starts at 300 gil.
+
+### Developer
+- `JobSystem.jobLevel`, `jobLevelProgress`, `missingPrerequisites`, `canChangeJob`, `grantPrerequisites`, `gainJp`; `Unit.jobJpEarned`. `src/core/Economy.ts` (bounties, shop tiers, resale). Abilities with `scalesWith: 'attack'` and positive power use the weapon damage scale.
+- The generated content reference gained job-level, requirement and shop tables.
+- 21 new tests (95 total) in `tests/progression.test.ts`.
+
+---
+
 ## [0.13.0] - 2026-11-23
 
 ### Added — new jobs, abilities and gear

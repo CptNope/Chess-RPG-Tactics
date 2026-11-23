@@ -21,7 +21,7 @@ What's on [cptnope.itch.io/chess-rpg-tactics](https://cptnope.itch.io/chess-rpg-
 | :--- | :--- |
 | Title | Chess RPG Tactics |
 | URL | `chess-rpg-tactics` |
-| Short description | Free isometric tactics RPG: thirteen jobs, high ground, bosses and a map editor. |
+| Short description | Free isometric tactics RPG: fifteen jobs, high ground, bosses and a map editor. |
 | Classification · status | Games · Released |
 | Pricing | No payments required, donations welcome ($0 or donate, suggested $3) |
 | Genre | Strategy |
@@ -51,12 +51,13 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 
 > Paste into the itch.io description editor. Headings and lists keep their formatting.
 
-**Chess RPG Tactics** is a free turn-based tactics RPG that runs right in your browser: isometric 3D battlefields with height, facing-based combat, thirteen mix-and-match jobs, a branching campaign with boss fights, an endless post-game, and a Workshop to build and share your own battles.
+**Chess RPG Tactics** is a free turn-based tactics RPG that runs right in your browser: isometric 3D battlefields with height, facing-based combat, fifteen mix-and-match jobs, a branching campaign with boss fights, an endless post-game, and a Workshop to build and share your own battles.
 
 ### Features
 - **Real tactics.** Speed decides who moves next, not teams. Hit from behind for big damage, take the high ground for range, mind water and swamp.
-- **Thirteen jobs, five ability slots.** Squire, Knight, Archer, White and Black Mage, Time Weaver, Dragoon, Ninja, Geomancer, Monk, Thief, Summoner and Oracle. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
+- **Fifteen jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin and Spellblade as your units level their jobs. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
 - **Steal their gear.** Thieves lift weapons and trinkets straight off enemies into your armory. Over 50 pieces of gear, some with traits: start battles with Regen, boost an element, or ward off Sleep and Silence.
+- **A shop that grows with the story.** Bounties and battle wins pay gil; one purchase outfits the whole squad.
 - **A branching campaign** across 16×16 battlefields, with a recruit, story choices, and bosses that enrage at half health.
 - **Trials of the Zodiac:** endless seeded floors with rare gear and a Warden boss every fifth floor, plus New Game+.
 - **The Workshop:** sculpt terrain, place enemies and bosses, write the dialogue, pick a goal (rout them, defeat the boss, or survive N rounds), then play it or share it as a link.
