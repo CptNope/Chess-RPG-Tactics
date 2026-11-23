@@ -63,6 +63,7 @@ timeline
     0.10.0 : 0018 Workshop scenarios, 16x16 maps, character art
     0.11.0 : 0019 Pixel-art effects, path walking, balance sim
     0.12.0 : 0020 itch.io distribution
+    0.13.0 : 0021 Ability flags, statuses, gear traits
 ```
 
 | # | Decision | Release |
@@ -86,6 +87,7 @@ timeline
 | [0017](adr/0017-lighting-atmosphere-and-quality-tiers.md) | Lighting, atmosphere, merged terrain and quality tiers | 0.9.0 |
 | [0018](adr/0018-workshop-scenarios-and-character-art.md) | Workshop scenarios, 16×16 battlefields, procedural character art (supersedes 0009) | 0.10.0 |
 | [0020](adr/0020-itch-io-distribution.md) | Distributing on itch.io from the same build: package checks, bundled fonts, title screen, platform detection, butler | 0.12.0 |
+| [0021](adr/0021-data-driven-abilities-statuses-and-gear-traits.md) | Data-driven ability flags, statuses and gear traits for the Monk, Thief, Summoner and Oracle; one source for veteran kits | 0.13.0 |
 | [0019](adr/0019-pixel-art-effects-and-path-walking.md) | Pixel-art battle effects (pixelfx), path walking, Workshop strokes, balance sim (replaces 0012's spell particles) | 0.11.0 |
 
 New ADRs use the template in [Contributing](../CONTRIBUTING.md#adr-template).

@@ -866,6 +866,12 @@ body, html {
 .status-immobilize { background: #b91c1c; color: #fff; }
 .status-poison { background: #047857; color: #a7f3d0; }
 .status-focus { background: #b45309; color: #fef3c7; }
+.status-shell { background: #6d28d9; color: #fff; }
+.status-regen { background: #15803d; color: #dcfce7; }
+.status-blind { background: #374151; color: #f9fafb; }
+.status-silence { background: #4c1d95; color: #e9d5ff; }
+.status-sleep { background: #1e3a8a; color: #bfdbfe; }
+.status-breach { background: #9a3412; color: #ffedd5; }
 
 /* Story / Tactical Cutscene Dialogue Box */
 #dialogue-box {

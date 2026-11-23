@@ -12,7 +12,7 @@ import { ITEMS, STARTING_ARMORY, RARE_DROP_POOL } from '../src/data/items';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { TERRAIN_SPELLS } from '../src/core/Geomancy';
-import { STATUS_DURATION } from '../src/core/CombatEngine';
+import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
 import { buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
 
@@ -30,7 +30,11 @@ function abilityRow(a: Ability): string {
   const extras = [
     a.appliesStatus ? `inflicts **${a.appliesStatus}**` : '',
     a.isSelfOnly ? 'self only' : '',
-    a.terrainDriven ? 'changes with terrain' : ''
+    a.terrainDriven ? 'changes with terrain' : '',
+    a.cleanse ? 'cleanses ailments' : '',
+    a.drain ? `drains ${Math.round(a.drain * 100)}%` : '',
+    a.steal ? 'steals gear' : '',
+    a.scalesWith === 'attack' ? 'scales with ATK' : ''
   ].filter(Boolean).join(', ');
   return `| **${a.name}** \`${a.id}\` | ${kind} | ${a.jpCost} | ${isAction ? a.mpCost : '—'} | ${isAction ? a.range : '—'} | ${isAction ? a.heightTolerance : '—'} | ${isAction && a.aoe ? a.aoe : '—'} | ${isAction ? power : '—'} | ${isAction ? a.element : '—'} | ${extras || '—'} | ${a.description.replace(/\|/g, '/')} |`;
 }
@@ -95,17 +99,25 @@ for (const j of jobs) {
 // ---------------------------------------------------------------- Statuses
 w('## Status effects');
 w();
-w('| Status | Lasts (turns) | Effect |');
-w('| :--- | :---: | :--- |');
 const statusText: Record<string, string> = {
   haste: 'Speed ×1.5 (bosses get a permanent Haste when enraged)',
   slow: 'Speed ×0.67 (minimum 2)',
   protect: 'Physical damage taken ×0.7',
   immobilize: 'Move becomes 0',
   poison: 'Lose 10% max HP at the start of each turn',
-  focus: 'Physical power ×1.25'
+  focus: 'Physical power ×1.25',
+  shell: 'Spell damage taken ×0.7',
+  regen: 'Recover 8% max HP at the start of each turn (Regen from gear lasts the whole battle)',
+  blind: 'Physical accuracy −40',
+  silence: 'Abilities that cost MP are sealed',
+  sleep: 'Turns pass without acting; any damage wakes the unit, and sleepers cannot dodge (100% hit)',
+  breach: 'Physical damage taken ×1.25'
 };
-for (const [k, d] of Object.entries(STATUS_DURATION)) w(`| **${k}** | ${d} | ${statusText[k] || ''} |`);
+w('| Status | Kind | Lasts (turns) | Effect |');
+w('| :--- | :--- | :---: | :--- |');
+for (const [k, d] of Object.entries(STATUS_DURATION)) w(`| **${k}** | ${BENEFICIAL_STATUSES.includes(k as never) ? 'Buff' : 'Ailment'} | ${d} | ${statusText[k] || ''} |`);
+w();
+w('Gear with a **guard** trait blocks the ailments it lists; cleansing abilities (Purify, Chakra) remove every ailment.');
 w();
 
 // ---------------------------------------------------------------- Geomancy
@@ -120,7 +132,16 @@ w();
 
 // ---------------------------------------------------------------- Items
 const slots: EquipmentSlot[] = ['weapon', 'shield', 'head', 'body', 'accessory'];
-const fmtStats = (s: Record<string, number | undefined>) => Object.entries(s).filter(([, v]) => v).map(([k, v]) => `${k.toUpperCase()} +${v}`).join(', ') || '—';
+const fmtStats = (s: Record<string, number | undefined>) => Object.entries(s).filter(([, v]) => v).map(([k, v]) => `${k.toUpperCase()} ${v! > 0 ? '+' : ''}${v}`).join(', ') || '—';
+const fmtTraits = (i: (typeof ITEMS)[string]) => {
+  const t = i.traits;
+  if (!t) return '—';
+  return [
+    t.startStatus ? `starts with ${t.startStatus.join(' + ')}` : '',
+    t.boost ? `${t.boost.join(', ')} +25%` : '',
+    t.guard ? `guards ${t.guard.join(', ')}` : ''
+  ].filter(Boolean).join('; ');
+};
 const source = (id: string) => {
   if (STARTING_ARMORY.includes(id)) return 'Starting gear';
   const ch = Object.values(CAMPAIGN_CHAPTERS).find((c) => c.rewardItemIds?.includes(id));
@@ -140,12 +161,12 @@ for (const slot of slots) {
   const list = items.filter((i) => i.slot === slot);
   w(`### ${slot[0].toUpperCase() + slot.slice(1)} (${list.length})`);
   w();
-  w(slot === 'weapon' ? '| Item | Type | Range | Stats | Price | How to get |' : '| Item | Stats | Price | How to get |');
-  w(slot === 'weapon' ? '| :--- | :--- | :---: | :--- | ---: | :--- |' : '| :--- | :--- | ---: | :--- |');
+  w(slot === 'weapon' ? '| Item | Type | Range | Stats | Traits | Price | How to get |' : '| Item | Stats | Traits | Price | How to get |');
+  w(slot === 'weapon' ? '| :--- | :--- | :---: | :--- | :--- | ---: | :--- |' : '| :--- | :--- | :--- | ---: | :--- |');
   for (const i of list) {
     const stats = fmtStats(i.stats as Record<string, number | undefined>);
-    if (slot === 'weapon') w(`| **${i.name}** \`${i.id}\` | ${i.weaponType} | ${i.range ?? 1} | ${stats} | ${i.price} | ${source(i.id)} |`);
-    else w(`| **${i.name}** \`${i.id}\` | ${stats} | ${i.price} | ${source(i.id)} |`);
+    if (slot === 'weapon') w(`| **${i.name}** \`${i.id}\` | ${i.weaponType} | ${i.range ?? 1} | ${stats} | ${fmtTraits(i)} | ${i.price} | ${source(i.id)} |`);
+    else w(`| **${i.name}** \`${i.id}\` | ${stats} | ${fmtTraits(i)} | ${i.price} | ${source(i.id)} |`);
   }
   w();
 }

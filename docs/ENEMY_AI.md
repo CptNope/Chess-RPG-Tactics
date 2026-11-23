@@ -43,8 +43,19 @@ All values come from **forecasts** (expected values). The planner never rolls di
 | Likely KO (damage ≥ HP left) | `+120 × hit%` (+40 more on a boss) | Removing a unit is worth far more than damage |
 | Dual Wield | damage × 1.9 | Second strike |
 | Damage that also inflicts a status | `+15 × hit%` if the target doesn't have it yet | |
+| Pure Sleep | `55 × hit%` | Takes a unit out of the fight until someone hits it |
 | Pure Haste / Slow | `45 × hit%` if not already applied | Tempo swings |
-| Other pure statuses (Protect, Immobilize, Poison, Focus) | `35 × hit%` if not already applied | |
+| Other pure statuses (Protect, Immobilize, Poison, Focus, Blind, Silence, Breach) | `35 × hit%` if not already applied | |
+| Regen | `25 × hit%`, only if the ally is below 80% HP | |
+| Shell / area Focus (Rally) | `15` / `18 × hit%` | Help less than a blow |
+| Area buffs and debuffs | × 0.6 per victim | A buff aimed where it's needed beats a blanket |
+| Protect, Shell or Focus with no foe within 5 tiles | skipped | Don't armour up miles from the fight |
+| Ailment the target's gear guards against | skipped | It would be wasted |
+| Silence on a unit with no MP abilities | skipped | |
+| Cleanse | `+25` per ailment removed (`+40` for Sleep or Silence) | |
+| Drain | `+ min(drained, HP missing) / maxHP × 60 × hit%` | Prefers draining when hurt |
+| Hitting a sleeping unit | −10 | It wakes up |
+| Steal | never chosen | The AI has nowhere to put stolen gear; Steal is the player's |
 | Heal | `healed / maxHP × 100 × 1.3` (+20 on a boss), only if the ally is missing ≥ 25% HP | No wasted heals |
 | Physical attack into Counter Tackle | −8 | Avoid feeding counters |
 

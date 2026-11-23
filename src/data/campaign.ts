@@ -32,13 +32,13 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
         rewardItemIds: ['platinum_armor', 'kite_shield']
       }
     ],
-    rewardItemIds: ['power_wrist'],
+    rewardItemIds: ['power_wrist', 'flame_rod'],
     enemyRoster: [
       { name: 'Bandit Chief', jobId: 'knight', level: 3, x: 13, z: 2, isBoss: true },
       { name: 'Rogue Warlock', jobId: 'time_mage', level: 3, x: 12, z: 3 },
       { name: 'Brigand Bowman', jobId: 'archer', level: 3, x: 14, z: 3 },
       { name: 'Shadow Shinobi', jobId: 'ninja', level: 3, x: 5, z: 4 },
-      { name: 'Bridge Cutthroat', jobId: 'squire', level: 2, x: 3, z: 3 }
+      { name: 'Bridge Cutthroat', jobId: 'thief', level: 2, x: 3, z: 3 }
     ]
   },
 
@@ -48,7 +48,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     subtitle: 'The Sunken Crypts (Gloomy Mire)',
     mapId: 'gloomy_swamp',
     recruit: { id: 'p5', name: 'Bria', jobId: 'geomancer', level: 4 },
-    rewardItemIds: ['gaia_staff'],
+    rewardItemIds: ['gaia_staff', 'verdant_charm'],
     introDialogue: [
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'The fog is thick with venom... Tread carefully on the wooden boardwalks!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'You will drown out here without a guide, knight. I am Bria. This mire is my home, and that warlock has poisoned it. I fight with you.' },
@@ -84,7 +84,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     subtitle: 'The Siege of Night Battlement',
     mapId: 'night_fortress',
     recruit: { id: 'p5', name: 'Bria', jobId: 'geomancer', level: 4 },
-    rewardItemIds: ['crystal_helm'],
+    rewardItemIds: ['crystal_helm', 'mirror_shield'],
     introDialogue: [
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'We arrived in time! The fortress drawbridge has been breached, but the ramparts hold!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The garrison sent for anyone who could hold a staff. I am Bria, a Geomancer. Stone walls answer to me. Point me at the enemy.' },
@@ -110,7 +110,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Rampart Sniper', jobId: 'archer', level: 3, x: 4, z: 8 },
       { name: 'Tower Sniper', jobId: 'archer', level: 3, x: 10, z: 8 },
       { name: 'Iron Vanguard', jobId: 'knight', level: 3, x: 7, z: 7 },
-      { name: 'Gate Warden', jobId: 'knight', level: 3, x: 8, z: 7 }
+      { name: 'Gate Brawler', jobId: 'monk', level: 3, x: 8, z: 7 }
     ]
   },
 

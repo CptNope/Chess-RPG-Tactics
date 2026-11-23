@@ -8,7 +8,6 @@ import { CombatEngine, AttackResult } from './core/CombatEngine';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { ITEMS, STARTING_ARMORY } from './data/items';
-import { JOBS } from './data/jobs';
 import { SoundFX } from './audio/SoundEffects';
 import { Music } from './audio/MusicSynthesizer';
 import { SaveManager, GameSaveData } from './core/SaveManager';
@@ -46,6 +45,8 @@ class TacticsGame {
   private squad: Unit[] = [];
   /** Item ids the squad owns. */
   private armory: string[] = [...STARTING_ARMORY];
+  /** Gear stolen this battle (shown on the spoils screen). */
+  private stolenThisBattle: string[] = [];
 
   private mode: 'campaign' | 'trials' | 'custom' = 'campaign';
   /** The campaign chapter to return to after Workshop battles (and to save). */
@@ -194,28 +195,8 @@ class TacticsGame {
   }
 
   private equipEnemyPassives(u: Unit): void {
-    const byJob: Record<string, { reaction?: string; support?: string }> = {
-      knight: { reaction: 'kn_parry' },
-      white_mage: { reaction: 'wm_auto_potion' },
-      black_mage: { support: 'bm_arcane_strength' },
-      ninja: { support: 'ni_dual_wield' },
-      dragoon: { reaction: 'dr_dragonheart' },
-      geomancer: { reaction: 'geo_earthen_ward' }
-    };
-    if (u.level < 4) return;
-    const p = byJob[u.jobId] || {};
-    if (p.reaction) {
-      u.unlockedAbilities[p.reaction] = true;
-      u.equippedAbilities.reaction = p.reaction;
-    }
-    if (p.support) {
-      u.unlockedAbilities[p.support] = true;
-      u.equippedAbilities.support = p.support;
-    }
-    // Veteran enemies know every action in their job's skillset
-    for (const a of JOBS[u.jobId]?.abilities || []) {
-      if (a.type === 'action') u.unlockedAbilities[a.id] = true;
-    }
+    JobSystem.equipVeteranPassives(u);
+    JobSystem.applyGearStatuses(u);
   }
 
   /** Builds grid, squad deployment and enemies for a chapter (optionally on a different map). */
@@ -237,6 +218,7 @@ class TacticsGame {
     this.units = [...this.squad, ...enemies];
     this.turnManager = new TurnManager(this.units);
     this.kills = {};
+    this.stolenThisBattle = [];
     this.battleOver = false;
 
     this.ui.setMapSelection(mapId);
@@ -654,10 +636,13 @@ class TacticsGame {
         if (renamed[u.name]) u.name = renamed[u.name];
         u.isBoss = false;
         u.isEnraged = false;
+        // 0.13.0 added jobs: bank starting JP for any job the save has never seen
+        JobSystem.ensureJobPoints(u);
         return u;
       });
 
-    const owned = new Set<string>(data.armory || STARTING_ARMORY);
+    // Starter gear added in later versions joins old armories too
+    const owned = new Set<string>([...(data.armory || []), ...STARTING_ARMORY]);
     for (const u of this.squad) {
       for (const it of Object.values(u.equipment)) if (it) owned.add(it.id);
     }
@@ -706,6 +691,26 @@ class TacticsGame {
     this.advanceTurn();
   }
 
+  /** Reports turns that passed without the unit acting: asleep, or felled by poison. */
+  private logSkippedTurns(): void {
+    for (const t of this.turnManager.skipped) {
+      const u = t.unit;
+      const h = this.grid.getHeight(u.x, u.z);
+      if (t.poison) {
+        this.scene.spawnFloatingDamage(u.x, h, u.z, `POISON -${t.poison}`, 'damage');
+        this.ui.addLogEntry(`[STATUS] ${u.name} takes ${t.poison} poison damage!`, 'spell');
+      }
+      if (t.regen) this.ui.addLogEntry(`[STATUS] ${u.name} regenerates ${t.regen} HP.`, 'heal');
+      if (u.isDead) this.ui.addLogEntry(`[DEFEAT] ${u.name} succumbs to poison!`, 'defeat');
+      else if (t.slept) {
+        this.scene.spawnFloatingDamage(u.x, h + 0.3, u.z, 'Zzz', 'miss');
+        this.ui.addLogEntry(`[STATUS] ${u.name} is fast asleep and loses the turn.`, 'spell');
+      }
+    }
+    if (this.turnManager.skipped.length) this.scene.updateUnits(this.units);
+    this.turnManager.skipped = [];
+  }
+
   private advanceTurn(): void {
     if (this.battleOver || this.checkBattleStatus()) return;
 
@@ -715,7 +720,9 @@ class TacticsGame {
       return;
     }
 
-    const { activeUnit, poisonDamage } = result;
+    const { activeUnit, poisonDamage, regenHeal } = result;
+    this.logSkippedTurns();
+    if (this.battleOver || this.checkBattleStatus()) return;
     if (!activeUnit.hasMoved && !activeUnit.hasActed && this.trackRound(activeUnit)) return;
     this.scene.setActiveUnit(activeUnit.id);
     this.currentMode = 'idle';
@@ -731,6 +738,11 @@ class TacticsGame {
       this.scene.spawnFloatingDamage(activeUnit.x, height, activeUnit.z, `POISON -${poisonDamage}`, 'damage');
       this.ui.addLogEntry(`[STATUS] ${activeUnit.name} takes ${poisonDamage} poison damage!`, 'spell');
       SoundFX.playCrit();
+      this.scene.updateUnits(this.units);
+    }
+    if (regenHeal) {
+      this.scene.spawnFloatingDamage(activeUnit.x, height, activeUnit.z, `REGEN +${regenHeal}`, 'heal');
+      this.ui.addLogEntry(`[STATUS] ${activeUnit.name} regenerates ${regenHeal} HP.`, 'heal');
       this.scene.updateUnits(this.units);
     }
 
@@ -866,6 +878,18 @@ class TacticsGame {
   }
 
   private applyRegenWalk(unit: Unit, steps: number): void {
+    if (unit.equippedAbilities.movement === 'mo_ki_flow' && steps > 0) {
+      const pct = Math.min(0.3, 0.06 * steps);
+      const hp = Math.min(unit.maxHp - unit.currentHp, Math.round(unit.maxHp * pct));
+      const mp = Math.min(unit.maxMp - unit.currentMp, Math.round(unit.maxMp * pct));
+      unit.currentHp += hp;
+      unit.currentMp += mp;
+      if (hp > 0 || mp > 0) {
+        const h = this.grid.getHeight(unit.x, unit.z);
+        this.scene.spawnFloatingDamage(unit.x, h, unit.z, `KI +${hp} HP +${mp} MP`, 'heal');
+      }
+      return;
+    }
     if (unit.equippedAbilities.movement !== 'wm_regen_move' || unit.currentHp >= unit.maxHp) return;
     const heal = Math.round(unit.maxHp * Math.min(0.4, 0.1 * steps));
     unit.currentHp = Math.min(unit.maxHp, unit.currentHp + heal);
@@ -1009,17 +1033,49 @@ class TacticsGame {
       return;
     }
 
+    if (result.stolen) {
+      const item = result.stolen;
+      SoundFX.playTurnChime();
+      this.fx.steal(target);
+      this.scene.spawnFloatingDamage(target.x, h, target.z, `STOLE ${item.name.toUpperCase()}`, 'heal');
+      const thief = forecast.attacker;
+      if (thief.team === 'player' && !this.armory.includes(item.id)) {
+        this.armory.push(item.id);
+        this.stolenThisBattle.push(item.id);
+        this.ui.addLogEntry(`[STEAL] ${thief.name} steals ${item.name} from ${target.name}! It's in your armory now.`, 'reaction');
+      } else {
+        const note = thief.team === 'player' ? ' (you already have one)' : '';
+        this.ui.addLogEntry(`[STEAL] ${thief.name} steals ${item.name} from ${target.name}${note}.`, 'reaction');
+      }
+      this.ui.showBanner(`STOLE ${item.name.toUpperCase()}!`);
+      return;
+    }
+
     if (result.isHeal) {
       SoundFX.playHeal();
       this.fx.heal(target);
       this.scene.spawnFloatingDamage(target.x, h, target.z, `+${result.damageDealt}`, 'heal');
-      this.ui.addLogEntry(`[HEAL] ${target.name} recovers ${result.damageDealt} HP.`, 'heal');
+      this.ui.addLogEntry(`[HEAL] ${target.name} recovers ${result.damageDealt} HP${result.cleansed ? ' and is cleansed' : ''}.`, 'heal');
+      if (result.appliedStatus) later(() => this.fx.status(target, result.appliedStatus?.toLowerCase()), 350);
+      return;
+    }
+
+    if (result.damageDealt === 0 && (result.resisted || result.cleansed !== undefined)) {
+      SoundFX.playMagicCast();
+      if (result.resisted) {
+        this.scene.spawnFloatingDamage(target.x, h, target.z, 'RESIST', 'miss');
+        this.ui.addLogEntry(`[RESIST] ${target.name}'s gear wards off ${ability.appliesStatus}.`, 'spell');
+      } else {
+        this.fx.cleanse(target);
+        this.scene.spawnFloatingDamage(target.x, h, target.z, result.cleansed ? 'CLEANSED' : 'NO AILMENTS', result.cleansed ? 'heal' : 'miss');
+        this.ui.addLogEntry(`[STATUS] ${target.name} is cleansed of ${result.cleansed} ailment${result.cleansed === 1 ? '' : 's'}.`, 'heal');
+      }
       return;
     }
 
     if (result.damageDealt === 0) {
       SoundFX.playMagicCast();
-      this.fx.status(target, result.appliedStatus || ability.appliesStatus);
+      this.fx.status(target, (result.appliedStatus || ability.appliesStatus)?.toLowerCase());
       this.scene.spawnFloatingDamage(target.x, h, target.z, `[${result.appliedStatus || 'OK'}]`, 'heal');
       this.ui.addLogEntry(`[STATUS] ${target.name} receives ${result.appliedStatus}.`, 'spell');
       return;
@@ -1030,7 +1086,18 @@ class TacticsGame {
     else SoundFX.playMagicCast();
     this.fx.hit(forecast.attacker, target, ability, !!result.isCrit);
     // A status that rides on a damaging spell (Hell Ivy, Quicksand, Leg Shot...) shows after the hit
-    if (result.appliedStatus && !ability.name.includes(': ')) later(() => this.fx.status(target, result.appliedStatus), 350);
+    if (result.appliedStatus && !ability.name.includes(': ')) later(() => this.fx.status(target, result.appliedStatus?.toLowerCase()), 350);
+    if (result.woke) this.ui.addLogEntry(`[STATUS] ${target.name} wakes up!`, 'spell');
+    if (result.resisted) this.ui.addLogEntry(`[RESIST] ${target.name}'s gear wards off ${ability.appliesStatus}.`, 'spell');
+    if (result.drained) {
+      const a = forecast.attacker;
+      later(() => {
+        this.fx.drain(a);
+        this.scene.spawnFloatingDamage(a.x, this.grid.getHeight(a.x, a.z), a.z, `+${result.drained}`, 'heal');
+        this.scene.updateUnits(this.units);
+      }, 380);
+      this.ui.addLogEntry(`[DRAIN] ${a.name} drains ${result.drained} HP.`, 'heal');
+    }
 
     if (result.isCrit) {
       SoundFX.playCrit();
@@ -1107,6 +1174,13 @@ class TacticsGame {
     } else if (rx.type === 'critical_quick') {
       SoundFX.playTurnChime();
       this.scene.spawnFloatingDamage(target.x, th, target.z, 'QUICK!', 'heal');
+    } else if (rx.label) {
+      // Iron Will, Quick Hands, Mana Spring, Hex Ward: a status or MP on the unit the reaction touched
+      const u = rx.target;
+      SoundFX.playTurnChime();
+      if (rx.status) this.fx.status(u, rx.status);
+      else this.fx.heal(u);
+      this.scene.spawnFloatingDamage(u.x, this.grid.getHeight(u.x, u.z), u.z, rx.label, rx.type === 'hex_ward' ? 'damage' : 'heal');
     }
     this.scene.updateUnits(this.units);
   }
@@ -1457,6 +1531,9 @@ class TacticsGame {
       if (drop) newItems.push(drop);
     }
     this.armory.push(...newItems);
+    if (this.stolenThisBattle.length > 0) {
+      rows.push(`<div class="result-loot"><b>STOLEN:</b> ${this.stolenThisBattle.map((id) => esc(ITEMS[id].name)).join(', ')}</div>`);
+    }
     if (newItems.length > 0) {
       rows.push(`<div class="result-loot"><b>NEW GEAR:</b> ${newItems.map((id) => esc(ITEMS[id].name)).join(', ')}<br><small>Equip it from ★ Team → Equipment.</small></div>`);
     }

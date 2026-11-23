@@ -16,7 +16,6 @@ import { CombatEngine } from '../src/core/CombatEngine';
 import { planTurn, unitsInBlast } from '../src/core/EnemyAI';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
-import { JOBS } from '../src/data/jobs';
 import type { Unit } from '../src/core/types';
 
 function squad(level: number, bria: boolean): Unit[] {
@@ -34,15 +33,8 @@ function squad(level: number, bria: boolean): Unit[] {
 }
 
 function passives(u: Unit) {
-  const byJob: Record<string, { reaction?: string; support?: string }> = {
-    knight: { reaction: 'kn_parry' }, white_mage: { reaction: 'wm_auto_potion' }, black_mage: { support: 'bm_arcane_strength' },
-    ninja: { support: 'ni_dual_wield' }, dragoon: { reaction: 'dr_dragonheart' }, geomancer: { reaction: 'geo_earthen_ward' }
-  };
-  if (u.level < 4) return;
-  const p = byJob[u.jobId] || {};
-  if (p.reaction) { u.unlockedAbilities[p.reaction] = true; u.equippedAbilities.reaction = p.reaction; }
-  if (p.support) { u.unlockedAbilities[p.support] = true; u.equippedAbilities.support = p.support; }
-  for (const a of JOBS[u.jobId]?.abilities || []) if (a.type === 'action') u.unlockedAbilities[a.id] = true;
+  JobSystem.equipVeteranPassives(u);
+  JobSystem.applyGearStatuses(u);
 }
 
 function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {

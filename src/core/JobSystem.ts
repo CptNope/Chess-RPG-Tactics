@@ -1,6 +1,22 @@
-import { Unit, Team, FacingDirection, EquippedAbilities, EquippedGear, Item, EquipmentSlot, Ability } from './types';
+import { Unit, Team, FacingDirection, EquippedAbilities, EquippedGear, Item, EquipmentSlot, Ability, StatusEffectType } from './types';
 import { JOBS, BASIC_ATTACK } from '../data/jobs';
 import { ITEMS } from '../data/items';
+
+import { STATUS_DURATION } from './CombatEngine';
+
+/** Signature passives veteran enemies of each job fight with. */
+export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: string }> = {
+  knight: { reaction: 'kn_parry' },
+  white_mage: { reaction: 'wm_auto_potion' },
+  black_mage: { support: 'bm_arcane_strength' },
+  ninja: { support: 'ni_dual_wield' },
+  dragoon: { reaction: 'dr_dragonheart' },
+  geomancer: { reaction: 'geo_earthen_ward' },
+  monk: { reaction: 'mo_iron_will', support: 'mo_brawler' },
+  thief: { reaction: 'th_quick_hands', support: 'th_backstab' },
+  summoner: { reaction: 'su_mana_spring' },
+  oracle: { reaction: 'or_hex_ward', support: 'or_hex_mastery' }
+};
 
 export class JobSystem {
   /**
@@ -74,6 +90,19 @@ export class JobSystem {
       initialGear.weapon = ITEMS.chrono_rod;
       initialGear.body = ITEMS.silk_robe;
       initialGear.accessory = ITEMS.mage_ring;
+    } else if (jobId === 'monk') {
+      initialGear.weapon = ITEMS.iron_knuckles;
+      initialGear.head = ITEMS.leather_cap;
+      initialGear.body = ITEMS.leather_vest;
+    } else if (jobId === 'thief') {
+      initialGear.weapon = ITEMS.thief_knife;
+      initialGear.head = ITEMS.leather_cap;
+      initialGear.body = ITEMS.leather_vest;
+      initialGear.accessory = ITEMS.feather_boots;
+    } else if (jobId === 'summoner' || jobId === 'oracle') {
+      initialGear.weapon = ITEMS.chrono_rod;
+      initialGear.head = ITEMS.wizard_hat;
+      initialGear.body = ITEMS.silk_robe;
     }
 
     const jobLevels: Record<string, number> = {
@@ -91,7 +120,11 @@ export class JobSystem {
       dragoon: 200,
       ninja: 200,
       geomancer: 200,
-      time_mage: 200
+      time_mage: 200,
+      monk: 200,
+      thief: 200,
+      summoner: 200,
+      oracle: 200
     };
 
     const unlockedAbilities: Record<string, boolean> = {
@@ -155,9 +188,11 @@ export class JobSystem {
     let gearJump = 0;
     let gearEva = 5;
 
+    // Armor Mastery: HP from armor, helms and shields counts half again
+    const armorMastery = unit.equippedAbilities.support === 'kn_heavy_armor';
     for (const item of Object.values(unit.equipment)) {
       if (item && item.stats) {
-        if (item.stats.hp) gearHp += item.stats.hp;
+        if (item.stats.hp) gearHp += armorMastery && item.slot !== 'weapon' && item.slot !== 'accessory' ? Math.round(item.stats.hp * 1.5) : item.stats.hp;
         if (item.stats.mp) gearMp += item.stats.mp;
         if (item.stats.attack) gearAtk += item.stats.attack;
         if (item.stats.magic) gearMag += item.stats.magic;
@@ -193,6 +228,10 @@ export class JobSystem {
     }
 
     if (unit.equippedAbilities.movement === 'ar_jump_plus') {
+      jump += 1;
+    }
+    if (unit.equippedAbilities.movement === 'th_fleet') {
+      if (move > 0) move += 1;
       jump += 1;
     }
     if (unit.equippedAbilities.movement === 'geo_stride') {
@@ -318,6 +357,7 @@ export class JobSystem {
     unit.statuses = [];
     unit.isEnraged = false;
     unit.usedDragonheart = false;
+    unit.usedIronWill = false;
     unit.ct = 0;
     unit.hasMoved = false;
     unit.hasActed = false;
@@ -327,6 +367,59 @@ export class JobSystem {
     this.recalculateDerivedStats(unit);
     unit.currentHp = unit.maxHp;
     unit.currentMp = unit.maxMp;
+    this.applyGearStatuses(unit);
+  }
+
+  /**
+   * Statuses the unit's gear grants at the start of a battle (Verdant Charm's Regen, Warding Amulet's
+   * Protect and Shell...). Regen from gear lasts the whole battle; the rest run their normal course.
+   */
+  public static applyGearStatuses(unit: Unit): void {
+    const start = new Set<StatusEffectType>();
+    for (const it of Object.values(unit.equipment)) for (const s of it?.traits?.startStatus || []) start.add(s);
+    for (const type of start) {
+      const duration = type === 'regen' ? 99 : STATUS_DURATION[type];
+      const cur = unit.statuses.find((s) => s.type === type);
+      if (cur) cur.duration = Math.max(cur.duration, duration);
+      else unit.statuses.push({ type, duration });
+    }
+    if (start.size) this.recalculateDerivedStats(unit);
+  }
+
+  /**
+   * Gives veteran enemies (level 4+) their job's signature reaction/support and every action in
+   * its skillset, so they fight like the player's units. Shared by the game and the balance sim.
+   */
+  public static equipVeteranPassives(u: Unit): void {
+    const p = VETERAN_PASSIVES[u.jobId] || {};
+    if (u.level < 4) return;
+    if (p.reaction) {
+      u.unlockedAbilities[p.reaction] = true;
+      u.equippedAbilities.reaction = p.reaction;
+    }
+    if (p.support) {
+      u.unlockedAbilities[p.support] = true;
+      u.equippedAbilities.support = p.support;
+    }
+    for (const a of JOBS[u.jobId]?.abilities || []) {
+      if (a.type === 'action') u.unlockedAbilities[a.id] = true;
+    }
+  }
+
+  /**
+   * Saves from before a job existed have no JP banked for it. Give every missing job the same
+   * starting JP a new recruit gets, so a newly added job can be tried right away.
+   */
+  public static ensureJobPoints(unit: Unit): void {
+    for (const id of Object.keys(JOBS)) {
+      if (unit.jobPoints[id] === undefined) unit.jobPoints[id] = 200;
+    }
+  }
+
+  /** MP an ability really costs this unit (Conserve halves it, rounding up). */
+  public static mpCostFor(unit: Unit, ability: Ability): number {
+    if (ability.mpCost > 0 && unit.equippedAbilities.support === 'su_conserve') return Math.ceil(ability.mpCost / 2);
+    return ability.mpCost;
   }
 
   /** Passive abilities (reaction / support / movement) the unit has learned from any job. */
@@ -374,7 +467,7 @@ export class JobSystem {
       }
     }
 
-    if (unit.equippedAbilities.secondaryJobId) {
+    if (unit.equippedAbilities.secondaryJobId && unit.equippedAbilities.secondaryJobId !== unit.equippedAbilities.primaryJobId) {
       const secondaryJob = JOBS[unit.equippedAbilities.secondaryJobId];
       if (secondaryJob) {
         for (const a of secondaryJob.abilities) {
@@ -385,6 +478,13 @@ export class JobSystem {
       }
     }
 
-    return actions;
+    // Silence seals every ability that costs MP
+    const silenced = unit.statuses.some((s) => s.type === 'silence');
+    return actions
+      .filter((a) => !silenced || a.mpCost === 0)
+      .map((a) => {
+        const mp = this.mpCostFor(unit, a);
+        return mp === a.mpCost ? a : { ...a, mpCost: mp };
+      });
   }
 }

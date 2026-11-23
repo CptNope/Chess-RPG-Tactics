@@ -911,7 +911,7 @@ export class UIManager {
       el.className = `learn-item ${isEquipped ? 'active' : ''}`;
 
       const statsDesc = Object.entries(item.stats)
-        .map(([stat, val]) => `${stat.toUpperCase()} +${val}`)
+        .map(([stat, val]) => `${stat.toUpperCase()} ${val! >= 0 ? '+' : ''}${val}`)
         .join(', ');
 
       el.innerHTML = `

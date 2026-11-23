@@ -242,9 +242,249 @@ export const ITEMS: Record<string, Item> = {
     id: 'ribbon',
     name: 'Zodiac Ribbon',
     slot: 'accessory',
-    description: 'A silk ribbon stitched with all twelve signs. Strengthens body and mind.',
+    description: 'A silk ribbon stitched with all twelve signs. Strengthens body and mind, and wards off every ailment.',
     price: 800,
-    stats: { hp: 20, mp: 20, speed: 1, evasion: 5 }
+    stats: { hp: 20, mp: 20, speed: 1, evasion: 5 },
+    traits: { guard: ['poison', 'slow', 'immobilize', 'blind', 'silence', 'sleep', 'breach'] }
+  },
+
+  // --- Added in 0.13.0: gear for the Monk, Thief, Summoner and Oracle, and gear with traits ---
+  iron_knuckles: {
+    id: 'iron_knuckles',
+    name: 'Iron Knuckles',
+    slot: 'weapon',
+    weaponType: 'knuckles',
+    description: 'Riveted iron bands for the fists. A Monk\'s first weapon.',
+    price: 120,
+    stats: { attack: 5 },
+    range: 1
+  },
+  tiger_claws: {
+    id: 'tiger_claws',
+    name: 'Tiger Claws',
+    slot: 'weapon',
+    weaponType: 'knuckles',
+    description: 'Hooked steel claws strapped over the knuckles. Fast and vicious.',
+    price: 480,
+    stats: { attack: 10, speed: 1 },
+    range: 1
+  },
+  thief_knife: {
+    id: 'thief_knife',
+    name: 'Cutpurse Knife',
+    slot: 'weapon',
+    weaponType: 'dagger',
+    description: 'A short, quick blade made for cutting purse strings.',
+    price: 140,
+    stats: { attack: 5, speed: 1, evasion: 5 },
+    range: 1
+  },
+  moonfang: {
+    id: 'moonfang',
+    name: 'Moonfang',
+    slot: 'weapon',
+    weaponType: 'dagger',
+    description: 'A curved silver dagger that catches no light at all.',
+    price: 520,
+    stats: { attack: 9, speed: 1, evasion: 12 },
+    range: 1
+  },
+  halberd: {
+    id: 'halberd',
+    name: 'Halberd',
+    slot: 'weapon',
+    weaponType: 'spear',
+    description: 'Axe-headed polearm: heavier than a lance, still reaches 2 tiles.',
+    price: 460,
+    stats: { attack: 11 },
+    range: 2
+  },
+  dawn_blade: {
+    id: 'dawn_blade',
+    name: 'Dawnbringer',
+    slot: 'weapon',
+    weaponType: 'sword',
+    description: 'A templar\'s blade blessed at sunrise. Holy spells and heals from its bearer are 25% stronger.',
+    price: 640,
+    stats: { attack: 10, hp: 10 },
+    range: 1,
+    traits: { boost: ['holy'] }
+  },
+  siege_crossbow: {
+    id: 'siege_crossbow',
+    name: 'Siege Crossbow',
+    slot: 'weapon',
+    weaponType: 'bow',
+    description: 'A heavy crank crossbow. Shorter reach than a longbow, far more punch.',
+    price: 480,
+    stats: { attack: 11, speed: -1 },
+    range: 4
+  },
+  flame_rod: {
+    id: 'flame_rod',
+    name: 'Flame Rod',
+    slot: 'weapon',
+    weaponType: 'staff',
+    description: 'Its ruby tip is always warm. Fire spells +25%.',
+    price: 380,
+    stats: { attack: 2, magic: 6 },
+    range: 1,
+    traits: { boost: ['fire'] }
+  },
+  frost_rod: {
+    id: 'frost_rod',
+    name: 'Frost Rod',
+    slot: 'weapon',
+    weaponType: 'staff',
+    description: 'Rimed in ice that never melts. Ice spells +25%.',
+    price: 380,
+    stats: { attack: 2, magic: 6 },
+    range: 1,
+    traits: { boost: ['ice'] }
+  },
+  storm_rod: {
+    id: 'storm_rod',
+    name: 'Storm Rod',
+    slot: 'weapon',
+    weaponType: 'staff',
+    description: 'Crackles when you hold it. Lightning spells +25%.',
+    price: 380,
+    stats: { attack: 2, magic: 6 },
+    range: 1,
+    traits: { boost: ['lightning'] }
+  },
+  sage_staff: {
+    id: 'sage_staff',
+    name: 'Sage\'s Staff',
+    slot: 'weapon',
+    weaponType: 'staff',
+    description: 'Carved with words of power that keep the bearer\'s voice free. Guards against Silence.',
+    price: 560,
+    stats: { magic: 9, mp: 30 },
+    range: 1,
+    traits: { guard: ['silence'] }
+  },
+
+  mirror_shield: {
+    id: 'mirror_shield',
+    name: 'Mirror Shield',
+    slot: 'shield',
+    description: 'Polished to a perfect shine. Starts every battle with Shell.',
+    price: 420,
+    stats: { evasion: 18, mp: 10 },
+    traits: { startStatus: ['shell'] }
+  },
+
+  leather_cap: {
+    id: 'leather_cap',
+    name: 'Leather Cap',
+    slot: 'head',
+    description: 'Boiled leather. Light, cheap, better than nothing.',
+    price: 60,
+    stats: { hp: 15 }
+  },
+  barbute: {
+    id: 'barbute',
+    name: 'Barbute',
+    slot: 'head',
+    description: 'An open-faced steel helm that leaves room to see the next swing.',
+    price: 340,
+    stats: { hp: 45, attack: 2 }
+  },
+  sage_circlet: {
+    id: 'sage_circlet',
+    name: 'Sage\'s Circlet',
+    slot: 'head',
+    description: 'A thin gold band that sharpens thought.',
+    price: 360,
+    stats: { hp: 10, mp: 15, magic: 5 }
+  },
+  clarity_circlet: {
+    id: 'clarity_circlet',
+    name: 'Circlet of Clarity',
+    slot: 'head',
+    description: 'Keeps the mind clear and the eyes open. Guards against Blind, Silence and Sleep.',
+    price: 440,
+    stats: { hp: 15, mp: 10 },
+    traits: { guard: ['blind', 'silence', 'sleep'] }
+  },
+
+  leather_vest: {
+    id: 'leather_vest',
+    name: 'Leather Vest',
+    slot: 'body',
+    description: 'Supple hide that lets you move.',
+    price: 90,
+    stats: { hp: 25, evasion: 3 }
+  },
+  brawler_gi: {
+    id: 'brawler_gi',
+    name: 'Brawler\'s Gi',
+    slot: 'body',
+    description: 'Heavy cotton training clothes, belted tight.',
+    price: 380,
+    stats: { hp: 40, attack: 3, evasion: 6 }
+  },
+  summoner_robe: {
+    id: 'summoner_robe',
+    name: 'Summoner\'s Robe',
+    slot: 'body',
+    description: 'Embroidered with the seals of the four spirits. A deep well of MP.',
+    price: 440,
+    stats: { hp: 25, mp: 60, magic: 6 }
+  },
+  templar_mail: {
+    id: 'templar_mail',
+    name: 'Templar Mail',
+    slot: 'body',
+    description: 'Consecrated plate. Starts every battle with Shell.',
+    price: 560,
+    stats: { hp: 75, speed: -1 },
+    traits: { startStatus: ['shell'] }
+  },
+
+  verdant_charm: {
+    id: 'verdant_charm',
+    name: 'Verdant Charm',
+    slot: 'accessory',
+    description: 'A living sprig sealed in glass. Regen for the whole battle.',
+    price: 600,
+    stats: { hp: 10 },
+    traits: { startStatus: ['regen'] }
+  },
+  warding_amulet: {
+    id: 'warding_amulet',
+    name: 'Warding Amulet',
+    slot: 'accessory',
+    description: 'Twin wards against blade and spell. Starts every battle with Protect and Shell.',
+    price: 520,
+    stats: { hp: 10 },
+    traits: { startStatus: ['protect', 'shell'] }
+  },
+  purity_bangle: {
+    id: 'purity_bangle',
+    name: 'Purity Bangle',
+    slot: 'accessory',
+    description: 'Blessed silver. Guards against Poison, Slow, binding and Breach.',
+    price: 420,
+    stats: { hp: 10 },
+    traits: { guard: ['poison', 'slow', 'immobilize', 'breach'] }
+  },
+  sprinter_anklet: {
+    id: 'sprinter_anklet',
+    name: 'Sprinter\'s Anklet',
+    slot: 'accessory',
+    description: 'A runner\'s band of springy steel. Move +1 and Jump +1.',
+    price: 620,
+    stats: { move: 1, jump: 1 }
+  },
+  berserker_band: {
+    id: 'berserker_band',
+    name: 'Berserker Band',
+    slot: 'accessory',
+    description: 'All power, no guard: ATK +7, but evasion drops.',
+    price: 460,
+    stats: { attack: 7, evasion: -5 }
   }
 };
 
@@ -253,13 +493,17 @@ export const STARTING_ARMORY: string[] = [
   'iron_sword', 'dragon_lance', 'hunting_bow', 'chrono_rod',
   'buckler', 'iron_helm', 'wizard_hat', 'shinobi_band',
   'chainmail', 'silk_robe', 'shinobi_garb',
-  'battle_boots', 'feather_boots'
+  'battle_boots', 'feather_boots',
+  'iron_knuckles', 'thief_knife', 'leather_cap', 'leather_vest'
 ];
 
 /** Pool used for random Trials of the Zodiac drops (excludes starter gear). */
 export const RARE_DROP_POOL: string[] = [
   'platinum_blade', 'kite_shield', 'aegis_shield', 'platinum_armor', 'hermes_shoes', 'power_wrist',
-  'mage_ring', 'assassin_daggers', 'gaia_staff', 'sniper_bow', 'crystal_helm', 'dragon_mail', 'ribbon'
+  'mage_ring', 'assassin_daggers', 'gaia_staff', 'sniper_bow', 'crystal_helm', 'dragon_mail', 'ribbon',
+  'tiger_claws', 'moonfang', 'halberd', 'dawn_blade', 'siege_crossbow', 'flame_rod', 'frost_rod', 'storm_rod',
+  'sage_staff', 'mirror_shield', 'barbute', 'sage_circlet', 'clarity_circlet', 'brawler_gi', 'summoner_robe',
+  'templar_mail', 'verdant_charm', 'warding_amulet', 'purity_bangle', 'sprinter_anklet', 'berserker_band'
 ];
 
 /**

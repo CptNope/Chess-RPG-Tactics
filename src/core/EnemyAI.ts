@@ -1,6 +1,6 @@
 import { Ability, FacingDirection, Unit } from './types';
 import { BattleGrid } from './Grid';
-import { CombatEngine } from './CombatEngine';
+import { CombatEngine, HARMFUL_STATUSES, guardsAgainst } from './CombatEngine';
 import { JobSystem } from './JobSystem';
 import { resolveTerrainAbility } from './Geomancy';
 
@@ -51,7 +51,11 @@ export function unitsInBlast(caster: Unit, ability: Ability, cx: number, cz: num
  * Scores what an ability would achieve against each unit it touches.
  * Positive = good for the caster. Uses forecasts (expected values), never rolls dice.
  */
-function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: BattleGrid, aim: { x: number; z: number }): number {
+function foesNear(u: Unit, units: Unit[], dist: number): boolean {
+  return units.some((f) => !f.isDead && f.team !== u.team && Math.abs(f.x - u.x) + Math.abs(f.z - u.z) <= dist);
+}
+
+function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: BattleGrid, aim: { x: number; z: number }, victimsPool: Unit[] = victims): number {
   const casterH = grid.getHeight(caster.x, caster.z);
   let score = 0;
   for (const v of victims) {
@@ -60,6 +64,13 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash);
     const p = fc.hitChance / 100;
 
+    // Cleansing is worth ~25 a removed ailment (sleep and silence more)
+    if (ability.cleanse) {
+      for (const st of v.statuses) {
+        if (HARMFUL_STATUSES.includes(st.type)) score += st.type === 'sleep' || st.type === 'silence' ? 40 : 25;
+      }
+    }
+
     if (ability.power < 0) {
       const missing = v.maxHp - v.currentHp;
       if (missing < v.maxHp * 0.25) continue; // not worth a heal
@@ -67,13 +78,23 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
       continue;
     }
 
+    // Pure status: only useful if the unit doesn't already have it and its gear doesn't ward it off
     if (ability.appliesStatus && fc.expectedDamage === 0) {
-      // Pure status: only useful if the unit does not already have it
-      if (v.statuses.some((s) => s.type === ability.appliesStatus)) continue;
-      const weight = ability.appliesStatus === 'haste' || ability.appliesStatus === 'slow' ? 45 : 35;
-      score += weight * p;
+      const st = ability.appliesStatus;
+      if (v.statuses.some((s) => s.type === st)) continue;
+      if (HARMFUL_STATUSES.includes(st) && guardsAgainst(v, st)) continue;
+      if (st === 'regen' && v.currentHp > v.maxHp * 0.8) continue;
+      // Guard buffs only matter when a foe is close enough to strike soon
+      if ((st === 'protect' || st === 'shell' || st === 'focus') && !foesNear(v, victimsPool, 5)) continue;
+      if (st === 'silence' && !JobSystem.getCombatActionAbilities(v).some((a) => a.mpCost > 0)) continue;
+      // Shell and Rally's Focus help less than a blow; ailments and Haste/Slow more
+      const weight = st === 'sleep' ? 55 : st === 'haste' || st === 'slow' ? 45
+        : st === 'shell' ? 15 : st === 'regen' ? 25 : st === 'focus' && ability.aoe > 0 ? 18 : 35;
+      // An area buff is worth less per ally than a buff aimed where it's needed
+      score += weight * p * (ability.aoe > 0 ? 0.6 : 1);
       continue;
     }
+    if (ability.cleanse || ability.steal) continue;
 
     // Damage is valued as the share of the target's HP removed, so chip damage on a
     // healthy unit never outranks finishing off a wounded one.
@@ -81,7 +102,10 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     dmg = Math.min(dmg, v.currentHp);
     score += (dmg / v.maxHp) * 100 * p;
     if (fc.expectedDamage >= v.currentHp) score += (120 + (v.isBoss ? 40 : 0)) * p; // likely kill
-    if (ability.appliesStatus && !v.statuses.some((s) => s.type === ability.appliesStatus)) score += 15 * p;
+    if (ability.appliesStatus && !v.statuses.some((s) => s.type === ability.appliesStatus) && !guardsAgainst(v, ability.appliesStatus)) score += 15 * p;
+    if (ability.drain) score += (Math.min(fc.expectedDamage * ability.drain, caster.maxHp - caster.currentHp) / caster.maxHp) * 60 * p;
+    // Hitting a sleeper wakes it: only worth it for real damage
+    if (v.statuses.some((s) => s.type === 'sleep')) score -= 10;
     // Avoid poking units with a nasty counter reaction
     if (v.equippedAbilities.reaction === 'sq_counter' && ability.element === 'physical') score -= 8;
   }
@@ -134,7 +158,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid): AiPlan {
           const victims = ability.isSelfOnly ? [unit] : unitsInBlast(unit, ability, ax, az, units);
           if (victims.length === 0) continue;
 
-          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az });
+          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units);
           if (score <= 0) continue;
           score += posScore;
           score -= ability.mpCost * 0.15; // spend MP when it matters

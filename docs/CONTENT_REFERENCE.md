@@ -8,41 +8,45 @@ Every number here is read straight from the game data, so it always matches what
 
 ## Jobs
 
-9 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+13 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Squire** `squire` | Vanguard | 4 | 2 | 1.00× | 0.80× | 1.00× | 0.80× | 1.00× | 5 |
-| **Knight** `knight` | Vanguard | 3 | 2 | 1.30× | 0.70× | 1.25× | 0.70× | 0.95× | 4 |
-| **Archer** `archer` | Marksman | 3 | 3 | 0.95× | 0.80× | 1.10× | 0.80× | 1.05× | 4 |
-| **Black Mage** `black_mage` | Mage | 3 | 2 | 0.80× | 1.40× | 0.70× | 1.35× | 0.95× | 6 |
-| **White Mage** `white_mage` | Healer | 3 | 2 | 0.85× | 1.30× | 0.70× | 1.25× | 1.00× | 4 |
+| **Squire** `squire` | Vanguard | 4 | 2 | 1.00× | 0.80× | 1.00× | 0.80× | 1.00× | 6 |
+| **Knight** `knight` | Vanguard | 3 | 2 | 1.30× | 0.70× | 1.25× | 0.70× | 0.95× | 5 |
+| **Archer** `archer` | Marksman | 3 | 3 | 0.95× | 0.80× | 1.10× | 0.80× | 1.05× | 5 |
+| **Black Mage** `black_mage` | Mage | 3 | 2 | 0.80× | 1.40× | 0.70× | 1.35× | 0.95× | 7 |
+| **White Mage** `white_mage` | Healer | 3 | 2 | 0.85× | 1.30× | 0.70× | 1.25× | 1.00× | 7 |
 | **Dragoon** `dragoon` | Lancer | 3 | 4 | 1.20× | 0.80× | 1.30× | 0.80× | 1.00× | 4 |
-| **Ninja** `ninja` | Skirmisher | 4 | 3 | 0.90× | 0.70× | 1.20× | 0.90× | 1.25× | 4 |
+| **Ninja** `ninja` | Skirmisher | 4 | 3 | 0.90× | 0.70× | 1.20× | 0.90× | 1.25× | 5 |
 | **Geomancer** `geomancer` | Terramancer | 4 | 3 | 1.05× | 1.00× | 1.05× | 1.15× | 1.00× | 5 |
-| **Time Weaver** `time_mage` | Chronomancer | 3 | 2 | 0.85× | 1.35× | 0.70× | 1.25× | 1.05× | 5 |
+| **Time Weaver** `time_mage` | Chronomancer | 3 | 2 | 0.85× | 1.35× | 0.70× | 1.25× | 1.05× | 6 |
+| **Monk** `monk` | Brawler | 4 | 3 | 1.20× | 0.60× | 1.20× | 0.60× | 1.05× | 6 |
+| **Thief** `thief` | Rogue | 5 | 3 | 0.90× | 0.70× | 1.00× | 0.70× | 1.25× | 6 |
+| **Summoner** `summoner` | Summoner | 3 | 2 | 0.80× | 1.50× | 0.60× | 1.30× | 0.90× | 7 |
+| **Oracle** `oracle` | Hexer | 3 | 2 | 0.90× | 1.20× | 0.70× | 1.20× | 1.00× | 6 |
 
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Monk", "Thief", "Summoner", "Oracle"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 1.2, 1, 0.6, 0.7]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.6, 0.7, 1.3, 1.2]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
 
 ## Abilities
 
-41 learnable abilities: 20 actions, 9 reactions, 5 supports, 7 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+75 learnable abilities: 44 actions, 13 reactions, 9 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 20
-  "Reaction" : 9
-  "Support" : 5
-  "Movement" : 7
+  "Action" : 44
+  "Reaction" : 13
+  "Support" : 9
+  "Movement" : 9
 ```
 
 ### Squire
@@ -56,6 +60,7 @@ pie showData title Abilities by slot type
 | **Counter Tackle** `sq_counter` | Reaction | 120 | — | — | — | — | — | — | — | Retaliates with a blunt shoulder check when struck by melee attacks. |
 | **JP Boost** `sq_jp_boost` | Support | 150 | — | — | — | — | — | — | — | Gain 50% additional Job Points from all battlefield actions. |
 | **Move +1** `sq_move_plus` | Movement | 200 | — | — | — | — | — | — | — | Increases unit movement radius by 1 tile. |
+| **Rally** `sq_rally` | Action | 180 | 0 | 1 | 1.5 | 1 | — | physical | inflicts **focus** | A battle cry: you and adjacent allies gain Focus (+25% physical damage) for 4 turns. |
 
 ### Knight
 
@@ -63,10 +68,11 @@ pie showData title Abilities by slot type
 
 | Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
-| **Rend Armor** `kn_rend_armor` | Action | 150 | 5 | 1 | 1.5 | — | 1.1 | physical | — | Shatters foe armor plating, permanently reducing their physical defense. |
+| **Rend Armor** `kn_rend_armor` | Action | 150 | 5 | 1 | 1.5 | — | 1.1 | physical | inflicts **breach** | Shatters foe armor plating: Breach (+25% physical damage taken) for 3 turns. |
 | **Shield Bash** `kn_shield_bash` | Action | 180 | 8 | 1 | 1.5 | — | 1.3 | physical | — | Slams shield into target, knocking them back and dealing physical shock. |
 | **Weapon Guard** `kn_parry` | Reaction | 200 | — | — | — | — | — | — | — | Chance to deflect incoming front-facing physical attacks with blade. |
-| **Equip Heavy Armor** `kn_heavy_armor` | Support | 250 | — | — | — | — | — | — | — | Allows non-knight classes to equip plate mail and heavy helms. |
+| **Armor Mastery** `kn_heavy_armor` | Support | 250 | — | — | — | — | — | — | — | Trained to fight in plate: HP from armor, helms and shields +50%. |
+| **Bulwark** `kn_bulwark` | Action | 160 | 6 | 0 | 0 | — | — | physical | inflicts **protect**, self only | Brace behind your shield: Protect on yourself (-30% physical damage taken). |
 
 ### Archer
 
@@ -78,6 +84,7 @@ pie showData title Abilities by slot type
 | **Leg Shot** `ar_leg_shot` | Action | 160 | 6 | 4 | 2.5 | — | 0.9 | physical | inflicts **immobilize** | Pinpoints tendon to immobilize enemy movement for 2 turns. |
 | **Speed Save** `ar_speed_save` | Reaction | 200 | — | — | — | — | — | — | — | Boosts Speed stat whenever sustaining damage in battle. |
 | **Jump +1** `ar_jump_plus` | Movement | 180 | — | — | — | — | — | — | — | Allows scaling higher ledges and cliffs effortlessly. |
+| **Arrow Rain** `ar_arrow_rain` | Action | 220 | 10 | 5 | 3 | 1 | 0.7 | physical | — | Looses a volley that falls on the target and everyone beside it. |
 
 ### Black Mage
 
@@ -91,6 +98,7 @@ pie showData title Abilities by slot type
 | **Poison Cloud** `bm_poison` | Action | 140 | 8 | 3 | 2 | — | 0.5 | dark | inflicts **poison** | Enshrouds foe in venomous miasma, dealing 10% max HP damage every turn. |
 | **Arcane Retaliation** `bm_magic_counter` | Reaction | 200 | — | — | — | — | — | — | — | When struck, lashes back at the attacker with a burst of raw magic. |
 | **Arcane Strength** `bm_arcane_strength` | Support | 250 | — | — | — | — | — | — | — | Increases all magical damage output by 25%. |
+| **Firestorm** `bm_firestorm` | Action | 300 | 28 | 4 | 3 | 2 | 1.15 | fire | — | A sweeping blaze over a wide area (radius 2). |
 
 ### White Mage
 
@@ -102,6 +110,9 @@ pie showData title Abilities by slot type
 | **Protect** `wm_protect` | Action | 120 | 12 | 3 | 2 | — | — | holy | inflicts **protect** | Erects an arcane barrier, softening physical blows by 30% for 3 turns. |
 | **Auto-Potion** `wm_auto_potion` | Reaction | 200 | — | — | — | — | — | — | — | Instantly drinks a restorative potion when taking direct damage. |
 | **Regen Walk** `wm_regen_move` | Movement | 220 | — | — | — | — | — | — | — | Restores 10% of maximum HP on every tile movement step. |
+| **Shell** `wm_shell` | Action | 120 | 8 | 4 | 2 | — | — | holy | inflicts **shell** | A ward against spells: Shell (-30% magic damage taken) for 3 turns. |
+| **Purify** `wm_purify` | Action | 100 | 6 | 4 | 2 | — | — | holy | cleanses ailments | Washes away poison, blindness, silence, sleep, slow, binding and Breach. |
+| **Healing Circle** `wm_heal_circle` | Action | 240 | 18 | 3 | 2 | 1 | Heal 1 | holy | — | Restores HP to the target and every ally beside it. |
 
 ### Dragoon
 
@@ -124,6 +135,7 @@ pie showData title Abilities by slot type
 | **Reflexes / Vanish** `ni_shadow_clone` | Reaction | 220 | — | — | — | — | — | — | — | Splits into smoke decoys upon being targeted, granting 40% evasion against attacks. |
 | **Dual Wield** `ni_dual_wield` | Support | 350 | — | — | — | — | — | — | — | Equips a weapon in both hands; basic attacks strike twice in rapid succession! |
 | **Water Walk** `ni_water_walk` | Movement | 150 | — | — | — | — | — | — | — | Treads effortlessly on water surface and murky bogs without movement penalty. |
+| **Smoke Bomb** `ni_smoke_bomb` | Action | 180 | 6 | 3 | 2.5 | 1 | — | dark | inflicts **blind** | A burst of choking smoke: Blind (-40% physical accuracy) on the target and foes beside it. |
 
 ### Geomancer
 
@@ -148,17 +160,79 @@ pie showData title Abilities by slot type
 | **Gravity** `tm_gravity` | Action | 180 | 16 | 4 | 3 | — | 1.2 | time | — | Bends gravitational weight, shearing away 25% of target current HP directly. |
 | **Critical Quick** `tm_critical_quick` | Reaction | 220 | — | — | — | — | — | — | — | When struck down to 35% HP or less, instantly charges CT to 100 to act next. |
 | **Teleport** `tm_teleport` | Movement | 350 | — | — | — | — | — | — | — | Folds spacetime to instantly blink to any tile within range, bypassing cliffs and walls! |
+| **Regen** `tm_regen` | Action | 140 | 10 | 4 | 2 | — | — | time | inflicts **regen** | Speeds the body's healing: Regen (8% HP at the start of each turn) for 4 turns. |
+
+### Monk
+
+*Bare-knuckle martial artist. Hits hard up close, throws chi at range, and heals the party without spending MP.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Aura Wave** `mo_aura_wave` | Action | 60 | 0 | 3 | 2 | — | 0.85 | physical | — | Throws a blast of chi at a foe up to 3 tiles away. |
+| **Chakra** `mo_chakra` | Action | 150 | 0 | 0 | 0 | 1 | Heal 0.7 | physical | cleanses ailments, scales with ATK | Breath and focus: you and adjacent allies recover HP (from ATK) and shake off ailments. Free. |
+| **Pummel** `mo_pummel` | Action | 200 | 6 | 1 | 1.5 | — | 1.45 | physical | — | A flurry of heavy blows on an adjacent foe. |
+| **Iron Will** `mo_iron_will` | Reaction | 200 | — | — | — | — | — | — | — | The first time you drop to half HP in a battle, you gain Focus and Protect. |
+| **Brawler** `mo_brawler` | Support | 250 | — | — | — | — | — | — | — | Unarmed or knuckle Attacks deal +30% damage. |
+| **Ki Flow** `mo_ki_flow` | Movement | 220 | — | — | — | — | — | — | — | Every tile walked restores 6% HP and MP (up to 30%). |
+
+### Thief
+
+*Fast and slippery. Steals gear straight off enemies, blinds and hobbles them, and strikes hardest from behind.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Steal** `th_steal` | Action | 50 | 0 | 1 | 1.5 | — | — | physical | steals gear | Lifts a piece of gear off an adjacent foe and adds it to your armory. Easier from the side or behind. |
+| **Sand Toss** `th_sand_toss` | Action | 120 | 0 | 2 | 2 | — | 0.35 | physical | inflicts **blind** | A handful of grit in the eyes: light damage and Blind (-40% physical accuracy). |
+| **Hamstring** `th_hamstring` | Action | 180 | 4 | 1 | 1.5 | — | 0.9 | physical | inflicts **slow** | A low cut that slows the target for 3 turns. |
+| **Quick Hands** `th_quick_hands` | Reaction | 200 | — | — | — | — | — | — | — | When struck, a 40% chance to gain Haste. |
+| **Backstab** `th_backstab` | Support | 260 | — | — | — | — | — | — | — | Flank hits deal a further +15% and back hits +30%. |
+| **Fleet Foot** `th_fleet` | Movement | 240 | — | — | — | — | — | — | — | Move +1 and Jump +1. |
+
+### Summoner
+
+*Calls elemental spirits that strike or mend a wide area. The biggest spells in the game, paid for with a deep MP pool.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Salamander** `su_salamander` | Action | 120 | 24 | 4 | 3 | 2 | 1 | fire | — | Calls a fire spirit that scorches a wide area (radius 2). |
+| **Undine** `su_undine` | Action | 160 | 24 | 4 | 3 | 2 | 1 | ice | — | Calls a water spirit whose freezing tide floods a wide area (radius 2). |
+| **Storm Roc** `su_storm_roc` | Action | 220 | 28 | 4 | 3 | 2 | 1.1 | lightning | — | Calls a great thunderbird over a wide area (radius 2). |
+| **Sylph** `su_sylph` | Action | 200 | 26 | 4 | 3 | 2 | Heal 0.7 | holy | inflicts **regen** | Calls a wind spirit that heals allies in a wide area and leaves them with Regen. |
+| **Golem** `su_golem` | Action | 260 | 22 | 3 | 3 | 2 | — | physical | inflicts **protect** | Calls a stone guardian: Protect on every ally in a wide area. |
+| **Mana Spring** `su_mana_spring` | Reaction | 180 | — | — | — | — | — | — | — | When struck, recover 15% of max MP. |
+| **Conserve** `su_conserve` | Support | 300 | — | — | — | — | — | — | — | Every MP cost is halved (rounded up). |
+
+### Oracle
+
+*Reader of omens who wins fights before they start: blinds, silences and lulls foes to sleep, and drains their life.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Dim Sight** `or_dim_sight` | Action | 60 | 6 | 4 | 2.5 | — | — | dark | inflicts **blind** | Clouds the eyes: Blind (-40% physical accuracy) for 3 turns. |
+| **Hush** `or_hush` | Action | 120 | 8 | 4 | 2.5 | — | — | dark | inflicts **silence** | Steals the voice: Silence (no MP abilities) for 3 turns. |
+| **Lullaby** `or_lullaby` | Action | 200 | 14 | 4 | 2.5 | 1 | — | dark | inflicts **sleep** | Sings the target and foes beside it to sleep. Sleepers lose their turns until struck. |
+| **Soul Drain** `or_soul_drain` | Action | 220 | 12 | 4 | 2.5 | — | 1 | dark | drains 50% | Dark magic that heals you for half the damage dealt. |
+| **Hex Ward** `or_hex_ward` | Reaction | 200 | — | — | — | — | — | — | — | When struck, a 35% chance to Blind the attacker. |
+| **Hex Mastery** `or_hex_mastery` | Support | 260 | — | — | — | — | — | — | — | Ailments you inflict land 20% more often. |
 
 ## Status effects
 
-| Status | Lasts (turns) | Effect |
-| :--- | :---: | :--- |
-| **haste** | 3 | Speed ×1.5 (bosses get a permanent Haste when enraged) |
-| **slow** | 3 | Speed ×0.67 (minimum 2) |
-| **protect** | 3 | Physical damage taken ×0.7 |
-| **immobilize** | 2 | Move becomes 0 |
-| **poison** | 3 | Lose 10% max HP at the start of each turn |
-| **focus** | 4 | Physical power ×1.25 |
+| Status | Kind | Lasts (turns) | Effect |
+| :--- | :--- | :---: | :--- |
+| **haste** | Buff | 3 | Speed ×1.5 (bosses get a permanent Haste when enraged) |
+| **slow** | Ailment | 3 | Speed ×0.67 (minimum 2) |
+| **protect** | Buff | 3 | Physical damage taken ×0.7 |
+| **immobilize** | Ailment | 2 | Move becomes 0 |
+| **poison** | Ailment | 3 | Lose 10% max HP at the start of each turn |
+| **focus** | Buff | 4 | Physical power ×1.25 |
+| **shell** | Buff | 3 | Spell damage taken ×0.7 |
+| **regen** | Buff | 4 | Recover 8% max HP at the start of each turn (Regen from gear lasts the whole battle) |
+| **blind** | Ailment | 3 | Physical accuracy −40 |
+| **silence** | Ailment | 3 | Abilities that cost MP are sealed |
+| **sleep** | Ailment | 2 | Turns pass without acting; any damage wakes the unit, and sleepers cannot dodge (100% hit) |
+| **breach** | Ailment | 3 | Physical damage taken ×1.25 |
+
+Gear with a **guard** trait blocks the ailments it lists; cleansing abilities (Purify, Chakra) remove every ailment.
 
 ## Geomancy terrain spells
 
@@ -176,66 +250,91 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-27 items across five gear slots.
+52 items across five gear slots.
 
-### Weapon (9)
+### Weapon (20)
 
-| Item | Type | Range | Stats | Price | How to get |
-| :--- | :--- | :---: | :--- | ---: | :--- |
-| **Iron Broadsword** `iron_sword` | sword | 1 | ATTACK +4 | 100 | Starting gear |
-| **Platinum Blade** `platinum_blade` | sword | 1 | ATTACK +9, HP +15 | 350 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
-| **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | 400 | Starting gear |
-| **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | 250 | Starting gear |
-| **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | 300 | Starting gear |
-| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
-| **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | 300 | Win CHAPTER II-A · Trials drop |
-| **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
-| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | 900 | Win FINAL CHAPTER |
+| Item | Type | Range | Stats | Traits | Price | How to get |
+| :--- | :--- | :---: | :--- | :--- | ---: | :--- |
+| **Iron Broadsword** `iron_sword` | sword | 1 | ATTACK +4 | — | 100 | Starting gear |
+| **Platinum Blade** `platinum_blade` | sword | 1 | ATTACK +9, HP +15 | — | 350 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
+| **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear |
+| **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | — | 250 | Starting gear |
+| **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear |
+| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
+| **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop |
+| **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
+| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win FINAL CHAPTER |
+| **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear |
+| **Tiger Claws** `tiger_claws` | knuckles | 1 | ATTACK +10, SPEED +1 | — | 480 | Trials drop |
+| **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear |
+| **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Trials drop |
+| **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop |
+| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Trials drop |
+| **Siege Crossbow** `siege_crossbow` | bow | 4 | ATTACK +11, SPEED -1 | — | 480 | Trials drop |
+| **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop |
+| **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop |
+| **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop |
+| **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop |
 
-### Shield (3)
+### Shield (4)
 
-| Item | Stats | Price | How to get |
-| :--- | :--- | ---: | :--- |
-| **Bronze Buckler** `buckler` | EVASION +12 | 80 | Starting gear |
-| **Kite Shield** `kite_shield` | EVASION +22, HP +15 | 220 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
-| **Aegis Barrier** `aegis_shield` | EVASION +32, HP +30, MP +15 | 450 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
+| Item | Stats | Traits | Price | How to get |
+| :--- | :--- | :--- | ---: | :--- |
+| **Bronze Buckler** `buckler` | EVASION +12 | — | 80 | Starting gear |
+| **Kite Shield** `kite_shield` | EVASION +22, HP +15 | — | 220 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
+| **Aegis Barrier** `aegis_shield` | EVASION +32, HP +30, MP +15 | — | 450 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
+| **Mirror Shield** `mirror_shield` | EVASION +18, MP +10 | starts with shell | 420 | Win CHAPTER II-B · Trials drop |
 
-### Head (4)
+### Head (8)
 
-| Item | Stats | Price | How to get |
-| :--- | :--- | ---: | :--- |
-| **Steel Bascinet** `iron_helm` | HP +30 | 120 | Starting gear |
-| **Pointed Wizard Hat** `wizard_hat` | HP +15, MP +25, MAGIC +3 | 150 | Starting gear |
-| **Shadow Headband** `shinobi_band` | HP +20, SPEED +1, EVASION +5 | 180 | Starting gear |
-| **Crystal Helm** `crystal_helm` | HP +30, MP +10, EVASION +3 | 380 | Win CHAPTER II-B · Trials drop |
+| Item | Stats | Traits | Price | How to get |
+| :--- | :--- | :--- | ---: | :--- |
+| **Steel Bascinet** `iron_helm` | HP +30 | — | 120 | Starting gear |
+| **Pointed Wizard Hat** `wizard_hat` | HP +15, MP +25, MAGIC +3 | — | 150 | Starting gear |
+| **Shadow Headband** `shinobi_band` | HP +20, SPEED +1, EVASION +5 | — | 180 | Starting gear |
+| **Crystal Helm** `crystal_helm` | HP +30, MP +10, EVASION +3 | — | 380 | Win CHAPTER II-B · Trials drop |
+| **Leather Cap** `leather_cap` | HP +15 | — | 60 | Starting gear |
+| **Barbute** `barbute` | HP +45, ATTACK +2 | — | 340 | Trials drop |
+| **Sage's Circlet** `sage_circlet` | HP +10, MP +15, MAGIC +5 | — | 360 | Trials drop |
+| **Circlet of Clarity** `clarity_circlet` | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop |
 
-### Body (5)
+### Body (9)
 
-| Item | Stats | Price | How to get |
-| :--- | :--- | ---: | :--- |
-| **Reinforced Hauberk** `chainmail` | HP +50 | 180 | Starting gear |
-| **Platinum Plate Mail** `platinum_armor` | HP +90, SPEED +-1 | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
-| **Astral Silk Robe** `silk_robe` | HP +30, MP +45, MAGIC +5 | 260 | Starting gear |
-| **Nightwalker Tunic** `shinobi_garb` | HP +35, SPEED +1, EVASION +12 | 300 | Starting gear |
-| **Wyrmscale Mail** `dragon_mail` | HP +55, ATTACK +2, EVASION +4 | 520 | Win FINAL CHAPTER · Trials drop |
+| Item | Stats | Traits | Price | How to get |
+| :--- | :--- | :--- | ---: | :--- |
+| **Reinforced Hauberk** `chainmail` | HP +50 | — | 180 | Starting gear |
+| **Platinum Plate Mail** `platinum_armor` | HP +90, SPEED -1 | — | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
+| **Astral Silk Robe** `silk_robe` | HP +30, MP +45, MAGIC +5 | — | 260 | Starting gear |
+| **Nightwalker Tunic** `shinobi_garb` | HP +35, SPEED +1, EVASION +12 | — | 300 | Starting gear |
+| **Wyrmscale Mail** `dragon_mail` | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win FINAL CHAPTER · Trials drop |
+| **Leather Vest** `leather_vest` | HP +25, EVASION +3 | — | 90 | Starting gear |
+| **Brawler's Gi** `brawler_gi` | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop |
+| **Summoner's Robe** `summoner_robe` | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop |
+| **Templar Mail** `templar_mail` | HP +75, SPEED -1 | starts with shell | 560 | Trials drop |
 
-### Accessory (6)
+### Accessory (11)
 
-| Item | Stats | Price | How to get |
-| :--- | :--- | ---: | :--- |
-| **Battle Greaves** `battle_boots` | JUMP +1 | 150 | Starting gear |
-| **Featherlight Boots** `feather_boots` | MOVE +1 | 350 | Starting gear |
-| **Hermes Slippers** `hermes_shoes` | SPEED +2 | 400 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
-| **Gauntlet of Might** `power_wrist` | ATTACK +4 | 200 | Win CHAPTER I · Trials drop |
-| **Ring of Arcana** `mage_ring` | MAGIC +4, MP +25 | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
-| **Zodiac Ribbon** `ribbon` | HP +20, MP +20, SPEED +1, EVASION +5 | 800 | Win FINAL CHAPTER · Trials drop |
+| Item | Stats | Traits | Price | How to get |
+| :--- | :--- | :--- | ---: | :--- |
+| **Battle Greaves** `battle_boots` | JUMP +1 | — | 150 | Starting gear |
+| **Featherlight Boots** `feather_boots` | MOVE +1 | — | 350 | Starting gear |
+| **Hermes Slippers** `hermes_shoes` | SPEED +2 | — | 400 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
+| **Gauntlet of Might** `power_wrist` | ATTACK +4 | — | 200 | Win CHAPTER I · Trials drop |
+| **Ring of Arcana** `mage_ring` | MAGIC +4, MP +25 | — | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
+| **Zodiac Ribbon** `ribbon` | HP +20, MP +20, SPEED +1, EVASION +5 | guards poison, slow, immobilize, blind, silence, sleep, breach | 800 | Win FINAL CHAPTER · Trials drop |
+| **Verdant Charm** `verdant_charm` | HP +10 | starts with regen | 600 | Win CHAPTER II-A · Trials drop |
+| **Warding Amulet** `warding_amulet` | HP +10 | starts with protect + shell | 520 | Trials drop |
+| **Purity Bangle** `purity_bangle` | HP +10 | guards poison, slow, immobilize, breach | 420 | Trials drop |
+| **Sprinter's Anklet** `sprinter_anklet` | MOVE +1, JUMP +1 | — | 620 | Trials drop |
+| **Berserker Band** `berserker_band` | ATTACK +7, EVASION -5 | — | 460 | Trials drop |
 
 ## Armory & drops
 
 | Pool | Items |
 | :--- | :--- |
-| Starting armory (13) | Iron Broadsword, Holy Dragon Lance, Longbow of the Gale, Chrono Scepter, Bronze Buckler, Steel Bascinet, Pointed Wizard Hat, Shadow Headband, Reinforced Hauberk, Astral Silk Robe, Nightwalker Tunic, Battle Greaves, Featherlight Boots |
-| Trials rare drops (13) | Platinum Blade, Kite Shield, Aegis Barrier, Platinum Plate Mail, Hermes Slippers, Gauntlet of Might, Ring of Arcana, Twin Shadow Daggers, Gaia Staff, Windslayer Bow, Crystal Helm, Wyrmscale Mail, Zodiac Ribbon |
+| Starting armory (17) | Iron Broadsword, Holy Dragon Lance, Longbow of the Gale, Chrono Scepter, Bronze Buckler, Steel Bascinet, Pointed Wizard Hat, Shadow Headband, Reinforced Hauberk, Astral Silk Robe, Nightwalker Tunic, Battle Greaves, Featherlight Boots, Iron Knuckles, Cutpurse Knife, Leather Cap, Leather Vest |
+| Trials rare drops (34) | Platinum Blade, Kite Shield, Aegis Barrier, Platinum Plate Mail, Hermes Slippers, Gauntlet of Might, Ring of Arcana, Twin Shadow Daggers, Gaia Staff, Windslayer Bow, Crystal Helm, Wyrmscale Mail, Zodiac Ribbon, Tiger Claws, Moonfang, Halberd, Dawnbringer, Siege Crossbow, Flame Rod, Frost Rod, Storm Rod, Sage's Staff, Mirror Shield, Barbute, Sage's Circlet, Circlet of Clarity, Brawler's Gi, Summoner's Robe, Templar Mail, Verdant Charm, Warding Amulet, Purity Bangle, Sprinter's Anklet, Berserker Band |
 
 ## Battlefields
 
@@ -264,9 +363,9 @@ flowchart LR
 
 | Chapter | Map | Enemies | Boss | Recruit | Win reward | Branch rewards |
 | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
-| **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
-| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 5 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff | Hermes Slippers + Windslayer Bow |
-| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm | Aegis Barrier + Platinum Blade |
+| **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
+| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 5 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
+| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm, Mirror Shield | Aegis Barrier + Platinum Blade |
 | **FINAL CHAPTER**: The Awakening at the Summit | Zodiac Summit | 6 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | — |
 
 <details><summary><b>CHAPTER I</b> enemy roster</summary>
@@ -277,7 +376,7 @@ flowchart LR
 | Rogue Warlock | Time Weaver | 3 | (12, 3) |  |
 | Brigand Bowman | Archer | 3 | (14, 3) |  |
 | Shadow Shinobi | Ninja | 3 | (5, 4) |  |
-| Bridge Cutthroat | Squire | 2 | (3, 3) |  |
+| Bridge Cutthroat | Thief | 2 | (3, 3) |  |
 
 </details>
 
@@ -301,7 +400,7 @@ flowchart LR
 | Rampart Sniper | Archer | 3 | (4, 8) |  |
 | Tower Sniper | Archer | 3 | (10, 8) |  |
 | Iron Vanguard | Knight | 3 | (7, 7) |  |
-| Gate Warden | Knight | 3 | (8, 7) |  |
+| Gate Brawler | Monk | 3 | (8, 7) |  |
 
 </details>
 
@@ -324,20 +423,20 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
-| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, White Mage |
-| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Archer, Squire, Ninja |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Geomancer, Knight, Time Weaver |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Squire, Dragoon |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Squire, Ninja, Black Mage, Geomancer |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Squire, Time Weaver, Ninja, White Mage |
-| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Time Weaver, Squire, White Mage, Geomancer |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Archer, Squire, Ninja, Dragoon, Black Mage |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Time Weaver, Ninja, Black Mage, Geomancer, Dragoon |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, White Mage, Ninja, Knight, Black Mage |
-| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Squire, Black Mage, Archer |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Ninja, Time Weaver, Black Mage, Knight, White Mage |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Geomancer, Squire, Black Mage, Archer, Dragoon |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Squire, White Mage, Dragoon, Black Mage, Geomancer |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Squire, Black Mage, Time Weaver, Archer |
+| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, Archer, Dragoon |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Archer, Oracle, Geomancer, Squire |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Thief, Knight, Archer, Squire |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Oracle, Time Weaver |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Oracle, Squire, Summoner |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Summoner, Monk, Geomancer, Dragoon |
+| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Monk, Oracle, Ninja, Thief |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Archer, Oracle, Geomancer, Time Weaver, White Mage |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Monk, Squire, White Mage, Thief, Time Weaver |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Squire, Archer, Time Weaver, White Mage |
+| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Summoner, Dragoon, Black Mage |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Geomancer, Monk, White Mage, Knight, Ninja |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Thief, Oracle, White Mage, Black Mage, Geomancer, Dragoon |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Oracle, Dragoon, Time Weaver, White Mage, Thief |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Oracle, White Mage, Time Weaver, Monk, Black Mage |
 
 *Floors continue forever; the table shows the first 15.*
