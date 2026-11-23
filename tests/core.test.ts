@@ -23,11 +23,11 @@ function flatMap(width = 7, depth = 7) {
 
 describe('data integrity', () => {
   it('every reaction/support/movement id used in engine code exists in a job', () => {
-    const src = ['src/core/CombatEngine.ts', 'src/core/JobSystem.ts', 'src/core/Grid.ts', 'src/main.ts']
+    const src = ['src/core/CombatEngine.ts', 'src/core/JobSystem.ts', 'src/core/Grid.ts', 'src/core/EnemyAI.ts', 'src/main.ts']
       .map((f) => fs.readFileSync(f, 'utf8'))
       .join('\n');
     const ids = new Set<string>();
-    for (const m of src.matchAll(/'((?:sq|kn|ar|bm|wm|dr|ni|tm|geo)_[a-z_]+)'/g)) ids.add(m[1]);
+    for (const m of src.matchAll(/'((?:sq|kn|ar|bm|wm|dr|ni|tm|geo|mo|th|su|or)_[a-z_]+)'/g)) ids.add(m[1]);
     const missing = [...ids].filter((id) => !allAbilityIds.has(id));
     expect(missing).toEqual([]);
   });

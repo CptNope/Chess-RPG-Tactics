@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 44 tests"]
+        T2["Unit tests<br/>vitest · 74 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
     end
@@ -39,9 +39,9 @@ flowchart TB
 
 ---
 
-## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`)
+## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`)
 
-All 44 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 74 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -53,6 +53,7 @@ All 44 tests import `src/core` and `src/data` directly in Node. No browser is ne
 | **Enemy AI** | 4 | Never hitting its own team; finishing wounded foes; healing allies, never buffing players; never casting unaffordable spells |
 | **Trials** | 3 | Determinism; walkable unique spawns; boss every 5th floor; drops never repeat owned items |
 | **Turn manager** | 1 | Speed order; timeline prediction doesn't mutate state |
+| **Jobs and gear (0.13)** | 30 | The four new jobs' kits; status bookkeeping (every status is a buff or an ailment); Breach, Shell, Blind, Silence, Sleep (skips turns, wakes on damage, wears off) and Regen; cleanse, drain, ATK-scaled healing, Steal (order, odds, bosses); Conserve; the new reactions and supports; gear guard, start-status and element-boost traits; old-save JP migration; the AI never Steals or wastes ailments on guarded targets |
 | **Workshop scenarios** | 11 | Blank and remixed scenarios are playable; scenarios become chapters without sharing state; validation errors and warnings; hostile JSON (huge sizes, `__proto__` job ids, control characters, duplicate tiles, unknown items) is clamped or dropped; old editor maps import; share links round-trip under 4 KB and damaged links fail cleanly |
 
 Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `rng` so tests force hits, misses and crits.
@@ -82,14 +83,16 @@ Before an itch upload, the build is served on one origin and embedded in a mock 
 
 `scripts/balance-sim.ts` plays each campaign chapter headless with the squad on AUTO against the enemy AI, using the game's own turn order, planner and combat engine, and prints the squad's win rate at levels 3–5. A run of 30 battles per chapter takes a few seconds; pass a count, chapters and levels to narrow it (`npm run balance -- 100 chapter_2b 3,4`), or a JSON roster override to try a change without editing data.
 
-It leaves out reactions, gear upgrades and human play, so read it relatively: compare versions, and keep branch choices in the same range. 0.11.0 (60 battles each):
+It leaves out reactions, gear upgrades and human play, so read it relatively: compare versions, and keep branch choices in the same range. Since 0.13.0 it gives veteran enemies their passives, as the game does (`JobSystem.equipVeteranPassives`).
 
-| Chapter | L3 | L4 | L5 |
+| Chapter | 0.11.0 (60 each): L3 / L4 / L5 | 0.12.0 (100 each) | 0.13.0 (100 each) |
 | :--- | :---: | :---: | :---: |
-| I | 67% | 72% | 87% |
-| II-A | 10% | 22% | 33% |
-| II-B | 17% | 52% | 65% |
-| Final | 0% | 0% | 2% |
+| I | 67% / 72% / 87% | 64% / 74% / 76% | 65% / 73% / 68% |
+| II-A | 10% / 22% / 33% | 9% / 24% / 27% | 16% / 25% / 25% |
+| II-B | 17% / 52% / 65% | 19% / 46% / 64% | 25% / 56% / 70% |
+| Final | 0% / 0% / 2% | 1% / 0% / 5% | 0% / 3% / 4% |
+
+0.13.0 swapped Chapter I's Bridge Cutthroat to a Thief and one of Chapter II-B's gate Knights to a Monk; both stay within run-to-run noise.
 
 The Final Chapter is near 0% on pure AUTO in 0.9 as well; the campaign bot clears it with the gear it has collected by then, after a few retries.
 

@@ -1,12 +1,17 @@
-import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainType } from './types';
+import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainType, Item, EquipmentSlot } from './types';
 import { JobSystem } from './JobSystem';
 
 export interface ReactionTrigger {
   name: string;
-  type: 'counter_attack' | 'auto_potion' | 'speed_save' | 'dragonheart' | 'critical_quick' | 'parry' | 'earthen_ward';
+  type: 'counter_attack' | 'auto_potion' | 'speed_save' | 'dragonheart' | 'critical_quick' | 'parry' | 'earthen_ward'
+    | 'iron_will' | 'quick_hands' | 'mana_spring' | 'hex_ward';
   target: Unit;
   damage?: number;
   heal?: number;
+  /** A status the reaction put on `target` (for the effect and floating label). */
+  status?: StatusEffectType;
+  /** Floating label over `target`, e.g. "MP +12". */
+  label?: string;
   description: string;
 }
 
@@ -24,10 +29,23 @@ export interface AttackResult {
   };
   /** Set when this hit pushed a boss below 50% HP and into its enrage phase. */
   bossEnraged?: boolean;
+  /** The target's gear guarded against the ability's status. */
+  resisted?: boolean;
+  /** Number of ailments a cleansing ability removed. */
+  cleansed?: number;
+  /** HP the caster drained back (Soul Drain). */
+  drained?: number;
+  /** Gear lifted off the target by Steal. */
+  stolen?: Item;
+  /** The blow woke a sleeping target. */
+  woke?: boolean;
 }
 
 /** Statuses that help the unit carrying them (cast on allies, never on foes). */
-export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus'];
+export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus', 'shell', 'regen'];
+
+/** Ailments: what cleansing removes and what gear can guard against. */
+export const HARMFUL_STATUSES: StatusEffectType[] = ['slow', 'immobilize', 'poison', 'blind', 'silence', 'sleep', 'breach'];
 
 /** How long each status lasts, in the affected unit's turns. */
 export const STATUS_DURATION: Record<StatusEffectType, number> = {
@@ -36,8 +54,29 @@ export const STATUS_DURATION: Record<StatusEffectType, number> = {
   protect: 3,
   immobilize: 2,
   poison: 3,
-  focus: 4
+  focus: 4,
+  shell: 3,
+  regen: 4,
+  blind: 3,
+  silence: 3,
+  sleep: 2,
+  breach: 3
 };
+
+/** Gear Steal tries first: the small, valuable pieces before weapons and armor. */
+const STEAL_ORDER: EquipmentSlot[] = ['accessory', 'head', 'weapon', 'shield', 'body'];
+
+/** True when the unit's gear guards it against `status`. */
+export function guardsAgainst(unit: Unit, status: StatusEffectType): boolean {
+  return Object.values(unit.equipment).some((it) => it?.traits?.guard?.includes(status));
+}
+
+/** True when the unit's gear strengthens `element`. */
+function boosts(unit: Unit, element: string): boolean {
+  return Object.values(unit.equipment).some((it) => it?.traits?.boost?.includes(element as never));
+}
+
+const has = (u: Unit, s: StatusEffectType) => u.statuses.some((x) => x.type === s);
 
 /** Damage scale factors. Tuned so a same-level basic attack from the front kills in 2-4 hits. */
 const PHYSICAL_SCALE = 5;
@@ -46,7 +85,15 @@ const MAGIC_SCALE = 3;
 export class CombatEngine {
   /** True for heals and buffs: abilities meant for the caster's own side. */
   public static isSupportive(ability: Ability): boolean {
-    return ability.power < 0 || (!!ability.appliesStatus && BENEFICIAL_STATUSES.includes(ability.appliesStatus) && ability.power === 0);
+    if (ability.power < 0) return true;
+    if (ability.power !== 0 || ability.steal) return false;
+    return !!ability.cleanse || (!!ability.appliesStatus && BENEFICIAL_STATUSES.includes(ability.appliesStatus));
+  }
+
+  /** The first piece of gear Steal would take, or null when there's nothing to take. */
+  public static stealableItem(target: Unit): Item | null {
+    for (const slot of STEAL_ORDER) if (target.equipment[slot]) return target.equipment[slot];
+    return null;
   }
 
   /**
@@ -106,19 +153,38 @@ export class CombatEngine {
       hitChance = Math.max(15, hitChance - 35);
     }
 
+    // Blind attackers flail at physical targets
+    if (has(attacker, 'blind') && ability.element === 'physical' && !supportive) hitChance -= 40;
+    // Hex Mastery: ailments land more often
+    if (attacker.equippedAbilities.support === 'or_hex_mastery' && ability.appliesStatus && HARMFUL_STATUSES.includes(ability.appliesStatus)) {
+      hitChance += 20;
+    }
+    // Steal is harder than a blow, and a boss keeps a firm grip on its gear
+    if (ability.steal) hitChance -= target.isBoss ? 45 : 25;
+
     hitChance = Math.min(100, Math.max(10, hitChance));
+    // A sleeper can't dodge
+    if (has(target, 'sleep') && !supportive && !isSelf) hitChance = 100;
+    if (ability.steal && !this.stealableItem(target)) hitChance = 0;
 
     let baseDamage = 0;
     if (ability.id === 'tm_gravity') {
       // Gravity shears 25% of current HP; bosses resist it (12%).
       baseDamage = Math.max(1, Math.round(target.currentHp * (target.isBoss ? 0.12 : 0.25)));
-    } else if (supportive && ability.power === 0) {
+    } else if ((supportive && ability.power === 0) || ability.steal) {
       baseDamage = 0;
-      hitChance = 100;
-    } else if (ability.element === 'physical') {
-      baseDamage = JobSystem.getAttackPower(attacker) * ability.power * PHYSICAL_SCALE;
+      if (supportive) hitChance = 100;
     } else {
-      baseDamage = JobSystem.getMagicPower(attacker) * Math.abs(ability.power) * MAGIC_SCALE;
+      // Weapon skills scale with ATK, spells with MAG; heals always use the gentler spell scale
+      const useAttack = ability.scalesWith ? ability.scalesWith === 'attack' : ability.element === 'physical';
+      const stat = useAttack ? JobSystem.getAttackPower(attacker) : JobSystem.getMagicPower(attacker);
+      const scale = ability.element === 'physical' && ability.power > 0 ? PHYSICAL_SCALE : MAGIC_SCALE;
+      baseDamage = stat * Math.abs(ability.power) * scale;
+    }
+
+    // Gear that strengthens an element (rods, holy blades) boosts its damage and holy healing
+    if (ability.power !== 0 && ability.id !== 'tm_gravity' && ability.element !== 'physical' && boosts(attacker, ability.element)) {
+      baseDamage *= 1.25;
     }
 
     if (ability.power > 0 && ability.id !== 'tm_gravity') {
@@ -129,16 +195,28 @@ export class CombatEngine {
       if (attacker.equippedAbilities.support === 'geo_attack_up' && ability.element === 'physical') {
         baseDamage *= 1.2;
       }
+      // Brawler: fists and knuckles hit harder
+      if (
+        attacker.equippedAbilities.support === 'mo_brawler' &&
+        ability.id === 'basic_attack' &&
+        (!attacker.equipment.weapon || attacker.equipment.weapon.weaponType === 'knuckles')
+      ) {
+        baseDamage *= 1.3;
+      }
 
-      // Protect reduces physical damage taken by 30%
-      if (target.statuses.some((s) => s.type === 'protect') && ability.element === 'physical') {
+      // Protect cuts physical damage taken by 30%, Shell does the same for spells; Breach opens armor up (+25%)
+      if (ability.element === 'physical') {
+        if (has(target, 'protect')) baseDamage *= 0.7;
+        if (has(target, 'breach')) baseDamage *= 1.25;
+      } else if (has(target, 'shell')) {
         baseDamage *= 0.7;
       }
 
       // Facing and height only matter for physical strikes; spells land the same from any side
       if (ability.element === 'physical') {
-        if (facingType === 'flank') baseDamage *= 1.15;
-        if (facingType === 'back') baseDamage *= 1.3;
+        const backstab = attacker.equippedAbilities.support === 'th_backstab';
+        if (facingType === 'flank') baseDamage *= backstab ? 1.15 * 1.15 : 1.15;
+        if (facingType === 'back') baseDamage *= backstab ? 1.3 * 1.3 : 1.3;
         if (heightAdvantage > 0) baseDamage *= 1.1;
       }
     }
@@ -167,9 +245,9 @@ export class CombatEngine {
     };
   }
 
-  /** Applies (or refreshes) a status effect on a unit. */
-  public static applyStatus(unit: Unit, type: StatusEffectType): void {
-    const duration = STATUS_DURATION[type];
+  /** Applies (or refreshes) a status effect on a unit. Returns false when the unit's gear guards against it. */
+  public static applyStatus(unit: Unit, type: StatusEffectType, duration: number = STATUS_DURATION[type]): boolean {
+    if (HARMFUL_STATUSES.includes(type) && guardsAgainst(unit, type)) return false;
     const existing = unit.statuses.find((s) => s.type === type);
     if (existing) {
       existing.duration = duration;
@@ -178,11 +256,26 @@ export class CombatEngine {
       unit.statuses.push(status);
     }
     JobSystem.recalculateDerivedStats(unit);
+    return true;
   }
 
-  private static damage(target: Unit, amount: number): void {
+  /** Removes every ailment from a unit. Returns how many were removed. */
+  public static cleanse(unit: Unit): number {
+    const before = unit.statuses.length;
+    unit.statuses = unit.statuses.filter((s) => !HARMFUL_STATUSES.includes(s.type));
+    JobSystem.recalculateDerivedStats(unit);
+    return before - unit.statuses.length;
+  }
+
+  /** Deals damage. Returns true when the blow woke the unit from Sleep. */
+  private static damage(target: Unit, amount: number): boolean {
     target.currentHp = Math.max(0, target.currentHp - amount);
     if (target.currentHp === 0) target.isDead = true;
+    if (amount > 0 && has(target, 'sleep')) {
+      target.statuses = target.statuses.filter((s) => s.type !== 'sleep');
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -221,20 +314,33 @@ export class CombatEngine {
       return { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
     }
 
-    let appliedStatusName: string | undefined;
-    if (ability.appliesStatus) {
-      this.applyStatus(target, ability.appliesStatus);
-      appliedStatusName = ability.appliesStatus.toUpperCase();
+    // Steal: lift the first stealable piece of gear off the target
+    if (ability.steal) {
+      const item = this.stealableItem(target);
+      if (!item) return { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
+      target.equipment[item.slot] = null;
+      JobSystem.recalculateDerivedStats(target);
+      target.currentHp = Math.min(target.currentHp, target.maxHp);
+      target.currentMp = Math.min(target.currentMp, target.maxMp);
+      return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, stolen: item };
     }
+
+    let appliedStatusName: string | undefined;
+    let resisted = false;
+    if (ability.appliesStatus) {
+      if (this.applyStatus(target, ability.appliesStatus)) appliedStatusName = ability.appliesStatus.toUpperCase();
+      else resisted = true;
+    }
+    const cleansed = ability.cleanse ? this.cleanse(target) : undefined;
 
     if (ability.power < 0) {
       const healAmount = Math.abs(forecast.expectedDamage);
       target.currentHp = Math.min(target.maxHp, target.currentHp + healAmount);
-      return { hit: true, damageDealt: healAmount, isCrit: false, isHeal: true, appliedStatus: appliedStatusName };
+      return { hit: true, damageDealt: healAmount, isCrit: false, isHeal: true, appliedStatus: appliedStatusName, cleansed };
     }
 
     if (forecast.expectedDamage === 0) {
-      return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, appliedStatus: appliedStatusName };
+      return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, appliedStatus: appliedStatusName, resisted, cleansed };
     }
 
     // Critical roll
@@ -246,7 +352,14 @@ export class CombatEngine {
     let finalDamage = forecast.expectedDamage;
     if (isCrit) finalDamage = Math.round(finalDamage * 1.5);
 
-    this.damage(target, finalDamage);
+    const woke = this.damage(target, finalDamage);
+
+    // Soul Drain: the caster heals for a share of the damage
+    let drained: number | undefined;
+    if (ability.drain && !attacker.isDead) {
+      drained = Math.max(1, Math.round(finalDamage * ability.drain));
+      attacker.currentHp = Math.min(attacker.maxHp, attacker.currentHp + drained);
+    }
 
     const reactionTrigger = this.checkReaction(forecast, rng);
 
@@ -280,9 +393,12 @@ export class CombatEngine {
       isCrit,
       isHeal: false,
       appliedStatus: appliedStatusName,
+      resisted,
       reaction: reactionTrigger,
       secondStrike: secondStrikeResult,
-      bossEnraged
+      bossEnraged,
+      drained,
+      woke
     };
   }
 
@@ -364,6 +480,56 @@ export class CombatEngine {
           type: 'critical_quick',
           target,
           description: `${target.name} accelerated time! CT instantly charged to 100!`
+        };
+      }
+      case 'mo_iron_will': {
+        if (target.usedIronWill || target.currentHp > target.maxHp / 2) return undefined;
+        target.usedIronWill = true;
+        this.applyStatus(target, 'focus');
+        this.applyStatus(target, 'protect');
+        return {
+          name: 'Iron Will',
+          type: 'iron_will',
+          target,
+          status: 'focus',
+          label: 'FOCUS + PROTECT',
+          description: `${target.name} steels themselves: Focus and Protect!`
+        };
+      }
+      case 'th_quick_hands': {
+        if (rng() * 100 > 40 || has(target, 'haste')) return undefined;
+        this.applyStatus(target, 'haste');
+        return {
+          name: 'Quick Hands',
+          type: 'quick_hands',
+          target,
+          status: 'haste',
+          label: 'HASTE',
+          description: `${target.name} slips the blow and speeds up: Haste!`
+        };
+      }
+      case 'su_mana_spring': {
+        if (target.currentMp >= target.maxMp) return undefined;
+        const mp = Math.max(1, Math.round(target.maxMp * 0.15));
+        target.currentMp = Math.min(target.maxMp, target.currentMp + mp);
+        return {
+          name: 'Mana Spring',
+          type: 'mana_spring',
+          target,
+          label: `MP +${mp}`,
+          description: `${target.name}'s Mana Spring restores ${mp} MP.`
+        };
+      }
+      case 'or_hex_ward': {
+        if (rng() * 100 > 35 || attacker.isDead || has(attacker, 'blind')) return undefined;
+        if (!this.applyStatus(attacker, 'blind')) return undefined;
+        return {
+          name: 'Hex Ward',
+          type: 'hex_ward',
+          target: attacker,
+          status: 'blind',
+          label: 'BLIND',
+          description: `${target.name}'s Hex Ward blinds ${attacker.name}!`
         };
       }
       case 'geo_earthen_ward': {

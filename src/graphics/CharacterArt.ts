@@ -124,7 +124,7 @@ function outline(canvas: HTMLCanvasElement, color = OUTLINE): void {
 // ---------------------------------------------------------------------------
 
 type Body = 'light' | 'armor' | 'robe';
-type Weapon = 'sword' | 'broadsword' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia';
+type Weapon = 'sword' | 'broadsword' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia' | 'fists' | 'dagger' | 'horn' | 'orb';
 
 interface Look {
   body: Body;
@@ -163,6 +163,14 @@ function lookFor(job: string, enemy: boolean): Look {
       return { ...base, weapon: 'daggers', hair: '#121826', main: e ? '#7a1f3a' : '#273248', sub: e ? '#e23b3b' : '#d63a3a', trim: '#9aa6b8', pants: e ? '#4a1424' : '#1c2433', boots: '#141a26' };
     case 'geomancer':
       return { ...base, body: 'robe', weapon: 'gaia', hair: '#5f8f2a', main: e ? '#9a3412' : '#4f7d1f', sub: e ? '#6b2410' : '#a16207', trim: '#e8c66a' };
+    case 'monk':
+      return { ...base, weapon: 'fists', skin: '#e0ad7e', hair: '#2b2018', main: e ? '#7a2e1a' : '#efe6d2', sub: e ? '#b91c1c' : '#d9631a', trim: '#f4c430', pants: e ? '#4a1d12' : '#d8cdb5', boots: '#5b3a22' };
+    case 'thief':
+      return { ...base, weapon: 'dagger', hair: '#6b3a1f', main: e ? '#6b2626' : '#3f6a3a', sub: e ? '#3d1414' : '#24401f', trim: '#c08a3e', pants: e ? '#3a1d1d' : '#4b3a2a', boots: '#2e2118' };
+    case 'summoner':
+      return { ...base, body: 'robe', weapon: 'horn', hair: '#2f7f73', main: e ? '#6b1d4a' : '#1f6f6a', sub: e ? '#3e0e2b' : '#f4c430', trim: '#7dd3fc' };
+    case 'oracle':
+      return { ...base, body: 'robe', weapon: 'orb', hair: '#d8d4e8', main: e ? '#3a0f2a' : '#3b2f6b', sub: e ? '#b91c1c' : '#c4b5fd', trim: '#fde68a' };
     default: // squire
       return { ...base, weapon: 'sword', main: e ? '#b83232' : '#2f6fd6', sub: e ? '#7a1f1f' : '#1d4aa8', trim: '#d9a441' };
   }
@@ -287,6 +295,49 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       p.tri(x + 12, hy + 1, x + 17, hy - 2, x + 12, hy - 1, L.main);
       p.line(x + 3, hy - 1, x - 2, hy - 7, '#e8e2d0');
       p.line(x + 4, hy - 1, x - 1, hy - 6, '#c9c2ae');
+      break;
+    }
+    case 'monk': {
+      // Shaved head, topknot and a sash headband
+      if (back) p.b(x, hy, 12, 12, L.skin);
+      p.b(x + 4, hy - 4, 4, 4, L.hair);
+      p.r(x + 5, hy - 1, 2, 1, shade(L.hair, 0.3));
+      p.r(x - 1, hy + 3, 14, 2, L.sub);
+      p.r(back ? x + 5 : x + 12, hy + 4, 2, 4, L.sub);
+      break;
+    }
+    case 'thief': {
+      // Bandana with trailing tails, scruffy fringe
+      if (!back) { p.r(x, hy + 4, 3, 3, L.hair); p.r(x + 9, hy + 4, 3, 3, L.hair); }
+      p.b(x - 1, hy - 1, 14, 6, L.sub);
+      p.r(x - 1, hy + 4, 14, 1, shade(L.sub, -0.25));
+      p.px(x + 3, hy, shade(L.sub, 0.35)); p.px(x + 8, hy + 1, shade(L.sub, 0.35));
+      p.r(back ? x + 4 : x + 12, hy + 2, 3, 2, L.sub);
+      p.r(back ? x + 5 : x + 14, hy + 4, 2, 3, L.sub);
+      break;
+    }
+    case 'summoner': {
+      // Long hair under a horned circlet with a sky gem
+      if (!back) { p.r(x, hy + 1, 12, 3, L.hair); p.r(x - 1, hy + 3, 3, 10, L.hair); p.r(x + 10, hy + 3, 3, 10, L.hair); }
+      else p.r(x - 1, hy + 2, 14, 12, L.hair);
+      p.b(x - 1, hy - 1, 14, 4, L.hair);
+      p.r(x - 1, hy + 2, 14, 2, L.sub);
+      p.tri(x, hy + 2, x - 3, hy - 6, x + 3, hy + 1, '#e8e2d0');
+      p.tri(x + 12, hy + 2, x + 15, hy - 6, x + 9, hy + 1, '#e8e2d0');
+      if (!back) p.r(x + 5, hy + 1, 2, 3, L.trim);
+      break;
+    }
+    case 'oracle': {
+      // Deep hood with a golden eye on the brow
+      p.b(x - 2, hy - 2, 16, 8, L.main);
+      p.r(x - 2, hy + 5, 3, 9, L.main);
+      p.r(x + 11, hy + 5, 3, 9, shade(L.main, -0.15));
+      if (back) p.r(x - 2, hy - 2, 16, 15, L.main);
+      else {
+        p.r(x + 4, hy + 2, 4, 2, L.trim);
+        p.px(x + 5, hy + 2, '#1b1f33'); p.px(x + 6, hy + 3, '#1b1f33');
+      }
+      p.r(x - 2, hy + 5, 16, 1, L.sub);
       break;
     }
     case 'geomancer': {
@@ -443,10 +494,12 @@ function weapon(p: Painter, L: Look, hx: number, hy: number, pose: Pose, view: '
     case 'staff':
     case 'rod':
     case 'hourglass':
-    case 'gaia': {
+    case 'gaia':
+    case 'horn':
+    case 'orb': {
       const tilt = strike ? (view === 'side' ? 6 : 5) : 0;
-      const top = hy - (L.weapon === 'rod' ? 12 : 18);
-      const shaft = L.weapon === 'staff' ? '#c08a3e' : L.weapon === 'rod' ? '#5b3a1e' : L.weapon === 'hourglass' ? '#c99a2e' : '#6b4423';
+      const top = hy - (L.weapon === 'rod' || L.weapon === 'orb' ? 12 : 18);
+      const shaft = L.weapon === 'staff' ? '#c08a3e' : L.weapon === 'rod' ? '#5b3a1e' : L.weapon === 'hourglass' ? '#c99a2e' : L.weapon === 'horn' ? '#3f2a1a' : L.weapon === 'orb' ? '#4a3a6a' : '#6b4423';
       p.line(hx, hy + 6, hx + tilt, top, shaft, 2);
       const gx = hx + tilt, gy = top;
       if (L.weapon === 'staff') {
@@ -454,6 +507,14 @@ function weapon(p: Painter, L: Look, hx: number, hy: number, pose: Pose, view: '
         p.r(gx, gy - 3, 2, 2, '#7dd3fc');
       } else if (L.weapon === 'rod') {
         p.b(gx - 1, gy - 4, 4, 4, '#ef4444'); p.px(gx, gy - 3, '#fecaca');
+      } else if (L.weapon === 'horn') {
+        // A curled horn crowning the staff, with a spirit flame inside
+        p.r(gx - 3, gy - 3, 2, 4, '#e8e2d0'); p.r(gx - 4, gy - 6, 2, 4, '#e8e2d0'); p.r(gx - 2, gy - 8, 3, 2, '#e8e2d0');
+        p.r(gx + 1, gy - 7, 2, 2, '#d6cdb8');
+        p.r(gx, gy - 4, 2, 2, L.trim);
+      } else if (L.weapon === 'orb') {
+        p.b(gx - 2, gy - 6, 6, 6, '#a78bfa'); p.r(gx - 1, gy - 5, 2, 2, '#ede9fe');
+        p.r(gx - 2, gy, 6, 1, L.trim);
       } else if (L.weapon === 'hourglass') {
         p.r(gx - 2, gy - 6, 6, 1, L.trim); p.r(gx - 2, gy, 6, 1, L.trim);
         p.tri(gx - 1, gy - 5, gx + 4, gy - 5, gx + 1.5, gy - 2.5, '#7dd3fc');
@@ -467,6 +528,14 @@ function weapon(p: Painter, L: Look, hx: number, hy: number, pose: Pose, view: '
       }
       break;
     }
+    case 'fists': {
+      // Knuckle wraps over the hand
+      p.r(hx - 1, hy - 1, 4, 3, L.trim);
+      p.r(hx - 1, hy - 1, 4, 1, shade(L.trim, 0.3));
+      if (strike) { p.px(hx + 4, hy - 2, '#fff7c2'); p.px(hx + 5, hy + 1, '#fff7c2'); }
+      break;
+    }
+    case 'dagger':
     case 'daggers': {
       if (strike && view === 'side') {
         p.r(hx + 1, hy, 9, 2, steel); p.r(hx + 1, hy, 9, 1, '#ffffff');
@@ -584,6 +653,27 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.b(hx, hy - 1, 13, 5, L.main);
       p.tri(hx + 1, hy + 1, hx - 5, hy - 2, hx + 1, hy - 1, L.main);
       p.line(hx + 3, hy - 1, hx - 3, hy - 7, '#e8e2d0');
+      break;
+    case 'monk':
+      p.b(hx + 3, hy - 4, 4, 4, L.hair);
+      p.r(hx, hy + 3, 13, 2, L.sub);
+      p.r(hx - 2, hy + 4, 2, 4, L.sub);
+      break;
+    case 'thief':
+      p.b(hx, hy - 1, 13, 6, L.sub);
+      p.r(hx + 1, hy + 4, 4, 4, L.hair);
+      p.r(hx - 3, hy + 2, 3, 2, L.sub); p.r(hx - 5, hy + 4, 3, 2, L.sub);
+      break;
+    case 'summoner':
+      p.r(hx + 1, hy + 1, 6, 12, L.hair);
+      p.b(hx, hy - 1, 13, 4, L.hair);
+      p.r(hx, hy + 2, 13, 2, L.sub);
+      p.tri(hx + 6, hy + 2, hx + 4, hy - 6, hx + 9, hy + 1, '#e8e2d0');
+      break;
+    case 'oracle':
+      p.b(hx - 1, hy - 2, 11, 15, L.main);
+      p.r(hx + 9, hy - 2, 4, 4, L.main);
+      p.r(hx + 10, hy + 2, 2, 2, L.trim);
       break;
     case 'geomancer':
       p.r(hx + 1, hy + 1, 6, 11, L.hair);
@@ -746,6 +836,8 @@ function drawPortrait(id: string): HTMLCanvasElement {
     p.b(22, 46, 20, 6, shade(L.main, 0.12)); // collar
     if (F.job === 'archer') p.line(10, 50, 50, 64, '#6b4423', 3);
     if (F.job === 'ninja') p.line(12, 50, 52, 62, L.sub, 3);
+    if (F.job === 'monk') { p.tri(22, 46, 32, 58, 42, 46, shade(L.main, -0.15)); p.r(8, 60, 48, 4, L.sub); }
+    if (F.job === 'thief') p.line(14, 50, 46, 64, '#4a2e1c', 3);
   }
   // Neck
   p.b(27, 41, 10, 8, shade(F.skin, -0.18));
@@ -863,6 +955,31 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.b(hx - 3, hy - 2, 34, 8, L.main);
         p.tri(hx + 30, hy + 2, hx + 40, hy - 3, hx + 30, hy - 2, L.main);
         p.line(hx + 4, hy - 2, hx - 6, hy - 12, '#e8e2d0', 2);
+        break;
+      case 'monk':
+        p.b(hx - 1, hy, 30, 10, F.skin); // shaved
+        p.b(hx + 10, hy - 8, 8, 8, F.enemy ? '#2b2018' : L.hair); // topknot
+        p.r(hx - 2, hy + 6, 32, 3, L.sub);
+        p.r(hx + 28, hy + 8, 4, 8, L.sub);
+        break;
+      case 'thief':
+        p.b(hx - 3, hy - 2, 34, 12, L.sub);
+        p.r(hx - 3, hy + 9, 34, 2, shade(L.sub, -0.25));
+        p.r(hx + 31, hy + 3, 7, 3, L.sub); p.r(hx + 33, hy + 6, 5, 5, L.sub);
+        p.px(hx + 6, hy + 1, shade(L.sub, 0.35)); p.px(hx + 18, hy + 3, shade(L.sub, 0.35));
+        break;
+      case 'summoner':
+        p.r(hx - 2, hy + 4, 32, 3, L.sub);
+        p.tri(hx, hy + 5, hx - 6, hy - 12, hx + 6, hy + 3, '#e8e2d0');
+        p.tri(hx + 28, hy + 5, hx + 34, hy - 12, hx + 22, hy + 3, '#e8e2d0');
+        p.b(hx + 11, hy + 2, 6, 6, L.trim);
+        break;
+      case 'oracle':
+        p.b(hx - 5, hy - 5, 38, 14, L.main);
+        p.r(hx - 5, hy + 8, 7, 30, L.main); p.r(hx + 26, hy + 8, 7, 30, shade(L.main, -0.15));
+        p.r(hx - 5, hy + 8, 38, 2, L.sub);
+        p.b(hx + 9, hy + 1, 10, 5, L.trim);
+        p.r(hx + 12, hy + 2, 4, 3, '#1b1f33');
         break;
       case 'geomancer':
         p.r(hx - 2, hy + 4, 32, 3, L.sub);

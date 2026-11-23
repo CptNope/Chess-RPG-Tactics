@@ -55,6 +55,10 @@ quadrantChart
     Ninja: [0.75, 0.95]
     Geomancer: [0.45, 0.45]
     Time Weaver: [0.15, 0.6]
+    Monk: [0.9, 0.55]
+    Thief: [0.62, 0.9]
+    Summoner: [0.05, 0.2]
+    Oracle: [0.2, 0.42]
 ```
 
 | Job | Plays like | Signature tools |
@@ -67,7 +71,13 @@ quadrantChart
 | **Dragoon** | Mobile bruiser | Dragon Plunge, Dragon Breath (Area 1), Dragonheart, Ignore Elevation |
 | **Ninja** | Fastest unit | Throw Shuriken, Reflexes, Dual Wield, Water Walk |
 | **Geomancer** | Terrain caster | Elemental (changes with the ground), Earth Slash, Earthen Ward |
-| **Time Weaver** | Tempo control | Haste, Slow, Gravity, Critical Quick, Teleport |
+| **Time Weaver** | Tempo control | Haste, Slow, Gravity, Regen, Critical Quick, Teleport |
+| **Monk** *(0.13)* | Fist fighter and field medic | Aura Wave (range 3), Chakra (free area heal + cleanse, from ATK), Pummel, Iron Will, Brawler, Ki Flow |
+| **Thief** *(0.13)* | Fast skirmisher | Steal (gear into your armory), Sand Toss (Blind), Hamstring (Slow), Quick Hands, Backstab, Fleet Foot |
+| **Summoner** *(0.13)* | Radius-2 spells | Salamander, Undine, Storm Roc, Sylph (heal + Regen), Golem (area Protect), Mana Spring, Conserve |
+| **Oracle** *(0.13)* | Ailments | Dim Sight (Blind), Hush (Silence), Lullaby (area Sleep), Soul Drain, Hex Ward, Hex Mastery |
+
+Older jobs gained an action each in 0.13: Squire *Rally*, Knight *Bulwark*, Archer *Arrow Rain*, Black Mage *Firestorm*, White Mage *Shell*, *Purify* and *Healing Circle*, Ninja *Smoke Bomb*, Time Weaver *Regen*. The Knight's support is now **Armor Mastery** (+50% HP from armor, helms and shields).
 
 ### Prerequisites (defined, not yet enforced)
 
@@ -80,7 +90,11 @@ flowchart LR
     Knight --> |Lv 2| Dragoon
     Archer --> |Lv 2| Ninja
     BlackMage["Black Mage"] --> |Lv 2| TimeWeaver["Time Weaver"]
-    WhiteMage["White Mage"]
+    Squire --> |Lv 3| Monk
+    Archer --> |Lv 2| Thief
+    WhiteMage["White Mage"] --> |Lv 2| Summoner
+    BlackMage --> |Lv 2| Summoner
+    TimeWeaver --> |Lv 2| Oracle
     Geomancer
 ```
 
@@ -138,4 +152,20 @@ flowchart LR
 | Body | HP, ATK | |
 | Accessory | Anything | Speed, Move, Jump, MP… |
 
-The gear tab lists only items in the squad's **armory**. You start with 13 items. Chapter wins, branch choices and Trials drops add more ([where each item comes from](CONTENT_REFERENCE.md#items)). Any number of units can equip the same item.
+Weapon types: swords, spears (range 2), bows (4–6), staves and rods, daggers, and **knuckles** (0.13; the Monk's *Brawler* adds +30% to unarmed or knuckle Attacks).
+
+### Traits (0.13)
+
+Some gear carries a **trait** on top of its stats (`Item.traits`):
+
+| Trait | What it does | Examples |
+| :--- | :--- | :--- |
+| `startStatus` | The wearer starts every battle with these statuses. Regen from gear lasts the whole battle; the rest run their normal course | Verdant Charm (Regen), Warding Amulet (Protect + Shell), Mirror Shield and Templar Mail (Shell) |
+| `boost` | +25% to the wearer's spells of that element (holy also boosts healing) | Flame / Frost / Storm Rod, Dawnbringer (holy) |
+| `guard` | Those ailments can't be inflicted on the wearer; the enemy AI won't waste turns trying | Circlet of Clarity (Blind, Silence, Sleep), Purity Bangle (Poison, Slow, binding, Breach), Sage's Staff (Silence), Zodiac Ribbon (all) |
+
+### Steal
+
+The Thief's **Steal** takes one piece of an adjacent foe's gear (accessory first, then head, weapon, shield, body) and adds it to your armory if you don't have one. The foe loses its stats. It's harder than a blow (−25 hit, −45 against a boss) and, like any attack, easier from the side or behind. Gear stolen in a battle is listed on the spoils screen.
+
+The gear tab lists only items in the squad's **armory**. You start with 17 items. Chapter wins, branch choices and Trials drops add more ([where each item comes from](CONTENT_REFERENCE.md#items)). Any number of units can equip the same item.

@@ -8,7 +8,10 @@ export type AbilityType = 'action' | 'reaction' | 'support' | 'movement';
 
 export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark' | 'time';
 
-export type StatusEffectType = 'haste' | 'slow' | 'protect' | 'immobilize' | 'poison' | 'focus';
+export type StatusEffectType =
+  | 'haste' | 'slow' | 'protect' | 'immobilize' | 'poison' | 'focus'
+  // Added in 0.13.0
+  | 'shell' | 'regen' | 'blind' | 'silence' | 'sleep' | 'breach';
 
 export interface ActiveStatus {
   type: StatusEffectType;
@@ -17,7 +20,17 @@ export interface ActiveStatus {
 
 export type EquipmentSlot = 'weapon' | 'shield' | 'head' | 'body' | 'accessory';
 
-export type WeaponType = 'sword' | 'spear' | 'bow' | 'staff' | 'dagger';
+export type WeaponType = 'sword' | 'spear' | 'bow' | 'staff' | 'dagger' | 'knuckles';
+
+/** Passive effects some gear carries on top of its stats. */
+export interface ItemTraits {
+  /** Statuses the wearer starts every battle with (normal duration; Regen lasts the whole battle). */
+  startStatus?: StatusEffectType[];
+  /** Elements whose damage (and healing, for holy) the wearer deals at +25%. */
+  boost?: Element[];
+  /** Statuses that can't be inflicted on the wearer. */
+  guard?: StatusEffectType[];
+}
 
 export interface Item {
   id: string;
@@ -37,6 +50,7 @@ export interface Item {
     evasion?: number;
   };
   range?: number;
+  traits?: ItemTraits;
 }
 
 export interface TileData {
@@ -65,13 +79,22 @@ export interface Ability {
   isSelfOnly?: boolean;
   /** Geomancer abilities: element and effect are decided by the terrain the caster stands on. */
   terrainDriven?: boolean;
+  /** Elemental skills that hit with weapon strength (ATK) instead of MAG, e.g. a Monk's chi or a holy blade. */
+  scalesWith?: 'attack' | 'magic';
+  /** Removes harmful statuses (poison, slow, blind, silence, sleep, immobilize, breach) from each target. */
+  cleanse?: boolean;
+  /** Share of the damage dealt that heals the caster. */
+  drain?: number;
+  /** Thief: takes one piece of the target's gear instead of dealing damage. */
+  steal?: boolean;
 }
 
 export interface Job {
   id: string;
   name: string;
   description: string;
-  role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer';
+  role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
+    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer';
   spriteClass: string;
   baseMove: number;
   baseJump: number;
@@ -148,6 +171,8 @@ export interface Unit {
   isEnraged?: boolean;
   /** Dragonheart can save a unit only once per battle. */
   usedDragonheart?: boolean;
+  /** Iron Will can fire only once per battle. */
+  usedIronWill?: boolean;
 }
 
 export interface CombatForecast {

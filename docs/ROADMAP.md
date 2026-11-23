@@ -29,6 +29,8 @@ timeline
     section Nov 20
         0.11.0 : Pixel-art spell effects : Path walking : Workshop brush strokes : Balance sim
         0.12.0 : itch.io release : Title screen : Bundled fonts : Fullscreen
+    section Nov 23
+        0.13.0 : Monk, Thief, Summoner, Oracle : 6 new statuses : Gear traits : Steal
 ```
 
 | Version | Theme | Highlights |
@@ -41,6 +43,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.13 | Bigger squad | Monk, Thief, Summoner and Oracle (13 jobs, 75 abilities), Shell / Regen / Blind / Silence / Sleep / Breach, 25 new items with traits, Steal, Rend Armor and Armor Mastery fixed |
 | 0.12 | Ship it | itch.io release (HTML5 zip, store page, butler publishing), title screen, fullscreen, bundled fonts, iframe-safe input |
 | 0.11 | Feel | Pixel-art spell and hit effects (pixelfx) wrapping the real sprites, units walk their path, Workshop brush strokes, Chapter II-B rebalanced with a headless balance sim |
 | 0.10 | Make your own | 16×16 battlefields, the Workshop (map + scenario editor with objectives, library, share links), animated 48px sprites, drawn portraits |
@@ -51,16 +54,16 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.13)"]
+    subgraph NOW["Now (0.14)"]
         direction TB
         N1["Job prerequisites enforced"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Devlog + site post<br/>for the itch release"]
     end
-    subgraph NEXT["Next (0.14 – 0.16)"]
+    subgraph NEXT["Next (0.15 – 0.17)"]
         direction TB
-        X1["Equipment rules:<br/>Equip Heavy Armor works"]
+        X1["Equipment rules:<br/>weapon types per job"]
         X2["Shop + gil economy"]
         X3["Smarter AI:<br/>reactions, facing, 2-ply"]
         X4["Undo move"]
@@ -70,7 +73,7 @@ flowchart LR
     subgraph LATER["Later (1.0+)"]
         direction TB
         L1["Chapter IV+ campaign arc"]
-        L2["New jobs: Monk, Summoner, Thief"]
+        L2["More jobs: Paladin, Bard,<br/>Dancer; a Revive spell"]
         L3["Workshop: community<br/>scenario gallery"]
         L4["Remappable controls"]
         L5["Localization"]
@@ -80,22 +83,23 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.13): finish and ship what exists
+### Now (0.14): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
-| **Enforce job prerequisites** | The tree is in `jobs.ts` but any unit can take any job, which flattens progression | S | Lock jobs in the Team screen until the required job level; show the requirement |
+| **Enforce job prerequisites** | The tree is in `jobs.ts` (now 13 jobs deep) but any unit can take any job, which flattens progression | S | Lock jobs in the Team screen until the required job level; show the requirement |
 | **Job levels** | Prerequisites need a job level; today only JP exists | S | Job level from total JP earned in a job |
 | **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **Devlog + site post** | Tell people it's out | S | itch devlog for 0.12, a project post on jeremyanderson.tech linking the itch page |
+| **Devlog** | Tell people what's new | S | itch devlog for 0.13 (the site's project page is live) |
+| **Status icons over units** | Six new statuses only show on the unit card | S | Small pixel icons above the HP bar |
 
-### Next (0.14 – 0.16): depth
+### Next (0.15 – 0.17): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **Equipment rules**: heavy armor and weapon types per job; *Equip Heavy Armor* does something | The support ability is a no-op today, and every job can wear everything | M |
-| **Shop and gil** | Items have prices that nothing uses; gives Trials rewards a second outlet | M |
+| **Equipment rules**: weapon and armor types per job | Every job can wear everything; Armor Mastery (0.13) could become "wear plate as any job" once rules exist | M |
+| **Shop and gil** | Items have prices that nothing uses; gives Trials rewards and stolen duplicates a second outlet | M |
 | **AI: reactions and facing** | AI ignores Weapon Guard and leaves its back open ([details](ENEMY_AI.md#5-known-limits)) | M |
 | **AI: two-ply look-ahead** | Lets enemies set up combos and retreat to heal | L |
 | **Undo move** (before acting) | Standard tactics-game comfort | S |
@@ -108,7 +112,8 @@ flowchart LR
 | Item | Size |
 | :--- | :---: |
 | Campaign Chapters IV–VI with new maps and a third recruit | L |
-| New jobs (Monk, Summoner, Thief) with new reactions | L |
+| More jobs (Paladin, Bard, Dancer) and a Revive spell (needs dead units to be targetable) | L |
+| Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns) | M |
 | Remappable keyboard and controller bindings | M |
 | Localization (strings out of code) | M |
@@ -152,7 +157,6 @@ quadrantChart
 | Area | Issue | Impact | Plan |
 | :--- | :--- | :---: | :--- |
 | Rules | Job prerequisites defined but not enforced | Medium | Now |
-| Rules | *Equip Heavy Armor* support has no effect | Low | Next (equipment rules) |
 | Rules | Item `price` unused | Low | Next (shop) |
 | Rules | Speed Save's +2 Speed is lost at the unit's next end of turn (stats are recalculated) | Low | Make it a status |
 | Code | `main.ts` (1.5k lines) and `UIManager.ts` (1k lines) are large | Medium | Split battle flow, spoils/chapters and input into modules |

@@ -14,7 +14,11 @@ flowchart TD
     CheckCT -- No --> AddSpeed["For each alive unit:<br/>CT = CT + Speed"]
     AddSpeed --> Start
     CheckCT -- Yes --> SelectActive["Sort ready units by highest CT,<br/>then by Speed.<br/>Grant Active Turn to #1."]
-    SelectActive --> TurnAction["Unit executes Move, Act, Wait"]
+    SelectActive --> Tick["Start of turn: Poison −10% HP,<br/>then Regen +8% HP"]
+    Tick --> Asleep{"Asleep?"}
+    Asleep -- Yes --> Lost["Turn lost: CT − 100,<br/>statuses count down"]
+    Lost --> Start
+    Asleep -- No --> TurnAction["Unit executes Move, Act, Wait"]
     TurnAction --> CalculateRefund{"Actions Taken?"}
     CalculateRefund -- "Moved AND Acted" --> Refund0["CT = max(0, CT - 100)"]
     CalculateRefund -- "Moved ONLY or Acted ONLY" --> Refund20["CT = 20 (20% Refund)"]
@@ -118,6 +122,25 @@ $$\text{Base Damage} = \text{MAG} \times |\text{Power}| \times 3$$
 * **Gravity** removes $25\%$ of current HP ($12\%$ against bosses).
 * Healing spells (e.g. *Cure*) carry negative power ($\text{Power} = -1.4$), delivering targeted HP restoration.
 
+### Modifiers added in 0.13.0
+
+| Modifier | Applies to | Effect |
+| :--- | :--- | :--- |
+| **Breach** on the target | Physical damage | ×1.25 (Rend Armor inflicts it) |
+| **Shell** on the target | Spell damage | ×0.70 (the spell counterpart of Protect) |
+| **Blind** on the attacker | Physical hit chance | −40 |
+| **Sleep** on the target | Hit chance | 100% (sleepers can't dodge); any damage wakes them |
+| Element **boost** trait on the attacker's gear | That element's damage, and holy healing | ×1.25 |
+| **Brawler** (`mo_brawler`) | Attack with knuckles or bare hands | ×1.30 |
+| **Backstab** (`th_backstab`) | Physical flank / back | a further ×1.15 / ×1.30 |
+| **Hex Mastery** (`or_hex_mastery`) | Abilities that inflict an ailment | +20 hit |
+| `scalesWith: 'attack'` | Chakra's heal | uses ATK instead of MAG (still ×3) |
+| `drain` | Soul Drain | the caster heals for 50% of the damage dealt |
+| `cleanse` | Purify, Chakra | removes every ailment (Poison, Slow, Immobilize, Blind, Silence, Sleep, Breach) |
+| `steal` | Steal | no damage; −25 hit (−45 vs a boss), 0% when the target has no gear |
+
+**Regen** heals 8% max HP at the start of each turn, after Poison. **Silence** removes every ability that costs MP from the unit's ACT menu. **Conserve** (`su_conserve`) halves MP costs, rounding up; the halved cost is what the menu shows and what's spent.
+
 ---
 
 ## 5. Terrain Movement Costs (0.7.0)
@@ -140,6 +163,10 @@ Boss units have $+60\%$ HP and $+15\%$ ATK/MAG. The first time a boss drops to $
 | Arcane Retaliation (`bm_magic_counter`) | Black Mage | 50%: strike back for $\text{MAG} \times 3$ |
 | Critical Quick (`tm_critical_quick`) | Time Weaver | At $\le 35\%$ HP after a hit, CT jumps to 100 |
 | Earthen Ward (`geo_earthen_ward`) | Geomancer | Hit while on stone/dirt/parapet: gain Protect |
+| Iron Will (`mo_iron_will`) | Monk | First drop to $\le 50\%$ HP in a battle: Focus + Protect |
+| Quick Hands (`th_quick_hands`) | Thief | 40%: gain Haste |
+| Mana Spring (`su_mana_spring`) | Summoner | Recover 15% max MP |
+| Hex Ward (`or_hex_ward`) | Oracle | 35%: Blind the attacker |
 
 Before 0.7.0, Counter Tackle, Arcane Retaliation and Critical Quick were checked against ability ids that did not exist, so they never fired. A unit test now fails if engine code references an unknown ability id.
 
@@ -149,22 +176,24 @@ Before 0.7.0, Counter Tackle, Arcane Retaliation and Critical Quick were checked
 
 ```mermaid
 flowchart TD
-    F(["getForecast"]) --> H["Hit % = 80<br/>+15 flank / +30 back<br/>+5 higher / −10 lower<br/>− (evasion − 5) for physical, unless back<br/>− 35 vs Reflexes<br/>clamped 10–100"]
+    F(["getForecast"]) --> H["Hit % = 80<br/>+15 flank / +30 back<br/>+5 higher / −10 lower<br/>− (evasion − 5) for physical, unless back<br/>− 35 vs Reflexes · − 40 if Blind<br/>+ 20 Hex Mastery · − 25 / 45 Steal<br/>clamped 10–100 · 100 vs a sleeper"]
     H --> D{"Ability kind"}
     D -- "heal (power < 0)" --> Heal["MAG × |power| × 3 → 100% hit"]
     D -- "pure buff / debuff" --> Stat["0 damage, status only"]
     D -- Gravity --> Grav["25% current HP (12% vs boss)"]
-    D -- physical --> Phys["ATK × power × 5<br/>× support × Protect<br/>× facing × height"]
-    D -- spell --> Mag["MAG × power × 3<br/>× Arcane Strength<br/>× 0.6 on splash ring"]
+    D -- physical --> Phys["ATK × power × 5<br/>× support × Protect / Breach<br/>× facing (× Backstab) × height"]
+    D -- spell --> Mag["MAG × power × 3<br/>× Arcane Strength × element boost<br/>× Shell × 0.6 on splash ring"]
     Heal & Stat & Grav & Phys & Mag --> X(["executeAttack"])
     X --> P{"Front physical vs<br/>Weapon Guard? 30%"}
     P -- parried --> Miss(["MISS + parry"])
     P -- no --> R{"roll ≤ hit %"}
     R -- no --> Miss2(["MISS"])
-    R -- yes --> S["Apply status"]
+    R -- yes --> St{"Steal?"}
+    St -- yes --> Take["Take gear → armory"]
+    St -- no --> S["Apply status (unless gear guards it) · cleanse"]
     S --> C{"crit? 5% / 15% flank / 30% back"}
     C --> Dmg["Damage (×1.5 on crit)"]
-    Dmg --> Re["Reaction · Dual Wield 2nd strike · boss enrage"]
+    Dmg --> Re["Wake a sleeper · drain · reaction · Dual Wield 2nd strike · boss enrage"]
 ```
 
 | Facing | Hit bonus | Damage | Crit chance | Ignores evasion |

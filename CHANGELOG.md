@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.13.0] - 2026-11-23
+
+### Added — new jobs, abilities and gear
+- **Four new jobs** (13 in all), each with its own sprite, portrait, signature gear and veteran-enemy kit:
+  - **Monk** (Brawler): *Aura Wave* (chi blast, range 3), *Chakra* (free area heal from ATK that also cleanses), *Pummel*; reaction *Iron Will* (Focus and Protect the first time you drop to half HP); support *Brawler* (+30% unarmed or knuckle Attacks); movement *Ki Flow* (walking restores HP and MP).
+  - **Thief** (Rogue): *Steal* (lifts a piece of the target's gear into your armory; harder head-on and against bosses), *Sand Toss* (Blind), *Hamstring* (Slow); reaction *Quick Hands* (40% Haste when struck); support *Backstab* (extra flank and back damage); movement *Fleet Foot* (Move +1, Jump +1).
+  - **Summoner**: radius-2 spirits: *Salamander* (fire), *Undine* (ice), *Storm Roc* (lightning), *Sylph* (area heal + Regen), *Golem* (area Protect); reaction *Mana Spring* (MP back when struck); support *Conserve* (half MP costs).
+  - **Oracle** (Hexer): *Dim Sight* (Blind), *Hush* (Silence), *Lullaby* (area Sleep), *Soul Drain* (dark damage that heals you); reaction *Hex Ward* (may Blind the attacker); support *Hex Mastery* (ailments land 20% more often).
+- **New actions for older jobs:** Squire *Rally* (Focus for you and neighbours), Knight *Bulwark* (self Protect), Archer *Arrow Rain* (area volley), Black Mage *Firestorm* (radius 2), White Mage *Shell*, *Purify* and *Healing Circle*, Ninja *Smoke Bomb* (area Blind), Time Weaver *Regen*. 75 abilities in all (was 41).
+- **Six new statuses:** Shell (−30% spell damage), Regen (8% HP a turn), Blind (−40 physical accuracy), Silence (MP abilities sealed), Sleep (turns pass until struck; sleepers can't dodge), Breach (+25% physical damage taken).
+- **25 new pieces of gear** (52 in all), including a new weapon type (knuckles), elemental rods, and gear with **traits**: start every battle with Regen, Shell or Protect; +25% to an element (Flame/Frost/Storm Rod, Dawnbringer for holy); or guard against ailments (Circlet of Clarity, Purity Bangle; the Zodiac Ribbon now wards off them all). Gear lists now show negative stats correctly.
+- The new jobs join the Trials of the Zodiac roster; Chapter I's Bridge Cutthroat is now a Thief and Chapter II-B's gate has a Monk. Flame Rod, Verdant Charm and Mirror Shield are new chapter rewards; the rest drop in the Trials, or steal them.
+- Stolen gear is listed on the spoils screen.
+
+### Changed
+- **Rend Armor** now does what it says: it inflicts Breach. **Equip Heavy Armor** (a no-op) is now **Armor Mastery**: +50% HP from armor, helms and shields.
+- The enemy AI weighs the new kit: it cleanses, drains when hurt, avoids casting ailments a target's gear guards against, only raises Protect/Shell/Focus when a foe is near, and never tries to Steal.
+- Old saves get 200 JP banked in each new job and the new starter gear in their armory.
+
+### Developer
+- Ability flags `cleanse`, `drain`, `steal`, `scalesWith`; item `traits` (`startStatus`, `boost`, `guard`). `JobSystem.equipVeteranPassives`, `applyGearStatuses`, `mpCostFor`, `ensureJobPoints`; `TurnManager.startOfTurn` / `tickStatuses` and `skipped` turns. The balance sim shares the game's veteran passives.
+- 12 more pixelfx effects vendored (sleep, curse, stars, rune circle, hex sigil, healing bloom, soul drain, sunburst, collect burst, fire tornado, wave crash, blunt hit).
+- 30 new tests (74 total) in `tests/jobs-gear.test.ts`.
+
+---
+
 ## [0.12.0] - 2026-11-20
 
 ### Added — ready for itch.io
