@@ -15,8 +15,21 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   monk: { reaction: 'mo_iron_will', support: 'mo_brawler' },
   thief: { reaction: 'th_quick_hands', support: 'th_backstab' },
   summoner: { reaction: 'su_mana_spring' },
-  oracle: { reaction: 'or_hex_ward', support: 'or_hex_mastery' }
+  oracle: { reaction: 'or_hex_ward', support: 'or_hex_mastery' },
+  paladin: { reaction: 'pa_divine_grace', support: 'pa_zeal' },
+  spellblade: { reaction: 'sb_runic', support: 'sb_arcane_edge' }
 };
+
+/** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
+export const JOB_LEVEL_JP = [0, 100, 250, 450, 700, 1000, 1400, 1900];
+export const MAX_JOB_LEVEL = JOB_LEVEL_JP.length;
+
+export interface JpGain {
+  /** The job's new level, when this gain raised it. */
+  leveledTo?: number;
+  /** Jobs this gain unlocked (their prerequisites are now met). */
+  unlocked: string[];
+}
 
 export class JobSystem {
   /**
@@ -99,33 +112,27 @@ export class JobSystem {
       initialGear.head = ITEMS.leather_cap;
       initialGear.body = ITEMS.leather_vest;
       initialGear.accessory = ITEMS.feather_boots;
+    } else if (jobId === 'paladin') {
+      initialGear.weapon = ITEMS.iron_sword;
+      initialGear.shield = ITEMS.buckler;
+      initialGear.head = ITEMS.iron_helm;
+      initialGear.body = ITEMS.chainmail;
+    } else if (jobId === 'spellblade') {
+      initialGear.weapon = ITEMS.iron_sword;
+      initialGear.head = ITEMS.wizard_hat;
+      initialGear.body = ITEMS.leather_vest;
+      initialGear.accessory = ITEMS.mage_ring;
     } else if (jobId === 'summoner' || jobId === 'oracle') {
       initialGear.weapon = ITEMS.chrono_rod;
       initialGear.head = ITEMS.wizard_hat;
       initialGear.body = ITEMS.silk_robe;
     }
 
-    const jobLevels: Record<string, number> = {
-      squire: 2,
-      chemist: 1
-    };
-    jobLevels[jobId] = 2;
+    const jobLevels: Record<string, number> = {};
 
-    const jobPoints: Record<string, number> = {
-      squire: 250,
-      knight: 200,
-      archer: 200,
-      black_mage: 200,
-      white_mage: 200,
-      dragoon: 200,
-      ninja: 200,
-      geomancer: 200,
-      time_mage: 200,
-      monk: 200,
-      thief: 200,
-      summoner: 200,
-      oracle: 200
-    };
+    // A small starting bank in every job, so a new job's first abilities are within reach
+    const jobPoints: Record<string, number> = {};
+    for (const id of Object.keys(JOBS)) jobPoints[id] = id === 'squire' ? 250 : 200;
 
     const unlockedAbilities: Record<string, boolean> = {
       basic_attack: true
@@ -144,6 +151,8 @@ export class JobSystem {
       jobId,
       jobLevels,
       jobPoints,
+      // Everyone has basic Squire training (Squire Lv 2), which opens Knight and Archer
+      jobJpEarned: { squire: JOB_LEVEL_JP[1] },
       unlockedAbilities,
       equippedAbilities: initialEquipped,
       equipment: initialGear,
@@ -166,10 +175,79 @@ export class JobSystem {
       hasActed: false
     };
 
+    this.grantPrerequisites(unit, jobId);
     this.recalculateDerivedStats(unit);
     unit.currentHp = unit.maxHp;
     unit.currentMp = unit.maxMp;
     return unit;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Job levels and the job tree
+  // ---------------------------------------------------------------------------
+
+  /** A unit's level in a job (1 to MAX_JOB_LEVEL), from the lifetime JP it has earned there. */
+  public static jobLevel(unit: Unit, jobId: string): number {
+    const earned = unit.jobJpEarned?.[jobId] || 0;
+    let level = 1;
+    for (let i = 1; i < JOB_LEVEL_JP.length; i++) if (earned >= JOB_LEVEL_JP[i]) level = i + 1;
+    return level;
+  }
+
+  /** JP earned into the current job level and JP the next level needs (need = 0 at Master). */
+  public static jobLevelProgress(unit: Unit, jobId: string): { level: number; into: number; need: number } {
+    const level = this.jobLevel(unit, jobId);
+    const earned = unit.jobJpEarned?.[jobId] || 0;
+    if (level >= MAX_JOB_LEVEL) return { level, into: 0, need: 0 };
+    return { level, into: earned - JOB_LEVEL_JP[level - 1], need: JOB_LEVEL_JP[level] - JOB_LEVEL_JP[level - 1] };
+  }
+
+  /** Prerequisites the unit hasn't met yet for a job (empty = unlocked). */
+  public static missingPrerequisites(unit: Unit, jobId: string): { jobId: string; level: number; have: number }[] {
+    const out: { jobId: string; level: number; have: number }[] = [];
+    for (const p of JOBS[jobId]?.prerequisites || []) {
+      const have = this.jobLevel(unit, p.jobId);
+      if (have < p.level) out.push({ jobId: p.jobId, level: p.level, have });
+    }
+    return out;
+  }
+
+  /** True when the unit may switch to the job: its prerequisites are met, or it already holds it. */
+  public static canChangeJob(unit: Unit, jobId: string): boolean {
+    if (!JOBS[jobId]) return false;
+    return unit.jobId === jobId || this.missingPrerequisites(unit, jobId).length === 0;
+  }
+
+  /** Jobs the unit can switch to right now. */
+  public static unlockedJobs(unit: Unit): string[] {
+    return Object.keys(JOBS).filter((id) => this.canChangeJob(unit, id));
+  }
+
+  /**
+   * Gives a unit the job levels a job requires, all the way down the tree. Used for units that
+   * start in an advanced job (recruits, enemies, the opening squad) and for old saves.
+   */
+  public static grantPrerequisites(unit: Unit, jobId: string, seen: Set<string> = new Set()): void {
+    if (seen.has(jobId)) return;
+    seen.add(jobId);
+    const earned = (unit.jobJpEarned ||= {});
+    for (const p of JOBS[jobId]?.prerequisites || []) {
+      earned[p.jobId] = Math.max(earned[p.jobId] || 0, JOB_LEVEL_JP[Math.min(p.level, MAX_JOB_LEVEL) - 1]);
+      this.grantPrerequisites(unit, p.jobId, seen);
+    }
+  }
+
+  /** Adds JP to the unit's current job: spendable and lifetime. Reports a level-up and any jobs it unlocks. */
+  public static gainJp(unit: Unit, amount: number): JpGain {
+    const jobId = unit.jobId;
+    const before = this.jobLevel(unit, jobId);
+    const lockedBefore = Object.keys(JOBS).filter((id) => !this.canChangeJob(unit, id));
+    const earned = (unit.jobJpEarned ||= {});
+    unit.jobPoints[jobId] = (unit.jobPoints[jobId] || 0) + amount;
+    earned[jobId] = (earned[jobId] || 0) + amount;
+    const after = this.jobLevel(unit, jobId);
+    if (after === before) return { unlocked: [] };
+    return { leveledTo: after, unlocked: lockedBefore.filter((id) => this.canChangeJob(unit, id)) };
   }
 
   /**
@@ -407,13 +485,27 @@ export class JobSystem {
   }
 
   /**
-   * Saves from before a job existed have no JP banked for it. Give every missing job the same
-   * starting JP a new recruit gets, so a newly added job can be tried right away.
+   * Brings a unit from an older save up to date:
+   * - banks the starting 200 JP for any job the save has never seen;
+   * - rebuilds lifetime JP (0.14.0) from what the unit holds and has spent, so job levels reflect
+   *   the play already done, and never locks the job or secondary skillset it's using.
    */
   public static ensureJobPoints(unit: Unit): void {
     for (const id of Object.keys(JOBS)) {
       if (unit.jobPoints[id] === undefined) unit.jobPoints[id] = 200;
     }
+    if (!unit.jobJpEarned) {
+      const earned: Record<string, number> = {};
+      for (const job of Object.values(JOBS)) {
+        const spent = job.abilities.reduce((n, a) => n + (unit.unlockedAbilities[a.id] ? a.jpCost : 0), 0);
+        const start = job.id === 'squire' ? 250 : 200;
+        earned[job.id] = Math.max(0, (unit.jobPoints[job.id] || 0) + spent - start);
+      }
+      earned.squire = Math.max(earned.squire, JOB_LEVEL_JP[1]);
+      unit.jobJpEarned = earned;
+    }
+    this.grantPrerequisites(unit, unit.jobId);
+    if (unit.equippedAbilities.secondaryJobId) this.grantPrerequisites(unit, unit.equippedAbilities.secondaryJobId);
   }
 
   /** MP an ability really costs this unit (Conserve halves it, rounding up). */

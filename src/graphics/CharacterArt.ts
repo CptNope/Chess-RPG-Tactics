@@ -163,6 +163,10 @@ function lookFor(job: string, enemy: boolean): Look {
       return { ...base, weapon: 'daggers', hair: '#121826', main: e ? '#7a1f3a' : '#273248', sub: e ? '#e23b3b' : '#d63a3a', trim: '#9aa6b8', pants: e ? '#4a1424' : '#1c2433', boots: '#141a26' };
     case 'geomancer':
       return { ...base, body: 'robe', weapon: 'gaia', hair: '#5f8f2a', main: e ? '#9a3412' : '#4f7d1f', sub: e ? '#6b2410' : '#a16207', trim: '#e8c66a' };
+    case 'paladin':
+      return { ...base, body: 'armor', weapon: 'broadsword', shield: true, hair: '#e8dfc8', main: e ? '#3a2030' : '#e9e4d6', sub: e ? '#7a1f1f' : '#c9a227', trim: '#ffe27a', metal: e ? '#8d7f8a' : '#f3efe4', cape: e ? '#5e1616' : '#e6d9a8' };
+    case 'spellblade':
+      return { ...base, weapon: 'sword', hair: '#c9cfe0', main: e ? '#5a1f4a' : '#5b3fa8', sub: e ? '#2e0f26' : '#2f2466', trim: '#7dd3fc', pants: '#2a2f45', boots: '#1f2333', cape: e ? '#2e0f26' : '#2f2466' };
     case 'monk':
       return { ...base, weapon: 'fists', skin: '#e0ad7e', hair: '#2b2018', main: e ? '#7a2e1a' : '#efe6d2', sub: e ? '#b91c1c' : '#d9631a', trim: '#f4c430', pants: e ? '#4a1d12' : '#d8cdb5', boots: '#5b3a22' };
     case 'thief':
@@ -217,6 +221,7 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
   }
 
   switch (job) {
+    case 'paladin':
     case 'knight': {
       // Great helm with plume
       p.b(x - 1, hy - 1, 14, 13, L.metal);
@@ -295,6 +300,20 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       p.tri(x + 12, hy + 1, x + 17, hy - 2, x + 12, hy - 1, L.main);
       p.line(x + 3, hy - 1, x - 2, hy - 7, '#e8e2d0');
       p.line(x + 4, hy - 1, x - 1, hy - 6, '#c9c2ae');
+      break;
+    }
+    case 'spellblade': {
+      // Swept silver hair, a ponytail and a thin circlet
+      if (!back) {
+        p.b(x - 1, hy - 1, 14, 5, L.hair);
+        p.r(x - 1, hy + 3, 2, 8, L.hair); p.r(x + 11, hy + 3, 2, 8, L.hair);
+        p.tri(x + 2, hy + 4, x + 8, hy + 4, x + 3, hy + 7, L.hair);
+      } else {
+        p.r(x - 1, hy - 1, 14, 3, shade(L.hair, 0.15));
+        p.r(x + 5, hy + 10, 3, 6, L.hair);
+      }
+      p.r(x - 1, hy + 1, 14, 1, L.trim);
+      if (!back) p.px(x + 6, hy + 1, '#ffffff');
       break;
     }
     case 'monk': {
@@ -614,6 +633,7 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
     else { p.r(hx + 8, hy + 6, 2, 3, '#1b1f33'); p.px(hx + 8, hy + 6, '#ffffff'); }
   }
   switch (job) {
+    case 'paladin':
     case 'knight':
       p.b(hx, hy - 1, 13, 13, L.metal);
       p.r(hx + 6, hy + 6, 7, 2, '#141826');
@@ -653,6 +673,12 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.b(hx, hy - 1, 13, 5, L.main);
       p.tri(hx + 1, hy + 1, hx - 5, hy - 2, hx + 1, hy - 1, L.main);
       p.line(hx + 3, hy - 1, hx - 3, hy - 7, '#e8e2d0');
+      break;
+    case 'spellblade':
+      p.b(hx, hy - 1, 12, 5, L.hair);
+      p.r(hx, hy + 3, 5, 9, L.hair);
+      p.r(hx - 2, hy + 8, 3, 6, L.hair);
+      p.r(hx, hy + 1, 13, 1, L.trim);
       break;
     case 'monk':
       p.b(hx + 3, hy - 4, 4, 4, L.hair);
@@ -912,6 +938,7 @@ function drawPortrait(id: string): HTMLCanvasElement {
   const metal = L.metal;
   if (!F.helmetOff) {
     switch (F.job) {
+      case 'paladin':
       case 'knight':
         p.b(hx - 3, hy - 2, 34, 18, metal);
         p.r(hx + 1, ey - 1, 26, 4, '#141826');
@@ -955,6 +982,10 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.b(hx - 3, hy - 2, 34, 8, L.main);
         p.tri(hx + 30, hy + 2, hx + 40, hy - 3, hx + 30, hy - 2, L.main);
         p.line(hx + 4, hy - 2, hx - 6, hy - 12, '#e8e2d0', 2);
+        break;
+      case 'spellblade':
+        p.r(hx - 2, hy + 5, 32, 2, L.trim);
+        p.b(hx + 12, hy + 3, 4, 5, '#ffffff');
         break;
       case 'monk':
         p.b(hx - 1, hy, 30, 10, F.skin); // shaved

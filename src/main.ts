@@ -3,7 +3,9 @@ import { BattleGrid } from './core/Grid';
 import { TacticsScene } from './renderer/TacticsScene';
 import { UIManager } from './ui/UIManager';
 import { TurnManager } from './core/TurnManager';
-import { JobSystem } from './core/JobSystem';
+import { JobSystem, JpGain, MAX_JOB_LEVEL } from './core/JobSystem';
+import { JOBS } from './data/jobs';
+import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue } from './core/Economy';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
@@ -47,6 +49,12 @@ class TacticsGame {
   private armory: string[] = [...STARTING_ARMORY];
   /** Gear stolen this battle (shown on the spoils screen). */
   private stolenThisBattle: string[] = [];
+  /** The squad's purse. */
+  private gil = STARTING_GIL;
+  /** Gil from fencing stolen duplicates this battle. */
+  private fencedThisBattle = 0;
+  /** Job level-ups and unlocks this battle, per unit (shown on the spoils screen). */
+  private jobNews: Record<string, string[]> = {};
 
   private mode: 'campaign' | 'trials' | 'custom' = 'campaign';
   /** The campaign chapter to return to after Workshop battles (and to save). */
@@ -88,6 +96,12 @@ class TacticsGame {
   constructor() {
     this.ui = new UIManager();
     this.ui.armory = this.armory;
+    this.ui.shop = {
+      gil: () => this.gil,
+      stock: () => shopStock(this.shopLevel()),
+      nextCap: () => nextShopCap(this.shopLevel()),
+      buy: (id) => this.buyItem(id)
+    };
     this.squad = this.createStartingSquad();
 
     this.setupBattle(CAMPAIGN_CHAPTERS.chapter_1);
@@ -219,6 +233,8 @@ class TacticsGame {
     this.turnManager = new TurnManager(this.units);
     this.kills = {};
     this.stolenThisBattle = [];
+    this.fencedThisBattle = 0;
+    this.jobNews = {};
     this.battleOver = false;
 
     this.ui.setMapSelection(mapId);
@@ -599,7 +615,8 @@ class TacticsGame {
       armory: this.armory,
       mode: this.mode === 'custom' ? 'campaign' : this.mode,
       trialsFloor: this.trialsFloor,
-      campaignCleared: this.campaignCleared
+      campaignCleared: this.campaignCleared,
+      gil: this.gil
     });
     if (ok && announce) {
       SoundFX.playTurnChime();
@@ -650,6 +667,7 @@ class TacticsGame {
     this.armory.push(...owned);
 
     this.campaignCleared = !!data.campaignCleared;
+    this.gil = typeof data.gil === 'number' && data.gil >= 0 ? Math.floor(data.gil) : STARTING_GIL;
     if (data.mode === 'trials' && data.trialsFloor) {
       this.ui.showBanner('SAVE FILE RESTORED!');
       this.startTrial(data.trialsFloor);
@@ -689,6 +707,24 @@ class TacticsGame {
     else if (obj?.type === 'survive') this.ui.addLogEntry(`[OBJECTIVE] Hold out for ${obj.rounds || 6} rounds. Round 1 begins!`, 'system');
     this.updateTimeline();
     this.advanceTurn();
+  }
+
+  /** Logs a job level-up and any jobs it unlocked, and keeps them for the spoils screen. */
+  private announceJobGain(u: Unit, gain: JpGain, float = true): void {
+    if (!gain.leveledTo) return;
+    const job = JOBS[u.jobId]?.name || u.jobId;
+    const lv = gain.leveledTo >= MAX_JOB_LEVEL ? 'MASTER' : `Lv ${gain.leveledTo}`;
+    const news = (this.jobNews[u.id] ||= []);
+    news.push(`${job} ${lv}`);
+    this.ui.addLogEntry(`[JOB] ${u.name}'s ${job} reached ${lv === 'MASTER' ? 'Master' : lv}!`, 'system');
+    for (const id of gain.unlocked) {
+      news.push(`NEW JOB: ${JOBS[id].name}`);
+      this.ui.addLogEntry(`[JOB] ${u.name} can now become a ${JOBS[id].name} (Team → Jobs).`, 'system');
+    }
+    if (float && !u.isDead) {
+      const h = this.grid.getHeight(u.x, u.z);
+      this.scene.spawnFloatingDamage(u.x, h + 0.7, u.z, gain.unlocked.length ? `NEW JOB: ${JOBS[gain.unlocked[0]].name}` : `${job} ${lv}`, 'heal');
+    }
   }
 
   /** Reports turns that passed without the unit acting: asleep, or felled by poison. */
@@ -1002,7 +1038,7 @@ class TacticsGame {
     // Player progression: JP for the current job, EXP for acting and for kills
     if (caster.team === 'player' && !caster.isDead) {
       const jpGain = Math.round(24 * (caster.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
-      caster.jobPoints[caster.jobId] = (caster.jobPoints[caster.jobId] || 0) + jpGain;
+      this.announceJobGain(caster, JobSystem.gainJp(caster, jpGain));
       const levels = JobSystem.grantExp(caster, 10 + (anyKill ? 20 : 0));
       if (levels > 0) {
         const h = this.grid.getHeight(caster.x, caster.z);
@@ -1043,9 +1079,14 @@ class TacticsGame {
         this.armory.push(item.id);
         this.stolenThisBattle.push(item.id);
         this.ui.addLogEntry(`[STEAL] ${thief.name} steals ${item.name} from ${target.name}! It's in your armory now.`, 'reaction');
+      } else if (thief.team === 'player') {
+        // The squad already owns one: it's fenced for half its price
+        const gil = resaleValue(item);
+        this.gil += gil;
+        this.fencedThisBattle += gil;
+        this.ui.addLogEntry(`[STEAL] ${thief.name} steals ${item.name} from ${target.name} and fences it for ${gil} gil.`, 'reaction');
       } else {
-        const note = thief.team === 'player' ? ' (you already have one)' : '';
-        this.ui.addLogEntry(`[STEAL] ${thief.name} steals ${item.name} from ${target.name}${note}.`, 'reaction');
+        this.ui.addLogEntry(`[STEAL] ${thief.name} steals ${item.name} from ${target.name}.`, 'reaction');
       }
       this.ui.showBanner(`STOLE ${item.name.toUpperCase()}!`);
       return;
@@ -1283,7 +1324,7 @@ class TacticsGame {
       (document.getElementById(id) as HTMLAnchorElement).href = url;
     }
 
-    on('title-new', () => this.fromTitle(() => this.loadChapter('chapter_1')));
+    on('title-new', () => this.fromTitle(() => this.startNewGame()));
     on('title-continue', () => this.fromTitle(() => this.loadGame()));
     on('title-workshop', () => this.fromTitle(() => {
       // Start the campaign underneath, so closing the Workshop lands in Chapter I
@@ -1512,11 +1553,13 @@ class TacticsGame {
       const survived = !u.isDead;
       const exp = survived ? 40 : 15;
       const jp = survived ? 60 : 20;
-      u.jobPoints[u.jobId] = (u.jobPoints[u.jobId] || 0) + Math.round(jp * (u.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
+      const jobGain = JobSystem.gainJp(u, Math.round(jp * (u.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1)));
+      this.announceJobGain(u, jobGain, false);
+      const jobNews = (this.jobNews[u.id] || []).map((t) => `<span class="levelup jobup">${esc(t)}</span>`).join('');
       const levels = JobSystem.grantExp(u, exp + (this.kills[u.id] || 0) * 10);
       const killsText = this.kills[u.id] ? ` · ${this.kills[u.id]} KO` : '';
       rows.push(`<div class="result-row ${survived ? '' : 'fallen'}">
-        <span><span class="result-name">${esc(u.name)}</span>${levels > 0 ? `<span class="levelup">LEVEL UP! Lv ${u.level}</span>` : ''}</span>
+        <span><span class="result-name">${esc(u.name)}</span>${levels > 0 ? `<span class="levelup">LEVEL UP! Lv ${u.level}</span>` : ''}${jobNews}</span>
         <span class="result-detail">${survived ? '' : 'Fell in battle · '}+${exp} EXP · +${jp} JP${killsText}</span>
       </div>`);
     }
@@ -1531,6 +1574,12 @@ class TacticsGame {
       if (drop) newItems.push(drop);
     }
     this.armory.push(...newItems);
+    const earned = victoryGil(this.units.filter((u) => u.team === 'enemy'), this.mode, this.trialsFloor);
+    this.gil += earned;
+    if (earned > 0 || this.fencedThisBattle > 0) {
+      const fenced = this.fencedThisBattle > 0 ? ` · +${this.fencedThisBattle} from fenced loot` : '';
+      rows.push(`<div class="result-loot result-gil"><b>GIL:</b> +${earned}${fenced} · Purse: ${this.gil.toLocaleString('en-US')}<br><small>Spend it in ★ Team → Shop.</small></div>`);
+    }
     if (this.stolenThisBattle.length > 0) {
       rows.push(`<div class="result-loot"><b>STOLEN:</b> ${this.stolenThisBattle.map((id) => esc(ITEMS[id].name)).join(', ')}</div>`);
     }
@@ -1610,6 +1659,33 @@ class TacticsGame {
         { label: 'New Game+', onClick: () => this.startNewGamePlus() }
       ]
     });
+  }
+
+  /** A fresh campaign: new squad, starting armory and purse. (The save stays until you save over it.) */
+  private startNewGame(): void {
+    this.squad = this.createStartingSquad();
+    this.armory.length = 0;
+    this.armory.push(...STARTING_ARMORY);
+    this.gil = STARTING_GIL;
+    this.campaignCleared = false;
+    this.mode = 'campaign';
+    this.customScenario = null;
+    this.loadChapter('chapter_1');
+  }
+
+  /** Buys an item for the armory. Returns false when the purse is short or it's already owned. */
+  private buyItem(id: string): boolean {
+    const item = ITEMS[id];
+    if (!item || this.armory.includes(id) || this.gil < item.price) return false;
+    if (!shopStock(this.shopLevel()).some((it) => it.id === id)) return false;
+    this.gil -= item.price;
+    this.armory.push(id);
+    this.ui.addLogEntry(`[SHOP] Bought ${item.name} for ${item.price} gil.`, 'system');
+    return true;
+  }
+
+  private shopLevel() {
+    return shopProgress(this.campaignChapterId, this.campaignCleared, this.mode === 'trials');
   }
 
   /** Replays the campaign from Chapter I keeping squad levels, jobs, abilities and armory. */

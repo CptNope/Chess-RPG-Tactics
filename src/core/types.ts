@@ -94,7 +94,7 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer';
+    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage';
   spriteClass: string;
   baseMove: number;
   baseJump: number;
@@ -132,8 +132,12 @@ export interface Unit {
   level: number;
   exp: number;
   jobId: string;
+  /** Legacy field from early saves; job levels now come from `jobJpEarned` (see JobSystem.jobLevel). */
   jobLevels: Record<string, number>;
+  /** Spendable JP per job. */
   jobPoints: Record<string, number>;
+  /** Lifetime JP earned per job (never spent): decides the job's level and what it unlocks. */
+  jobJpEarned?: Record<string, number>;
   unlockedAbilities: Record<string, boolean>;
   equippedAbilities: EquippedAbilities;
   equipment: EquippedGear;

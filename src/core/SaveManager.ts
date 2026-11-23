@@ -13,6 +13,8 @@ export interface GameSaveData {
   mode?: 'campaign' | 'trials';
   trialsFloor?: number;
   campaignCleared?: boolean;
+  /** Added in 0.14.0; older saves start with the new-game purse. */
+  gil?: number;
 }
 
 const BEST_FLOOR_KEY = 'chess_rpg_tactics_best_trial_v1';
@@ -27,11 +29,11 @@ export class SaveManager {
   public static saveGame(
     chapterId: string,
     playerUnits: Unit[],
-    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared'> = {}
+    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil'> = {}
   ): boolean {
     try {
       const saveData: GameSaveData = {
-        version: '0.7.0',
+        version: '0.14.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,

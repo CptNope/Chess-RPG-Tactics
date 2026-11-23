@@ -788,17 +788,17 @@ body, html {
   top: 0;
   left: 0;
   width: 36px;
-  height: 5px;
+  height: 7px;
   background: rgba(10, 14, 23, 0.85);
   border: 1px solid #1e293b;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
   pointer-events: none;
   border-radius: 1px;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 1px;
+  padding: 0;
   will-change: transform;
 }
 
@@ -818,6 +818,22 @@ body, html {
   border-radius: 1px;
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.overhead-status {
+  position: absolute;
+  left: -1px;
+  bottom: calc(100% + 3px);
+  display: flex;
+  gap: 2px;
+}
+.overhead-status i {
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(230, 237, 245, 0.75);
+  box-shadow: 0 0 0 1px rgba(10, 14, 23, 0.8);
+  box-sizing: border-box;
+}
+.overhead-status i.buff { border-radius: 50%; }
 
 .overhead-ct-fill {
   height: 1px;
@@ -1022,6 +1038,7 @@ body, html {
 .modal-title-tabs {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .modal-subtab {
@@ -1038,6 +1055,58 @@ body, html {
 .modal-subtab.active {
   color: var(--gold);
   border-bottom: 2px solid var(--gold);
+}
+
+/* ---- Purse, shop and the job tree (0.14.0) ---- */
+.gil-badge {
+  margin-left: auto;
+  margin-right: 10px;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--gold-glow);
+  white-space: nowrap;
+}
+.shop-view { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.shop-view.hidden { display: none; }
+.shop-note { margin: 0; font-size: 14px; color: var(--text-muted); }
+.shop-list { max-height: 372px; overflow-y: auto; padding-right: 4px; }
+.shop-slot-head {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--panel-border);
+  margin: 6px 0 2px;
+  letter-spacing: 1px;
+}
+.shop-item { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; }
+.shop-item .shop-name { font-family: var(--font-pixel); font-size: 9px; }
+.shop-item .shop-stats { font-size: 13px; color: var(--hp-green); }
+.shop-item .shop-desc { grid-column: 1 / -1; font-size: 13px; color: var(--text-muted); }
+.shop-item.owned { opacity: 0.6; }
+.shop-buy {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  padding: 6px 10px;
+  min-width: 92px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: #1e3a8a;
+  color: var(--gold-glow);
+  cursor: pointer;
+}
+.shop-buy:disabled { border-color: var(--panel-border-inner); background: #111c2e; color: var(--text-muted); cursor: default; }
+.shop-buy:not(:disabled):hover, .shop-buy:focus-visible { background: #2563eb; }
+.job-item.locked { opacity: 0.55; cursor: not-allowed; }
+.job-item .job-lv { float: right; font-family: var(--font-pixel); font-size: 8px; color: var(--text-light); }
+.job-item .job-lv.master { color: var(--gold-glow); }
+.job-item .job-req { font-size: 13px; color: #fca5a5; }
+.job-item .job-bar { height: 3px; margin-top: 4px; background: #0b0f1c; border-radius: 2px; overflow: hidden; }
+.job-item .job-bar > span { display: block; height: 100%; background: var(--ct-yellow); }
+.result-row .levelup.jobup { color: var(--gold-glow); }
+.result-gil b { color: var(--gold-glow); }
+@media (max-width: 700px) {
+  .tab-long { display: none; }
+  .modal-subtab { font-size: 9px; padding: 4px 6px; }
+  .gil-badge { font-size: 9px; margin-right: 4px; }
 }
 
 .gear-slot-box {
@@ -1461,7 +1530,7 @@ html[data-input="gamepad"] .help-card[data-input="gamepad"] { order: -1; border-
 /* ---- Touch screens: 44px targets everywhere ---- */
 @media (pointer: coarse) {
   button, select, .menu-btn, .icon-btn, .compass-btn, .close-btn, .action-item-btn,
-  .learn-item, .job-item, .job-unit-tab, .modal-subtab, .story-choice-card,
+  .learn-item, .job-item, .job-unit-tab, .modal-subtab, .story-choice-card, .shop-buy,
   .ability-slot-box, .gear-slot-box, .hud-btn-mini, .ws-btn, .ws-tool, .ws-tab {
     min-height: 44px;
   }
@@ -1489,6 +1558,7 @@ html[data-input="gamepad"] .help-card[data-input="gamepad"] { order: -1; border-
   .job-config-columns > :last-child { grid-column: 1 / -1; }
   .job-column { max-height: 46dvh; }
   .modal-window { overflow-y: auto; }
+  .shop-list { max-height: none; overflow: visible; padding-right: 0; }
 }
 
 @media (max-width: 900px) {
@@ -1698,6 +1768,7 @@ html[data-input="gamepad"] .help-card[data-input="gamepad"] { order: -1; border-
     overflow-y: auto;
   }
   .job-config-columns { grid-template-columns: repeat(3, 1fr); height: auto; }
+  .shop-list { max-height: none; overflow: visible; }
   .job-config-columns > :last-child { grid-column: auto; }
   .job-column { max-height: none; }
   #banner-text { font-size: 13px; }

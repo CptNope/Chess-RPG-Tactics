@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0c10" />
   <title>Chess RPG Tactics</title>
-  <meta name="description" content="A free isometric tactics RPG for the browser: thirteen jobs, facing and height, a branching campaign, endless Trials, and a map and scenario editor. Mouse, keyboard, touch, pen or controller." />
+  <meta name="description" content="A free isometric tactics RPG for the browser: fifteen jobs, facing and height, a branching campaign, endless Trials, and a map and scenario editor. Mouse, keyboard, touch, pen or controller." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%224%22 fill=%22%230b1220%22/%3E%3Cpath d=%22M16 5l3 7h-6zM11 13h10l-2 9h-6zM8 24h16v3H8z%22 fill=%22%23f4c430%22/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
@@ -21,7 +21,7 @@
     <section id="title-screen" aria-label="Chess RPG Tactics">
       <div class="title-card">
         <h1 class="title-logo"><span class="title-logo-top">CHESS RPG</span><span class="title-logo-main">TACTICS</span></h1>
-        <p class="title-tagline">Thirteen jobs. High ground. No second chances.</p>
+        <p class="title-tagline">Fifteen jobs. High ground. No second chances.</p>
         <div class="title-menu" role="menu" aria-label="Main menu">
           <button id="title-continue" class="title-btn hidden" role="menuitem" disabled>Continue</button>
           <button id="title-new" class="title-btn primary" role="menuitem" disabled>Loading…</button>
@@ -281,9 +281,11 @@
       <div class="modal-window hud-panel">
         <div class="modal-header">
           <div class="modal-title-tabs">
-            <button id="btn-tab-jobs" class="modal-subtab active">★ JOBS & ABILITIES</button>
-            <button id="btn-tab-equip" class="modal-subtab">🛡 EQUIPMENT & GEAR</button>
+            <button id="btn-tab-jobs" class="modal-subtab active">★ JOBS<span class="tab-long"> &amp; ABILITIES</span></button>
+            <button id="btn-tab-equip" class="modal-subtab">🛡 <span class="tab-long">EQUIPMENT &amp; </span>GEAR</button>
+            <button id="btn-tab-shop" class="modal-subtab">◆ SHOP</button>
           </div>
+          <div id="gil-badge" class="gil-badge" title="Your purse">0 G</div>
           <button id="btn-close-job-modal" class="close-btn" aria-label="Close team">×</button>
         </div>
         <div class="modal-content">
@@ -292,7 +294,7 @@
           <!-- Tab 1: Jobs & Abilities View -->
           <div id="tab-content-jobs" class="job-config-columns">
             <div class="job-column">
-              <h3>UNLOCKED JOBS</h3>
+              <h3>JOBS</h3>
               <div id="job-list" class="job-selection-list"></div>
             </div>
 
@@ -356,6 +358,12 @@
               <h3 id="inventory-header">AVAILABLE INVENTORY</h3>
               <div id="inventory-list" class="learn-ability-list"></div>
             </div>
+          </div>
+
+          <!-- Tab 3: Shop -->
+          <div id="tab-content-shop" class="shop-view hidden">
+            <p id="shop-note" class="shop-note"></p>
+            <div id="shop-list" class="learn-ability-list shop-list"></div>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { JobSystem } from './JobSystem';
 export interface ReactionTrigger {
   name: string;
   type: 'counter_attack' | 'auto_potion' | 'speed_save' | 'dragonheart' | 'critical_quick' | 'parry' | 'earthen_ward'
-    | 'iron_will' | 'quick_hands' | 'mana_spring' | 'hex_ward';
+    | 'iron_will' | 'quick_hands' | 'mana_spring' | 'hex_ward' | 'divine_grace' | 'runic';
   target: Unit;
   damage?: number;
   heal?: number;
@@ -178,7 +178,7 @@ export class CombatEngine {
       // Weapon skills scale with ATK, spells with MAG; heals always use the gentler spell scale
       const useAttack = ability.scalesWith ? ability.scalesWith === 'attack' : ability.element === 'physical';
       const stat = useAttack ? JobSystem.getAttackPower(attacker) : JobSystem.getMagicPower(attacker);
-      const scale = ability.element === 'physical' && ability.power > 0 ? PHYSICAL_SCALE : MAGIC_SCALE;
+      const scale = useAttack && ability.power > 0 ? PHYSICAL_SCALE : MAGIC_SCALE;
       baseDamage = stat * Math.abs(ability.power) * scale;
     }
 
@@ -187,7 +187,16 @@ export class CombatEngine {
       baseDamage *= 1.25;
     }
 
+    // Zeal: a Paladin's holy strikes and heals run hotter
+    if (ability.power !== 0 && ability.element === 'holy' && attacker.equippedAbilities.support === 'pa_zeal') {
+      baseDamage *= 1.2;
+    }
+
     if (ability.power > 0 && ability.id !== 'tm_gravity') {
+      // Arcane Edge: the basic Attack carries the wielder's magic
+      if (attacker.equippedAbilities.support === 'sb_arcane_edge' && ability.id === 'basic_attack') {
+        baseDamage += JobSystem.getMagicPower(attacker) * 1.5;
+      }
       // Support abilities
       if (attacker.equippedAbilities.support === 'bm_arcane_strength' && ability.element !== 'physical') {
         baseDamage *= 1.25;
@@ -530,6 +539,31 @@ export class CombatEngine {
           status: 'blind',
           label: 'BLIND',
           description: `${target.name}'s Hex Ward blinds ${attacker.name}!`
+        };
+      }
+      case 'pa_divine_grace': {
+        if (rng() * 100 > 30 || target.currentHp >= target.maxHp) return undefined;
+        const heal = Math.min(target.maxHp - target.currentHp, Math.max(1, Math.round(target.maxHp * 0.15)));
+        target.currentHp += heal;
+        return {
+          name: 'Divine Grace',
+          type: 'divine_grace',
+          target,
+          heal,
+          label: `+${heal}`,
+          description: `${target.name} is touched by Divine Grace: +${heal} HP!`
+        };
+      }
+      case 'sb_runic': {
+        if (ability.element === 'physical' || target.currentMp >= target.maxMp) return undefined;
+        const mp = Math.min(target.maxMp - target.currentMp, Math.max(1, Math.round(target.maxMp * 0.2)));
+        target.currentMp += mp;
+        return {
+          name: 'Runic',
+          type: 'runic',
+          target,
+          label: `MP +${mp}`,
+          description: `${target.name}'s blade drinks in the spell: +${mp} MP.`
         };
       }
       case 'geo_earthen_ward': {

@@ -134,7 +134,9 @@ $$\text{Base Damage} = \text{MAG} \times |\text{Power}| \times 3$$
 | **Brawler** (`mo_brawler`) | Attack with knuckles or bare hands | ×1.30 |
 | **Backstab** (`th_backstab`) | Physical flank / back | a further ×1.15 / ×1.30 |
 | **Hex Mastery** (`or_hex_mastery`) | Abilities that inflict an ailment | +20 hit |
-| `scalesWith: 'attack'` | Chakra's heal | uses ATK instead of MAG (still ×3) |
+| `scalesWith: 'attack'` | Chakra and Lay on Hands (heals); Holy Blade, Rebuke and the Spellblade's edges (damage) | uses ATK instead of MAG. Heals keep the ×3 scale; damage uses the weapon scale (×5). Being elemental, these strikes ignore Protect, facing and height, and are cut by Shell |
+| **Zeal** (`pa_zeal`) | Holy damage and healing | ×1.20 |
+| **Arcane Edge** (`sb_arcane_edge`) | Attack | + MAG × 1.5 |
 | `drain` | Soul Drain | the caster heals for 50% of the damage dealt |
 | `cleanse` | Purify, Chakra | removes every ailment (Poison, Slow, Immobilize, Blind, Silence, Sleep, Breach) |
 | `steal` | Steal | no damage; −25 hit (−45 vs a boss), 0% when the target has no gear |
@@ -167,6 +169,8 @@ Boss units have $+60\%$ HP and $+15\%$ ATK/MAG. The first time a boss drops to $
 | Quick Hands (`th_quick_hands`) | Thief | 40%: gain Haste |
 | Mana Spring (`su_mana_spring`) | Summoner | Recover 15% max MP |
 | Hex Ward (`or_hex_ward`) | Oracle | 35%: Blind the attacker |
+| Divine Grace (`pa_divine_grace`) | Paladin | 30%: recover 15% max HP |
+| Runic (`sb_runic`) | Spellblade | Struck by a spell: recover 20% max MP |
 
 Before 0.7.0, Counter Tackle, Arcane Retaliation and Critical Quick were checked against ability ids that did not exist, so they never fired. A unit test now fails if engine code references an unknown ability id.
 

@@ -1,6 +1,6 @@
-import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainType, EquipmentSlot, StoryChoice } from '../core/types';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainType, EquipmentSlot, StoryChoice, Item } from '../core/types';
 import { JOBS } from '../data/jobs';
-import { JobSystem } from '../core/JobSystem';
+import { JobSystem, MAX_JOB_LEVEL } from '../core/JobSystem';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
 import { portraitCanvas, portraitDataUrl, portraitForSpeaker } from '../graphics/CharacterArt';
@@ -86,6 +86,13 @@ export class UIManager {
   private btnTabEquip = document.getElementById('btn-tab-equip')!;
   private tabContentJobs = document.getElementById('tab-content-jobs')!;
   private tabContentEquip = document.getElementById('tab-content-equip')!;
+  private btnTabShop = document.getElementById('btn-tab-shop')!;
+  private tabContentShop = document.getElementById('tab-content-shop')!;
+  private shopListEl = document.getElementById('shop-list')!;
+  private shopNoteEl = document.getElementById('shop-note')!;
+  private gilBadgeEl = document.getElementById('gil-badge')!;
+  /** Redraws the Team screen for the unit it's showing (set whenever it's populated). */
+  private refreshTeam: () => void = () => undefined;
 
   private jobUnitTabsEl = document.getElementById('job-unit-tabs')!;
   private jobListEl = document.getElementById('job-list')!;
@@ -118,6 +125,8 @@ export class UIManager {
 
   /** Item ids the squad owns. The gear tab only offers these. */
   public armory: string[] = [];
+  /** The purse and the shop's shelves, provided by the game. */
+  public shop: { gil: () => number; stock: () => Item[]; nextCap: () => number | null; buy: (id: string) => boolean } | null = null;
 
   // Banner
   private bannerEl = document.getElementById('battle-banner')!;
@@ -285,21 +294,22 @@ export class UIManager {
     });
 
     // Modal Subtabs (Jobs vs Equip)
-    this.btnTabJobs.addEventListener('click', () => {
-      SoundFX.playMenuBlip();
-      this.btnTabJobs.classList.add('active');
-      this.btnTabEquip.classList.remove('active');
-      this.tabContentJobs.classList.remove('hidden');
-      this.tabContentEquip.classList.add('hidden');
-    });
-
-    this.btnTabEquip.addEventListener('click', () => {
-      SoundFX.playMenuBlip();
-      this.btnTabEquip.classList.add('active');
-      this.btnTabJobs.classList.remove('active');
-      this.tabContentEquip.classList.remove('hidden');
-      this.tabContentJobs.classList.add('hidden');
-    });
+    const tabs: [HTMLElement, HTMLElement][] = [
+      [this.btnTabJobs, this.tabContentJobs],
+      [this.btnTabEquip, this.tabContentEquip],
+      [this.btnTabShop, this.tabContentShop]
+    ];
+    for (const [btn, pane] of tabs) {
+      btn.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
+        for (const [b, p] of tabs) {
+          b.classList.toggle('active', b === btn);
+          p.classList.toggle('hidden', p !== pane);
+        }
+        // The squad tabs don't apply to the shop: it sells to the whole armory
+        this.jobUnitTabsEl.classList.toggle('hidden', pane === this.tabContentShop);
+      });
+    }
 
     // Story Dialogue Advance Click
     this.dialogueBoxEl.addEventListener('click', () => {
@@ -752,16 +762,32 @@ export class UIManager {
       this.jobUnitTabsEl.appendChild(tab);
     });
 
-    // 1. JOBS VIEW
+    this.refreshTeam = () => this.populateJobCustomizer(units, selectedUnitIndex);
+
+    // 1. JOBS VIEW: every job with its level; locked ones show what they need
     this.jobListEl.innerHTML = '';
     for (const [jobId, job] of Object.entries(JOBS)) {
+      const missing = JobSystem.missingPrerequisites(unit, jobId);
+      const locked = !JobSystem.canChangeJob(unit, jobId);
+      const prog = JobSystem.jobLevelProgress(unit, jobId);
+      const master = prog.level >= MAX_JOB_LEVEL;
       const jobItem = document.createElement('div');
-      jobItem.className = `job-item ${unit.jobId === jobId ? 'active' : ''}`;
+      jobItem.className = `job-item ${unit.jobId === jobId ? 'active' : ''} ${locked ? 'locked' : ''}`;
+      jobItem.setAttribute('role', 'button');
+      jobItem.setAttribute('aria-disabled', String(locked));
+      const need = missing.map((m) => `${JOBS[m.jobId].name} Lv ${m.level} (now Lv ${m.have})`).join(' and ');
       jobItem.innerHTML = `
-        <div style="font-family: var(--font-pixel); font-size: 10px; color: var(--gold);">${job.name}</div>
+        <div style="font-family: var(--font-pixel); font-size: 10px; color: var(--gold);">${locked ? '🔒 ' : ''}${job.name}
+          <span class="job-lv ${master ? 'master' : ''}">${master ? '★ MASTER' : `Lv ${prog.level}`}</span></div>
         <div style="font-size: 13px; color: var(--text-muted);">${job.role} | Move: ${job.baseMove} Jump: ${job.baseJump}</div>
+        ${locked ? `<div class="job-req">Needs ${need}</div>` : ''}
+        ${!locked && !master ? `<div class="job-bar" title="${prog.into} / ${prog.need} JP to Lv ${prog.level + 1}"><span style="width:${Math.round((prog.into / prog.need) * 100)}%"></span></div>` : ''}
       `;
       jobItem.addEventListener('click', () => {
+        if (locked) {
+          this.showBanner(`LOCKED: NEEDS ${need.toUpperCase()}`);
+          return;
+        }
         SoundFX.playMenuBlip();
         JobSystem.changeJob(unit, jobId);
         this.populateJobCustomizer(units, selectedUnitIndex);
@@ -780,6 +806,7 @@ export class UIManager {
     slotSecondary.textContent = unit.equippedAbilities.secondaryJobId
       ? `${JOBS[unit.equippedAbilities.secondaryJobId]?.name || 'None'} Skillset`
       : 'None (Click to cycle)';
+    if (slotSecondary.parentElement) slotSecondary.parentElement.title = 'Cycles through other jobs where this unit has learned an action';
     const nameOf = (id: string | null) => (id ? JobSystem.findAbility(id)?.name || id : 'None');
     slotReaction.textContent = nameOf(unit.equippedAbilities.reaction);
     slotSupport.textContent = nameOf(unit.equippedAbilities.support);
@@ -809,7 +836,10 @@ export class UIManager {
     if (slotSecondary.parentElement) {
       slotSecondary.parentElement.onclick = () => {
         SoundFX.playMenuBlip();
-        const availableJobIds = Object.keys(JOBS);
+        // Only skillsets with something to offer: unlocked jobs where the unit has learned an action
+        const availableJobIds = Object.keys(JOBS).filter(
+          (id) => id !== unit.jobId && JobSystem.canChangeJob(unit, id) && JOBS[id].abilities.some((a) => a.type === 'action' && unit.unlockedAbilities[a.id])
+        );
         const curIdx = unit.equippedAbilities.secondaryJobId
           ? availableJobIds.indexOf(unit.equippedAbilities.secondaryJobId)
           : -1;
@@ -822,6 +852,7 @@ export class UIManager {
 
     const currentJp = unit.jobPoints[unit.jobId] || 0;
     this.currentUnitJpEl.textContent = currentJp.toString();
+    this.renderShop();
     this.learnAbilityListEl.innerHTML = '';
 
     for (const ability of currentJob.abilities) {
@@ -929,6 +960,57 @@ export class UIManager {
       };
 
       this.inventoryListEl.appendChild(el);
+    }
+  }
+
+  /** The Shop tab: everything on the shelves at this point in the campaign, by slot. */
+  private renderShop(): void {
+    const shop = this.shop;
+    if (!shop) return;
+    const gil = shop.gil();
+    this.gilBadgeEl.textContent = `${gil.toLocaleString('en-US')} G`;
+    const cap = shop.nextCap();
+    this.shopNoteEl.textContent =
+      'One purchase outfits the whole squad. Gil comes from defeated enemies, cleared battles and fenced loot.' +
+      (cap ? ' More stock arrives after the next chapter.' : '');
+    this.shopListEl.innerHTML = '';
+    const slotNames: Record<EquipmentSlot, string> = { weapon: 'WEAPONS', shield: 'SHIELDS', head: 'HEADGEAR', body: 'ARMOR & ROBES', accessory: 'ACCESSORIES' };
+    let lastSlot = '';
+    for (const item of shop.stock()) {
+      if (item.slot !== lastSlot) {
+        lastSlot = item.slot;
+        const h = document.createElement('div');
+        h.className = 'shop-slot-head';
+        h.textContent = slotNames[item.slot];
+        this.shopListEl.appendChild(h);
+      }
+      const owned = this.armory.includes(item.id);
+      const stats = Object.entries(item.stats)
+        .map(([stat, val]) => `${stat.toUpperCase()} ${val! >= 0 ? '+' : ''}${val}`)
+        .join(', ');
+      const row = document.createElement('div');
+      row.className = `learn-item shop-item ${owned ? 'owned' : ''}`;
+      row.innerHTML = `
+        <div><span class="shop-name">${item.name}</span> <span class="shop-stats">${stats}${item.range && item.range > 1 ? ` · Range ${item.range}` : ''}</span></div>
+        <button class="shop-buy" tabindex="-1" ${owned || gil < item.price ? 'disabled' : ''} aria-label="${owned ? `${item.name}: owned` : `Buy ${item.name} for ${item.price} gil`}">${owned ? 'OWNED' : `${item.price} G`}</button>
+        <div class="shop-desc">${item.description}</div>
+      `;
+      row.dataset.item = item.id;
+      // The whole row buys (the button's click bubbles here), so keys and controllers can buy from the row
+      row.addEventListener('click', () => {
+        if (!shop.buy(item.id)) {
+          if (!owned) this.showBanner('NOT ENOUGH GIL');
+          return;
+        }
+        SoundFX.playTurnChime();
+        const keep = this.shopListEl.scrollTop;
+        this.refreshTeam();
+        this.shopListEl.scrollTop = keep;
+        this.showBanner(`BOUGHT ${item.name.toUpperCase()}`);
+        // The list was redrawn: put keyboard / controller focus back on the row just bought
+        queueMicrotask(() => this.focusForNav(this.shopListEl.querySelector<HTMLElement>(`[data-item="${item.id}"]`)));
+      });
+      this.shopListEl.appendChild(row);
     }
   }
 }

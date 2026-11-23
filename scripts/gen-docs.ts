@@ -15,6 +15,8 @@ import { TERRAIN_SPELLS } from '../src/core/Geomancy';
 import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
 import { buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
+import { JOB_LEVEL_JP } from '../src/core/JobSystem';
+import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress } from '../src/core/Economy';
 
 const OUT = path.resolve('docs/CONTENT_REFERENCE.md');
 const lines: string[] = [];
@@ -45,7 +47,7 @@ w('> **Generated file — do not edit by hand.** Run `npm run docs:gen` after ch
 w();
 w('Every number here is read straight from the game data, so it always matches what ships.');
 w();
-w('**Contents:** [Jobs](#jobs) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
+w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Shop](#shop--gil) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
 w();
 
 // ---------------------------------------------------------------- Jobs
@@ -71,6 +73,22 @@ w(`  line [${jobs.map((j) => j.statMultipliers.magic).join(', ')}]`);
 w('```');
 w();
 w('*Bars = ATK multiplier, line = MAG multiplier.*');
+w();
+
+// ---------------------------------------------------------------- Job levels
+w('## Job levels & requirements');
+w();
+w('A job levels up with the lifetime JP a unit earns in it (spending JP never lowers it).');
+w();
+w(`| Job level | ${JOB_LEVEL_JP.map((_, i) => (i === JOB_LEVEL_JP.length - 1 ? `${i + 1} (Master)` : String(i + 1))).join(' | ')} |`);
+w(`| :--- | ${JOB_LEVEL_JP.map(() => '---:').join(' | ')} |`);
+w(`| Lifetime JP | ${JOB_LEVEL_JP.join(' | ')} |`);
+w();
+w('| Job | Requires |');
+w('| :--- | :--- |');
+for (const j of jobs) w(`| **${j.name}** | ${(j.prerequisites || []).map((p) => `${jobName(p.jobId)} Lv ${p.level}`).join(' + ') || '— (open to everyone)'} |`);
+w();
+w('Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.');
 w();
 
 // ---------------------------------------------------------------- Abilities
@@ -170,6 +188,19 @@ for (const slot of slots) {
   }
   w();
 }
+
+// ---------------------------------------------------------------- Shop
+w('## Shop & gil');
+w();
+w(`A new game starts with **${STARTING_GIL} gil**. A defeated enemy pays 20 + 10 × its level (×3 for a boss); winning adds 150 in the campaign or 100 + 20 × floor in the Trials. Stealing gear you already own fences it for half its price. Workshop battles pay nothing.`);
+w();
+w('| Stage | Price cap | Items on the shelves |');
+w('| :--- | ---: | ---: |');
+const stages = ['Chapter I', 'Chapter II', 'Final Chapter', 'Campaign cleared / Trials'];
+stages.forEach((name, i) => w(`| ${name} | ${Number.isFinite(SHOP_PRICE_CAP[i as ShopProgress]) ? SHOP_PRICE_CAP[i as ShopProgress] : 'none'} | ${shopStock(i as ShopProgress).length} |`));
+w();
+w(`Never sold (won only): ${UNIQUE_ITEMS.map(itemName).join(', ')}.`);
+w();
 
 // ---------------------------------------------------------------- Armory
 w('## Armory & drops');

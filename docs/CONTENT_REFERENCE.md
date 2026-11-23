@@ -4,11 +4,11 @@
 
 Every number here is read straight from the game data, so it always matches what ships.
 
-**Contents:** [Jobs](#jobs) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
+**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Shop](#shop--gil) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
 
 ## Jobs
 
-13 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+15 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -25,27 +25,57 @@ Every number here is read straight from the game data, so it always matches what
 | **Thief** `thief` | Rogue | 5 | 3 | 0.90× | 0.70× | 1.00× | 0.70× | 1.25× | 6 |
 | **Summoner** `summoner` | Summoner | 3 | 2 | 0.80× | 1.50× | 0.60× | 1.30× | 0.90× | 7 |
 | **Oracle** `oracle` | Hexer | 3 | 2 | 0.90× | 1.20× | 0.70× | 1.20× | 1.00× | 6 |
+| **Paladin** `paladin` | Templar | 3 | 2 | 1.25× | 0.90× | 1.15× | 0.95× | 0.95× | 6 |
+| **Spellblade** `spellblade` | Battlemage | 4 | 3 | 1.05× | 1.10× | 1.10× | 1.10× | 1.00× | 5 |
 
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Monk", "Thief", "Summoner", "Oracle"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 1.2, 1, 0.6, 0.7]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.6, 0.7, 1.3, 1.2]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 1.2, 1, 0.6, 0.7, 1.15, 1.1]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
 
+## Job levels & requirements
+
+A job levels up with the lifetime JP a unit earns in it (spending JP never lowers it).
+
+| Job level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 (Master) |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Lifetime JP | 0 | 100 | 250 | 450 | 700 | 1000 | 1400 | 1900 |
+
+| Job | Requires |
+| :--- | :--- |
+| **Squire** | — (open to everyone) |
+| **Knight** | Squire Lv 2 |
+| **Archer** | Squire Lv 2 |
+| **Black Mage** | — (open to everyone) |
+| **White Mage** | — (open to everyone) |
+| **Dragoon** | Knight Lv 2 |
+| **Ninja** | Archer Lv 2 |
+| **Geomancer** | — (open to everyone) |
+| **Time Weaver** | Black Mage Lv 2 |
+| **Monk** | Squire Lv 3 |
+| **Thief** | Archer Lv 2 |
+| **Summoner** | White Mage Lv 2 + Black Mage Lv 2 |
+| **Oracle** | Time Weaver Lv 2 |
+| **Paladin** | Knight Lv 3 + White Mage Lv 2 |
+| **Spellblade** | Knight Lv 2 + Black Mage Lv 2 |
+
+Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
+
 ## Abilities
 
-75 learnable abilities: 44 actions, 13 reactions, 9 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+86 learnable abilities: 51 actions, 15 reactions, 11 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 44
-  "Reaction" : 13
-  "Support" : 9
+  "Action" : 51
+  "Reaction" : 15
+  "Support" : 11
   "Movement" : 9
 ```
 
@@ -215,6 +245,31 @@ pie showData title Abilities by slot type
 | **Hex Ward** `or_hex_ward` | Reaction | 200 | — | — | — | — | — | — | — | When struck, a 35% chance to Blind the attacker. |
 | **Hex Mastery** `or_hex_mastery` | Support | 260 | — | — | — | — | — | — | — | Ailments you inflict land 20% more often. |
 
+### Paladin
+
+*An advanced job. A knight sworn to the light: strikes with holy steel, heals by touch and wards the line against spells.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Holy Blade** `pa_holy_blade` | Action | 80 | 6 | 1 | 1.5 | — | 1.05 | holy | scales with ATK | A consecrated strike: holy damage from ATK that Protect and facing do not change. |
+| **Lay on Hands** `pa_lay_on_hands` | Action | 120 | 8 | 1 | 1.5 | — | Heal 1.3 | holy | scales with ATK | Heals an adjacent ally (or yourself) with strength of arm rather than magic. |
+| **Rebuke** `pa_rebuke` | Action | 180 | 10 | 3 | 2.5 | — | 0.45 | holy | inflicts **silence**, scales with ATK | A bolt of judgment up to 3 tiles away: light holy damage and Silence. |
+| **Aegis** `pa_aegis` | Action | 160 | 10 | 1 | 1.5 | 1 | — | holy | inflicts **shell** | Raises a ward: Shell on you and adjacent allies. |
+| **Divine Grace** `pa_divine_grace` | Reaction | 200 | — | — | — | — | — | — | — | When struck, a 30% chance to recover 15% of max HP. |
+| **Zeal** `pa_zeal` | Support | 260 | — | — | — | — | — | — | — | Holy damage and healing you deal +20%. |
+
+### Spellblade
+
+*An advanced job. A duelist who channels spells through a sword: elemental strikes that hit with weapon strength.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Flame Edge** `sb_flame_edge` | Action | 60 | 6 | 1 | 1.5 | — | 1.1 | fire | scales with ATK | Wreathes the blade in fire: fire damage from ATK. |
+| **Frost Edge** `sb_frost_edge` | Action | 150 | 8 | 1 | 1.5 | — | 0.9 | ice | inflicts **slow**, scales with ATK | A freezing cut: ice damage from ATK, and Slow. |
+| **Thunder Lunge** `sb_thunder_lunge` | Action | 180 | 8 | 2 | 2 | — | 1 | lightning | scales with ATK | A crackling thrust that reaches 2 tiles: lightning damage from ATK. |
+| **Runic** `sb_runic` | Reaction | 200 | — | — | — | — | — | — | — | When struck by a spell, the blade drinks it in: recover 20% of max MP. |
+| **Arcane Edge** `sb_arcane_edge` | Support | 260 | — | — | — | — | — | — | — | Your Attack carries your magic: bonus damage from MAG. |
+
 ## Status effects
 
 | Status | Kind | Lasts (turns) | Effect |
@@ -250,9 +305,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-52 items across five gear slots.
+54 items across five gear slots.
 
-### Weapon (20)
+### Weapon (21)
 
 | Item | Type | Range | Stats | Traits | Price | How to get |
 | :--- | :--- | :---: | :--- | :--- | ---: | :--- |
@@ -276,8 +331,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop |
 | **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop |
 | **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop |
+| **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Trials drop |
 
-### Shield (4)
+### Shield (5)
 
 | Item | Stats | Traits | Price | How to get |
 | :--- | :--- | :--- | ---: | :--- |
@@ -285,6 +341,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Kite Shield** `kite_shield` | EVASION +22, HP +15 | — | 220 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
 | **Aegis Barrier** `aegis_shield` | EVASION +32, HP +30, MP +15 | — | 450 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
 | **Mirror Shield** `mirror_shield` | EVASION +18, MP +10 | starts with shell | 420 | Win CHAPTER II-B · Trials drop |
+| **Oathkeeper** `oath_shield` | EVASION +20, HP +20 | guards sleep, blind | 500 | Trials drop |
 
 ### Head (8)
 
@@ -329,12 +386,25 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Sprinter's Anklet** `sprinter_anklet` | MOVE +1, JUMP +1 | — | 620 | Trials drop |
 | **Berserker Band** `berserker_band` | ATTACK +7, EVASION -5 | — | 460 | Trials drop |
 
+## Shop & gil
+
+A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (×3 for a boss); winning adds 150 in the campaign or 100 + 20 × floor in the Trials. Stealing gear you already own fences it for half its price. Workshop battles pay nothing.
+
+| Stage | Price cap | Items on the shelves |
+| :--- | ---: | ---: |
+| Chapter I | 380 | 29 |
+| Chapter II | 480 | 42 |
+| Final Chapter | 580 | 48 |
+| Campaign cleared / Trials | none | 51 |
+
+Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail.
+
 ## Armory & drops
 
 | Pool | Items |
 | :--- | :--- |
 | Starting armory (17) | Iron Broadsword, Holy Dragon Lance, Longbow of the Gale, Chrono Scepter, Bronze Buckler, Steel Bascinet, Pointed Wizard Hat, Shadow Headband, Reinforced Hauberk, Astral Silk Robe, Nightwalker Tunic, Battle Greaves, Featherlight Boots, Iron Knuckles, Cutpurse Knife, Leather Cap, Leather Vest |
-| Trials rare drops (34) | Platinum Blade, Kite Shield, Aegis Barrier, Platinum Plate Mail, Hermes Slippers, Gauntlet of Might, Ring of Arcana, Twin Shadow Daggers, Gaia Staff, Windslayer Bow, Crystal Helm, Wyrmscale Mail, Zodiac Ribbon, Tiger Claws, Moonfang, Halberd, Dawnbringer, Siege Crossbow, Flame Rod, Frost Rod, Storm Rod, Sage's Staff, Mirror Shield, Barbute, Sage's Circlet, Circlet of Clarity, Brawler's Gi, Summoner's Robe, Templar Mail, Verdant Charm, Warding Amulet, Purity Bangle, Sprinter's Anklet, Berserker Band |
+| Trials rare drops (36) | Platinum Blade, Kite Shield, Aegis Barrier, Platinum Plate Mail, Hermes Slippers, Gauntlet of Might, Ring of Arcana, Twin Shadow Daggers, Gaia Staff, Windslayer Bow, Crystal Helm, Wyrmscale Mail, Zodiac Ribbon, Tiger Claws, Moonfang, Halberd, Dawnbringer, Siege Crossbow, Flame Rod, Frost Rod, Storm Rod, Sage's Staff, Mirror Shield, Barbute, Sage's Circlet, Circlet of Clarity, Brawler's Gi, Summoner's Robe, Templar Mail, Verdant Charm, Warding Amulet, Purity Bangle, Sprinter's Anklet, Berserker Band, Runeblade, Oathkeeper |
 
 ## Battlefields
 
@@ -423,20 +493,20 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
-| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, Archer, Dragoon |
-| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Archer, Oracle, Geomancer, Squire |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Thief, Knight, Archer, Squire |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Oracle, Time Weaver |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Oracle, Squire, Summoner |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Summoner, Monk, Geomancer, Dragoon |
-| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Monk, Oracle, Ninja, Thief |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Archer, Oracle, Geomancer, Time Weaver, White Mage |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Monk, Squire, White Mage, Thief, Time Weaver |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Squire, Archer, Time Weaver, White Mage |
-| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Summoner, Dragoon, Black Mage |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Geomancer, Monk, White Mage, Knight, Ninja |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Thief, Oracle, White Mage, Black Mage, Geomancer, Dragoon |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Oracle, Dragoon, Time Weaver, White Mage, Thief |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Oracle, White Mage, Time Weaver, Monk, Black Mage |
+| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, Archer, Ninja |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Spellblade, Monk |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Summoner, Archer, Thief |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Spellblade, Paladin, Geomancer |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Spellblade, Monk, Paladin |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Paladin, Thief, Summoner, Monk, Ninja |
+| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Summoner, Spellblade, Ninja |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Spellblade, Squire, Geomancer, Dragoon |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Summoner, Monk, Dragoon, Oracle, Geomancer, White Mage |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Ninja, Monk, Archer, Geomancer |
+| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Paladin, Dragoon, Black Mage |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Squire, Thief, White Mage, Knight, Ninja |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Summoner, Spellblade, White Mage, Black Mage, Squire, Dragoon |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Spellblade, Ninja, Geomancer, White Mage, Oracle |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Spellblade, Geomancer, Thief, Black Mage |
 
 *Floors continue forever; the table shows the first 15.*

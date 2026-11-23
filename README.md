@@ -6,7 +6,7 @@
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, thirteen mix-and-match jobs, a branching campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
+A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, fifteen mix-and-match jobs, a branching campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
 
 ### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/) · [on itch.io](https://cptnope.itch.io/chess-rpg-tactics)
 
@@ -19,7 +19,8 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | | |
 | :--- | :--- |
 | **Tactics** | Speed-based turn order (CT), front / flank / back attacks, height advantage, terrain movement costs, area spells |
-| **Squad building** | 13 jobs, 75 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP; 52 pieces of gear, some with traits; steal gear off enemies |
+| **Squad building** | 15 jobs on a job tree (jobs level up and unlock advanced jobs), 86 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
+| **Gear & gil** | 54 pieces of gear, some with traits; earn gil from battles and spend it in the shop; steal gear off enemies |
 | **Campaign** | A branching campaign (four chapters, three per playthrough) on 16×16 battlefields, with a recruit, boss fights with enrage phases, and gear rewards |
 | **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters. **AUTO** lets it play your turn |
@@ -93,7 +94,7 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `R` re-ce
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 74 rule tests
+npm test             # 95 rule tests
 npm run build        # type-check + production build
 npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
 npm run balance      # headless AUTO battles: win rate per chapter
