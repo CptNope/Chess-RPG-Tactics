@@ -81,6 +81,7 @@ timeline
     0.28.0 : 0036 Beast Tamer
     0.29.0 : 0037 Beast gear
     0.30.0 : 0038 Equipment rules
+    0.31.0 : 0039 Smarter enemies
 ```
 
 | # | Decision | Release |
@@ -116,6 +117,7 @@ timeline
 | [0035](adr/0035-monsters-in-the-story.md) | Monsters replace story enemies of similar strength, checked chapter by chapter with the sim; natural stats stand in for gear | 0.27.0 |
 | [0036](adr/0036-beast-tamer.md) | Tame wins a hurt monster over on the spot; survivors join the squad as beasts that keep their job and wear no gear | 0.28.0 |
 | [0037](adr/0037-beast-gear.md) | Beasts wear only beast gear (barding and a collar), people never do; one `canEquip` rule; sold on its own market shelf | 0.29.0 |
+| [0039](adr/0039-smarter-enemies.md) | A threat map lets the planner think a turn ahead (light on Normal, full on Hard and AUTO); enemies carry item pouches by role; leftovers are salvaged | 0.31.0 |
 | [0038](adr/0038-equipment-rules.md) | Each job has weapon types and armor weights it can use; starting gear complies, so balance holds; job changes swap gear; old saves fixed on load | 0.30.0 |
 | [0034](adr/0034-monsters.md) | Monsters are jobs flagged `monster`, with innate statuses and immunities instead of gear, their own art, and player job lists filtered | 0.26.0 |
 | [0026](adr/0026-difficulty-and-save-slots.md) | Difficulty as three dials on enemies only; three slots with slot 1 on the old key; imports treated as untrusted; refunds on defeat; the Gate after Act I | 0.18.0 |

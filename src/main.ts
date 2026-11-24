@@ -29,6 +29,7 @@ import { SaveManager, GameSaveData, SAVE_SLOTS, MAX_IMPORT_BYTES } from './core/
 import { resolveTerrainAbility } from './core/Geomancy';
 import { encoreDue, endPerformance, isCentered, noFalloff, performedBy, startPerformance } from './core/Performance';
 import { planTurn, unitsInBlast, summonVictims, faceTowards, ENEMY_RAISE_CAP } from './core/EnemyAI';
+import { enemyCaution, enemyPouch, salvage } from './core/EnemyPouch';
 import { breakCall, callArea, callDue, callHolds, startCall } from './core/Summons';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
@@ -330,6 +331,8 @@ class TacticsGame {
       if (e.isBoss && this.mode !== 'custom') scaleBoss(u, this.difficulty);
       // Enemy casters get their job's reaction/support so they fight like the player's units
       this.equipEnemyPassives(u);
+      // Some carry items (0.31.0); the Workshop plays at Normal
+      u.pouch = enemyPouch(u, idx, this.mode === 'custom' ? 'normal' : this.difficulty);
       return u;
     });
   }
@@ -1406,7 +1409,9 @@ class TacticsGame {
       caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
       caster.hasActed = true;
       this.moveUndo = null; // acting commits the move
-      if (ability.item) this.inventory[ability.item] = Math.max(0, (this.inventory[ability.item] || 0) - 1);
+      // An enemy's item comes out of its own pouch (0.31.0)
+      if (ability.item && caster.team === 'enemy' && caster.pouch) caster.pouch[ability.item] = Math.max(0, (caster.pouch[ability.item] || 0) - 1);
+      else if (ability.item) this.inventory[ability.item] = Math.max(0, (this.inventory[ability.item] || 0) - 1);
       JobSystem.useSignature(caster, ability); // once per battle (0.23.0)
       // Any other action ends a song or dance; using one starts (or restarts) it (0.22.0)
       if (ability.performance) startPerformance(caster, ability);
@@ -1756,7 +1761,14 @@ class TacticsGame {
   private async runAiTurn(enemy: Unit): Promise<void> {
     if (this.battleOver) return;
     // Enemies may raise only so many of their fallen per battle; AUTO for your own units is not limited
-    const plan = planTurn(enemy, this.units, this.grid, { noRevive: enemy.team === 'enemy' && this.enemyRaises >= (this.mode === 'custom' ? ENEMY_RAISE_CAP : DIFFICULTIES[this.difficulty].raiseCap) });
+    // Enemies think a turn ahead except on Easy, and use their pouches; AUTO plays your units
+    // carefully too but never spends the squad's supplies (0.31.0)
+    const foe = enemy.team === 'enemy';
+    const plan = planTurn(enemy, this.units, this.grid, {
+      noRevive: foe && this.enemyRaises >= (this.mode === 'custom' ? ENEMY_RAISE_CAP : DIFFICULTIES[this.difficulty].raiseCap),
+      caution: foe ? enemyCaution(this.mode === 'custom' ? 'normal' : this.difficulty) : 'full',
+      pouch: foe ? enemy.pouch : undefined
+    });
     if ((plan.ability?.revive || plan.ability?.rebirth) && enemy.team === 'enemy') this.enemyRaises++;
 
     if (plan.moveTo.x !== enemy.x || plan.moveTo.z !== enemy.z) {
@@ -2139,6 +2151,11 @@ class TacticsGame {
     }
     if (this.stolenThisBattle.length > 0) {
       rows.push(`<div class="result-loot"><b>STOLEN:</b> ${this.stolenThisBattle.map((id) => esc(ITEMS[id].name)).join(', ')}</div>`);
+    }
+    // What the fallen enemies didn't use from their pouches (0.31.0)
+    const salvaged = salvage(this.units, this.inventory);
+    if (Object.keys(salvaged).length) {
+      rows.push(`<div class="result-loot"><b>SALVAGED:</b> ${Object.entries(salvaged).map(([id, n]) => `${esc(CONSUMABLES[id].name)}${n > 1 ? ` ×${n}` : ''}`).join(', ')}<br><small>Items the enemy carried and never used.</small></div>`);
     }
     // Tamed monsters still standing join the squad, if there's room (0.28.0)
     if (this.mode !== 'custom') {

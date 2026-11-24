@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.31.0] - 2026-11-24
+
+### Added — smarter enemies
+- **Enemies think a turn ahead.** Before moving, an enemy now estimates what your squad could do to it on your next turns, tile by tile, and avoids ending where it would likely fall, unless the trade is worth it (killing the unit that threatens it counts). A hurt archer shoots from out of reach instead of walking into your knights.
+  - **Normal**: enemies think ahead once they're below half HP, so the wounded back off or heal while the healthy still charge.
+  - **Hard**: every enemy thinks ahead, prefers safer spots, and hurt ones hang back.
+  - **Easy**: unchanged.
+- **Enemies use items.** Some enemies carry a pouch: bosses a Potion, Chemists Potions and a Remedy, and on Normal every third enemy a Potion (on Hard, everyone; Chemists add a Phoenix Feather and a Blast Flask). They drink when hurt, cure a sleeping friend, and raise the fallen (counting against the side's raises). From level 9 Potions are Hi-Potions. Monsters carry nothing; on Easy nobody does.
+- **🎒 on an enemy's card** shows how many items it carries; hover it for the list.
+- **Salvage.** What fallen enemies never used goes into your supplies after a victory.
+- **AUTO plays your units more carefully** too (it never spends your supplies).
+
+### Changed
+- The difficulty descriptions say how enemies use items and plan ahead.
+
+### Balance
+- Simulated win rates (Normal, 100 battles per level) stay close to 0.30 overall. Chapter II-B at level 3 and Chapter VI at level 8 are a little harder; Chapter V at levels 7–8 is easier because AUTO plays safer. Hard is clearly harder (Chapter I roughly halves).
+
+### Developer
+- `EnemyAI.threatMap()`, `PlanOptions { noRevive, caution: false | 'light' | 'full', pouch }`. Item heals are scored like heals; kills are reported so threatened plans can spare foes they finish.
+- `core/EnemyPouch.ts`: `enemyPouch`, `enemyCaution`, `pouchText`, `salvage`. `Unit.pouch`.
+- The balance sim mirrors the game (pouches, caution) and takes `OLD_AI=1`, `CAUTION=enemy|player|none` and `ITEMS=0` for comparisons.
+- 8 new tests (270 total) in `tests/smarter-enemies.test.ts`. [ADR 0039](docs/adr/0039-smarter-enemies.md); [Enemy AI](docs/ENEMY_AI.md) updated.
+
 ## [0.30.0] - 2026-11-24
 
 ### Added — equipment rules

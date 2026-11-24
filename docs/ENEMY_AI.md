@@ -1,6 +1,6 @@
 # Enemy AI (and AUTO)
 
-`planTurn(unit, units, grid)` in `src/core/EnemyAI.ts` decides a whole turn: where to stand, what to use, what to aim at, and which way to face. It's team-agnostic, so the same planner plays enemy turns and the player's **AUTO** command.
+`planTurn(unit, units, grid, opts)` in `src/core/EnemyAI.ts` decides a whole turn (options: `noRevive`, `caution`, `pouch`, see 0.31 below): where to stand, what to use, what to aim at, and which way to face. It's team-agnostic, so the same planner plays enemy turns and the player's **AUTO** command.
 
 ---
 
@@ -75,6 +75,30 @@ Then each plan gets small adjustments:
 | Standing where a foe's grand summon will land (0.24) | −30 per call (−50 on the fallback walk), so units get clear of the marked area |
 | Still performing (0.22): moving, or any other action | −12 each, so a song isn't dropped for a small gain; with nothing worth doing, the performer stays put instead of advancing |
 
+### Thinking a turn ahead (0.31)
+
+`threatMap()` estimates, for every tile, how much damage the foes could do to the unit there on their next turns: each foe's best damaging action against it (expected damage × hit%, Dual Wield ×1.9), counted on every tile within that action's range (+ area) of anywhere the foe can walk to. Sleeping foes don't count, Immobilized ones strike only from where they stand, and foes this plan will likely KO (expected damage ≥ HP left at ≥ 70% hit) are **spared**: killing the knight that would have killed you is the point of two-ply thinking.
+
+| Caution | Who | Effect on a plan's score |
+| :--- | :--- | :--- |
+| `false` | Enemies on Easy | None: the 0.30 planner |
+| `'light'` | Enemies on Normal and in the Workshop | Only once the unit is **below half HP**: −30 (−45 for a healer or a boss) where the threat would likely finish it (threat ≥ HP after the action, counting a heal on itself) |
+| `'full'` | Enemies on Hard; **AUTO** for your units | Always: the same −30 for a likely fall, otherwise `−threat / maxHP × 15`; the no-action walk also weighs the threat (×0.4 when below 40% HP), so a hurt unit with nothing to do hangs back |
+
+A trade is still taken when it's worth more than the risk: a likely KO on a healer (+150) beats −45.
+
+### Items (0.31)
+
+Enemies may carry a **pouch** (`core/EnemyPouch.ts`), shown on their card as 🎒 with a count:
+
+| | Easy | Normal | Hard |
+| :--- | :---: | :---: | :---: |
+| Bosses | — | Potion | Potion ×2 |
+| Chemists | — | Potion ×2, Remedy | Potion ×2, Remedy, Phoenix Feather, Blast Flask (Lv 6+) |
+| Everyone else (not monsters) | — | every third enemy: Potion | Potion |
+
+Potions become Hi-Potions from level 9. Items are scored like the matching ability (a heal only when the ally is missing ≥ 25% HP, a feather like a raise, counting against the side's raise cap), **−6** so they're kept for when they matter. What fallen enemies never used is **salvaged** after a victory, up to the stack limit. AUTO never spends the squad's supplies.
+
 Every plan ends **facing the closest foe** (0.20), the one most likely to strike next, so the unit doesn't leave its back open after moving. For a melee attack that foe is the target anyway.
 
 ### Walking distance (0.20)
@@ -105,6 +129,8 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | AUTO doesn't spend a signature on a foe an ordinary blow finishes, but uses Meteor on a group | `tests/signatures.test.ts` |
 | A Bard beside wounded allies sings, centred on itself; a performer still playing holds its ground, but breaks off for a clearly better blow | `tests/performers.test.ts` |
 | Walks out of the area a foe's grand summon is about to land on; a veteran Summoner calls a grand summon on a crowd; never raises past the cap | `tests/summons.test.ts` |
+| Threat map: marks a foe's reach, ignores sleepers, spares foes about to fall; a hurt archer shoots from out of reach (light and full caution); light caution leaves a healthy unit's plan unchanged | `tests/smarter-enemies.test.ts` |
+| Drinks a Potion when hurt with nothing to hit, keeps it when healthy; a Phoenix Feather respects the raise cap; salvage stops at the stack limit | `tests/smarter-enemies.test.ts` |
 
 ---
 
@@ -115,6 +141,7 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | Job, level, position | Chapter `enemyRoster` (`src/data/campaign.ts`) or `buildTrialFloor()` |
 | Boss | `isBoss` → `JobSystem.makeBoss()`: +60% HP, +15% ATK/MAG, enrage at 50% HP |
 | Monster (0.26) | A monster job: every action from level 1, no gear, innate statuses and immunities (`data/monsters.ts`) |
+| Pouch (0.31) | `enemyPouch()` by difficulty, job, boss and roster position (see *Items* above) |
 | Veteran kit (level ≥ 4) | Every action in their job (grand summons from level 6, 0.24), plus a job reaction/support (Knight parry, White Mage auto-potion, Black Mage Arcane Strength, Ninja Dual Wield, Dragoon Dragonheart, Geomancer Earthen Ward) |
 
 ---
@@ -123,13 +150,12 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 
 | Limit | Effect | Idea |
 | :--- | :--- | :--- |
-| One-turn horizon | Doesn't set up combos or retreat to heal | Two-ply search on the best N plans |
+| One-turn horizon, plus a threat estimate (0.31) | Avoids walking into a likely KO and drinks a Potion when hurt, but doesn't set up combos with allies | Two-ply search on the best N plans |
 | Knows only Counter Tackle and Weapon Guard (0.20) | Other reactions (Field Dressing, Auto-Potion) don't change its choices | Add terms as they matter |
 | One raise per battle for the enemy side (0.17) | The first healer to act takes it, whoever fell | Let the planner hold it for the most valuable unit |
 | Raises the fallen whenever it can (0.16) | A revive scores 110 + 2 × the fallen unit's level, about the same as a likely kill, so a healer with MP nearly always does it | Weigh the fallen unit's job and how exposed the tile is |
-| Never uses items (0.15) | Enemies carry no supplies, and AUTO won't spend yours | Give bosses a potion or two and a rule for when to drink |
+| AUTO never uses your items (0.31) | Enemies use their pouches, but AUTO won't spend the squad's supplies | An opt-in setting |
 | Faces the closest foe, not the most dangerous one (0.20) | An archer two tiles further away may still get the back | Weigh each foe's damage, not just distance |
-| Doesn't avoid danger | A wounded unit will still walk into the enemy line to land a blow. A threat term was tried for 0.20 and made no difference in the simulation, so it was left out | Retreat-to-heal as part of two-ply search |
-| AUTO uses the same weights | Plays aggressively for the player | Optional "careful" profile for AUTO |
+| The threat map is an estimate (0.31) | It ignores heights, facing and that foes rarely all converge on one unit | Count only the two strongest threats, or simulate their turns |
 
 These are tracked on the [roadmap](ROADMAP.md).

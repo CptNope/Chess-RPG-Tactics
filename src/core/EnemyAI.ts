@@ -5,6 +5,22 @@ import { JobSystem } from './JobSystem';
 import { resolveTerrainAbility } from './Geomancy';
 import { isCentered, noFalloff, performedBy } from './Performance';
 import { callsLandingOn, rebirthOf } from './Summons';
+import { CONSUMABLES, consumableAbility } from '../data/consumables';
+
+/** What a planner may use beyond the unit's own abilities (0.31.0). */
+export interface PlanOptions {
+  /** No raising the fallen this turn (the side has used its raises). */
+  noRevive?: boolean;
+  /**
+   * Think one turn ahead (0.31.0): weigh what the foes could do to this unit where it ends its
+   * turn. 'light' (once the unit is below half HP) only steers clear of spots where it would
+   * likely fall, unless the trade is worth it; 'full' always does, also prefers spots where it
+   * takes less, and hurt units hang back.
+   */
+  caution?: false | 'light' | 'full';
+  /** Items the unit carries (0.31.0): consumable id -> count. */
+  pouch?: Record<string, number>;
+}
 
 export interface AiPlan {
   /** Tile to move to before acting (may equal the current tile). */
@@ -116,7 +132,55 @@ function foesNear(u: Unit, units: Unit[], dist: number): boolean {
   return units.some((f) => !f.isDead && f.team !== u.team && Math.abs(f.x - u.x) + Math.abs(f.z - u.z) <= dist);
 }
 
-function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: BattleGrid, aim: { x: number; z: number }, victimsPool: Unit[] = victims): number {
+/**
+ * The threat map (0.31.0): for each tile, how much damage the foes could do to `unit` there on
+ * their next turns, each with its best blow from anywhere it can walk to. An estimate: heights,
+ * facing and the dice are ignored. Foes that are asleep can't strike; `spared` leaves out foes
+ * this turn's action is likely to kill.
+ */
+export function threatMap(unit: Unit, units: Unit[], grid: BattleGrid): (x: number, z: number, spared?: Set<string>) => number {
+  const key = (x: number, z: number) => `${x},${z}`;
+  const entries: { id: string; dmg: number; reach: Set<string> }[] = [];
+  const uh = grid.getHeight(unit.x, unit.z);
+  for (const foe of foesOf(unit, units)) {
+    if (foe.statuses.some((s) => s.type === 'sleep')) continue;
+    const silenced = foe.statuses.some((s) => s.type === 'silence');
+    let best: { dmg: number; reach: number } | null = null;
+    for (const a of JobSystem.getCombatActionAbilities(foe)) {
+      if (a.item || a.isSelfOnly || a.charge || a.mpCost > foe.currentMp || (silenced && a.mpCost > 0)) continue;
+      if (CombatEngine.isSupportive(a) || !(a.power > 0 || a.fixedDamage)) continue;
+      const fc = CombatEngine.getForecast(foe, unit, a, uh, uh);
+      const dmg = Math.max(0, fc.expectedDamage) * (fc.willDualWield ? 1.9 : 1) * (fc.hitChance / 100);
+      if (!best || dmg > best.dmg) best = { dmg, reach: a.range + a.aoe };
+    }
+    if (!best || best.dmg <= 0) continue;
+    const from = foe.statuses.some((s) => s.type === 'immobilize') ? [{ x: foe.x, z: foe.z }]
+      : [{ x: foe.x, z: foe.z }, ...grid.getReachableTiles(foe, units)];
+    const reach = new Set<string>();
+    for (const t of from) {
+      for (let dx = -best.reach; dx <= best.reach; dx++) {
+        const r = best.reach - Math.abs(dx);
+        for (let dz = -r; dz <= r; dz++) reach.add(key(t.x + dx, t.z + dz));
+      }
+    }
+    entries.push({ id: foe.id, dmg: best.dmg, reach });
+  }
+  return (x, z, spared) => {
+    let total = 0;
+    for (const e of entries) if (!spared?.has(e.id) && e.reach.has(key(x, z))) total += e.dmg;
+    return total;
+  };
+}
+
+/** The items a unit could use from its pouch this turn, as battle actions. */
+function pouchAbilities(pouch: Record<string, number> | undefined, noRevive: boolean): Ability[] {
+  if (!pouch) return [];
+  return Object.entries(pouch)
+    .filter(([id, n]) => n > 0 && CONSUMABLES[id] && !(noRevive && CONSUMABLES[id].revive))
+    .map(([id]) => consumableAbility(CONSUMABLES[id]));
+}
+
+function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: BattleGrid, aim: { x: number; z: number }, victimsPool: Unit[] = victims, kills?: Set<string>): number {
   const casterH = grid.getHeight(caster.x, caster.z);
   let score = 0;
   for (const v of victims) {
@@ -141,7 +205,8 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
       }
     }
 
-    if (ability.power < 0) {
+    if (ability.power < 0 || ability.fixedHeal) {
+      if (v.team !== caster.team) continue;
       const missing = v.maxHp - v.currentHp;
       if (missing < v.maxHp * 0.25) continue; // not worth a heal
       score += (Math.min(missing, Math.abs(fc.expectedDamage)) / v.maxHp) * 100 * 1.3 + (v.isBoss ? 20 : 0);
@@ -172,7 +237,10 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     dmg = Math.min(dmg, v.currentHp);
     const support = isSupportCaster(v);
     score += (dmg / v.maxHp) * 100 * p * (support ? 1.3 : 1);
-    if (fc.expectedDamage >= v.currentHp) score += (120 + (v.isBoss ? 40 : 0) + (support ? 30 : 0)) * p; // likely kill
+    if (fc.expectedDamage >= v.currentHp) {
+      score += (120 + (v.isBoss ? 40 : 0) + (support ? 30 : 0)) * p; // likely kill
+      if (p >= 0.7 && v.team !== caster.team) kills?.add(v.id);
+    }
     if (ability.appliesStatus && !v.statuses.some((s) => s.type === ability.appliesStatus) && !guardsAgainst(v, ability.appliesStatus)) score += 15 * p;
     if (ability.drain) score += (Math.min(fc.expectedDamage * ability.drain, caster.maxHp - caster.currentHp) / caster.maxHp) * 60 * p;
     // Hitting a sleeper wakes it: only worth it for real damage
@@ -190,7 +258,7 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
 /** How many fallen allies the enemy side may raise in one battle. Keeps a healer from undoing a whole fight. */
 export const ENEMY_RAISE_CAP = 1;
 
-export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { noRevive?: boolean } = {}): AiPlan {
+export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: PlanOptions = {}): AiPlan {
   const foes = foesOf(unit, units);
   const origin = { x: unit.x, z: unit.z };
   const fallbackFacing = unit.facing;
@@ -200,7 +268,21 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
   }
 
   const tiles: { x: number; z: number }[] = unit.hasMoved ? [origin] : [origin, ...grid.getReachableTiles(unit, units)];
-  const baseAbilities = JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp && !(opts.noRevive && (a.revive || a.rebirth)));
+  const baseAbilities = [
+    ...JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp && !(opts.noRevive && (a.revive || a.rebirth))),
+    ...pouchAbilities(opts.pouch, !!opts.noRevive)
+  ];
+  // One turn ahead (0.31.0): what the foes could do to this unit, tile by tile
+  // 'light' caution only kicks in once the unit is hurt: a wounded enemy backs off or heals
+  const threat = opts.caution === 'full' || (opts.caution === 'light' && unit.currentHp < unit.maxHp * 0.5) ? threatMap(unit, units, grid) : null;
+  const precious = (isSupportCaster(unit) ? 15 : 0) + (unit.isBoss ? 15 : 0);
+  /** What ending the turn on a tile risks: a lot where the unit would likely fall, a little per HP otherwise. */
+  const risk = (x: number, z: number, hpAfter: number, spared?: Set<string>) => {
+    if (!threat) return 0;
+    const danger = threat(x, z, spared);
+    if (danger >= hpAfter) return 30 + precious;
+    return opts.caution === 'full' ? (danger / unit.maxHp) * 15 : 0;
+  };
 
   // Walking distance from each foe, by this unit's own movement rules: shared by the self-buff
   // approach below and the fallback walk
@@ -253,9 +335,21 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
           const fallen = raise ? unitsInBlast(unit, raise, ax, az, units) : [];
           if (victims.length === 0 && fallen.length === 0) continue;
 
-          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units)
+          const kills = new Set<string>();
+          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units, kills)
             + (raise && fallen.length ? scoreAbility(unit, raise, fallen, grid, { x: ax, z: az }, units) : 0);
           if (score <= 0) continue;
+          // Items are few: keep them for when they matter
+          if (ability.item) score -= 6;
+          if (threat) {
+            // A heal on itself raises the HP it will face the next turn with
+            let hpAfter = unit.currentHp;
+            if (victims.includes(unit) && (ability.power < 0 || ability.fixedHeal)) {
+              const fc = CombatEngine.getForecast(unit, unit, ability, tileH, tileH);
+              hpAfter = Math.min(unit.maxHp, hpAfter + Math.abs(Math.min(0, fc.expectedDamage)));
+            }
+            score -= risk(tile.x, tile.z, hpAfter, kills);
+          }
           // A grand summon lands on the caster's next turn, and its targets can see it coming
           // (0.24.0): worth less than the same blow now, but it doesn't cost this turn's move
           if (ability.charge) score *= 0.7;
@@ -302,7 +396,9 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
   const target = pick.f;
   const distFrom = (t: { x: number; z: number }) => pick.d.get(key(t.x, t.z)) ?? manhattan(target, t) + 100;
   // ... and never into an area a foe's grand summon is about to land on (0.24.0)
-  const walkScore = (t: { x: number; z: number }) => distFrom(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50;
+  // With caution (0.31.0) a hurt unit with nothing to do hangs back rather than walking into reach
+  const walkScore = (t: { x: number; z: number }) => distFrom(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50
+    + (threat && opts.caution === 'full' ? risk(t.x, t.z, unit.currentHp) * (unit.currentHp < unit.maxHp * 0.4 ? 0.4 : 0.1) : 0);
   let moveTo = origin;
   let bestDist = walkScore(origin);
   for (const t of tiles) {

@@ -235,6 +235,8 @@ export interface Unit {
   usedIronWill?: boolean;
   /** A monster a Beast Tamer won over this battle (0.28.0): it fights for the squad and may join it. */
   tamed?: boolean;
+  /** Consumables an enemy carries into battle (0.31.0): id -> count. See core/EnemyPouch.ts. */
+  pouch?: Record<string, number>;
 }
 
 export interface CombatForecast {
