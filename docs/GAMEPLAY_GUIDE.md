@@ -128,6 +128,7 @@ flowchart LR
     TF --- CP["Stormbreak Cape<br/>Final Chapter"]
     G --- DS["⚑ Drowned Shrine"]
     Z --- WR["⚑ Watchfire Ridge"]
+    B --- HH["⚑ Howling Hollow"]
 ```
 
 | On the map | Means |
@@ -148,8 +149,20 @@ flowchart LR
   | Thornwood Ford | After Chapter I | Bandits: thieves, archers, brawlers | Defeat them all | Fordwarden's Bow (ATK +8, Speed +1, range 5) |
   | Drowned Shrine | After Chapter II | Cultists: mages, oracles, summoners | Defeat them all | Chanting Censer (MAG +4, MP +20, no Silence) |
   | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja | Hold out for 6 rounds | Watchfire Helm (HP +40, no Sleep or Blind) |
+  | Howling Hollow | After Chapter I | Monsters: wolves, a wyvern, oozes, wisps, a stone brute | Defeat them all | Wolfpelt Mantle (HP +25, Evasion +6, Move +1, no Poison) |
 
   Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after. The first win also brings the place's **trophy**, a piece of gear found nowhere else (it can't be sold).
+* **Monsters** (0.26) fight differently from people. They wear no gear and know all their tricks from the start ([full table](CONTENT_REFERENCE.md#monsters)):
+
+  | Monster | What to expect | Answer |
+  | :--- | :--- | :--- |
+  | Dire Wolf | Fast, hits hard, Lunges from 2 tiles; Pack Howl gives the pack Focus | Knights up front; Slow them |
+  | Wyvern | Flies over walls and cliffs; Tail Sting poisons; can't be Immobilized | Remedies; archers |
+  | Bog Ooze | Tough, regenerates, its Acid Touch opens armor (Breach) and Engulf holds you in place | Burst it down; spells |
+  | Marsh Wisp | Frail at range but sends you to Sleep (Lure) and drains life | Rush it; it can't be poisoned or slept |
+  | Stonehide Brute | Slow, starts behind Protect; Ground Pound hits everyone next to it | Don't crowd it; fight it from range |
+
+  They live at the Howling Hollow and turn up on Trials floors from 3 on.
 * **Wenna the Pedlar** follows the squad around the realm. Once the first battle is won she sets up beside a won battlefield or a side-battle camp, and moves on after every win. She sells two things: a piece the market won't stock until after the next chapter (early, for a quarter more), and one of her own goods that nobody else sells. Walk to her pin to buy.
 * **Camp.** After each story battle the squad makes camp, and the panel offers **Sit by the fire**: a short talk between the squad, once per playthrough, worth 30 JP to everyone.
 * **Team**, **Save** and **Menu** (sound, graphics, battle speed, load, the Workshop, title screen) are in the top bar. Team works everywhere; buying and selling only at the market.

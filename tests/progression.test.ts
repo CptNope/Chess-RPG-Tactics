@@ -3,7 +3,7 @@
  * (Paladin, Spellblade).
  */
 import { describe, it, expect } from 'vitest';
-import { JOBS } from '../src/data/jobs';
+import { JOBS, PLAYER_JOB_IDS } from '../src/data/jobs';
 import { ITEMS, MERCHANT_ITEMS, STARTING_ARMORY } from '../src/data/items';
 import { JobSystem, JOB_LEVEL_JP, MAX_JOB_LEVEL } from '../src/core/JobSystem';
 import { CombatEngine } from '../src/core/CombatEngine';
@@ -60,7 +60,7 @@ describe('job levels', () => {
 
 describe('job tree', () => {
   it('every prerequisite names a real job and a reachable level, with no cycles', () => {
-    for (const job of Object.values(JOBS)) {
+    for (const job of PLAYER_JOB_IDS.map((id) => JOBS[id])) {
       for (const p of job.prerequisites || []) {
         expect(JOBS[p.jobId], `${job.id} -> ${p.jobId}`).toBeTruthy();
         expect(p.level).toBeGreaterThanOrEqual(2);

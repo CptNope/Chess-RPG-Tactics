@@ -1,4 +1,5 @@
 import { Job, Ability } from '../core/types';
+import { MONSTERS } from './monsters';
 
 export const BASIC_ATTACK: Ability = {
   id: 'basic_attack',
@@ -1952,3 +1953,12 @@ export const JOBS: Record<string, Job> = {
   }
 
 };
+
+// Monsters (0.26.0) are jobs too, so every rule finds them, but only enemies are ever given one
+Object.assign(JOBS, MONSTERS);
+
+/** True for a monster's job (0.26.0). */
+export const isMonsterJob = (id: string): boolean => !!JOBS[id]?.monster;
+
+/** The jobs a squad member can hold: every job but the monsters. */
+export const PLAYER_JOB_IDS: string[] = Object.keys(JOBS).filter((id) => !JOBS[id].monster);

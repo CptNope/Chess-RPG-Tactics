@@ -4,7 +4,7 @@
 
 Every number here is read straight from the game data, so it always matches what ships.
 
-**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
+**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Monsters](#monsters) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
 
 ## Jobs
 
@@ -344,6 +344,68 @@ pie showData title Abilities by slot type
 | **Captivate** `dn_captivate` | Reaction | 220 | — | — | — | — | — | — | — | When struck in melee, turn the blow into a dance: 35% chance the attacker falls asleep. |
 | **Encore** `dn_encore` | Support | 240 | — | — | — | — | — | — | — | Your songs and dances play on for 2 more turns. |
 
+## Monsters
+
+5 monsters: enemies only, never a squad member's job. They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from 3 up, and in Workshop scenarios.
+
+| Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |
+| **Dire Wolf** `wolf` | Beast | 5 | 2 | 1.00× | 0.50× | 1.45× | 0.30× | 1.20× | — | — |
+| **Wyvern** `wyvern` | Beast | 4 | 8 | 1.15× | 0.50× | 1.40× | 0.60× | 1.05× | — | immobilize |
+| **Bog Ooze** `ooze` | Ooze | 3 | 1 | 1.45× | 0.40× | 1.15× | 0.50× | 0.80× | regen | poison, blind, sleep |
+| **Marsh Wisp** `wisp` | Spirit | 4 | 8 | 1.05× | 1.40× | 0.85× | 1.30× | 1.15× | — | poison, sleep, immobilize |
+| **Stonehide Brute** `brute` | Brute | 3 | 1 | 1.45× | 0.30× | 1.40× | 0.30× | 0.75× | protect | poison |
+
+### Dire Wolf
+
+*Hunts in packs. Fast on its feet, it closes in from the flank and bites hard; its howl spurs the pack on.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Bite** `mon_bite` | Action | 0 | 0 | 1 | 2 | — | 1.1 | physical | — | Sinks its fangs in. |
+| **Lunge** `mon_lunge` | Action | 0 | 0 | 2 | 2 | — | 0.9 | physical | — | Leaps at a foe two tiles away. |
+| **Pack Howl** `mon_howl` | Action | 0 | 6 | 0 | 2 | 2 | — | physical | inflicts **focus** | Focus for the wolf and every ally within 2 tiles. |
+
+### Wyvern
+
+*A winged drake. It flies over walls and cliffs, swoops from above and stings with a venomous tail.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Tail Sting** `mon_tail_sting` | Action | 0 | 0 | 1 | 2 | — | 0.9 | physical | inflicts **poison** | A venomous sting: damage and Poison. |
+| **Swoop** `mon_swoop` | Action | 0 | 0 | 3 | 8 | — | 1.1 | physical | — | Dives on a foe up to 3 tiles away, from any height. |
+| **Wing Gust** `mon_wing_gust` | Action | 0 | 6 | 2 | 2 | 1 | 0.7 | physical | — | A blast of wind over a small area, up to 2 tiles away. |
+
+### Bog Ooze
+
+*A slow, sticky mass from the mire. It seals its own wounds, eats through armor and holds what it touches.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Acid Touch** `mon_acid` | Action | 0 | 0 | 1 | 2 | — | 0.85 | physical | inflicts **breach** | Burns through armor: damage and Breach. |
+| **Engulf** `mon_engulf` | Action | 0 | 0 | 1 | 2 | — | 0.7 | physical | inflicts **immobilize** | Swallows a foe's legs: damage and Immobilize. |
+| **Bog Spit** `mon_bog_spit` | Action | 0 | 6 | 3 | 2 | 1 | 0.55 | physical | inflicts **poison** | Spits muck over a small area up to 3 tiles away: damage and Poison. |
+
+### Marsh Wisp
+
+*A drifting light that leads travellers astray. Frail, but it burns from afar, lulls the unwary to sleep and feeds on life.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Wisp Flame** `mon_wisp_flame` | Action | 0 | 4 | 4 | 3 | — | 0.95 | fire | — | Cold fire from up to 4 tiles away. |
+| **Lure** `mon_lure` | Action | 0 | 8 | 3 | 3 | — | — | dark | inflicts **sleep** | A dancing light: Sleep on a foe up to 3 tiles away. |
+| **Drain Light** `mon_drain_light` | Action | 0 | 10 | 3 | 3 | — | 0.8 | dark | drains 50% | Feeds on a foe's life: damage, and the wisp heals half of it. |
+
+### Stonehide Brute
+
+*A hulking thing of living rock. Slow, but it shrugs off blows, pounds the ground around it and hurls boulders.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Smash** `mon_smash` | Action | 0 | 0 | 1 | 2 | — | 1.2 | physical | — | A crushing blow. |
+| **Ground Pound** `mon_ground_pound` | Action | 0 | 0 | 0 | 2 | 1 | 0.8 | physical | inflicts **immobilize** | Hits every foe next to it: damage and Immobilize. |
+| **Hurl Boulder** `mon_hurl_boulder` | Action | 0 | 4 | 4 | 3 | — | 0.95 | physical | — | Throws a rock at a foe up to 4 tiles away. |
+
 ## Status effects
 
 | Status | Kind | Lasts (turns) | Effect |
@@ -381,7 +443,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-60 items across five gear slots.
+61 items across five gear slots.
 
 ### Weapon (23)
 
@@ -435,7 +497,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Circlet of Clarity** `clarity_circlet` | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop |
 | **Watchfire Helm** `watchfire_helm` | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge |
 
-### Body (9)
+### Body (10)
 
 | Item | Stats | Traits | Price | How to get |
 | :--- | :--- | :--- | ---: | :--- |
@@ -448,6 +510,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Brawler's Gi** `brawler_gi` | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop |
 | **Summoner's Robe** `summoner_robe` | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop |
 | **Templar Mail** `templar_mail` | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop |
+| **Wolfpelt Mantle** `wolfpelt_mantle` | HP +25, EVASION +6, MOVE +1 | guards poison | 560 | First win at Howling Hollow |
 
 ### Accessory (14)
 
@@ -494,7 +557,7 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 | Chapter II won | 580 | 48 |
 | Campaign cleared / Trials | none | 51 |
 
-Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm.
+Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle.
 
 Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the relics and trophies above can't be sold.
 
@@ -518,6 +581,7 @@ flowchart LR
   thornwood["Thornwood Ford<br/><i>side battle</i>"]
   shrine["Drowned Shrine<br/><i>side battle</i>"]
   ridge["Watchfire Ridge<br/><i>side battle</i>"]
+  hollow["Howling Hollow<br/><i>side battle</i>"]
   market --- ruins
   market --- battlement
   ruins --- mire
@@ -533,6 +597,7 @@ flowchart LR
   market --- harbor
   market --- isle
   thornwood --- cape
+  battlement --- hollow
 ```
 
 | Place | Kind | What happens there | Roads to |
@@ -540,7 +605,7 @@ flowchart LR
 | **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement, Thornwood Ford, Emberwick Harbor, Greywatch Isle |
 | **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement, Emberwick Harbor |
 | **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit, Drowned Shrine |
-| **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit, Thornwood Ford |
+| **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit, Thornwood Ford, Howling Hollow |
 | **Zodiac Summit** | mission | CHAPTER III: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials, Watchfire Ridge |
 | **Gate of Trials** | trials | Enter the Trials of the Zodiac (after the story) | Zodiac Summit |
 | **Emberwick Harbor** | mission | CHAPTER IV: Fire on the Water | Riverside Ruins, Larkmoor Market |
@@ -549,6 +614,7 @@ flowchart LR
 | **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement, Stormbreak Cape |
 | **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
+| **Howling Hollow** | skirmish | Side battle: Wild Beasts | Night Battlement |
 
 ### Camp scenes
 
@@ -582,12 +648,14 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Thornwood Ford** | Fordwarden's Bow |
 | **Drowned Shrine** | Chanting Censer |
 | **Watchfire Ridge** | Watchfire Helm |
+| **Howling Hollow** | Wolfpelt Mantle |
 
 | Place | Battlefield | Enemies | Drawn from | Goal | Opens after |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Thornwood Ford** | Riverside Ruins | Thornwood Bandits | Cutpurse (Thief), Poacher (Archer), Footpad (Squire), Bruiser (Monk), Deserter (Knight) | Defeat every enemy | CHAPTER I |
 | **Drowned Shrine** | Gloomy Mire | Mire Cultists | Hexer (Black Mage), Augur (Oracle), Caller (Summoner), Seer (Time Weaver), Acolyte (White Mage), Shade (Ninja) | Defeat every enemy | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
 | **Watchfire Ridge** | Night Battlement | Night Raiders | Raider (Knight), Lancer (Dragoon), Marksman (Archer), Shade (Ninja), Duelist (Spellblade), Warden (Geomancer) | Survive 6 rounds | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
+| **Howling Hollow** | Zodiac Summit | Wild Beasts | Pack Leader (Dire Wolf), Dire Wolf (Dire Wolf), Wyvern (Wyvern), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Stonehide Brute (Stonehide Brute) | Defeat every enemy | CHAPTER I |
 
 ## Armory & drops
 
@@ -735,18 +803,18 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
 | 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Archer, Time Weaver |
 | 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Dancer, Thief, Summoner |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Spellblade, Archer, Oracle |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Dancer, Bard, Squire |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Dancer, Summoner, Ninja, Chemist |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Bard, Oracle, Paladin, Thief, Time Weaver |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Spellblade, Stonehide Brute, Archer, Oracle |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Dancer, Bard, Bog Ooze |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Dancer, Bog Ooze, Ninja, Chemist |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Bard, Oracle, Paladin, Dire Wolf, Time Weaver |
 | 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Paladin, Bard, Geomancer, Spellblade |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dancer, Thief, Monk, Ninja |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Paladin, Summoner, Ninja, Spellblade, Squire, Dragoon |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Summoner, Archer, Monk, Ninja |
-| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Bard, Ninja, White Mage |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Thief, Paladin, Dragoon, Knight, Geomancer |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Spellblade, Dancer, Dragoon, White Mage, Monk, Ninja |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Dancer, Time Weaver, Monk, Dragoon, Spellblade, Bard |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dancer, Ninja, Squire, Oracle, Black Mage |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dancer, Thief, Bog Ooze, Dire Wolf |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Paladin, Summoner, Stonehide Brute, Spellblade, Bog Ooze, Marsh Wisp |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Summoner, Bog Ooze, Marsh Wisp, Ninja |
+| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Marsh Wisp, Ninja, Dire Wolf, Wyvern |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Thief, Paladin, Dragoon, Knight, Dire Wolf |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Spellblade, Dancer, Dire Wolf, White Mage, Wyvern, Ninja |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Stonehide Brute, Time Weaver, Monk, Bog Ooze, Marsh Wisp |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dancer, Ninja, Squire, Oracle, Bog Ooze |
 
 *Floors continue forever; the table shows the first 15.*

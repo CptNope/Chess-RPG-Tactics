@@ -6,6 +6,7 @@
  * (front, back, side; the other side is mirrored) and six frames:
  *   idle0/idle1 (breathing), walk0/walk1 (stride), attack (weapon strike), hurt (flinch).
  */
+import { drawMonsterPortrait, drawMonsterSprite, isMonsterArt } from './MonsterArt';
 
 export type SpriteView = 'S' | 'N' | 'E' | 'W';
 export type SpriteFrame = 'idle0' | 'idle1' | 'walk0' | 'walk1' | 'attack' | 'hurt';
@@ -16,11 +17,11 @@ export const PORTRAIT_SIZE = 64;
 // Colour helpers
 // ---------------------------------------------------------------------------
 
-function rgb(hex: string): [number, number, number] {
+export function rgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
-function hex(r: number, g: number, b: number): string {
+export function hex(r: number, g: number, b: number): string {
   const c = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
   return `#${c(r)}${c(g)}${c(b)}`;
 }
@@ -38,7 +39,7 @@ const OUTLINE = '#0b0f1c';
 // Painter
 // ---------------------------------------------------------------------------
 
-class Painter {
+export class Painter {
   constructor(public ctx: CanvasRenderingContext2D) {}
 
   r(x: number, y: number, w: number, h: number, c: string): void {
@@ -88,7 +89,7 @@ class Painter {
   }
 }
 
-function makeCanvas(w: number, h: number): HTMLCanvasElement {
+export function makeCanvas(w: number, h: number): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -96,7 +97,7 @@ function makeCanvas(w: number, h: number): HTMLCanvasElement {
 }
 
 /** Adds a 1px outline around every opaque shape and cleans up anti-aliased edges. */
-function outline(canvas: HTMLCanvasElement, color = OUTLINE): void {
+export function outline(canvas: HTMLCanvasElement, color = OUTLINE): void {
   const ctx = canvas.getContext('2d')!;
   const { width: w, height: h } = canvas;
   const img = ctx.getImageData(0, 0, w, h);
@@ -822,6 +823,13 @@ export function drawSprite(job: string, view: SpriteView, enemy: boolean, frame:
   const hit = spriteCache.get(key);
   if (hit) return hit;
 
+  // Monsters have bodies of their own (0.26.0)
+  if (isMonsterArt(job) && view !== 'W') {
+    const m = drawMonsterSprite(job, view, frame);
+    spriteCache.set(key, m);
+    return m;
+  }
+
   if (view === 'W') {
     const src = drawSprite(job, 'E', enemy, frame);
     const c = makeCanvas(SPRITE_SIZE, SPRITE_SIZE);
@@ -900,6 +908,8 @@ function faceFor(id: string): Face {
 }
 
 function drawPortrait(id: string): HTMLCanvasElement {
+  const monster = id.startsWith('foe_') ? id.slice(4) : id;
+  if (isMonsterArt(monster)) return drawMonsterPortrait(monster);
   const F = faceFor(id);
   const L = lookFor(F.job, F.enemy);
   const S = PORTRAIT_SIZE;

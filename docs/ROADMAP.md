@@ -43,6 +43,7 @@ timeline
         0.23.0 : Master signatures for all 18 jobs
         0.24.0 : Summons on screen : Grand summons that land next turn
         0.25.0 : Recruiting board : Barracks of ten : Choose your party of six
+        0.26.0 : Monsters : Howling Hollow side battle : Beasts in the Trials
 ```
 
 | Version | Theme | Highlights |
@@ -55,6 +56,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.26 | Monsters | Five monsters with bodies and abilities of their own (Dire Wolf, Wyvern, Bog Ooze, Marsh Wisp, Stonehide Brute); the Howling Hollow side battle and its trophy; monsters on Trials floors from 3; Workshop enemies |
 | 0.25 | Recruits | A recruiting board at the market (three hopefuls, new after each win, more jobs as the story goes on); a barracks of ten; choose a party of six before each battle; dismiss hires |
 | 0.24 | Summons | Every summon's creature drawn over the battlefield (Salamander, Undine, Storm Roc, Sylph, Golem, Celestial Call); three grand summons (Cinderwing, Tidewyrm, Elder Wyrm) that mark their area and land on the caller's next turn; the Chapter V boss calls one |
 | 0.23 | Signatures | Mastering a job brings its signature: 18 once-a-battle actions, kept in every job |
@@ -76,18 +78,18 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.25.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.26.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.26): needs a person"]
+    subgraph NOW["Now (0.27): needs a person"]
         direction TB
         N1["Play the campaign by hand:<br/>Chapter III, Act II"]
         N2["Real-device QA:<br/>iOS Safari, Android, pads"]
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.26 – 0.28): depth"]
+    subgraph NEXT["Next (0.27 – 0.29): depth"]
         direction TB
         X1["AI: items and<br/>two-ply look-ahead"]
         X5["Play-tests in CI"]
@@ -96,7 +98,7 @@ flowchart LR
     subgraph LATER["Later (1.0+): breadth"]
         direction TB
         L1["Act III"]
-        L2["Monsters with their<br/>own abilities"]
+        L2["Monsters in the story;<br/>a beast tamer"]
         L4["Workshop gallery"]
         L5["Remappable controls"]
         L6["Localization"]
@@ -105,7 +107,7 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.26): checks that need a person
+### Now (0.27): checks that need a person
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
@@ -114,7 +116,7 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.26 – 0.28): depth
+### Next (0.27 – 0.29): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
@@ -128,7 +130,7 @@ flowchart LR
 | Item | Size |
 | :--- | :---: |
 | Act III: Chapters VII to IX, new battlefields and map places | L |
-| Monsters: enemies that aren't humans in player jobs, with their own abilities | L |
+| Monsters in the story (0.26 put them in a side battle and the Trials), and more of them | M |
 | More jobs (a beast tamer, a gunner) | L |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |
@@ -154,11 +156,10 @@ quadrantChart
     "Device QA": [0.25, 0.72]
     "Devlog + store": [0.1, 0.55]
     "AI look-ahead": [0.75, 0.5]
-    "Recruiting": [0.5, 0.5]
     "Play-tests in CI": [0.4, 0.6]
     "Equipment rules": [0.55, 0.4]
     "Act III": [0.8, 0.7]
-    "Monsters": [0.75, 0.66]
+    "Monsters in the story": [0.45, 0.62]
     "Online duels": [0.88, 0.6]
     "Localization": [0.6, 0.28]
 ```

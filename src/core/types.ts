@@ -128,7 +128,9 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer';
+    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
+    // Monsters (0.26.0)
+    | 'Beast' | 'Ooze' | 'Spirit' | 'Brute';
   spriteClass: string;
   baseMove: number;
   baseJump: number;
@@ -141,6 +143,10 @@ export interface Job {
   };
   abilities: Ability[];
   prerequisites?: { jobId: string; level: number }[];
+  /** A monster (0.26.0): an enemy only, never a player's job; see data/monsters.ts. */
+  monster?: boolean;
+  /** What a monster has instead of gear traits: statuses it starts each battle with, ailments it can't get. */
+  innate?: { startStatus?: StatusEffectType[]; immune?: StatusEffectType[] };
 }
 
 export interface EquippedAbilities {

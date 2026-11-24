@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.26.0] - 2026-11-24
+
+### Added — monsters
+- **Five monsters**, enemies with bodies and abilities of their own rather than people in a job. Each is drawn in pixel art in every view and frame, with a portrait for the unit card:
+  - **Dire Wolf**: fast (Move 5) and hard-hitting. **Bite**, **Lunge** (2 tiles) and **Pack Howl** (Focus for the pack).
+  - **Wyvern**: flies over walls and cliffs (Jump 8), can't be Immobilized. **Tail Sting** (Poison), **Swoop** (3 tiles, any height) and **Wing Gust** (a small area).
+  - **Bog Ooze**: tough, starts every battle with Regen, can't be Poisoned, Blinded or put to Sleep. **Acid Touch** (Breach), **Engulf** (Immobilize) and **Bog Spit** (Poison over an area).
+  - **Marsh Wisp**: a drifting marsh-light that floats over everything and can't be Poisoned, Slept or held. **Wisp Flame** (4 tiles), **Lure** (Sleep) and **Drain Light**.
+  - **Stonehide Brute**: slow and huge, starts behind Protect. **Smash**, **Ground Pound** (every foe next to it, Immobilize) and **Hurl Boulder** (4 tiles).
+- Monsters wear no gear and know all their actions from the start. They're never a squad member's job.
+- **Howling Hollow**, a new side battle under the high pass (opens after Chapter I): a pack led by a wolf, with whatever else came down the mountain. First win: the **Wolfpelt Mantle** (HP +25, Evasion +6, Move +1, no Poison).
+- **The Trials**: from floor 3, about one enemy in three is a monster.
+- **The Workshop** can place monsters as enemies.
+
+### Developer
+- `src/data/monsters.ts`: monsters are `Job`s with `monster: true` and `innate` (start statuses, immunities). `PLAYER_JOB_IDS` and `isMonsterJob` in `data/jobs.ts`; job lists, the job tree, JP banks, recruiting and the docs' job tables use player jobs only.
+- `src/graphics/MonsterArt.ts`: monster sprites (front, back, side; six frames) and portraits; `drawSprite` and the portrait cache hand monsters to it.
+- `guardsAgainst` and `applyGearStatuses` include a monster's innate immunities and statuses.
+- Monster stats are held to the same rules as jobs: a plain blow takes 2 to 6 hits either way, and no same-level spell one-shots one (the Wisp's HP and ATK were raised to pass).
+- 6 new tests (239 total) in `tests/monsters.test.ts`. [ADR 0034](docs/adr/0034-monsters.md).
+
 ## [0.25.0] - 2026-11-24
 
 ### Added — recruiting

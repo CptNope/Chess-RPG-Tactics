@@ -2,6 +2,7 @@ import { endPerformance } from './Performance';
 import { breakCall } from './Summons';
 import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainType, Item, EquipmentSlot } from './types';
 import { JobSystem } from './JobSystem';
+import { JOBS } from '../data/jobs';
 
 export interface ReactionTrigger {
   name: string;
@@ -76,7 +77,8 @@ const STEAL_ORDER: EquipmentSlot[] = ['accessory', 'head', 'weapon', 'shield', '
 
 /** True when the unit's gear guards it against `status`. */
 export function guardsAgainst(unit: Unit, status: StatusEffectType): boolean {
-  return Object.values(unit.equipment).some((it) => it?.traits?.guard?.includes(status));
+  return Object.values(unit.equipment).some((it) => it?.traits?.guard?.includes(status))
+    || !!JOBS[unit.jobId]?.innate?.immune?.includes(status); // a monster's own immunities (0.26.0)
 }
 
 /** True when the unit's gear strengthens `element`. */

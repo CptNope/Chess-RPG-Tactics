@@ -2,7 +2,7 @@
  * 0.23.0: Master signatures, one per job, earned at job level 8 and usable once per battle in any job.
  */
 import { describe, it, expect } from 'vitest';
-import { JOBS } from '../src/data/jobs';
+import { JOBS, PLAYER_JOB_IDS } from '../src/data/jobs';
 import { SIGNATURES } from '../src/data/signatures';
 import { MapData } from '../src/data/maps';
 import { JobSystem, JOB_LEVEL_JP, MAX_JOB_LEVEL } from '../src/core/JobSystem';
@@ -27,7 +27,7 @@ function map(size = 10): BattleGrid {
 
 describe('Master signatures', () => {
   it('one per job: a free, unlearnable action of its own', () => {
-    expect(Object.keys(SIGNATURES).sort()).toEqual(Object.keys(JOBS).sort());
+    expect(Object.keys(SIGNATURES).sort()).toEqual([...PLAYER_JOB_IDS].sort());
     const jobAbilityIds = new Set(Object.values(JOBS).flatMap((j) => j.abilities.map((a) => a.id)));
     const ids = Object.values(SIGNATURES).map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);

@@ -58,6 +58,17 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     objective: { type: 'survive', rounds: 6 },
     intro: 'Raiders come up the ridge in the dark. Hold the watchfire until the garrison arrives.',
     trophy: 'watchfire_helm'
+  },
+  // Added in 0.26.0: monsters
+  hollow: {
+    id: 'hollow',
+    name: 'Howling Hollow',
+    mapId: 'zodiac_summit',
+    foe: 'Wild Beasts',
+    jobs: [['wolf', 'Pack Leader'], ['wolf', 'Dire Wolf'], ['wyvern', 'Wyvern'], ['ooze', 'Bog Ooze'], ['wisp', 'Marsh Wisp'], ['brute', 'Stonehide Brute']],
+    opensAfter: ['chapter_1'],
+    intro: 'Something has driven the beasts down from the high pass. Wolves first, by the sound of it. Stay together.',
+    trophy: 'wolfpelt_mantle'
   }
 };
 

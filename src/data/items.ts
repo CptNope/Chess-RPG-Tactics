@@ -563,6 +563,16 @@ export const ITEMS: Record<string, Item> = {
     price: 480,
     stats: { hp: 40 },
     traits: { guard: ['sleep', 'blind'] }
+  },
+  // Added in 0.26.0: the Howling Hollow's trophy
+  wolfpelt_mantle: {
+    id: 'wolfpelt_mantle',
+    name: 'Wolfpelt Mantle',
+    slot: 'body',
+    description: 'The grey pelt of the Hollow\'s pack leader. Light and warm: its wearer runs a tile further, and venom can\'t take hold.',
+    price: 560,
+    stats: { hp: 25, evasion: 6, move: 1 },
+    traits: { guard: ['poison'] }
   }
 };
 

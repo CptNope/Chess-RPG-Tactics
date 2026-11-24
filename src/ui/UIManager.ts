@@ -1,5 +1,5 @@
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainType, EquipmentSlot, StoryChoice, Item } from '../core/types';
-import { JOBS } from '../data/jobs';
+import { JOBS, PLAYER_JOB_IDS } from '../data/jobs';
 import { JobSystem, MAX_JOB_LEVEL , JOB_MASTERY, VETERAN_JOB_LEVEL, masteryLabel } from '../core/JobSystem';
 import { CONSUMABLES, MAX_STACK, Consumable, consumableAbility } from '../data/consumables';
 import { ITEMS } from '../data/items';
@@ -883,7 +883,7 @@ export class UIManager {
 
     // 1. JOBS VIEW: every job with its level; locked ones show what they need
     this.jobListEl.innerHTML = '';
-    for (const [jobId, job] of Object.entries(JOBS)) {
+    for (const [jobId, job] of Object.entries(JOBS).filter(([, j]) => !j.monster)) {
       const missing = JobSystem.missingPrerequisites(unit, jobId);
       const locked = !JobSystem.canChangeJob(unit, jobId);
       const prog = JobSystem.jobLevelProgress(unit, jobId);
@@ -957,7 +957,7 @@ export class UIManager {
       slotSecondary.parentElement.onclick = () => {
         SoundFX.playMenuBlip();
         // Only skillsets with something to offer: unlocked jobs where the unit has learned an action
-        const availableJobIds = Object.keys(JOBS).filter(
+        const availableJobIds = PLAYER_JOB_IDS.filter(
           (id) => id !== unit.jobId && JobSystem.canChangeJob(unit, id) && JOBS[id].abilities.some((a) => a.type === 'action' && unit.unlockedAbilities[a.id])
         );
         const curIdx = unit.equippedAbilities.secondaryJobId

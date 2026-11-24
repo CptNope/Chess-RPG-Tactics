@@ -114,6 +114,7 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | :--- | :--- |
 | Job, level, position | Chapter `enemyRoster` (`src/data/campaign.ts`) or `buildTrialFloor()` |
 | Boss | `isBoss` → `JobSystem.makeBoss()`: +60% HP, +15% ATK/MAG, enrage at 50% HP |
+| Monster (0.26) | A monster job: every action from level 1, no gear, innate statuses and immunities (`data/monsters.ts`) |
 | Veteran kit (level ≥ 4) | Every action in their job (grand summons from level 6, 0.24), plus a job reaction/support (Knight parry, White Mage auto-potion, Black Mage Arcane Strength, Ninja Dual Wield, Dragoon Dragonheart, Geomancer Earthen Ward) |
 
 ---
