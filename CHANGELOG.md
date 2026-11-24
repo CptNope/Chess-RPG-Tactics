@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.28.0] - 2026-11-24
+
+### Added — the Beast Tamer
+- **A new advanced job, the Beast Tamer** (needs Archer Lv 2 and Chemist Lv 2; 19 jobs, 114 abilities). A drover in a wolf-pelt hood with a whip that cracks 2 tiles out:
+  - **Tame**: win over a monster up to 2 tiles away. The more hurt it is, the likelier it gives in: 15% on an unhurt monster, up to 90% on one nearly down, +20% if it's asleep, +10% from behind. Never a boss.
+  - **Snare**: a weighted net up to 3 tiles away, light damage and Immobilize; beasts get tangled more often.
+  - **Treat**: heals an ally up to 3 tiles away, twice as much for a beast.
+  - **Soothe**: Sleep up to 3 tiles away. People often shrug it off; beasts rarely do.
+  - **Snarl** (reaction): struck in melee, a 35% chance the attacker is Slowed.
+  - **Beast Lore** (support): +25% damage to monsters, and Tame works 15% more often. Any job can wear it once learned, handy now that the story is full of monsters.
+  - **Stampede** (Master signature): a charging herd over a wide area up to 4 tiles away, heavy damage and Immobilize, more against beasts.
+  - Mastery bonus: +10 HP at job level 5, +25 at Master.
+- **Tamed monsters fight for you.** A monster won over changes sides on the spot and takes your orders for the rest of the battle (its HP bar and turn-order chip turn blue, and a ring of warm light and hearts marks the moment).
+- **Beasts join the squad.** A tamed monster still standing at the victory joins the squad under a name of its own (Fang the Dire Wolf, Gloop the Bog Ooze, Flicker the Marsh Wisp…), at its level. Beasts wear no gear (their fangs, hide and glow are their gear), know all their moves from the start, and never change jobs; they level up like anyone else. With the squad full (10), a tamed monster goes back to the wild. Beasts can be **released** at the Barracks.
+- Beast Tamers can turn up on the recruiting board after Chapter II.
+- **Drover's Whip** (ATK +5, Speed +1, reaches 2 tiles): the tamer's weapon, in the starting armory and at the market.
+- A first-time tip explains a tamed beast.
+
+### Changed
+- A tamed beast can't win a battle on its own: if everyone else in the squad falls, the battle is lost.
+
+### Developer
+- `core/Taming.ts` (`canTame`, `tameChance`, `tame`, `beastFromTamed`, `beastName`, `isBeast`, `BEAST_PREFIX`). `Ability.tame`, `Ability.beasts { hit, power }`, `Unit.tamed`, `AttackResult.tamed`, reaction type `snarl`, weapon type `whip`.
+- A beast's job is its own: `canChangeJob` and `changeJob` refuse any other, `equipItem` and save import keep gear off it.
+- A new pixel effect of our own, `local/tame` (`src/renderer/fx/tame.js`). Overhead HP bars follow a unit's team when it changes.
+- The enemy planner never tries Tame. The Trials keep their job list, so existing floors don't change.
+- 8 new tests (249 total) in `tests/tamer.test.ts`. [ADR 0036](docs/adr/0036-beast-tamer.md).
+
 ## [0.27.0] - 2026-11-24
 
 ### Added — monsters in the story

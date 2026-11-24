@@ -7,7 +7,7 @@
  * playthrough isn't taught again. "Show tips again" in Controls resets it.
  */
 export type TipId =
-  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap' | 'enemyCall';
+  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap' | 'enemyCall' | 'tamed';
 
 export const TIPS: Record<TipId, { title: string; text: string }> = {
   firstTurn: {
@@ -49,6 +49,10 @@ export const TIPS: Record<TipId, { title: string; text: string }> = {
   enemyCall: {
     title: 'A GRAND SUMMON IS COMING',
     text: 'The pulsing tiles mark where it lands, at the start of the caller\'s next turn. Move out of them, or put the caller to sleep, silence them or knock them out to break the call.'
+  },
+  tamed: {
+    title: 'A BEAST ON YOUR SIDE',
+    text: 'The tamed monster takes orders from you now. Keep it standing: if it lives to see the victory, it joins your squad. Beasts wear no gear and never change jobs.'
   },
   worldMap: {
     title: 'THE WORLD MAP',

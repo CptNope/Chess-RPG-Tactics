@@ -125,7 +125,7 @@ export function outline(canvas: HTMLCanvasElement, color = OUTLINE): void {
 // ---------------------------------------------------------------------------
 
 type Body = 'light' | 'armor' | 'robe';
-type Weapon = 'sword' | 'broadsword' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia' | 'fists' | 'dagger' | 'horn' | 'orb' | 'lute';
+type Weapon = 'sword' | 'broadsword' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia' | 'fists' | 'dagger' | 'horn' | 'orb' | 'lute' | 'whip';
 
 interface Look {
   body: Body;
@@ -182,6 +182,9 @@ function lookFor(job: string, enemy: boolean): Look {
       return { ...base, weapon: 'lute', hair: '#b45309', main: e ? '#7a1f3a' : '#6d28d9', sub: e ? '#3d0f1f' : '#facc15', trim: '#fde68a', pants: e ? '#3a1424' : '#3b2f5c', cape: e ? '#5e1616' : '#4c1d95' };
     case 'dancer':
       return { ...base, weapon: 'daggers', hair: '#5b2a14', main: e ? '#9d174d' : '#e11d48', sub: e ? '#4a0d24' : '#fbbf24', trim: '#fde68a', pants: e ? '#6b1035' : '#fb7185', boots: '#7c2d12' };
+    case 'tamer':
+      // A wolf-pelt hood and cloak over hunting greens (0.28.0)
+      return { ...base, weapon: 'whip', hair: '#7a4a22', main: e ? '#6b3a1a' : '#5f7a2e', sub: e ? '#3d200e' : '#3f5220', trim: '#e7dcc0', pants: e ? '#3a2614' : '#5b4630', boots: '#3b2a1c', cape: e ? '#4a3a32' : '#8b8f99' };
     default: // squire
       return { ...base, weapon: 'sword', main: e ? '#b83232' : '#2f6fd6', sub: e ? '#7a1f1f' : '#1d4aa8', trim: '#d9a441' };
   }
@@ -321,6 +324,25 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       p.r(x - 1, hy + 2, 14, 1, L.trim);
       if (!back) { p.px(x + 6, hy + 2, '#38bdf8'); p.r(x + 1, hy + 9, 10, 3, shade(L.main, 0.3)); }
       else p.r(x + 5, hy + 4, 3, 10, L.hair);
+      break;
+    }
+    case 'tamer': {
+      // A wolf-pelt hood, ears up and the pelt's teeth along the brow
+      const pelt = L.cape || '#8b8f99';
+      if (!back) { p.r(x, hy + 3, 3, 3, L.hair); p.r(x + 9, hy + 3, 3, 3, L.hair); }
+      p.b(x - 2, hy - 2, 16, 6, pelt);
+      p.r(x - 2, hy + 3, 3, 9, pelt); p.r(x + 11, hy + 3, 3, 9, shade(pelt, -0.15));
+      p.tri(x - 1, hy - 1, x + 1, hy - 7, x + 4, hy - 1, pelt);
+      p.tri(x + 8, hy - 1, x + 11, hy - 7, x + 13, hy - 1, pelt);
+      p.px(x + 1, hy - 4, shade(pelt, -0.4)); p.px(x + 11, hy - 4, shade(pelt, -0.4));
+      if (back) { p.r(x - 2, hy - 2, 16, 14, pelt); p.r(x + 5, hy - 2, 2, 14, shade(pelt, 0.2)); }
+      else {
+        // the wolf's own face on top: eyes, a pale muzzle and a black nose
+        p.b(x + 3, hy - 2, 6, 3, shade(pelt, 0.3));
+        p.r(x + 5, hy - 2, 2, 1, '#1f2937');
+        p.px(x + 2, hy - 1, '#1f2937'); p.px(x + 9, hy - 1, '#1f2937');
+        p.r(x - 2, hy + 3, 16, 1, shade(pelt, -0.3)); p.px(x + 2, hy + 4, '#f8fafc'); p.px(x + 9, hy + 4, '#f8fafc');
+      }
       break;
     }
     case 'archer': {
@@ -602,6 +624,28 @@ function weapon(p: Painter, L: Look, hx: number, hy: number, pose: Pose, view: '
       if (strike) { p.px(hx + 6, hy - 6, '#fff7c2'); p.px(hx + 8, hy - 9, '#fde68a'); p.px(hx + 5, hy - 13, '#ffffff'); }
       break;
     }
+    case 'whip': {
+      // A braided whip: coiled at the hip, cracking out when it strikes (0.28.0)
+      const leather = '#6b4423';
+      if (strike && view === 'side') {
+        p.r(hx, hy - 1, 2, 4, wood);
+        p.line(hx + 2, hy, hx + 10, hy - 5, leather, 2);
+        p.line(hx + 10, hy - 5, hx + 18, hy - 2, leather);
+        p.line(hx + 18, hy - 2, hx + 22, hy + 2, leather);
+        p.px(hx + 23, hy + 2, '#fff7c2'); p.px(hx + 24, hy, '#ffffff'); p.px(hx + 22, hy + 4, '#fff7c2');
+      } else if (strike) {
+        p.r(hx, hy - 1, 2, 4, wood);
+        p.line(hx + 1, hy - 1, hx + 6, hy - 10, leather, 2);
+        p.line(hx + 6, hy - 10, hx + 13, hy - 8, leather);
+        p.px(hx + 14, hy - 8, '#fff7c2'); p.px(hx + 13, hy - 10, '#ffffff');
+      } else {
+        p.r(hx, hy - 3, 2, 5, wood);
+        p.line(hx + 1, hy + 2, hx + 3, hy + 6, leather, 2);
+        p.line(hx + 3, hy + 6, hx - 2, hy + 9, leather, 2);
+        p.line(hx - 2, hy + 9, hx + 2, hy + 12, leather);
+      }
+      break;
+    }
     case 'fists': {
       // Knuckle wraps over the hand
       p.r(hx - 1, hy - 1, 4, 3, L.trim);
@@ -730,6 +774,16 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.r(hx + 1, hy, 9, 1, L.sub);
       p.line(hx + 2, hy - 2, hx - 4, hy - 9, L.trim);
       break;
+    case 'tamer': {
+      const pelt = L.cape || '#8b8f99';
+      p.b(hx - 1, hy - 2, 14, 6, pelt);
+      p.r(hx - 2, hy + 2, 5, 10, pelt);
+      p.tri(hx + 3, hy - 1, hx + 5, hy - 7, hx + 8, hy - 1, pelt);
+      p.px(hx + 5, hy - 4, shade(pelt, -0.4));
+      p.b(hx + 9, hy - 2, 5, 3, shade(pelt, 0.3)); p.px(hx + 13, hy - 2, '#1f2937'); p.px(hx + 8, hy - 1, '#1f2937');
+      p.r(hx + 8, hy + 3, 5, 1, shade(pelt, -0.3)); p.px(hx + 11, hy + 4, '#f8fafc');
+      break;
+    }
     case 'dancer':
       p.b(hx, hy - 1, 12, 4, L.hair);
       p.r(hx + 1, hy + 1, 4, 6, L.hair);
@@ -951,6 +1005,7 @@ function drawPortrait(id: string): HTMLCanvasElement {
     if (F.job === 'thief') p.line(14, 50, 46, 64, '#4a2e1c', 3);
     if (F.job === 'bard') { p.line(10, 50, 50, 64, '#8b5a2b', 3); p.r(8, 48, 48, 2, L.sub); }
     if (F.job === 'dancer') { p.tri(22, 46, 32, 56, 42, 46, shade(L.main, -0.2)); p.r(8, 60, 48, 4, L.sub); }
+    if (F.job === 'tamer') { p.b(6, 45, 52, 8, L.cape!); p.r(20, 45, 24, 2, shade(L.cape!, -0.25)); p.line(14, 52, 46, 64, '#6b4423', 3); }
   }
   // Neck
   p.b(27, 41, 10, 8, shade(F.skin, -0.18));
@@ -1072,6 +1127,21 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.line(hx + 20, hy - 4, hx + 36, hy - 22, L.trim, 3);
         p.line(hx + 22, hy - 4, hx + 38, hy - 19, '#fff7c2', 2);
         break;
+      case 'tamer': {
+        const pelt = L.cape || '#8b8f99';
+        p.b(hx - 4, hy - 4, 36, 13, pelt);
+        p.b(hx - 5, hy + 6, 7, 26, pelt); p.b(hx + 26, hy + 6, 7, 26, shade(pelt, -0.15));
+        p.tri(hx - 2, hy - 2, hx + 3, hy - 16, hx + 10, hy - 2, pelt);
+        p.tri(hx + 18, hy - 2, hx + 25, hy - 16, hx + 30, hy - 2, pelt);
+        p.tri(hx + 1, hy - 3, hx + 3, hy - 11, hx + 7, hy - 3, shade(pelt, -0.4));
+        p.tri(hx + 21, hy - 3, hx + 25, hy - 11, hx + 27, hy - 3, shade(pelt, -0.4));
+        p.b(hx + 8, hy - 6, 12, 7, shade(pelt, 0.3));
+        p.b(hx + 11, hy - 7, 6, 3, '#1f2937');
+        p.r(hx + 3, hy - 2, 3, 2, '#1f2937'); p.r(hx + 22, hy - 2, 3, 2, '#1f2937');
+        p.r(hx - 4, hy + 7, 36, 2, shade(pelt, -0.3));
+        for (const tx of [hx + 2, hx + 22]) p.tri(tx, hy + 8, tx + 2, hy + 12, tx + 4, hy + 8, '#f8fafc');
+        break;
+      }
       case 'dancer':
         p.b(hx + 9, hy - 10, 10, 12, F.hair);
         p.r(hx + 18, hy - 7, 10, 3, L.sub);

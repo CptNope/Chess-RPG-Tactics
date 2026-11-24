@@ -841,7 +841,7 @@ export class UIManager {
     this.fcHitRate.textContent = `${forecast.hitChance}%`;
     const isHeal = forecast.ability.power < 0;
     const dualText = forecast.willDualWield ? ' (×2 Dual)' : '';
-    this.fcDamage.textContent = ab.revive ? `REVIVE ${Math.round(ab.revive * 100)}% HP` : forecast.expectedDamage === 0
+    this.fcDamage.textContent = ab.tame ? (forecast.hitChance > 0 ? 'WIN IT OVER' : 'CAN\'T BE TAMED') : ab.revive ? `REVIVE ${Math.round(ab.revive * 100)}% HP` : forecast.expectedDamage === 0
       ? (forecast.ability.appliesStatus ? forecast.ability.appliesStatus.toUpperCase() : '—')
       : `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP${dualText}`;
     // A grand summon lands next turn (0.24.0): say so, and that it's on whoever stands there then
@@ -883,7 +883,9 @@ export class UIManager {
 
     // 1. JOBS VIEW: every job with its level; locked ones show what they need
     this.jobListEl.innerHTML = '';
-    for (const [jobId, job] of Object.entries(JOBS).filter(([, j]) => !j.monster)) {
+    // A beast (0.28.0) has only its own kind to show
+    const beast = !!JOBS[unit.jobId]?.monster;
+    for (const [jobId, job] of Object.entries(JOBS).filter(([id, j]) => (beast ? id === unit.jobId : !j.monster))) {
       const missing = JobSystem.missingPrerequisites(unit, jobId);
       const locked = !JobSystem.canChangeJob(unit, jobId);
       const prog = JobSystem.jobLevelProgress(unit, jobId);
@@ -1040,6 +1042,14 @@ export class UIManager {
     // Populate inventory for selected slot
     this.inventoryHeaderEl.textContent = `AVAILABLE ${this.selectedGearSlot.toUpperCase()} INVENTORY`;
     this.inventoryListEl.innerHTML = '';
+    if (beast) {
+      this.inventoryHeaderEl.textContent = 'BEASTS WEAR NO GEAR';
+      const note = document.createElement('div');
+      note.className = 'learn-item';
+      note.innerHTML = `<div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${unit.name} fights with what nature gave it: its fangs, hide or glow count as its gear. It knows all its moves already and grows stronger as it levels.</div>`;
+      this.inventoryListEl.appendChild(note);
+      return;
+    }
 
     const availableItems = getItemsForSlot(this.selectedGearSlot, this.armory.length > 0 ? this.armory : undefined);
 

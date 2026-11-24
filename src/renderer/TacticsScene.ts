@@ -890,6 +890,9 @@ export class TacticsScene {
         this.overheadHpElements.set(unit.id, barEl);
       }
 
+      // A tamed monster changes sides mid-battle (0.28.0)
+      barEl.classList.toggle('player', unit.team === 'player');
+      barEl.classList.toggle('enemy', unit.team === 'enemy');
       barEl.classList.toggle('boss', !!unit.isBoss);
       barEl.classList.toggle('enraged', !!unit.isEnraged);
 

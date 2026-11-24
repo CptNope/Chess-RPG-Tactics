@@ -12,6 +12,7 @@ import { Tutorial, TipId, TIPS } from './ui/Tutorial';
 import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize } from './ui/TextSize';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, missingTrophies, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { MERCHANT_NAME, MerchantSales, merchantVisit, merchantVisitIndex, sanitizeMerchantSales } from './core/Merchant';
+import { beastFromTamed, isBeast } from './core/Taming';
 import { LEADER_ID, MAX_SQUAD, PARTY_SIZE, RecruitHires, chooseParty, hireRecruit, isHired, recruitBoard, sanitizeParty, sanitizeRecruitHires } from './core/Recruits';
 import { CAMP_JP, pendingCamp, sanitizeCampSeen } from './data/camp';
 import { SIGNATURES } from './data/signatures';
@@ -1585,6 +1586,19 @@ class TacticsGame {
       return;
     }
 
+    // Tame (0.28.0): the monster changes sides
+    if (result.tamed) {
+      SoundFX.playTurnChime();
+      this.fx.tame(target);
+      this.scene.updateUnits(this.units);
+      this.scene.spawnFloatingDamage(target.x, h, target.z, 'TAMED!', 'heal');
+      this.ui.showBanner(`${target.name.toUpperCase()} IS TAMED!`);
+      this.ui.addLogEntry(`[TAME] ${forecast.attacker.name} wins ${target.name} over. It fights for you now${this.mode === 'custom' ? '' : ', and joins the squad if it lives to see the victory'}.`, 'reaction');
+      this.tip('tamed');
+      this.updateTimeline();
+      return;
+    }
+
     if (result.isHeal) {
       SoundFX.playHeal();
       this.fx.heal(target);
@@ -2011,7 +2025,8 @@ class TacticsGame {
 
   private checkBattleStatus(): boolean {
     if (this.battleOver) return true;
-    const playersAlive = this.units.some((u) => !u.isDead && u.team === 'player');
+    // A tamed beast fights on, but can't win the battle alone (0.28.0)
+    const playersAlive = this.units.some((u) => !u.isDead && u.team === 'player' && !u.tamed);
     let enemiesAlive = this.units.some((u) => !u.isDead && u.team === 'enemy');
     const obj = this.currentChapter.objective;
     let winText = 'VICTORY! BATTLEFIELD SECURED';
@@ -2119,6 +2134,18 @@ class TacticsGame {
     }
     if (this.stolenThisBattle.length > 0) {
       rows.push(`<div class="result-loot"><b>STOLEN:</b> ${this.stolenThisBattle.map((id) => esc(ITEMS[id].name)).join(', ')}</div>`);
+    }
+    // Tamed monsters still standing join the squad, if there's room (0.28.0)
+    if (this.mode !== 'custom') {
+      for (const t of this.units.filter((u) => u.tamed && !u.isDead)) {
+        if (this.squad.length >= MAX_SQUAD) {
+          rows.push(`<div class="result-loot"><b>TAMED:</b> ${esc(t.name)} · the squad is full (${MAX_SQUAD}), so it goes back to the wild.<br><small>Let someone go at the Barracks to make room next time.</small></div>`);
+          continue;
+        }
+        const beast = beastFromTamed(t, this.squad);
+        this.squad.push(beast);
+        rows.push(`<div class="result-loot"><b>NEW BEAST:</b> ${esc(beast.name)} the ${esc(JOBS[beast.jobId].name)} (Lv ${beast.level}) joins your squad!<br><small>Beasts wear no gear and never change jobs. Pick your party at the Barracks.</small></div>`);
+      }
     }
     if (newItems.length > 0) {
       rows.push(`<div class="result-loot"><b>NEW GEAR:</b> ${newItems.map((id) => esc(ITEMS[id].name)).join(', ')}<br><small>Equip it from ★ Team → Equipment.</small></div>`);
@@ -2320,7 +2347,7 @@ class TacticsGame {
 
   /**
    * The party screen (0.25.0). Before a battle (`go` set) it picks who fights; from the market's
-   * Barracks (`go` null) it also lets hired units be dismissed.
+   * Barracks (`go` null) it also lets hired units be dismissed, and beasts released (0.28.0).
    */
   private openParty(go: (() => void) | null, newcomer?: { id: string; name: string }, pickIn?: string[]): void {
     const seats = PARTY_SIZE - (newcomer ? 1 : 0);
@@ -2336,6 +2363,7 @@ class TacticsGame {
           <div class="party-buttons">
             ${lead ? '<span class="party-lock">LEADS</span>' : `<button data-act="toggle" class="${on ? 'primary' : ''}" aria-pressed="${on}">${on ? 'In party' : 'Reserve'}</button>`}
             ${!go && isHired(u) ? '<button data-act="dismiss">Dismiss</button>' : ''}
+            ${!go && isBeast(u) ? '<button data-act="dismiss">Release</button>' : ''}
           </div>
         </div>`;
       }).join('');
@@ -2367,7 +2395,10 @@ class TacticsGame {
         });
         card.querySelector('[data-act="dismiss"]')?.addEventListener('click', () => {
           SoundFX.playMenuBlip();
-          this.confirm(`Dismiss ${u.name}?`, `${u.name} leaves the squad for good, with their levels and JP. Their gear stays in your armory.`, 'Dismiss', () => {
+          const beast = isBeast(u);
+          this.confirm(beast ? `Release ${u.name}?` : `Dismiss ${u.name}?`, beast
+            ? `${u.name} goes back to the wild for good, with its levels.`
+            : `${u.name} leaves the squad for good, with their levels and JP. Their gear stays in your armory.`, beast ? 'Release' : 'Dismiss', () => {
             this.squad = this.squad.filter((x) => x.id !== u.id);
             pick = pick.filter((id) => id !== u.id);
             this.party = this.party?.filter((id) => id !== u.id);

@@ -296,5 +296,23 @@ export const SIGNATURES: Record<string, Ability> = {
     scalesWith: 'attack',
     centered: true,
     signature: true
+  },
+  tamer: {
+    id: 'sig_stampede',
+    name: 'Stampede',
+    jobId: 'tamer',
+    type: 'action',
+    description: 'One call and the wild answers: a charging herd tramples a wide area up to 4 tiles away. Heavy damage (ATK) and Immobilize; beasts take more.',
+    jpCost: 0,
+    mpCost: 0,
+    range: 4,
+    heightTolerance: 3.0,
+    aoe: 2,
+    power: 1.2,
+    element: 'physical',
+    appliesStatus: 'immobilize',
+    scalesWith: 'attack',
+    beasts: { power: 1.25 },
+    signature: true
   }
 };

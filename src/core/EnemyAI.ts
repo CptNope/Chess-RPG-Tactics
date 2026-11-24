@@ -164,7 +164,7 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
       score += weight * p * (ability.aoe > 0 ? 0.6 : 1);
       continue;
     }
-    if (ability.cleanse || ability.steal) continue;
+    if (ability.cleanse || ability.steal || ability.tame) continue;
 
     // Damage is valued as the share of the target's HP removed, so chip damage on a
     // healthy unit never outranks finishing off a wounded one.

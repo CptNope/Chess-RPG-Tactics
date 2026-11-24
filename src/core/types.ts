@@ -24,7 +24,7 @@ export interface ActiveStatus {
 
 export type EquipmentSlot = 'weapon' | 'shield' | 'head' | 'body' | 'accessory';
 
-export type WeaponType = 'sword' | 'spear' | 'bow' | 'staff' | 'dagger' | 'knuckles';
+export type WeaponType = 'sword' | 'spear' | 'bow' | 'staff' | 'dagger' | 'knuckles' | 'whip';
 
 /** Passive effects some gear carries on top of its stats. */
 export interface ItemTraits {
@@ -123,6 +123,10 @@ export interface Ability {
   rebirth?: number;
   /** Added to the chance to hit (0.27.0): the Wisp's Lure is easy to resist. */
   accuracy?: number;
+  /** Beast Tamer (0.28.0): wins a weakened monster over to the caster's side (see core/Taming.ts). */
+  tame?: boolean;
+  /** Beast Tamer (0.28.0): extra chance to hit, and a power multiplier, when the target is a monster. */
+  beasts?: { hit?: number; power?: number };
 }
 
 export interface Job {
@@ -132,7 +136,7 @@ export interface Job {
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
     | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
     // Monsters (0.26.0)
-    | 'Beast' | 'Ooze' | 'Spirit' | 'Brute';
+    | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer';
   spriteClass: string;
   baseMove: number;
   baseJump: number;
@@ -225,6 +229,8 @@ export interface Unit {
   calling?: { abilityId: string; x: number; z: number };
   /** Iron Will can fire only once per battle. */
   usedIronWill?: boolean;
+  /** A monster a Beast Tamer won over this battle (0.28.0): it fights for the squad and may join it. */
+  tamed?: boolean;
 }
 
 export interface CombatForecast {

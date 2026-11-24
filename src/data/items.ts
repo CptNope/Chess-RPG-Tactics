@@ -279,6 +279,16 @@ export const ITEMS: Record<string, Item> = {
     stats: { attack: 5, speed: 1, evasion: 5 },
     range: 1
   },
+  drovers_whip: {
+    id: 'drovers_whip',
+    name: 'Drover\'s Whip',
+    slot: 'weapon',
+    weaponType: 'whip',
+    description: 'A braided leather whip that cracks 2 tiles out. Beast Tamers start with one.',
+    price: 260,
+    stats: { attack: 5, speed: 1 },
+    range: 2
+  },
   moonfang: {
     id: 'moonfang',
     name: 'Moonfang',
@@ -585,7 +595,7 @@ export const STARTING_ARMORY: string[] = [
   'buckler', 'iron_helm', 'wizard_hat', 'shinobi_band',
   'chainmail', 'silk_robe', 'shinobi_garb',
   'battle_boots', 'feather_boots',
-  'iron_knuckles', 'thief_knife', 'leather_cap', 'leather_vest'
+  'iron_knuckles', 'thief_knife', 'leather_cap', 'leather_vest', 'drovers_whip'
 ];
 
 /** Pool used for random Trials of the Zodiac drops (excludes starter gear). */

@@ -22,7 +22,8 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   spellblade: { reaction: 'sb_runic', support: 'sb_arcane_edge' },
   chemist: { reaction: 'ch_field_dressing' },
   bard: { reaction: 'bd_refrain' },
-  dancer: { reaction: 'dn_captivate' }
+  dancer: { reaction: 'dn_captivate' },
+  tamer: { reaction: 'ta_snarl' }
 };
 
 /** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
@@ -54,7 +55,8 @@ export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; m
   spellblade: { stat: 'magic', veteran: 1, master: 2 },
   chemist: { stat: 'hp', veteran: 8, master: 20 },
   bard: { stat: 'mp', veteran: 8, master: 20 },
-  dancer: { stat: 'speed', veteran: 1, master: 2 }
+  dancer: { stat: 'speed', veteran: 1, master: 2 },
+  tamer: { stat: 'hp', veteran: 10, master: 25 }
 };
 const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
 /** "+10 HP", "+1 ATK"… */
@@ -178,6 +180,10 @@ export class JobSystem {
       initialGear.head = ITEMS.shinobi_band;
       initialGear.body = ITEMS.shinobi_garb;
       initialGear.accessory = ITEMS.feather_boots;
+    } else if (jobId === 'tamer') {
+      initialGear.weapon = ITEMS.drovers_whip;
+      initialGear.head = ITEMS.leather_cap;
+      initialGear.body = ITEMS.leather_vest;
     }
 
     const jobLevels: Record<string, number> = {};
@@ -269,8 +275,8 @@ export class JobSystem {
   /** True when the unit may switch to the job: its prerequisites are met, or it already holds it. */
   public static canChangeJob(unit: Unit, jobId: string): boolean {
     if (!JOBS[jobId]) return false;
-    // A monster's job is its own; nobody changes into one (0.26.0)
-    if (JOBS[jobId].monster) return unit.jobId === jobId;
+    // A monster's job is its own; nobody changes into one (0.26.0), and a beast never leaves it (0.28.0)
+    if (JOBS[jobId].monster || JOBS[unit.jobId]?.monster) return unit.jobId === jobId;
     return unit.jobId === jobId || this.missingPrerequisites(unit, jobId).length === 0;
   }
 
@@ -422,6 +428,7 @@ export class JobSystem {
   }
 
   public static equipItem(unit: Unit, item: Item): void {
+    if (JOBS[unit.jobId]?.monster) return; // beasts wear no gear (0.28.0)
     unit.equipment[item.slot] = item;
     this.recalculateDerivedStats(unit);
   }
@@ -433,6 +440,7 @@ export class JobSystem {
 
   public static changeJob(unit: Unit, newJobId: string): void {
     if (!JOBS[newJobId]) return;
+    if (JOBS[unit.jobId]?.monster && newJobId !== unit.jobId) return; // a beast stays a beast (0.28.0)
     unit.jobId = newJobId;
     unit.equippedAbilities.primaryJobId = newJobId;
     this.recalculateDerivedStats(unit);
