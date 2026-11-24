@@ -8,7 +8,7 @@ Every number here is read straight from the game data, so it always matches what
 
 ## Jobs
 
-18 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+19 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -30,14 +30,15 @@ Every number here is read straight from the game data, so it always matches what
 | **Spellblade** `spellblade` | Battlemage | 4 | 3 | 1.05× | 1.10× | 1.10× | 1.10× | 1.00× | 5 |
 | **Bard** `bard` | Troubadour | 3 | 2 | 0.85× | 1.10× | 0.80× | 1.05× | 1.05× | 6 |
 | **Dancer** `dancer` | Performer | 4 | 3 | 0.90× | 0.90× | 1.00× | 0.85× | 1.15× | 6 |
+| **Beast Tamer** `tamer` | Tamer | 4 | 3 | 1.05× | 0.80× | 1.05× | 0.80× | 1.00× | 6 |
 
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer", "Beast Tamer"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1, 1.05]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85, 0.8]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
@@ -70,6 +71,7 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 | **Spellblade** | Knight Lv 2 + Black Mage Lv 2 |
 | **Bard** | Archer Lv 2 + White Mage Lv 2 |
 | **Dancer** | Thief Lv 2 + Monk Lv 2 |
+| **Beast Tamer** | Archer Lv 2 + Chemist Lv 2 |
 
 Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
 
@@ -97,16 +99,17 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 | **Spellblade** | +1 MAG | +2 MAG | **Runic Tempest** `sig_runic_tempest` | Every rune on the blade at once: heavy lightning damage (ATK) to the target and every foe beside it, up to 2 away. | range 2, area 1 |
 | **Bard** | +8 MP | +20 MP | **Grand Finale** `sig_finale` | The last song of the night, sung once: heals you and every ally within 3 tiles, and gives them Haste. | around the user, area 3 |
 | **Dancer** | +1 Speed | +2 Speed | **Last Dance** `sig_last_dance` | One dance nobody forgets: damage (ATK) and Slow to every foe within 2 tiles of you. | around the user, area 2 |
+| **Beast Tamer** | +10 HP | +25 HP | **Stampede** `sig_stampede` | One call and the wild answers: a charging herd tramples a wide area up to 4 tiles away. Heavy damage (ATK) and Immobilize; beasts take more. | range 4, area 2 |
 
 ## Abilities
 
-108 learnable abilities: 67 actions, 18 reactions, 14 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+114 learnable abilities: 71 actions, 19 reactions, 15 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 67
-  "Reaction" : 18
-  "Support" : 14
+  "Action" : 71
+  "Reaction" : 19
+  "Support" : 15
   "Movement" : 9
 ```
 
@@ -344,9 +347,22 @@ pie showData title Abilities by slot type
 | **Captivate** `dn_captivate` | Reaction | 220 | — | — | — | — | — | — | — | When struck in melee, turn the blow into a dance: 35% chance the attacker falls asleep. |
 | **Encore** `dn_encore` | Support | 240 | — | — | — | — | — | — | — | Your songs and dances play on for 2 more turns. |
 
+### Beast Tamer
+
+*An advanced job. A drover of wild things: wears a beast down, then wins it over. A tamed monster fights for you, and joins your squad if it lives to see the victory.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Tame** `ta_tame` | Action | 80 | 8 | 2 | 2 | — | — | physical | — | Win over a monster up to 2 tiles away (never a boss). The more hurt it is, the likelier it gives in; easier asleep. It fights for you, and joins your squad if it lives to see the victory. |
+| **Snare** `ta_snare` | Action | 110 | 0 | 3 | 3 | — | 0.6 | physical | inflicts **immobilize** | Throws a weighted net up to 3 tiles away: light damage (ATK) and Immobilize. Beasts get tangled more often. |
+| **Treat** `ta_treat` | Action | 140 | 6 | 3 | 3 | — | Heal 0.7 | holy | — | Tosses an ally a trail treat up to 3 tiles away: restores HP. Twice as much for a beast. |
+| **Soothe** `ta_soothe` | Action | 180 | 10 | 3 | 3 | — | — | physical | inflicts **sleep** | A low hum up to 3 tiles away that puts a foe to Sleep. People often shrug it off; beasts rarely do. |
+| **Snarl** `ta_snarl` | Reaction | 200 | — | — | — | — | — | — | — | When struck in melee, snarl like a wolf: 35% chance the attacker is Slowed. |
+| **Beast Lore** `ta_beast_lore` | Support | 240 | — | — | — | — | — | — | — | Knows where a beast is soft: +25% damage to monsters, and Tame works 15% more often. |
+
 ## Monsters
 
-5 monsters: enemies only, never a squad member's job. They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from 3 up, and in Workshop scenarios.
+5 monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from 3 up, and in Workshop scenarios.
 
 | Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |
@@ -443,9 +459,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-61 items across five gear slots.
+62 items across five gear slots.
 
-### Weapon (23)
+### Weapon (24)
 
 | Item | Type | Range | Stats | Traits | Price | How to get |
 | :--- | :--- | :---: | :--- | :--- | ---: | :--- |
@@ -461,6 +477,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear |
 | **Tiger Claws** `tiger_claws` | knuckles | 1 | ATTACK +10, SPEED +1 | — | 480 | Trials drop |
 | **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear |
+| **Drover's Whip** `drovers_whip` | whip | 2 | ATTACK +5, SPEED +1 | — | 260 | Starting gear |
 | **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop |
 | **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop |
 | **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win FINAL CHAPTER · Trials drop |
@@ -552,10 +569,10 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 
 | Stage | Price cap | Items on the shelves |
 | :--- | ---: | ---: |
-| Before the first victory | 380 | 29 |
-| Chapter I won | 480 | 42 |
-| Chapter II won | 580 | 48 |
-| Campaign cleared / Trials | none | 51 |
+| Before the first victory | 380 | 30 |
+| Chapter I won | 480 | 43 |
+| Chapter II won | 580 | 49 |
+| Campaign cleared / Trials | none | 52 |
 
 Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle.
 
@@ -661,7 +678,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 
 | Pool | Items |
 | :--- | :--- |
-| Starting armory (17) | Iron Broadsword, Holy Dragon Lance, Longbow of the Gale, Chrono Scepter, Bronze Buckler, Steel Bascinet, Pointed Wizard Hat, Shadow Headband, Reinforced Hauberk, Astral Silk Robe, Nightwalker Tunic, Battle Greaves, Featherlight Boots, Iron Knuckles, Cutpurse Knife, Leather Cap, Leather Vest |
+| Starting armory (18) | Iron Broadsword, Holy Dragon Lance, Longbow of the Gale, Chrono Scepter, Bronze Buckler, Steel Bascinet, Pointed Wizard Hat, Shadow Headband, Reinforced Hauberk, Astral Silk Robe, Nightwalker Tunic, Battle Greaves, Featherlight Boots, Iron Knuckles, Cutpurse Knife, Leather Cap, Leather Vest, Drover's Whip |
 | Trials rare drops (36) | Platinum Blade, Kite Shield, Aegis Barrier, Platinum Plate Mail, Hermes Slippers, Gauntlet of Might, Ring of Arcana, Twin Shadow Daggers, Gaia Staff, Windslayer Bow, Crystal Helm, Wyrmscale Mail, Zodiac Ribbon, Tiger Claws, Moonfang, Halberd, Dawnbringer, Siege Crossbow, Flame Rod, Frost Rod, Storm Rod, Sage's Staff, Mirror Shield, Barbute, Sage's Circlet, Circlet of Clarity, Brawler's Gi, Summoner's Robe, Templar Mail, Verdant Charm, Warding Amulet, Purity Bangle, Sprinter's Anklet, Berserker Band, Runeblade, Oathkeeper |
 
 ## Battlefields

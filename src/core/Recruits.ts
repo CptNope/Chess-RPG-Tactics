@@ -28,7 +28,7 @@ export const HIRED_PREFIX = 'hire-';
 /** Jobs on the board, opening up as the story goes on (by chapters won). */
 export const RECRUIT_JOBS: { from: number; jobs: string[] }[] = [
   { from: 0, jobs: ['squire', 'knight', 'archer', 'black_mage', 'white_mage', 'monk', 'thief', 'chemist'] },
-  { from: 2, jobs: ['dragoon', 'geomancer', 'ninja', 'time_mage', 'oracle', 'summoner'] },
+  { from: 2, jobs: ['dragoon', 'geomancer', 'ninja', 'time_mage', 'oracle', 'summoner', 'tamer'] },
   { from: 4, jobs: ['paladin', 'spellblade', 'bard', 'dancer'] }
 ];
 
@@ -59,7 +59,8 @@ export const RECRUIT_PITCH: Record<string, string> = {
   paladin: 'An oath to the light and a shield to back it.',
   spellblade: 'Steel or sorcery? Why choose?',
   bard: 'Every company needs a song. Yours is about to get better.',
-  dancer: 'They watch my feet. They never see the blades.'
+  dancer: 'They watch my feet. They never see the blades.',
+  tamer: 'The last wolf that bit me follows me home now. Point me at the next one.'
 };
 
 export interface RecruitOffer {

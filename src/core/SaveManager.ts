@@ -67,7 +67,7 @@ export class SaveManager {
     if (!validSlot(slot)) return false;
     try {
       const saveData: GameSaveData = {
-        version: '0.27.0',
+        version: '0.28.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,
@@ -306,7 +306,8 @@ function importUnit(raw: unknown, i: number): Unit | null {
   for (const slot of ['reaction', 'support', 'movement'] as const) {
     if (knownAbility(eq[slot]) && u.unlockedAbilities[eq[slot]]) u.equippedAbilities[slot] = eq[slot];
   }
-  if (r.equipment && typeof r.equipment === 'object') {
+  // Beasts wear no gear (0.28.0)
+  if (r.equipment && typeof r.equipment === 'object' && !JOBS[jobId].monster) {
     for (const slot of Object.keys(u.equipment) as (keyof Unit['equipment'])[]) {
       const it = r.equipment[slot];
       const item = it && typeof it.id === 'string' && own(ITEMS, it.id) ? ITEMS[it.id] : undefined;

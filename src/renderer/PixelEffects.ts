@@ -13,10 +13,11 @@
 import * as THREE from 'three';
 import { EFFECTS, createFrame, clearFrame, createFx, FxFrame, FxInstance, FxModule } from '../vendor/pixelfx/registry.js';
 import * as quicken from './fx/quicken.js';
+import * as tameFx from './fx/tame.js';
 import { SUMMON_EFFECTS } from './fx/summons/index.js';
 
 /** The game's own effects, alongside the vendored library: Haste, and the summons (0.24.0). */
-const LOCAL_EFFECTS: Record<string, FxModule> = { 'local/quicken': quicken, ...(SUMMON_EFFECTS as Record<string, FxModule>) };
+const LOCAL_EFFECTS: Record<string, FxModule> = { 'local/quicken': quicken, 'local/tame': tameFx, ...(SUMMON_EFFECTS as Record<string, FxModule>) };
 
 /** Seconds into an effect at which it lands (summons say so in their meta), at speed 1. */
 export function effectImpact(id: string): number {

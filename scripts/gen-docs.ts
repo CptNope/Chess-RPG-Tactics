@@ -142,7 +142,7 @@ for (const j of jobs) {
 // ---------------------------------------------------------------- Monsters (0.26.0)
 w('## Monsters');
 w();
-w(`${monsters.length} monsters: enemies only, never a squad member's job. They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from ${TRIAL_MONSTERS_FROM} up, and in Workshop scenarios.`);
+w(`${monsters.length} monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from ${TRIAL_MONSTERS_FROM} up, and in Workshop scenarios.`);
 w();
 w('| Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to |');
 w('| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |');

@@ -163,6 +163,7 @@ flowchart LR
   | Stonehide Brute | Slow, starts behind Protect; Ground Pound hits everyone next to it | Don't crowd it; fight it from range |
 
   They live at the Howling Hollow, turn up on Trials floors from 3 on, and from Chapter II every story battle has one or two (the squad warns you about them before the fight).
+* **Tame them** (0.28). A **Beast Tamer** (Archer Lv 2 and Chemist Lv 2) can win a monster over with **Tame**, 2 tiles away. Wear it down first: an unhurt monster gives in 15% of the time, one nearly down up to 90%, and more if it's asleep (**Soothe** puts beasts to sleep easily) or you're behind it. Bosses can't be tamed. A tamed monster fights for you at once, under your orders. If it's still standing when you win, it **joins the squad** with a name of its own. Beasts wear no gear, know all their moves and never change jobs, but they level up like anyone; release one at the Barracks if you need the room. **Beast Lore** (+25% damage to monsters) is worth learning for anyone.
 * **Wenna the Pedlar** follows the squad around the realm. Once the first battle is won she sets up beside a won battlefield or a side-battle camp, and moves on after every win. She sells two things: a piece the market won't stock until after the next chapter (early, for a quarter more), and one of her own goods that nobody else sells. Walk to her pin to buy.
 * **Camp.** After each story battle the squad makes camp, and the panel offers **Sit by the fire**: a short talk between the squad, once per playthrough, worth 30 JP to everyone.
 * **Team**, **Save** and **Menu** (sound, graphics, battle speed, load, the Workshop, title screen) are in the top bar. Team works everywhere; buying and selling only at the market.
@@ -184,7 +185,7 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
   ![Team → Jobs: each job lists its two mastery bonuses, ticked once earned](images/mastery.webp)
 
-* **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Four advanced jobs, **Paladin**, **Spellblade**, **Bard** and **Dancer**, each need two other jobs.
+* **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Five advanced jobs, **Paladin**, **Spellblade**, **Bard**, **Dancer** and **Beast Tamer**, each need two other jobs.
 * **Spend your gil at Larkmoor Market** on the world map. Enemies pay bounties and every win pays a bonus. Gear you buy, the whole squad can equip. New stock arrives each time you win a chapter. In battle, **Team → Shop** shows the shelves but the market is closed.
 
   ![Larkmoor Market: supplies and gear on the BUY counter](images/market.webp)

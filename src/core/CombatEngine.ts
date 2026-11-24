@@ -2,12 +2,13 @@ import { endPerformance } from './Performance';
 import { breakCall } from './Summons';
 import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainType, Item, EquipmentSlot } from './types';
 import { JobSystem } from './JobSystem';
+import { BEAST_LORE, canTame, tame, tameChance } from './Taming';
 import { JOBS } from '../data/jobs';
 
 export interface ReactionTrigger {
   name: string;
   type: 'counter_attack' | 'auto_potion' | 'speed_save' | 'dragonheart' | 'critical_quick' | 'parry' | 'earthen_ward'
-    | 'iron_will' | 'quick_hands' | 'mana_spring' | 'hex_ward' | 'divine_grace' | 'runic' | 'refrain' | 'captivate';
+    | 'iron_will' | 'quick_hands' | 'mana_spring' | 'hex_ward' | 'divine_grace' | 'runic' | 'refrain' | 'captivate' | 'snarl';
   target: Unit;
   damage?: number;
   heal?: number;
@@ -40,6 +41,8 @@ export interface AttackResult {
   drained?: number;
   /** Gear lifted off the target by Steal. */
   stolen?: Item;
+  /** Tame won the monster over (0.28.0): it fights for the caster's side now. */
+  tamed?: boolean;
   /** The blow woke a sleeping target. */
   woke?: boolean;
   /** MP an item restored. */
@@ -87,6 +90,7 @@ function boosts(unit: Unit, element: string): boolean {
 }
 
 const has = (u: Unit, s: StatusEffectType) => u.statuses.some((x) => x.type === s);
+const isMonster = (u: Unit) => !!JOBS[u.jobId]?.monster;
 
 /** Damage scale factors. Tuned so a same-level basic attack from the front kills in 2-4 hits. */
 const PHYSICAL_SCALE = 5;
@@ -178,6 +182,8 @@ export class CombatEngine {
     // ... and a grand summon, waited a whole turn for, lands just as surely (0.24.0)
     if (ability.charge) hitChance += 30;
     if (ability.accuracy) hitChance += ability.accuracy;
+    // A Beast Tamer's craft works best on beasts (0.28.0)
+    if (ability.beasts?.hit && isMonster(target)) hitChance += ability.beasts.hit;
 
     hitChance = Math.min(100, Math.max(10, hitChance));
     // A sleeper can't dodge
@@ -185,6 +191,8 @@ export class CombatEngine {
     if (ability.steal && !this.stealableItem(target)) hitChance = 0;
     // Items always work, and do the same whoever uses them
     if (ability.item || ability.revive) hitChance = 100;
+    // Tame has its own odds: the more hurt the monster, the likelier (0.28.0)
+    if (ability.tame) hitChance = tameChance(attacker, target, facingType);
 
     let baseDamage = 0;
     if (ability.item) {
@@ -193,7 +201,7 @@ export class CombatEngine {
     } else if (ability.id === 'tm_gravity') {
       // Gravity shears 25% of current HP; bosses resist it (12%).
       baseDamage = Math.max(1, Math.round(target.currentHp * (target.isBoss ? 0.12 : 0.25)));
-    } else if ((supportive && ability.power === 0) || ability.steal) {
+    } else if ((supportive && ability.power === 0) || ability.steal || ability.tame) {
       baseDamage = 0;
       if (supportive) hitChance = 100;
     } else {
@@ -208,6 +216,9 @@ export class CombatEngine {
     if (ability.power !== 0 && ability.id !== 'tm_gravity' && ability.element !== 'physical' && boosts(attacker, ability.element)) {
       baseDamage *= 1.25;
     }
+
+    // Beast Tamer tricks hit (and treats heal) beasts harder (0.28.0)
+    if (ability.power !== 0 && ability.beasts?.power && isMonster(target)) baseDamage *= ability.beasts.power;
 
     // Zeal: a Paladin's holy strikes and heals run hotter
     if (ability.power !== 0 && ability.element === 'holy' && attacker.equippedAbilities.support === 'pa_zeal') {
@@ -225,6 +236,10 @@ export class CombatEngine {
       }
       if (attacker.equippedAbilities.support === 'geo_attack_up' && ability.element === 'physical') {
         baseDamage *= 1.2;
+      }
+      // Beast Lore: knows where a beast is soft (0.28.0)
+      if (attacker.equippedAbilities.support === BEAST_LORE && isMonster(target)) {
+        baseDamage *= 1.25;
       }
       // Brawler: fists and knuckles hit harder
       if (
@@ -426,6 +441,13 @@ export class CombatEngine {
       target.currentHp = Math.min(target.currentHp, target.maxHp);
       target.currentMp = Math.min(target.currentMp, target.maxMp);
       return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, stolen: item };
+    }
+
+    // Tame: the monster comes over to the caster's side (0.28.0)
+    if (ability.tame) {
+      if (!canTame(attacker, target)) return { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
+      tame(attacker, target);
+      return { hit: true, damageDealt: 0, isCrit: false, isHeal: false, tamed: true };
     }
 
     let appliedStatusName: string | undefined;
@@ -661,6 +683,19 @@ export class CombatEngine {
           status: 'sleep',
           label: 'SLEEP',
           description: `${target.name} turns the blow into a dance; ${attacker.name} stares, spellbound, and falls asleep!`
+        };
+      }
+      case 'ta_snarl': {
+        // A beast-taught snarl: 35% chance a melee attacker is Slowed (0.28.0)
+        if (dist > 1 || rng() * 100 > 35 || attacker.isDead || has(attacker, 'slow')) return undefined;
+        if (!this.applyStatus(attacker, 'slow')) return undefined;
+        return {
+          name: 'Snarl',
+          type: 'snarl',
+          target: attacker,
+          status: 'slow',
+          label: 'SLOW',
+          description: `${target.name} bares their teeth and snarls; ${attacker.name} falters and is Slowed!`
         };
       }
       case 'pa_divine_grace': {

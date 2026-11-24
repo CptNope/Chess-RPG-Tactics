@@ -165,6 +165,11 @@ export class BattleFx {
     this.play({ id: 'pickups/collect-burst', speed: 1.1, lift: 14 }, target);
   }
 
+  /** A monster won over by a Beast Tamer (0.28.0). */
+  public tame(target: Unit): void {
+    this.play({ id: 'local/tame', wrap: true, speed: 1.1 }, target);
+  }
+
   public enrage(boss: Unit): void {
     this.play({ id: 'status/rage', wrap: true, holdFor: 1.6 }, boss);
   }

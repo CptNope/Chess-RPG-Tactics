@@ -1950,6 +1950,118 @@ export const JOBS: Record<string, Job> = {
         element: 'physical'
       }
     ]
+  },
+
+  // Beast Tamer (0.28.0): wins monsters over; see core/Taming.ts
+  tamer: {
+    id: 'tamer',
+    name: 'Beast Tamer',
+    description: 'An advanced job. A drover of wild things: wears a beast down, then wins it over. A tamed monster fights for you, and joins your squad if it lives to see the victory.',
+    role: 'Tamer',
+    spriteClass: 'tamer',
+    baseMove: 4,
+    baseJump: 3,
+    statMultipliers: {
+      hp: 1.05,
+      mp: 0.8,
+      attack: 1.05,
+      magic: 0.8,
+      speed: 1.0
+    },
+    prerequisites: [{ jobId: 'archer', level: 2 }, { jobId: 'chemist', level: 2 }],
+    abilities: [
+      {
+        id: 'ta_tame',
+        name: 'Tame',
+        jobId: 'tamer',
+        type: 'action',
+        description: 'Win over a monster up to 2 tiles away (never a boss). The more hurt it is, the likelier it gives in; easier asleep. It fights for you, and joins your squad if it lives to see the victory.',
+        jpCost: 80,
+        mpCost: 8,
+        range: 2,
+        heightTolerance: 2.0,
+        aoe: 0,
+        power: 0,
+        element: 'physical',
+        tame: true
+      },
+      {
+        id: 'ta_snare',
+        name: 'Snare',
+        jobId: 'tamer',
+        type: 'action',
+        description: 'Throws a weighted net up to 3 tiles away: light damage (ATK) and Immobilize. Beasts get tangled more often.',
+        jpCost: 110,
+        mpCost: 0,
+        range: 3,
+        heightTolerance: 3.0,
+        aoe: 0,
+        power: 0.6,
+        element: 'physical',
+        appliesStatus: 'immobilize',
+        beasts: { hit: 20 }
+      },
+      {
+        id: 'ta_treat',
+        name: 'Treat',
+        jobId: 'tamer',
+        type: 'action',
+        description: 'Tosses an ally a trail treat up to 3 tiles away: restores HP. Twice as much for a beast.',
+        jpCost: 140,
+        mpCost: 6,
+        range: 3,
+        heightTolerance: 3.0,
+        aoe: 0,
+        power: -0.7,
+        element: 'holy',
+        beasts: { power: 2 }
+      },
+      {
+        id: 'ta_soothe',
+        name: 'Soothe',
+        jobId: 'tamer',
+        type: 'action',
+        description: 'A low hum up to 3 tiles away that puts a foe to Sleep. People often shrug it off; beasts rarely do.',
+        jpCost: 180,
+        mpCost: 10,
+        range: 3,
+        heightTolerance: 3.0,
+        aoe: 0,
+        power: 0,
+        element: 'physical',
+        appliesStatus: 'sleep',
+        accuracy: -40,
+        beasts: { hit: 60 }
+      },
+      {
+        id: 'ta_snarl',
+        name: 'Snarl',
+        jobId: 'tamer',
+        type: 'reaction',
+        description: 'When struck in melee, snarl like a wolf: 35% chance the attacker is Slowed.',
+        jpCost: 200,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'ta_beast_lore',
+        name: 'Beast Lore',
+        jobId: 'tamer',
+        type: 'support',
+        description: 'Knows where a beast is soft: +25% damage to monsters, and Tame works 15% more often.',
+        jpCost: 240,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      }
+    ]
   }
 
 };
