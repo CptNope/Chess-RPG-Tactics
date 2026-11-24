@@ -85,17 +85,30 @@ gitGraph
 | 3 | `src/renderer/BattleFx.ts` | Add or change the cue: anchor, mirror, `speed`, `startAt` (the impact time from the constants at the top of the effect file, minus ~0.15 s), `wrap` for effects that recolour the unit |
 | 4 | — | Look at it in game on High and Low, beside a 48px unit, before shipping |
 
+If nothing in the catalog fits a 48px unit (the stock Haste effect spread five tiles wide), write a small one of our own in `src/renderer/fx/` against the pixelfx core, as `quicken.js` does, and register it in `LOCAL_EFFECTS` in `PixelEffects.ts` under a `local/` id. The vendored files stay untouched.
+
 ### Add a chapter
 
 | Step | File | What to do |
 | :---: | :--- | :--- |
 | 1 | `src/data/campaign.ts` | Add a `CampaignChapter`: map, dialogue, `enemyRoster` (mark one `isBoss`), `rewardItemIds`, optional `recruit` |
 | 2 | `src/data/campaign.ts` | Point a previous chapter's `choices[].nextChapterId` at it |
+| 2a | `src/core/World.ts` | Give it a place on the world map (see below); a test fails if a chapter has none |
 | 3 | — | Tests check every map, item, job and chapter reference; `npm run docs:gen` redraws the campaign diagram |
 
 ### Add an item
 
 Add it to `ITEMS` in `src/data/items.ts`, then give it a source: `STARTING_ARMORY`, `RARE_DROP_POOL`, a chapter's `rewardItemIds`, or a choice's `rewardItemIds`. Run `npm run docs:gen`.
+
+### Add a supply (battle item)
+1. Add an entry to `CONSUMABLES` in `src/data/consumables.ts` with exactly one effect (`heal`, `mp`, `cleanse`, `revive` or `damage`), a `range`, a `price` and `stockedFrom` (0 = always, 1 = after the first victory).
+2. That's all the wiring: the Item menu, the market, saves and the content reference pick it up. A new *kind* of effect needs a flag on `Ability`, a branch in `CombatEngine.useItem`, a line in the forecast (`UIManager.showCombatForecast`) and a test in `tests/items-world.test.ts`.
+3. `npm run docs:gen`.
+
+### Add a place to the world map
+1. Add a node to `WORLD_NODES` in `src/core/World.ts` (`x` and `y` are fractions of the map, kept inside 0.05–0.95) and at least one road in `WORLD_ROADS`.
+2. A battle needs a `chapterId`; which battles are open comes from the campaign's `choices`, not from the map.
+3. Give it an icon in `paintWorld` (`src/ui/WorldMap.ts`). Check a 390px-wide phone: labels wrap under their pins.
 
 ### Add a UI control
 

@@ -33,11 +33,11 @@ flowchart LR
 
 | Guide | For | What's inside |
 | :--- | :--- | :--- |
-| **[Gameplay Guide](GAMEPLAY_GUIDE.md)** | Players | Commands, positioning, campaign map, bosses, growth, Trials, devices, tips |
+| **[Gameplay Guide](GAMEPLAY_GUIDE.md)** | Players | Commands, items, positioning, the campaign and world map, the market, bosses, growth, Trials, devices, tips |
 | **[Controls & Camera](CONTROLS_AND_CAMERA.md)** | Players · devs | Full input matrix for mouse, keyboard, touch, pen and controller; gesture state machine; responsive breakpoints; camera math |
-| **[Content Reference](CONTENT_REFERENCE.md)** | Players · designers | *Generated from the game data:* every job, ability, status, item, map, chapter and Trial floor |
+| **[Content Reference](CONTENT_REFERENCE.md)** | Players · designers | *Generated from the game data:* every job, ability, status, item, supply, map, world-map place, chapter and Trial floor |
 | **[Architecture](ARCHITECTURE.md)** | Developers | Module map, game state machine, turn sequence, action pipeline, input flow, data model, saves, build |
-| **[Combat System](COMBAT_SYSTEM.md)** | Developers · designers | CT clock, facing geometry, height, damage formulas, terrain costs, bosses, reactions, hit resolution |
+| **[Combat System](COMBAT_SYSTEM.md)** | Developers · designers | CT clock, facing geometry, height, damage formulas, terrain costs, bosses, reactions, hit resolution, items |
 | **[Job & Ability System](JOB_SYSTEM.md)** | Developers · designers | Five slots, jobs at a glance, prerequisites, EXP/JP/levels, effective stats, armory |
 | **[Enemy AI](ENEMY_AI.md)** | Developers | Planner search, scoring table, guarantees, known limits |
 | **[Testing](TESTING.md)** | Developers | CI layers, unit test map, browser play-tests, release checklist |
@@ -65,6 +65,7 @@ timeline
     0.12.0 : 0020 itch.io distribution
     0.13.0 : 0021 Ability flags, statuses, gear traits
     0.14.0 : 0022 Job tree, gil economy
+    0.15.0 : 0023 Items, world map, market
 ```
 
 | # | Decision | Release |
@@ -90,6 +91,7 @@ timeline
 | [0020](adr/0020-itch-io-distribution.md) | Distributing on itch.io from the same build: package checks, bundled fonts, title screen, platform detection, butler | 0.12.0 |
 | [0021](adr/0021-data-driven-abilities-statuses-and-gear-traits.md) | Data-driven ability flags, statuses and gear traits for the Monk, Thief, Summoner and Oracle; one source for veteran kits | 0.13.0 |
 | [0022](adr/0022-job-tree-and-gil-economy.md) | Job levels from lifetime JP, an enforced job tree, a shared-armory shop with price-cap tiers, status pips | 0.14.0 |
+| [0023](adr/0023-items-world-map-and-market.md) | Consumables resolved as abilities by the one engine, a world map as the hub between missions (branch by marching), trading only at the market, selling | 0.15.0 |
 | [0019](adr/0019-pixel-art-effects-and-path-walking.md) | Pixel-art battle effects (pixelfx), path walking, Workshop strokes, balance sim (replaces 0012's spell particles) | 0.11.0 |
 
 New ADRs use the template in [Contributing](../CONTRIBUTING.md#adr-template).

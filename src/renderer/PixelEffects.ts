@@ -11,7 +11,11 @@
  * rate (30 fps), like hand-drawn animation, whatever the display's refresh rate.
  */
 import * as THREE from 'three';
-import { EFFECTS, createFrame, clearFrame, createFx, FxFrame, FxInstance } from '../vendor/pixelfx/registry.js';
+import { EFFECTS, createFrame, clearFrame, createFx, FxFrame, FxInstance, FxModule } from '../vendor/pixelfx/registry.js';
+import * as quicken from './fx/quicken.js';
+
+/** The game's own effects, alongside the vendored library. */
+const LOCAL_EFFECTS: Record<string, FxModule> = { 'local/quicken': quicken };
 
 /** World units per effect pixel (matches the 48px unit sprites drawn on 1.35-unit planes). */
 export const FX_PIXEL = 1.35 / 48;
@@ -135,7 +139,7 @@ export class PixelEffects {
 
   /** Starts an effect whose origin sits at `pos` (a tile's surface under a unit's feet). */
   public play(id: string, pos: THREE.Vector3, o: PlayOptions = {}): void {
-    const mod = EFFECTS[id];
+    const mod = EFFECTS[id] ?? LOCAL_EFFECTS[id];
     if (!mod) return;
     while (this.live.length >= MAX_LIVE) this.dispose(this.live.shift()!);
 

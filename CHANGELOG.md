@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.0] - 2026-11-23
+
+### Added — items in battle
+- **ITEM command** (key **5** or **I**). Six supplies, shared by the squad and used up one at a time: **Potion** (80 HP), **Hi-Potion** (200 HP), **Ether** (40 MP), **Remedy** (cures every ailment), **Phoenix Feather** (raises a fallen ally at a quarter HP) and **Blast Flask** (70 fire damage to a target and every foe beside it, thrown up to 3 tiles). Using one is your action for the turn.
+- **Items never miss** and do a fixed amount in anyone's hands. They ignore facing, don't crit and draw no reaction. The forecast says what the item will do.
+- **Fallen allies can be raised.** A marker with the unit's name stays over the tile where an ally fell, so you can see where to use a Phoenix Feather. Nobody else can be standing there.
+- A new squad carries 3 Potions and a Phoenix Feather. You can hold 9 of each.
+
+### Added — the world map
+- **Between missions the squad stands on a world map** of the realm: Larkmoor Market, the four battlefields, and the Gate of Trials, joined by roads. Select a place to walk there, then act on it from the panel.
+- **The story branch is now a march.** After Chapter I both roads lie open; the panel shows each one's orders and the gear it brings. Marching down one closes the other.
+- **Defeat no longer traps you in a battle.** The defeat screen offers **World Map**: restock, change jobs and march again when ready. The battle waits for you.
+- **The Trials are entered from the map**, and after each floor you can go on or step back out to the market.
+- The game saves whenever you reach the map, and **Continue** puts you back on it where you stood. Team, Save and the Menu (sound, graphics, load, Workshop, title screen) are in the map's top bar.
+- Works with mouse, touch, pen, keyboard and controller, on phones in both orientations.
+
+### Added — buying and selling
+- **The shop is now Larkmoor Market**, a place on the world map, with **BUY** and **SELL** counters. In battle the Shop tab still lists everything, but you can only trade at the market.
+- **Supplies** are sold alongside gear. Potions, Remedies and Phoenix Feathers are always stocked; Hi-Potions, Ethers and Blast Flasks arrive after the first victory.
+- **Sell** spare gear and supplies for half price. Gear someone is wearing has to come off first, and the three relics are never sold.
+- New stock now arrives the moment a chapter is won, so it's on the shelves when you first walk in.
+
+### Fixed
+- **Haste played away from the unit.** The effect's streaks spread several tiles wide and read as happening somewhere else. Haste now has its own effect that hugs the unit: flickering after-images, rising streaks at its sides and a ring at its feet. **Focus** had the same problem and now uses an on-unit effect too.
+- Long lists in the action menu (many abilities or items) squashed their rows so descriptions spilled into the next row. Rows keep their height and the list scrolls.
+- The action menu closes when a battle ends.
+- Banners now show above menus and the map instead of behind them.
+
+### Changed
+- The choice screen after Chapter I and II is replaced by the world map.
+- The epilogue offers **World Map** first; **Next Trial** is joined by **World Map** in place of the save-and-continue button (reaching the map saves).
+- Old saves load as before, straight into their battle, with the starting supplies added. The chapters already behind them show as won on the map.
+
+### Developer
+- `src/data/consumables.ts` (`CONSUMABLES`, `consumableAbility`, `sanitizeInventory`, `consumableStock`): an item is turned into an `Ability` with `item`, `fixedHeal`, `fixedMp`, `fixedDamage`, `revive` or `cleanse`, and resolved by `CombatEngine.useItem` through the usual forecast and execute calls.
+- `src/core/World.ts` holds the map's rules with no DOM (`openMissions`, `nodeState`, `route`, `sanitizeCleared`); `src/ui/WorldMap.ts` draws it. The island is painted in code onto a 320×180 canvas: still no image files.
+- `Economy.gearSaleBlock`; `shopProgress` takes a fourth argument (the current chapter is won). Saves gained `inventory`, `clearedChapters`, `onWorldMap` and `worldLocation`.
+- `src/renderer/fx/quicken.js`: the game's own Haste effect, written against the vendored pixelfx core.
+- The generated content reference gained supplies and world-map tables.
+- 24 new tests (119 total) in `tests/items-world.test.ts`. [ADR 0023](docs/adr/0023-items-world-map-and-market.md).
+
 ## [0.14.0] - 2026-11-23
 
 ### Added — the job tree

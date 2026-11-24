@@ -57,7 +57,9 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 - **Real tactics.** Speed decides who moves next, not teams. Hit from behind for big damage, take the high ground for range, mind water and swamp.
 - **Fifteen jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin and Spellblade as your units level their jobs. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
 - **Steal their gear.** Thieves lift weapons and trinkets straight off enemies into your armory. Over 50 pieces of gear, some with traits: start battles with Regen, boost an element, or ward off Sleep and Silence.
-- **A shop that grows with the story.** Bounties and battle wins pay gil; one purchase outfits the whole squad.
+- **A world map between battles.** Walk the realm, choose which road the story takes, and fall back to regroup after a defeat.
+- **A market that grows with the story.** Bounties and wins pay gil. Buy gear that outfits the whole squad, sell what you don't need, and stock up on supplies.
+- **Items in battle.** Potions, Ethers, Remedies, Blast Flasks, and Phoenix Feathers to raise fallen allies.
 - **A branching campaign** across 16×16 battlefields, with a recruit, story choices, and bosses that enrage at half health.
 - **Trials of the Zodiac:** endless seeded floors with rare gear and a Warden boss every fifth floor, plus New Game+.
 - **The Workshop:** sculpt terrain, place enemies and bosses, write the dialogue, pick a goal (rout them, defeat the boss, or survive N rounds), then play it or share it as a link.
@@ -70,13 +72,13 @@ Phone, tablet or desktop, in portrait or landscape. Mouse, keyboard, touch, pen 
 | | Keyboard | Controller | Touch |
 | :--- | :--- | :--- | :--- |
 | Move cursor / choose | Arrows + Enter | D-pad + A | Tap |
-| Commands | 1 Move · 2 Act · 3 Wait · 4 Auto | X | Command bar |
+| Commands | 1 Move · 2 Act · 3 Wait · 4 Auto · 5 Item | X | Command bar |
 | Back | Esc | B | Two-finger tap |
 | Camera | Q / E rotate, + / − zoom, WASD pan | Bumpers, triggers, right stick | Twist, pinch, drag |
 | Fullscreen | F | | Fullscreen button |
 
 ### Saves
-Progress saves in your browser (Menu → Save, plus an autosave at each chapter). It survives game updates on this page. Private or incognito windows don't keep it.
+Progress saves in your browser (Menu → Save, plus an autosave at each chapter and whenever you reach the world map). It survives game updates on this page. Private or incognito windows don't keep it.
 
 ### Free and open
 The game is free, and the code is open source under the MIT licence on [GitHub](https://github.com/CptNope/Chess-RPG-Tactics). If you enjoy it, a donation helps more games get made.

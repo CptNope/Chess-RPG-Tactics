@@ -20,7 +20,9 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | :--- | :--- |
 | **Tactics** | Speed-based turn order (CT), front / flank / back attacks, height advantage, terrain movement costs, area spells |
 | **Squad building** | 15 jobs on a job tree (jobs level up and unlock advanced jobs), 86 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
-| **Gear & gil** | 54 pieces of gear, some with traits; earn gil from battles and spend it in the shop; steal gear off enemies |
+| **Gear & gil** | 54 pieces of gear, some with traits; earn gil from battles; buy and sell at the market; steal gear off enemies |
+| **Items** | Potions, Ethers, Remedies, Phoenix Feathers and Blast Flasks, used in battle with the Item command |
+| **World map** | Between missions the squad walks a map of the realm: visit the market, pick which road the story takes, enter the Trials |
 | **Campaign** | A branching campaign (four chapters, three per playthrough) on 16×16 battlefields, with a recruit, boss fights with enrage phases, and gear rewards |
 | **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters. **AUTO** lets it play your turn |
@@ -32,6 +34,11 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 <p>
   <img src="docs/images/phone-portrait.webp" alt="Phone layout" width="200">
   <img src="docs/images/summit.webp" alt="Zodiac Summit final battle" width="560">
+</p>
+
+<p>
+  <img src="docs/images/world-map.webp" alt="The world map: the squad at Night Battlement, with the market, the other battlefields and the Gate of Trials" width="380">
+  <img src="docs/images/items.webp" alt="The Item command in battle: potions, an ether, a remedy and a phoenix feather" width="380">
 </p>
 
 <p>
@@ -85,7 +92,7 @@ Press **H**, the **?** button, or **View/Back** on a controller for the in-game 
 | **Pen** | Tap (hover previews) | Eraser / barrel button | Drag | — | ⟲ ⟳ buttons |
 | **Controller** | D-pad + A | B | Right stick | LT / RT | LB / RB |
 
-Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `R` re-center · `J` Team · `L` Log · `H` Controls. Full matrix: **[Controls & Camera](docs/CONTROLS_AND_CAMERA.md)**.
+Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` Item · `R` re-center · `J` Team · `L` Log · `H` Controls. Full matrix: **[Controls & Camera](docs/CONTROLS_AND_CAMERA.md)**.
 
 ---
 
@@ -94,7 +101,7 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `R` re-ce
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 95 rule tests
+npm test             # 119 rule tests
 npm run build        # type-check + production build
 npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
 npm run balance      # headless AUTO battles: win rate per chapter

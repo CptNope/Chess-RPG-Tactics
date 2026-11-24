@@ -13,7 +13,7 @@ Every action is reachable from **mouse, keyboard, touch, pen and controller**. A
 | Select tile / unit | Click | Arrows + `Enter`/`Space` | Tap | Tap | D-pad / left stick + **A** |
 | Preview tile | Hover | Arrows | Tap | Hover | D-pad / left stick |
 | Cancel / back | `CANCEL` / × buttons | `Esc` | Two-finger tap | Eraser or barrel button + tap | **B** |
-| Command menu | Click | `1` Move · `2` Act · `3` Wait · `4`/`T` Auto | Tap | Tap | **X**, then d-pad + **A** |
+| Command menu | Click | `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` Item | Tap | Tap | **X**, then d-pad + **A** |
 | Move between menu buttons | — | Arrows, `Tab` | — | — | D-pad / left stick |
 | Pan camera | Left-drag, right/middle-drag | `W` `A` `S` `D` | One-finger drag | Drag | Right stick |
 | Zoom | Wheel, trackpad pinch | `+` / `-` | Pinch | — | **LT** out / **RT** in |
@@ -23,6 +23,8 @@ Every action is reachable from **mouse, keyboard, touch, pen and controller**. A
 | Battle log | Log button | `L` | Log button | Log button | via Menu |
 | Menu (map, sound, save, load, Workshop) | Menu button | — | Menu button | Menu button | **Start** |
 | Controls help | ? button | `H` / `?` | ? button | ? button | **View / Back** |
+| World map: go to a place | Click it | Arrows to it, `Enter` | Tap it | Tap it | D-pad to it, **A** |
+| World map: act there (march, shop, enter) | Panel button | `Enter` (focus lands on it after the walk) | Panel button | Panel button | **A** |
 
 Notes:
 * **Arrow keys and the d-pad are context-aware.** With a menu, modal, forecast or facing picker open (or a HUD button focused), they move focus between buttons. Otherwise they move the tile cursor. "Up" moves along the grid axis that points toward the top-right of the screen for the current camera angle.
@@ -32,6 +34,7 @@ Notes:
 * Controllers use the standard Gamepad mapping (Xbox, PlayStation, Switch Pro, 8BitDo…). Held directions repeat after 320ms every 110ms. Crits and boss enrage trigger a short rumble where the browser supports it.
 * Hotkey badges on the command buttons appear only while you're using a keyboard; the dialogue hint says "Tap", "Press A" or "Press Enter" to match your input.
 * Modals trap `Tab`, restore focus when closed, and every HUD control has a visible gold focus ring.
+* **The world map (0.15) is one more focus layer.** Its places are real buttons laid over the painted map, so arrows and the d-pad move between places and the top bar by position, the same way they move between menu buttons. After the squad walks somewhere, focus lands on that place's main action. The camera keys do nothing there.
 
 ### Workshop controls (0.10.0)
 

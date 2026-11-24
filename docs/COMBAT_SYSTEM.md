@@ -211,3 +211,37 @@ flowchart TD
 | Attacker higher | +5 | ×1.10 (physical) |
 | Level | — | — |
 | Attacker lower | −10 | — |
+
+---
+
+## 9. Items (0.15.0)
+
+The **ITEM** command spends one supply from the squad's shared inventory as the unit's action. An item is turned into an ordinary `Ability` (`consumableAbility`) and goes through the same `getForecast` → `executeAttack` calls, where `ability.item` routes it to `CombatEngine.useItem`.
+
+| Supply | Flag | Effect | Reach | Targets |
+| :--- | :--- | :--- | :---: | :--- |
+| Potion | `fixedHeal: 80` | +80 HP | 2 | A living ally (or yourself) |
+| Hi-Potion | `fixedHeal: 200` | +200 HP | 2 | A living ally |
+| Ether | `fixedMp: 40` | +40 MP | 2 | A living ally |
+| Remedy | `cleanse` | Removes every ailment | 2 | A living ally |
+| Phoenix Feather | `revive: 0.25` | Raises at 25% max HP, statuses cleared, CT 0 | 2 | A **fallen** ally, on a tile nobody else stands on |
+| Blast Flask | `fixedDamage: 70`, area 1 | 70 fire damage to each foe in the blast | 3 | Foes; never allies |
+
+```mermaid
+flowchart TD
+    I(["ITEM → pick a supply → pick a tile"]) --> V{"Anyone it can help or hurt<br/>on that tile (or in the blast)?"}
+    V -- no --> N(["NO EFFECT, nothing spent"])
+    V -- yes --> F["Forecast: 100% hit, the item's fixed amount"]
+    F --> U["useItem: revive · cleanse · MP · damage · heal"]
+    U --> S["One supply spent · the unit has acted"]
+```
+
+Rules that differ from abilities:
+
+* **Always hits.** No hit roll, no crit, no facing or height modifier, no Protect / Shell / Breach, no element boost. The amount is the same whoever uses it.
+* **No reactions.** Weapon Guard, Counter and the rest don't answer an item. A Blast Flask still **wakes** a sleeper and can trigger a boss's **enrage**.
+* **The whole blast is fixed:** unlike area spells, the ring takes the full 70.
+* **Revive** is the only action that can target the fallen. A raised unit keeps its position and facing and acts when its CT next fills.
+* **No JP and no EXP for using an item**, so healing with potions doesn't train a job the way casting Cure does. A Blast Flask that fells a foe still earns the kill's EXP.
+* **The AI never uses items**, for either side: AUTO won't spend your supplies, and enemies carry none.
+

@@ -75,6 +75,8 @@ export class TacticsScene {
   /** Paths queued by the game just before it moves a unit (consumed when the tile change is seen). */
   private queuedPaths: Map<string, { x: number; z: number }[]> = new Map();
   private overheadHpElements: Map<string, HTMLElement> = new Map();
+  /** Markers where the player's fallen units lie, so they can be found and raised. */
+  private fallenMarkers: Map<string, HTMLElement> = new Map();
 
   // Highlight overlays (pooled)
   private highlightGroup: THREE.Group = new THREE.Group();
@@ -885,9 +887,38 @@ export class TacticsScene {
     }
   }
 
+  /** Keeps a small marker over each fallen player unit (a Phoenix Feather needs to know where they lie). */
+  private updateFallenMarkers(): void {
+    const fallen = new Set<string>();
+    for (const unit of this.currentUnits) {
+      if (!unit.isDead || unit.team !== 'player') continue;
+      fallen.add(unit.id);
+      let el = this.fallenMarkers.get(unit.id);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'unit-fallen-marker';
+        el.textContent = `✝ ${unit.name}`;
+        this.floatingTextContainer.appendChild(el);
+        this.fallenMarkers.set(unit.id, el);
+      }
+      this.tempScreenPos.set(unit.x, this.grid.getHeight(unit.x, unit.z) + 0.45, unit.z);
+      this.tempScreenPos.project(this.camera);
+      const x = ((this.tempScreenPos.x + 1) * window.innerWidth) / 2;
+      const y = ((-this.tempScreenPos.y + 1) * window.innerHeight) / 2;
+      el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+    }
+    for (const [id, el] of this.fallenMarkers) {
+      if (!fallen.has(id)) {
+        el.remove();
+        this.fallenMarkers.delete(id);
+      }
+    }
+  }
+
   private animateUnits(now: number): void {
     const time = now * 0.0035;
     this.activeRing.visible = false;
+    this.updateFallenMarkers();
 
     for (const unit of this.currentUnits) {
       if (unit.isDead) continue;

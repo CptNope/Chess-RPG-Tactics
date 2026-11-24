@@ -180,7 +180,7 @@ Some gear carries a **trait** on top of its stats (`Item.traits`):
 
 The Thief's **Steal** takes one piece of an adjacent foe's gear (accessory first, then head, weapon, shield, body) and adds it to your armory if you don't have one. The foe loses its stats. It's harder than a blow (−25 hit, −45 against a boss) and, like any attack, easier from the side or behind. Gear stolen in a battle is listed on the spoils screen.
 
-### Gil and the shop (0.14)
+### Gil and the market (0.14, 0.15)
 
 | Source | Gil |
 | :--- | :--- |
@@ -188,8 +188,15 @@ The Thief's **Steal** takes one piece of an adjacent foe's gear (accessory first
 | Defeated enemy | 20 + 10 × level (×3 for a boss) |
 | Battle won | +150 (campaign), +100 + 20 × floor (Trials) |
 | Stealing gear you already own | half its price |
+| Selling at the market (0.15) | half its price |
 | Workshop battles | none |
 
-**Team → Shop** sells gear for the armory; one purchase outfits the whole squad. The shelves grow with the campaign: items up to 380 gil in Chapter I, 480 in Chapter II, 580 in the Final Chapter, and everything after the campaign is cleared or in the Trials. The Zodiac Blade, Zodiac Ribbon and Wyrmscale Mail are never sold. Rules live in `src/core/Economy.ts`.
+**Larkmoor Market** on the world map sells gear for the armory; one purchase outfits the whole squad. (Team → Shop shows the shelves anywhere, but trades only at the market.) The shelves grow with the campaign, the moment each chapter is won: items up to 380 gil before the first victory, 480 after Chapter I, 580 after Chapter II, and everything after the campaign is cleared or in the Trials. The Zodiac Blade, Zodiac Ribbon and Wyrmscale Mail are never sold. Rules live in `src/core/Economy.ts`.
+
+**Selling (0.15).** The market's SELL counter pays half price for spare gear and supplies. An item leaves the armory when sold, so `gearSaleBlock` refuses anything a squad member is wearing ("Worn by Rowan") and the three relics.
+
+### Supplies (0.15)
+
+Consumables are not gear: they sit in a shared inventory (`Record<id, count>`, at most 9 of each), are bought and sold at the market, and are used in battle with the **ITEM** command. A new squad carries 3 Potions and a Phoenix Feather. [Full table](CONTENT_REFERENCE.md#supplies); how they resolve is in [Combat](COMBAT_SYSTEM.md#9-items-0150).
 
 The gear tab lists only items in the squad's **armory**. You start with 17 items. Chapter wins, branch choices and Trials drops add more ([where each item comes from](CONTENT_REFERENCE.md#items)). Any number of units can equip the same item.

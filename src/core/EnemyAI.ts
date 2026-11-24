@@ -40,7 +40,7 @@ export function faceTowards(x: number, z: number, tx: number, tz: number): Facin
 export function unitsInBlast(caster: Unit, ability: Ability, cx: number, cz: number, units: Unit[]): Unit[] {
   const supportive = CombatEngine.isSupportive(ability);
   return units.filter((u) => {
-    if (u.isDead) return false;
+    if (u.isDead !== !!ability.revive) return false;
     const dist = Math.abs(u.x - cx) + Math.abs(u.z - cz);
     if (dist > ability.aoe) return false;
     return supportive ? u.team === caster.team : u.team !== caster.team;

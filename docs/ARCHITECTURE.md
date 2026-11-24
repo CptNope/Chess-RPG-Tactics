@@ -24,11 +24,12 @@ flowchart TB
         direction LR
         TM["TurnManager"] ~~~ Grid["BattleGrid"] ~~~ CE["CombatEngine"] ~~~ JS["JobSystem"]
         AI["EnemyAI"] ~~~ Geo["Geomancy"] ~~~ Tr["Trials"] ~~~ Save["SaveManager"] ~~~ Scn["Scenario"]
+        Eco["Economy"] ~~~ Wld["World"]
     end
 
     subgraph Data["Content · src/data"]
         direction LR
-        Jobs["jobs"] ~~~ Items["items"] ~~~ Maps["maps"] ~~~ Camp["campaign"]
+        Jobs["jobs"] ~~~ Items["items"] ~~~ Cons["consumables"] ~~~ Maps["maps"] ~~~ Camp["campaign"]
     end
 
     subgraph View["Presentation"]
@@ -55,6 +56,10 @@ flowchart TB
 | **Geomancy** | `src/core/Geomancy.ts` | Terrain → spell mapping | types |
 | **Trials** | `src/core/Trials.ts` | Seeded floor generator, drops | data |
 | **SaveManager** | `src/core/SaveManager.ts` | Save/load, best Trial floor | — |
+| **Economy** | `src/core/Economy.ts` | Bounties, shop tiers, resale value, what can't be sold | data |
+| **World** | `src/core/World.ts` | The world map's places and roads; which battles are open, cleared or locked; routes; cleared-chapter lists for old saves | data |
+| **WorldMap** | `src/ui/WorldMap.ts` | Draws the map (a painted 320×180 canvas with real buttons over it), walks the party marker, shows what the current place offers. Talks to the game through a small `WorldHost` interface | World, CharacterArt |
+| **consumables** | `src/data/consumables.ts` | The six supplies; turns one into an `Ability` for the engine; clamps saved inventories | types |
 | **Scenario** | `src/core/Scenario.ts` | Workshop scenario format: create, copy, sanitise untrusted input, validate, turn into a chapter, share-link encoding, library | data |
 | **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor | Grid, VFX, PixelTextures |
 | **Atmosphere** | `src/renderer/Atmosphere.ts` | Per-map presets: sky gradient, fog, hemisphere/sun/rim lights, exposure, bloom, torch colour | — |
@@ -103,8 +108,9 @@ stateDiagram-v2
     editor --> dialogue: Play scenario
     menu --> editor: Back to Workshop
     busy --> menu: victory / defeat
-    menu --> dialogue: next chapter
-    menu --> busy: retry / next Trial
+    menu --> menu: spoils → world map
+    menu --> dialogue: march to a chapter
+    menu --> busy: retry / next Trial / enter the Trials
 ```
 
 | Mode | Battlefield taps | Arrows / d-pad | Confirm (Enter / A) | Cancel (Esc / B) |
@@ -116,6 +122,21 @@ stateDiagram-v2
 | `facing` | — | Move focus on compass | Pick / confirm | Back out unless forced |
 | `editor` | Apply the Workshop tool | Move cursor (or panel focus) | Apply tool at cursor | Leave panel, then close Workshop |
 | `busy` / `menu` | — | Modal focus only | Modal buttons | — |
+
+The **world map** is not a mode of its own: it is shown while `currentMode` is `menu` and `world.isOpen` is true. `UIManager.activeLayer()` lists it under the modals, so the Team screen, the system menu and result screens take focus over it, and the 3D scene isn't rendered while it covers the battlefield.
+
+```mermaid
+flowchart LR
+    Win(["Victory → spoils → dialogue"]) --> Map["World map<br/>(autosave)"]
+    Lose(["Defeat"]) -->|"World Map"| Map
+    Lose -->|"Retry"| Battle
+    Map -->|"walk to the market"| Shop["Team → Shop<br/>buy · sell"] --> Map
+    Map -->|"March to battle<br/>(branch reward applied)"| Battle(["loadChapter"])
+    Map -->|"Gate of Trials"| Trial(["startTrial"])
+    Win -->|"final chapter"| Epi["Epilogue"] --> Map
+    Battle --> Win & Lose
+    Trial --> Win & Lose
+```
 
 ---
 
@@ -298,18 +319,20 @@ classDiagram
 
 ```mermaid
 flowchart LR
-    Save["Save button · chapter start · each Trial"] --> SM["SaveManager.saveGame()"]
+    Save["Save button · chapter start · reaching the world map"] --> SM["SaveManager.saveGame()"]
     SM --> LS[("localStorage<br/>chess_rpg_tactics_save_v1")]
     LS --> Load["Load button / Defeat → Load Save"]
     Load --> Hydrate["Re-hydrate gear from ITEMS<br/>rebuild armory for 0.6 saves"]
-    Hydrate --> Mode{"mode"}
+    Hydrate --> OnMap{"onWorldMap?"}
+    OnMap -- yes --> World["openWorldMap(worldLocation)"]
+    OnMap -- no --> Mode{"mode"}
     Mode -- campaign --> Chapter["setupBattle(chapter)"]
     Mode -- trials --> Trial["startTrial(floor)"]
 ```
 
 | Key | Contents |
 | :--- | :--- |
-| `chess_rpg_tactics_save_v1` | `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared }` |
+| `chess_rpg_tactics_save_v1` | `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared, gil, inventory, clearedChapters, onWorldMap, worldLocation }`. Every field after `units` is optional and filled in on load, so saves from any earlier version still open |
 | `chess_rpg_tactics_best_trial_v1` | Highest Trial floor cleared |
 | `chess_rpg_tactics_workshop_v1` | Workshop library: up to 50 scenarios, newest first, each re-sanitised on load |
 | `chess_rpg_tactics_graphics_v1` | Graphics setting (auto / high / medium / low) |
@@ -390,16 +413,18 @@ src/
 │   ├── Geomancy.ts         Terrain spells
 │   ├── Trials.ts           Seeded post-game floors
 │   ├── SaveManager.ts      localStorage
+│   ├── Economy.ts          Gil, shop tiers, resale
+│   ├── World.ts            World map rules: places, roads, open battles
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
-├── data/                   Content: jobs, items, maps, campaign
+├── data/                   Content: jobs, items, consumables, maps, campaign
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
 │                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality
 ├── vendor/pixelfx/         Third-party pixel effects (MIT), unchanged + our registry
 ├── graphics/               PixelTextures, CharacterArt (sprites + portraits)
-├── ui/                     UIManager, Workshop
+├── ui/                     UIManager, Workshop, WorldMap
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core.test.ts (33 rule tests), scenario.test.ts (11)
+tests/                      core, scenario, jobs-gear, progression, items-world (119 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts
 docs/                       This documentation + ADRs
 ```

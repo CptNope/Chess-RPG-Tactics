@@ -4,7 +4,7 @@
 
 Every number here is read straight from the game data, so it always matches what ships.
 
-**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Shop](#shop--gil) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
+**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
 
 ## Jobs
 
@@ -386,18 +386,63 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Sprinter's Anklet** `sprinter_anklet` | MOVE +1, JUMP +1 | — | 620 | Trials drop |
 | **Berserker Band** `berserker_band` | ATTACK +7, EVASION -5 | — | 460 | Trials drop |
 
+## Supplies
+
+Used in battle with the **ITEM** command; one is spent each time. The squad shares them and can carry 9 of each. A new squad starts with 3 × Potion and 1 × Phoenix Feather. Items always hit and do a fixed amount.
+
+| Supply | Effect | Reach | Area | Buy | Sell | Stocked |
+| :--- | :--- | :---: | :---: | ---: | ---: | :--- |
+| **Potion** `potion` | Restores 80 HP | 2 | — | 40 | 20 | Always |
+| **Remedy** `remedy` | Cures every ailment | 2 | — | 60 | 30 | Always |
+| **Blast Flask** `blast_flask` | 70 fire damage to each foe hit | 3 | 1 | 110 | 55 | After the first victory |
+| **Ether** `ether` | Restores 40 MP | 2 | — | 120 | 60 | After the first victory |
+| **Hi-Potion** `hi_potion` | Restores 200 HP | 2 | — | 150 | 75 | After the first victory |
+| **Phoenix Feather** `phoenix_feather` | Raises a fallen ally at 25% HP | 2 | — | 250 | 125 | Always |
+
 ## Shop & gil
 
 A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (×3 for a boss); winning adds 150 in the campaign or 100 + 20 × floor in the Trials. Stealing gear you already own fences it for half its price. Workshop battles pay nothing.
 
 | Stage | Price cap | Items on the shelves |
 | :--- | ---: | ---: |
-| Chapter I | 380 | 29 |
-| Chapter II | 480 | 42 |
-| Final Chapter | 580 | 48 |
+| Before the first victory | 380 | 29 |
+| Chapter I won | 480 | 42 |
+| Chapter II won | 580 | 48 |
 | Campaign cleared / Trials | none | 51 |
 
 Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail.
+
+Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the three relics above can't be sold.
+
+## World map
+
+Where the squad stands between missions. Roads join the places; the squad walks the shortest way along them.
+
+```mermaid
+flowchart LR
+  market["Larkmoor Market<br/><i>buy and sell</i>"]
+  ruins["Riverside Ruins<br/><i>CHAPTER I</i>"]
+  mire["Gloomy Mire<br/><i>CHAPTER II-A</i>"]
+  battlement["Night Battlement<br/><i>CHAPTER II-B</i>"]
+  summit["Zodiac Summit<br/><i>FINAL CHAPTER</i>"]
+  trials["Gate of Trials<br/><i>post-game</i>"]
+  market --- ruins
+  market --- battlement
+  ruins --- mire
+  ruins --- battlement
+  mire --- summit
+  battlement --- summit
+  summit --- trials
+```
+
+| Place | Kind | What happens there | Roads to |
+| :--- | :--- | :--- | :--- |
+| **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement |
+| **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement |
+| **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit |
+| **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit |
+| **Zodiac Summit** | mission | FINAL CHAPTER: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials |
+| **Gate of Trials** | trials | Enter the Trials of the Zodiac (after the story) | Zodiac Summit |
 
 ## Armory & drops
 

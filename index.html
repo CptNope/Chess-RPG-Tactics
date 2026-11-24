@@ -17,6 +17,25 @@
     <!-- Retro CRT / Vignette Scanline Overlay -->
     <div class="crt-overlay"></div>
 
+    <!-- World map: where the squad stands between missions (0.15.0) -->
+    <section id="world-map" class="world-map hidden" aria-label="World map">
+      <header class="wm-bar">
+        <h2>THE REALM</h2>
+        <span id="wm-gil" class="gil-badge" title="Your purse">0 G</span>
+        <button id="wm-team" class="hud-btn" title="Jobs, abilities and gear (J)">★ Team</button>
+        <button id="wm-save" class="hud-btn">Save</button>
+        <button id="wm-menu" class="hud-btn" data-menu-toggle title="Menu: sound, graphics, load, Workshop, title screen (Esc)" aria-haspopup="true" aria-controls="system-menu">☰ Menu</button>
+      </header>
+      <div class="wm-body">
+        <div class="wm-stage">
+          <canvas id="wm-canvas" width="320" height="180" aria-hidden="true"></canvas>
+          <div id="wm-party" class="wm-party" aria-hidden="true"></div>
+          <div id="wm-nodes"></div>
+        </div>
+        <aside id="wm-panel" class="wm-panel" aria-live="polite"></aside>
+      </div>
+    </section>
+
     <!-- Title screen: shows at once while the game loads; the first press also unlocks audio -->
     <section id="title-screen" aria-label="Chess RPG Tactics">
       <div class="title-card">
@@ -50,7 +69,7 @@
       <button id="btn-job-menu" class="icon-btn" title="Team: jobs, abilities and gear (J)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M5 2h6v2h2v4h-2v2H5V8H3V4h2z M2 12h12v2H2z"/></g></svg><span class="btn-label">Team</span></button>
       <button id="btn-toggle-log" class="icon-btn" title="Battle log (L)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M3 1h10v14H3z M5 4h6v1.5H5z M5 7h6v1.5H5z M5 10h4v1.5H5z" fill-rule="evenodd"/></g></svg><span class="btn-label">Log</span></button>
       <button id="btn-help" class="icon-btn" title="Controls (H)"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M5 2h6v2h2v4h-2v2H9v2H7V9h2V7h2V4H5v2H3V4h2z M7 13h2v2H7z"/></g></svg><span class="btn-label">Controls</span></button>
-      <button id="btn-menu" class="icon-btn" title="Menu: map, sound, save, load, Workshop" aria-haspopup="true" aria-expanded="false" aria-controls="system-menu"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M2 3h12v2H2z M2 7h12v2H2z M2 11h12v2H2z"/></g></svg><span class="btn-label">Menu</span></button>
+      <button id="btn-menu" data-menu-toggle class="icon-btn" title="Menu: map, sound, save, load, Workshop" aria-haspopup="true" aria-expanded="false" aria-controls="system-menu"><svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M2 3h12v2H2z M2 7h12v2H2z M2 11h12v2H2z"/></g></svg><span class="btn-label">Menu</span></button>
     </nav>
 
     <!-- System menu (dropdown) -->
@@ -125,7 +144,7 @@
               <dt><kbd>←↑↓→</kbd></dt><dd>Move the cursor, or move between buttons in a menu</dd>
               <dt><kbd>Enter</kbd> <kbd>Space</kbd></dt><dd>Select / confirm</dd>
               <dt><kbd>Esc</kbd></dt><dd>Cancel / back</dd>
-              <dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></dt><dd>Move · Act · Wait · Auto</dd>
+              <dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> <kbd>5</kbd></dt><dd>Move · Act · Wait · Auto · Item</dd>
               <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Pan the camera</dd>
               <dt><kbd>Q</kbd> <kbd>E</kbd></dt><dd>Rotate</dd>
               <dt><kbd>+</kbd> <kbd>-</kbd></dt><dd>Zoom</dd>
@@ -197,6 +216,7 @@
       <button id="btn-action-act" class="menu-btn" title="Act (2)"><kbd class="hk">2</kbd>ACT</button>
       <button id="btn-action-wait" class="menu-btn" title="Wait and choose facing (3)"><kbd class="hk">3</kbd>WAIT</button>
       <button id="btn-action-auto" class="menu-btn" title="Let the AI play this unit's turn (4)"><kbd class="hk">4</kbd>AUTO</button>
+      <button id="btn-action-item" class="menu-btn" title="Use an item (5)"><kbd class="hk">5</kbd>ITEM</button>
       <button id="btn-action-status" class="menu-btn" title="Jobs and gear for this unit">STATUS</button>
     </nav>
 

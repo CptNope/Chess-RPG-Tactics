@@ -15,6 +15,14 @@ export interface GameSaveData {
   campaignCleared?: boolean;
   /** Added in 0.14.0; older saves start with the new-game purse. */
   gil?: number;
+  /** Consumables carried (0.15.0): item id to count. */
+  inventory?: Record<string, number>;
+  /** Campaign chapters won, in order (0.15.0). */
+  clearedChapters?: string[];
+  /** True when the save was made on the world map, between missions (0.15.0). */
+  onWorldMap?: boolean;
+  /** The world-map location the party stands at (0.15.0). */
+  worldLocation?: string;
 }
 
 const BEST_FLOOR_KEY = 'chess_rpg_tactics_best_trial_v1';
@@ -29,11 +37,11 @@ export class SaveManager {
   public static saveGame(
     chapterId: string,
     playerUnits: Unit[],
-    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil'> = {}
+    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation'> = {}
   ): boolean {
     try {
       const saveData: GameSaveData = {
-        version: '0.14.0',
+        version: '0.15.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,

@@ -1,6 +1,8 @@
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainType, EquipmentSlot, StoryChoice, Item } from '../core/types';
 import { JOBS } from '../data/jobs';
 import { JobSystem, MAX_JOB_LEVEL } from '../core/JobSystem';
+import { CONSUMABLES, MAX_STACK, Consumable, consumableAbility } from '../data/consumables';
+import { ITEMS } from '../data/items';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
 import { portraitCanvas, portraitDataUrl, portraitForSpeaker } from '../graphics/CharacterArt';
@@ -47,6 +49,11 @@ export class UIManager {
   private btnMove = document.getElementById('btn-action-move') as HTMLButtonElement;
   private btnAct = document.getElementById('btn-action-act') as HTMLButtonElement;
   private btnWait = document.getElementById('btn-action-wait') as HTMLButtonElement;
+  private btnItem = document.getElementById('btn-action-item') as HTMLButtonElement;
+  /** The unit and ground the ACT list was last built for, so ACT can rebuild it after ITEM borrowed the panel. */
+  private subMenuFor: { unit: Unit; terrain?: TerrainType } | null = null;
+  /** The squad's consumables (id to count), provided by the game. */
+  public inventory: () => Record<string, number> = () => ({});
   private btnAuto = document.getElementById('btn-action-auto') as HTMLButtonElement;
   private subMenuEl = document.getElementById('sub-menu')!;
   private subMenuItemsEl = document.getElementById('sub-menu-items')!;
@@ -126,7 +133,21 @@ export class UIManager {
   /** Item ids the squad owns. The gear tab only offers these. */
   public armory: string[] = [];
   /** The purse and the shop's shelves, provided by the game. */
-  public shop: { gil: () => number; stock: () => Item[]; nextCap: () => number | null; buy: (id: string) => boolean } | null = null;
+  public shop: {
+    gil: () => number;
+    stock: () => Item[];
+    nextCap: () => number | null;
+    buy: (id: string) => boolean;
+    /** True while the party is at the market (buying and selling allowed). */
+    open: () => boolean;
+    supplies: () => Consumable[];
+    buySupply: (id: string) => boolean;
+    sellSupply: (id: string) => boolean;
+    sellGear: (id: string) => boolean;
+    /** Why a piece of gear can't be sold, or null. */
+    saleBlock: (id: string) => string | null;
+  } | null = null;
+  private shopMode: 'buy' | 'sell' = 'buy';
 
   // Banner
   private bannerEl = document.getElementById('battle-banner')!;
@@ -135,6 +156,8 @@ export class UIManager {
   // Callbacks
   public onMoveClicked?: () => void;
   public onAbilitySelected?: (ability: Ability) => void;
+  /** Called when the Team screen closes (the world map refreshes its purse). */
+  public onJobModalClosed?: () => void;
   public onWaitClicked?: () => void;
   public onAutoClicked?: () => void;
   public onFacingConfirmed?: (facing: FacingDirection) => void;
@@ -151,7 +174,10 @@ export class UIManager {
     // Keep Tab inside an open modal so keyboard players can't wander into the HUD behind it
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Tab') return;
-      const modal = [...document.querySelectorAll<HTMLElement>('.modal-overlay')].find((m) => !m.classList.contains('hidden'));
+      const shown = (id: string) => { const el = document.getElementById(id); return el && !el.classList.contains('hidden') ? el : null; };
+      // The world map covers the battlefield HUD the same way a modal does (the system menu can sit on top of it)
+      const modal = [...document.querySelectorAll<HTMLElement>('.modal-overlay')].find((m) => !m.classList.contains('hidden'))
+        || (shown('world-map') ? shown('system-menu') || shown('world-map') : null);
       if (!modal) return;
       const items = focusablesIn(modal);
       if (items.length === 0) return;
@@ -234,6 +260,13 @@ export class UIManager {
 
     this.btnAct.addEventListener('click', () => {
       SoundFX.playMenuBlip();
+      if (this.subMenuFor) this.populateActionSubMenu(this.subMenuFor.unit, this.subMenuFor.terrain);
+      this.toggleSubMenu(true);
+    });
+
+    this.btnItem.addEventListener('click', () => {
+      SoundFX.playMenuBlip();
+      this.populateItemSubMenu();
       this.toggleSubMenu(true);
     });
 
@@ -328,7 +361,7 @@ export class UIManager {
     });
     document.addEventListener('pointerdown', (e) => {
       const t = e.target as HTMLElement;
-      if (this.isSystemMenuOpen && !this.systemMenuEl.contains(t) && !this.btnMenu.contains(t)) this.toggleSystemMenu(false);
+      if (this.isSystemMenuOpen && !this.systemMenuEl.contains(t) && !t.closest?.('[data-menu-toggle]')) this.toggleSystemMenu(false);
     });
 
     // Controls help
@@ -403,6 +436,7 @@ export class UIManager {
 
   public closeJobModal(): void {
     this.closeModal(this.jobModalEl);
+    this.onJobModalClosed?.();
   }
 
   private openModal(el: HTMLElement): void {
@@ -425,7 +459,7 @@ export class UIManager {
    * Battlefield input (tile cursor) is used when this returns null.
    */
   public activeLayer(): HTMLElement | null {
-    const order = ['help-modal', 'title-screen', 'result-modal', 'choice-modal', 'job-modal', 'system-menu', 'facing-selector', 'combat-forecast', 'sub-menu'];
+    const order = ['help-modal', 'title-screen', 'result-modal', 'choice-modal', 'job-modal', 'system-menu', 'world-map', 'facing-selector', 'combat-forecast', 'sub-menu'];
     for (const id of order) {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) return el;
@@ -633,6 +667,7 @@ export class UIManager {
 
     this.btnMove.disabled = unit.hasMoved || unit.team !== 'player' || unit.move === 0;
     this.btnAct.disabled = unit.hasActed || unit.team !== 'player';
+    this.btnItem.disabled = this.btnAct.disabled;
     this.btnWait.disabled = unit.team !== 'player';
     this.btnAuto.disabled = unit.team !== 'player';
     this.btnStatus.disabled = unit.team !== 'player';
@@ -658,7 +693,42 @@ export class UIManager {
     this.tileTerrainEl.textContent = `Terrain: ${terrain.toUpperCase()}`;
   }
 
+  /** The ITEM list: every consumable the squad carries, with its count. Using one takes the unit's action. */
+  public populateItemSubMenu(): void {
+    document.getElementById('sub-menu-title')!.textContent = 'ITEMS';
+    this.subMenuItemsEl.innerHTML = '';
+    const stock = this.inventory();
+    const owned = Object.values(CONSUMABLES).filter((c) => (stock[c.id] || 0) > 0);
+    if (owned.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'action-desc';
+      empty.style.padding = '8px';
+      empty.textContent = 'No items. Buy potions at the market on the world map.';
+      this.subMenuItemsEl.appendChild(empty);
+      return;
+    }
+    for (const c of owned) {
+      const btn = document.createElement('button');
+      btn.className = 'action-item-btn';
+      btn.innerHTML = `
+        <div class="action-name-row">
+          <span>${c.name}</span>
+          <span class="action-mp">×${stock[c.id]}</span>
+        </div>
+        <div class="action-desc">Rng: ${c.range}${c.aoe ? ` · Area ${c.aoe}` : ''} | ${c.description}</div>
+      `;
+      btn.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
+        this.toggleSubMenu(false);
+        this.onAbilitySelected?.(consumableAbility(c));
+      });
+      this.subMenuItemsEl.appendChild(btn);
+    }
+  }
+
   public populateActionSubMenu(unit: Unit, terrain?: TerrainType): void {
+    this.subMenuFor = { unit, terrain };
+    document.getElementById('sub-menu-title')!.textContent = 'ACTIONS';
     this.subMenuItemsEl.innerHTML = '';
     const abilities = JobSystem.getCombatActionAbilities(unit).map((a) => resolveTerrainAbility(a, terrain));
 
@@ -722,6 +792,27 @@ export class UIManager {
 
   public showCombatForecast(forecast: CombatForecast, extraTargets: number = 0): void {
     this.fcTargetName.textContent = extraTargets > 0 ? `${forecast.target.name} +${extraTargets} more` : forecast.target.name;
+    const ab = forecast.ability;
+    const facingLabel = this.fcFacingBadge.previousSibling;
+    const amountLabel = this.fcDamage.previousSibling;
+    if (ab.item) {
+      // Items ignore facing, never miss and do a fixed amount: say what the item does instead
+      if (facingLabel) facingLabel.textContent = 'Item: ';
+      if (amountLabel) amountLabel.textContent = 'EFFECT: ';
+      this.fcFacingBadge.textContent = ab.name.toUpperCase();
+      this.fcFacingBadge.className = 'badge-front';
+      this.fcHitRate.textContent = '100%';
+      this.fcDamage.textContent = ab.revive ? `REVIVE ${Math.round(ab.revive * 100)}% HP`
+        : ab.fixedDamage ? `-${ab.fixedDamage} HP`
+        : ab.fixedHeal ? `+${ab.fixedHeal} HP`
+        : ab.fixedMp ? `+${ab.fixedMp} MP`
+        : ab.cleanse ? 'CURE AILMENTS' : '—';
+      this.forecastEl.classList.remove('hidden');
+      this.focusForNav(this.btnForecastConfirm as HTMLElement);
+      return;
+    }
+    if (facingLabel) facingLabel.textContent = 'Facing: ';
+    if (amountLabel) amountLabel.textContent = 'DMG: ';
     const bonus = forecast.facingType === 'back' ? 30 : forecast.facingType === 'flank' ? 15 : 0;
     this.fcFacingBadge.textContent = `${forecast.facingType.toUpperCase()} (+${bonus}%)`;
     this.fcFacingBadge.className = `badge-${forecast.facingType}`;
@@ -963,54 +1054,125 @@ export class UIManager {
     }
   }
 
-  /** The Shop tab: everything on the shelves at this point in the campaign, by slot. */
+  /** The Shop tab: buy supplies and gear, or sell them back for half. Trading needs the party at the market. */
   private renderShop(): void {
     const shop = this.shop;
     if (!shop) return;
     const gil = shop.gil();
+    const open = shop.open();
+    const stock = this.inventory();
     this.gilBadgeEl.textContent = `${gil.toLocaleString('en-US')} G`;
-    const cap = shop.nextCap();
-    this.shopNoteEl.textContent =
-      'One purchase outfits the whole squad. Gil comes from defeated enemies, cleared battles and fenced loot.' +
-      (cap ? ' More stock arrives after the next chapter.' : '');
+    this.shopNoteEl.textContent = open
+      ? this.shopMode === 'buy'
+        ? 'Gear outfits the whole squad once bought. Supplies are used up in battle with the ITEM command.' + (shop.nextCap() ? ' More stock arrives after the next chapter.' : '')
+        : 'The market pays half price. Gear someone is wearing has to come off first.'
+      : 'The market is on the world map. Travel there between battles to buy and sell. You can browse the shelves from here.';
     this.shopListEl.innerHTML = '';
-    const slotNames: Record<EquipmentSlot, string> = { weapon: 'WEAPONS', shield: 'SHIELDS', head: 'HEADGEAR', body: 'ARMOR & ROBES', accessory: 'ACCESSORIES' };
-    let lastSlot = '';
-    for (const item of shop.stock()) {
-      if (item.slot !== lastSlot) {
-        lastSlot = item.slot;
-        const h = document.createElement('div');
-        h.className = 'shop-slot-head';
-        h.textContent = slotNames[item.slot];
-        this.shopListEl.appendChild(h);
-      }
-      const owned = this.armory.includes(item.id);
-      const stats = Object.entries(item.stats)
-        .map(([stat, val]) => `${stat.toUpperCase()} ${val! >= 0 ? '+' : ''}${val}`)
-        .join(', ');
-      const row = document.createElement('div');
-      row.className = `learn-item shop-item ${owned ? 'owned' : ''}`;
-      row.innerHTML = `
-        <div><span class="shop-name">${item.name}</span> <span class="shop-stats">${stats}${item.range && item.range > 1 ? ` · Range ${item.range}` : ''}</span></div>
-        <button class="shop-buy" tabindex="-1" ${owned || gil < item.price ? 'disabled' : ''} aria-label="${owned ? `${item.name}: owned` : `Buy ${item.name} for ${item.price} gil`}">${owned ? 'OWNED' : `${item.price} G`}</button>
-        <div class="shop-desc">${item.description}</div>
+
+    const modes = document.createElement('div');
+    modes.className = 'shop-modes';
+    for (const m of ['buy', 'sell'] as const) {
+      const b = document.createElement('button');
+      b.className = `shop-mode ${this.shopMode === m ? 'active' : ''}`;
+      b.textContent = m.toUpperCase();
+      b.setAttribute('aria-pressed', String(this.shopMode === m));
+      b.addEventListener('click', () => {
+        if (this.shopMode === m) return;
+        SoundFX.playMenuBlip();
+        this.shopMode = m;
+        this.renderShop();
+        queueMicrotask(() => this.focusForNav(this.shopListEl.querySelector<HTMLElement>('.shop-mode.active')));
+      });
+      modes.appendChild(b);
+    }
+    this.shopListEl.appendChild(modes);
+
+    const head = (text: string) => {
+      const h = document.createElement('div');
+      h.className = 'shop-slot-head';
+      h.textContent = text;
+      this.shopListEl.appendChild(h);
+    };
+    /** One shelf row. `act` returns true when the trade went through. */
+    const row = (o: { key: string; name: string; stats: string; desc: string; label: string; enabled: boolean; dim?: boolean; why?: string; act: () => boolean; done: string }) => {
+      const el = document.createElement('div');
+      el.className = `learn-item shop-item ${o.dim ? 'owned' : ''}`;
+      el.dataset.item = o.key;
+      el.innerHTML = `
+        <div><span class="shop-name">${o.name}</span> <span class="shop-stats">${o.stats}</span></div>
+        <button class="shop-buy" tabindex="-1" ${o.enabled ? '' : 'disabled'} aria-label="${o.name}: ${o.label}">${o.label}</button>
+        <div class="shop-desc">${o.desc}</div>
       `;
-      row.dataset.item = item.id;
-      // The whole row buys (the button's click bubbles here), so keys and controllers can buy from the row
-      row.addEventListener('click', () => {
-        if (!shop.buy(item.id)) {
-          if (!owned) this.showBanner('NOT ENOUGH GIL');
+      // The whole row trades (the button's click bubbles here), so keys and controllers can use the row
+      el.addEventListener('click', () => {
+        if (!o.enabled || !o.act()) {
+          if (o.why) this.showBanner(o.why.toUpperCase());
           return;
         }
         SoundFX.playTurnChime();
         const keep = this.shopListEl.scrollTop;
         this.refreshTeam();
         this.shopListEl.scrollTop = keep;
-        this.showBanner(`BOUGHT ${item.name.toUpperCase()}`);
-        // The list was redrawn: put keyboard / controller focus back on the row just bought
-        queueMicrotask(() => this.focusForNav(this.shopListEl.querySelector<HTMLElement>(`[data-item="${item.id}"]`)));
+        this.showBanner(o.done.toUpperCase());
+        // The list was redrawn: put keyboard / controller focus back on the same row (or the top if it's gone)
+        queueMicrotask(() => this.focusForNav(this.shopListEl.querySelector<HTMLElement>(`[data-item="${o.key}"]`) || this.shopListEl.querySelector<HTMLElement>('.shop-mode.active')));
       });
-      this.shopListEl.appendChild(row);
+      this.shopListEl.appendChild(el);
+    };
+    const statText = (item: Item) =>
+      Object.entries(item.stats).map(([stat, val]) => `${stat.toUpperCase()} ${val! >= 0 ? '+' : ''}${val}`).join(', ') + (item.range && item.range > 1 ? ` · Range ${item.range}` : '');
+    const closed = 'The market is on the world map';
+    const slotNames: Record<EquipmentSlot, string> = { weapon: 'WEAPONS', shield: 'SHIELDS', head: 'HEADGEAR', body: 'ARMOR & ROBES', accessory: 'ACCESSORIES' };
+
+    if (this.shopMode === 'buy') {
+      head('SUPPLIES');
+      for (const c of shop.supplies()) {
+        const have = stock[c.id] || 0;
+        const full = have >= MAX_STACK;
+        row({
+          key: `s:${c.id}`, name: c.name, stats: `Have ${have}`, desc: c.description,
+          label: full ? 'FULL' : `${c.price} G`, enabled: open && !full && gil >= c.price, dim: full,
+          why: !open ? closed : full ? `You can carry ${MAX_STACK}` : 'Not enough gil',
+          act: () => shop.buySupply(c.id), done: `Bought ${c.name}`
+        });
+      }
+      let lastSlot = '';
+      for (const item of shop.stock()) {
+        if (item.slot !== lastSlot) head(slotNames[(lastSlot = item.slot) as EquipmentSlot]);
+        const owned = this.armory.includes(item.id);
+        row({
+          key: `g:${item.id}`, name: item.name, stats: statText(item), desc: item.description,
+          label: owned ? 'OWNED' : `${item.price} G`, enabled: open && !owned && gil >= item.price, dim: owned,
+          why: owned ? '' : !open ? closed : 'Not enough gil',
+          act: () => shop.buy(item.id), done: `Bought ${item.name}`
+        });
+      }
+      return;
+    }
+
+    const supplies = Object.values(CONSUMABLES).filter((c) => (stock[c.id] || 0) > 0);
+    head('SUPPLIES');
+    if (supplies.length === 0) head('— none to sell —');
+    for (const c of supplies) {
+      const pay = Math.round(c.price / 2);
+      row({
+        key: `s:${c.id}`, name: c.name, stats: `Have ${stock[c.id]}`, desc: c.description,
+        label: `+${pay} G`, enabled: open, why: closed,
+        act: () => shop.sellSupply(c.id), done: `Sold ${c.name} for ${pay} gil`
+      });
+    }
+    head('GEAR');
+    const order: EquipmentSlot[] = ['weapon', 'shield', 'head', 'body', 'accessory'];
+    const gear = this.armory.map((id) => ITEMS[id]).filter(Boolean).sort((a, b) => order.indexOf(a.slot) - order.indexOf(b.slot) || a.price - b.price);
+    for (const item of gear) {
+      const block = shop.saleBlock(item.id);
+      const pay = Math.round(item.price / 2);
+      row({
+        key: `g:${item.id}`, name: item.name, stats: statText(item), desc: block ? `${block}. ${item.description}` : item.description,
+        label: block ? (block === 'Relic' ? 'RELIC' : 'IN USE') : `+${pay} G`, enabled: open && !block, dim: !!block,
+        why: block ? (block === 'Relic' ? 'Relics are never sold' : block) : closed,
+        act: () => shop.sellGear(item.id), done: `Sold ${item.name} for ${pay} gil`
+      });
     }
   }
 }
