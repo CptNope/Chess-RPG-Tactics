@@ -17,7 +17,8 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   summoner: { reaction: 'su_mana_spring' },
   oracle: { reaction: 'or_hex_ward', support: 'or_hex_mastery' },
   paladin: { reaction: 'pa_divine_grace', support: 'pa_zeal' },
-  spellblade: { reaction: 'sb_runic', support: 'sb_arcane_edge' }
+  spellblade: { reaction: 'sb_runic', support: 'sb_arcane_edge' },
+  chemist: { reaction: 'ch_field_dressing' }
 };
 
 /** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
@@ -46,7 +47,8 @@ export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; m
   summoner: { stat: 'magic', veteran: 1, master: 2 },
   oracle: { stat: 'mp', veteran: 8, master: 20 },
   paladin: { stat: 'hp', veteran: 12, master: 30 },
-  spellblade: { stat: 'magic', veteran: 1, master: 2 }
+  spellblade: { stat: 'magic', veteran: 1, master: 2 },
+  chemist: { stat: 'hp', veteran: 8, master: 20 }
 };
 const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
 /** "+10 HP", "+1 ATK"… */
@@ -137,6 +139,11 @@ export class JobSystem {
       initialGear.weapon = ITEMS.iron_knuckles;
       initialGear.head = ITEMS.leather_cap;
       initialGear.body = ITEMS.leather_vest;
+    } else if (jobId === 'chemist') {
+      initialGear.weapon = ITEMS.thief_knife;
+      initialGear.head = ITEMS.leather_cap;
+      initialGear.body = ITEMS.leather_vest;
+      initialGear.accessory = ITEMS.mage_ring;
     } else if (jobId === 'thief') {
       initialGear.weapon = ITEMS.thief_knife;
       initialGear.head = ITEMS.leather_cap;
@@ -287,6 +294,11 @@ export class JobSystem {
       this.recalculateDerivedStats(unit);
     }
     return gain;
+  }
+
+  /** How much stronger items are in this unit's hands (Pharmacology: ×1.5). */
+  public static itemPotency(unit: Unit): number {
+    return unit.equippedAbilities.support === 'ch_pharmacology' ? 1.5 : 1;
   }
 
   /** 0 = none yet, 1 = Veteran (job level 5), 2 = Master (job level 8). */

@@ -923,6 +923,114 @@ export const JOBS: Record<string, Job> = {
     ]
   },
 
+  chemist: {
+    id: 'chemist',
+    name: 'Chemist',
+    description: 'Field medic and bomb-maker. Patches allies up for free, burns armour with acid and blinds foes with smoke, and makes every supply go further.',
+    role: 'Alchemist',
+    spriteClass: 'chemist',
+    baseMove: 4,
+    baseJump: 3,
+    statMultipliers: {
+      hp: 1.0,
+      mp: 0.9,
+      attack: 0.95,
+      magic: 0.8,
+      speed: 1.0
+    },
+    prerequisites: [{ jobId: 'squire', level: 2 }],
+    abilities: [
+      {
+        id: 'ch_salve',
+        name: 'Salve',
+        jobId: 'chemist',
+        type: 'action',
+        description: 'Throws a herbal salve to an ally up to 3 tiles away: heals HP (from ATK). Free.',
+        jpCost: 60,
+        mpCost: 0,
+        range: 3,
+        heightTolerance: 2.0,
+        aoe: 0,
+        power: -0.9,
+        element: 'physical',
+        scalesWith: 'attack'
+      },
+      {
+        id: 'ch_purge',
+        name: 'Purge',
+        jobId: 'chemist',
+        type: 'action',
+        description: 'A bitter tonic: lifts every ailment from an ally up to 3 tiles away.',
+        jpCost: 90,
+        mpCost: 4,
+        range: 3,
+        heightTolerance: 2.0,
+        aoe: 0,
+        power: 0,
+        element: 'physical',
+        cleanse: true
+      },
+      {
+        id: 'ch_acid_flask',
+        name: 'Acid Flask',
+        jobId: 'chemist',
+        type: 'action',
+        description: 'Hurls a flask of acid up to 3 tiles: light damage, and Breach (+25% physical damage taken) for 3 turns.',
+        jpCost: 140,
+        mpCost: 6,
+        range: 3,
+        heightTolerance: 2.5,
+        aoe: 0,
+        power: 0.7,
+        element: 'physical',
+        appliesStatus: 'breach'
+      },
+      {
+        id: 'ch_smoke_bomb',
+        name: 'Smoke Bomb',
+        jobId: 'chemist',
+        type: 'action',
+        description: 'A cloud of choking smoke: Blinds every foe within 1 tile of the target.',
+        jpCost: 180,
+        mpCost: 10,
+        range: 3,
+        heightTolerance: 2.5,
+        aoe: 1,
+        power: 0,
+        element: 'physical',
+        appliesStatus: 'blind'
+      },
+      {
+        id: 'ch_field_dressing',
+        name: 'Field Dressing',
+        jobId: 'chemist',
+        type: 'reaction',
+        description: 'When a blow leaves you under half HP, bind the wound at once: recover 15% of max HP.',
+        jpCost: 200,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'ch_pharmacology',
+        name: 'Pharmacology',
+        jobId: 'chemist',
+        type: 'support',
+        description: 'Items you use work 50% better (heal, MP, damage and revives) and reach 1 tile further.',
+        jpCost: 250,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      }
+    ]
+  },
+
   monk: {
     id: 'monk',
     name: 'Monk',

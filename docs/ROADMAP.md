@@ -36,6 +36,7 @@ timeline
         0.16.0 : Side battles : Job mastery : Raise : Undo move, battle speed, tips
         0.17.0 : Act II, Chapters IV to VI : Three battlefields : Sable joins : Enemy raise cap
         0.18.0 : Easy, Normal, Hard : Three save slots, export and import : Supplies refunded on defeat : Trials after Chapter III
+        0.19.0 : Chemist job : Frost Flask, Elixir : Installable app, plays offline
 ```
 
 | Version | Theme | Highlights |
@@ -48,6 +49,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.19 | Kit and reach | The Chemist (16 jobs, 93 abilities) with Pharmacology for supplies, Frost Flask and Elixir (8 supplies), an installable app that plays offline |
 | 0.18 | Choices for the player | Easy / Normal / Hard, three save slots with export and import, a lost battle returns its supplies, the Trials open after Chapter III |
 | 0.17 | A second act | Chapters IV to VI on three new battlefields (harbor piers, a lighthouse rock, a cliff altar), a third recruit, six battles per playthrough; finished saves continue; enemies raise once per battle |
 | 0.16 | Room to grow | Three replayable side battles on the map, permanent job mastery bonuses at job level 5 and 8, the White Mage's Raise (used by the AI too), undo move, a Fast battle speed, first-battle tips |
@@ -62,73 +64,75 @@ timeline
 
 ## 2. Now / Next / Later
 
+*Reviewed for 0.19.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.19)"]
+    subgraph NOW["Now (0.20): needs a person"]
         direction TB
-        N1["Play Act II by hand"]
-        N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
-        N3["Commit the Playwright<br/>play-test suite to CI"]
-        N4["Devlog + site post<br/>for the itch release"]
+        N1["Play the campaign by hand:<br/>Chapter III, Act II"]
+        N2["Real-device QA:<br/>iOS Safari, Android, pads"]
+        N3["Install the app on a phone;<br/>play offline"]
+        N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.19 – 0.21)"]
+    subgraph NEXT["Next (0.20 – 0.22): depth"]
         direction TB
-        X1["Equipment rules:<br/>weapon types per job"]
-        X2["World map events:<br/>travellers, camp scenes"]
-        X3["Smarter AI:<br/>reactions, facing, 2-ply"]
+        X1["AI: approach uphill,<br/>respect facing and parries"]
+        X2["World map events:<br/>merchant, camp scenes"]
+        X3["Recruiting at the market"]
         X4["Mastery abilities"]
         X5["Play-tests in CI"]
-        X6["Installable PWA, offline"]
+        X6["Text-size setting"]
+        X7["Equipment rules"]
     end
-    subgraph LATER["Later (1.0+)"]
+    subgraph LATER["Later (1.0+): breadth"]
         direction TB
-        L1["Monsters with their<br/>own abilities"]
-        L2["More jobs: Bard, Dancer,<br/>Chemist"]
-        L3["Workshop: community<br/>scenario gallery"]
-        L4["Remappable controls"]
-        L5["Localization"]
-        L6["Async online duels"]
-        L7["Effects for every ability<br/>(per-weapon arcs, projectiles)"]
+        L1["Act III"]
+        L2["Monsters with their<br/>own abilities"]
+        L3["More jobs: Bard, Dancer"]
+        L4["Workshop gallery"]
+        L5["Remappable controls"]
+        L6["Localization"]
+        L7["Async online duels"]
     end
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.19): finish and ship what exists
+### Now (0.20): checks that need a person
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
-| **Play Act II by hand** | The sim says Chapter V is the hardest of the three | S | Tune rosters after real playthroughs |
-| **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
-| **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.18 (the site's project page is live) |
+| **Play the campaign by hand** | Act II and difficulty were tuned by an AI-versus-AI sim with a starter-geared squad. Chapter III sits near 0% in that sim on every setting | S | One run on Normal, one on Easy; note where it drags |
+| **Real-device QA** | Input has only been verified in Chromium with synthesized events | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
+| **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
+| **Devlog and store update** | itch and the project page still describe 0.14 | S | One devlog covering 0.13 to 0.19 |
 
-### Next (0.19 – 0.21): depth
+### Next (0.20 – 0.22): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **Equipment rules**: weapon and armor types per job | Every job can wear everything; Armor Mastery (0.13) could become "wear plate as any job" once rules exist | M |
-| **World map events**: a travelling merchant with one rare item, a camp scene between chapters, side battles with their own rewards | Side battles (0.16) all pay the same; nothing happens on the road | M |
-| **Recruiting at the market** | The squad is fixed plus one story recruit; hiring would give gil a second sink | M |
+| **AI: approach uphill, respect facing and parries** | The planner attacks uphill badly (the likely cause of Chapter III's sim results), ignores Weapon Guard, and leaves its back open ([details](ENEMY_AI.md#5-known-limits)) | M |
+| **World map events**: a travelling merchant with one rare item, camp scenes between chapters, side battles with their own rewards | Side battles all pay the same; nothing happens on the road | M |
+| **Recruiting at the market** | The squad is the opening four plus two story recruits; hiring (and choosing who deploys) would give gil a second sink | M |
 | **Mastery abilities** | Mastery (0.16) is stat bonuses only; a signature ability per job at Master would give builds an identity | M |
-| **More supplies and a Chemist job**: an elixir, status-inflicting flasks, a job that doubles item effects and throws them further | Items are six plain supplies | M |
-| **AI: items** | Bosses could carry a potion; AUTO could use yours with a setting | S |
-| **AI: reactions and facing** | AI ignores Weapon Guard and leaves its back open ([details](ENEMY_AI.md#5-known-limits)) | M |
-| **AI: two-ply look-ahead** | Lets enemies set up combos and retreat to heal | L |
-| **PWA**: install, offline | Play on phones without a connection | S |
+| **Play-test suite in CI** | Device matrix, input, campaign and feature bots exist but aren't committed | M |
+| **Text-size setting** | Font sizes are fixed px | S |
+| **Equipment rules**: weapon and armor types per job | Every job can wear everything | M |
+| **AI: items and two-ply look-ahead** | Bosses could carry a potion; enemies could set up combos and retreat to heal | L |
 
 ### Later (1.0+): breadth
 
 | Item | Size |
 | :--- | :---: |
-| More jobs (Bard, Dancer) | L |
+| Act III: Chapters VII to IX, new battlefields and map places | L |
 | Monsters: enemies that aren't humans in player jobs, with their own abilities | L |
+| More jobs (Bard, Dancer) | L |
 | Enemies that steal from you (needs a way to win it back) | S |
-| Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns) | M |
+| Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |
 | Remappable keyboard and controller bindings | M |
 | Localization (strings out of code) | M |
 | Asynchronous online duels (exchange turns via a back end) | XL |
-| Effects per ability, not just per element: arrows and thrown stones in flight, spear thrusts, a chain lightning for area spells (more pixelfx effects are available) | M |
-| Workshop: place props (trees, crates) and per-tile decorations; multi-wave enemies; ally guests | M |
+| Effects per ability, not just per element: arrows in flight, spear thrusts, chain lightning | M |
 
 ---
 
@@ -143,19 +147,20 @@ quadrantChart
     quadrant-2 "Quick wins"
     quadrant-3 "Fill-ins"
     quadrant-4 "Reconsider"
-    "Play Act II by hand": [0.2, 0.7]
-    "Devlog + site post": [0.1, 0.55]
-    "Device QA": [0.25, 0.75]
-    "Play-tests in CI": [0.36, 0.65]
-    "Recruiting": [0.45, 0.5]
-    "PWA offline": [0.3, 0.52]
-    "Equipment rules": [0.55, 0.53]
-    "World map events": [0.55, 0.66]
-    "AI 2-ply": [0.75, 0.6]
+    "Play it by hand": [0.15, 0.75]
+    "Device QA": [0.25, 0.72]
+    "Devlog + store": [0.1, 0.55]
+    "AI uphill and facing": [0.5, 0.72]
+    "World map events": [0.55, 0.62]
+    "Recruiting": [0.5, 0.5]
+    "Mastery abilities": [0.55, 0.45]
+    "Play-tests in CI": [0.4, 0.6]
+    "Text size": [0.2, 0.35]
+    "Equipment rules": [0.55, 0.4]
     "Act III": [0.8, 0.7]
-    "More jobs": [0.7, 0.7]
-    "Online duels": [0.86, 0.68]
-    "Localization": [0.6, 0.3]
+    "Monsters": [0.75, 0.66]
+    "Online duels": [0.88, 0.6]
+    "Localization": [0.6, 0.28]
 ```
 
 ---
@@ -164,19 +169,21 @@ quadrantChart
 
 | Area | Issue | Impact | Plan |
 | :--- | :--- | :---: | :--- |
-| Rules | Speed Save's +2 Speed is lost at the unit's next end of turn (stats are recalculated) | Low | Make it a status |
-| Code | `main.ts` (1.5k lines) and `UIManager.ts` (1k lines) are large | Medium | Split battle flow, spoils/chapters and input into modules |
+| Balance | Act II and the difficulty settings are tuned by simulation only (AI against AI, starter gear, no items) | Medium | Now (play it by hand) |
+| Balance | Chapter III sits near 0% in the simulation on every difficulty (as it has since 0.9). The planner attacks uphill badly; real squads with gear, a healer and items should do far better | Medium | Now, then Next (AI) |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |
 | QA | High-quality graphics frame rate not yet measured on real GPUs (CI has none); Auto steps down if slow | Medium | Now (device QA) |
-| QA | Browser play-tests not in CI | Medium | Now |
+| QA | Browser play-tests not in CI | Medium | Next |
+| App | The offline build is tested in headless Chrome only; iOS installs from Safari's Share menu (no Install button there) | Low | Now (install on a phone) |
+| App | An installed app picks up a new version on the next launch after it downloads, not instantly | Low | Fine for now |
+| Code | `main.ts` (2.3k lines) and `UIManager.ts` (1.2k lines) are large | Medium | Split battle flow, saves, the map host and input into modules |
+| Rules | Speed Save's +2 Speed is lost at the unit's next end of turn (stats are recalculated) | Low | Make it a status |
 | A11y | Font sizes are fixed px; no text-size setting | Low | Next |
-| Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
-| Balance | Act II (0.17) is tuned by simulation only: a starter-geared squad wins Chapter IV about half the time at level 7, Chapter V about 7% at level 8, the finale about 17% at level 9. A geared squad with a healer and items should do far better, but nobody has played it through | Medium | Now (play it by hand) |
-| Balance | Chapter III sits near 0% in the simulation on every difficulty (as it has since 0.9): the planner attacks uphill badly and the sim squad has starter gear and no healer. Easy helps every other chapter clearly | Medium | Now (play it by hand) |
 | Saves | Export downloads may be blocked inside the itch.io embed; Copy works there | Low | Fine for now |
-| Tips | First-battle tips are remembered per device, not per save, and aren't translated into controller glyphs | Low | Fine for now |
-| World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Open on the map once there is more than one thing to do there at the start |
-| Balance | `npm run balance` ignores reactions and gear, so its numbers are relative; the Final Chapter is near 0% on pure AUTO (as in 0.9) and needs re-geared or hands-on play | Low | Tune after real playtests |
+| Tips | First-battle tips are remembered per device, not per save, and don't show controller glyphs | Low | Fine for now |
+| World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Fine for now |
+| Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
+| Art | The itch banner image still says "Fifteen jobs" | Low | Regenerate with the next store update |
 
 ---
 

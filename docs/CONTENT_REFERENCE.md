@@ -8,7 +8,7 @@ Every number here is read straight from the game data, so it always matches what
 
 ## Jobs
 
-15 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+16 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -21,6 +21,7 @@ Every number here is read straight from the game data, so it always matches what
 | **Ninja** `ninja` | Skirmisher | 4 | 3 | 0.90× | 0.70× | 1.20× | 0.90× | 1.25× | 5 |
 | **Geomancer** `geomancer` | Terramancer | 4 | 3 | 1.05× | 1.00× | 1.05× | 1.15× | 1.00× | 5 |
 | **Time Weaver** `time_mage` | Chronomancer | 3 | 2 | 0.85× | 1.35× | 0.70× | 1.25× | 1.05× | 6 |
+| **Chemist** `chemist` | Alchemist | 4 | 3 | 1.00× | 0.90× | 0.95× | 0.80× | 1.00× | 6 |
 | **Monk** `monk` | Brawler | 4 | 3 | 1.20× | 0.60× | 1.20× | 0.60× | 1.05× | 6 |
 | **Thief** `thief` | Rogue | 5 | 3 | 0.90× | 0.70× | 1.00× | 0.70× | 1.25× | 6 |
 | **Summoner** `summoner` | Summoner | 3 | 2 | 0.80× | 1.50× | 0.60× | 1.30× | 0.90× | 7 |
@@ -31,10 +32,10 @@ Every number here is read straight from the game data, so it always matches what
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 1.2, 1, 0.6, 0.7, 1.15, 1.1]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
@@ -58,6 +59,7 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 | **Ninja** | Archer Lv 2 |
 | **Geomancer** | — (open to everyone) |
 | **Time Weaver** | Black Mage Lv 2 |
+| **Chemist** | Squire Lv 2 |
 | **Monk** | Squire Lv 3 |
 | **Thief** | Archer Lv 2 |
 | **Summoner** | White Mage Lv 2 + Black Mage Lv 2 |
@@ -82,6 +84,7 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 | **Ninja** | +4 Evasion | +8 Evasion |
 | **Geomancer** | +6 MP | +15 MP |
 | **Time Weaver** | +1 Speed | +2 Speed |
+| **Chemist** | +8 HP | +20 HP |
 | **Monk** | +1 ATK | +2 ATK |
 | **Thief** | +3 Evasion | +6 Evasion |
 | **Summoner** | +1 MAG | +2 MAG |
@@ -91,13 +94,13 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 
 ## Abilities
 
-87 learnable abilities: 52 actions, 15 reactions, 11 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+93 learnable abilities: 56 actions, 16 reactions, 12 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 52
-  "Reaction" : 15
-  "Support" : 11
+  "Action" : 56
+  "Reaction" : 16
+  "Support" : 12
   "Movement" : 9
 ```
 
@@ -214,6 +217,19 @@ pie showData title Abilities by slot type
 | **Critical Quick** `tm_critical_quick` | Reaction | 220 | — | — | — | — | — | — | — | When struck down to 35% HP or less, instantly charges CT to 100 to act next. |
 | **Teleport** `tm_teleport` | Movement | 350 | — | — | — | — | — | — | — | Folds spacetime to instantly blink to any tile within range, bypassing cliffs and walls! |
 | **Regen** `tm_regen` | Action | 140 | 10 | 4 | 2 | — | — | time | inflicts **regen** | Speeds the body's healing: Regen (8% HP at the start of each turn) for 4 turns. |
+
+### Chemist
+
+*Field medic and bomb-maker. Patches allies up for free, burns armour with acid and blinds foes with smoke, and makes every supply go further.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Salve** `ch_salve` | Action | 60 | 0 | 3 | 2 | — | Heal 0.9 | physical | scales with ATK | Throws a herbal salve to an ally up to 3 tiles away: heals HP (from ATK). Free. |
+| **Purge** `ch_purge` | Action | 90 | 4 | 3 | 2 | — | — | physical | cleanses ailments | A bitter tonic: lifts every ailment from an ally up to 3 tiles away. |
+| **Acid Flask** `ch_acid_flask` | Action | 140 | 6 | 3 | 2.5 | — | 0.7 | physical | inflicts **breach** | Hurls a flask of acid up to 3 tiles: light damage, and Breach (+25% physical damage taken) for 3 turns. |
+| **Smoke Bomb** `ch_smoke_bomb` | Action | 180 | 10 | 3 | 2.5 | 1 | — | physical | inflicts **blind** | A cloud of choking smoke: Blinds every foe within 1 tile of the target. |
+| **Field Dressing** `ch_field_dressing` | Reaction | 200 | — | — | — | — | — | — | — | When a blow leaves you under half HP, bind the wound at once: recover 15% of max HP. |
+| **Pharmacology** `ch_pharmacology` | Support | 250 | — | — | — | — | — | — | — | Items you use work 50% better (heal, MP, damage and revives) and reach 1 tile further. |
 
 ### Monk
 
@@ -420,7 +436,9 @@ Used in battle with the **ITEM** command; one is spent each time. The squad shar
 | **Blast Flask** `blast_flask` | 70 fire damage to each foe hit | 3 | 1 | 110 | 55 | After the first victory |
 | **Ether** `ether` | Restores 40 MP | 2 | — | 120 | 60 | After the first victory |
 | **Hi-Potion** `hi_potion` | Restores 200 HP | 2 | — | 150 | 75 | After the first victory |
+| **Frost Flask** `frost_flask` | 45 ice damage to each foe hit | 3 | 1 | 160 | 80 | After the first victory |
 | **Phoenix Feather** `phoenix_feather` | Raises a fallen ally at 25% HP | 2 | — | 250 | 125 | Always |
+| **Elixir** `elixir` | Restores 9999 HP | 2 | — | 600 | 300 | After the first victory |
 
 ## Shop & gil
 
@@ -653,20 +671,20 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
-| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, Archer, Ninja |
-| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Spellblade, Monk |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Summoner, Archer, Thief |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Spellblade, Paladin, Geomancer |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Spellblade, Monk, Paladin |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Paladin, Thief, Summoner, Monk, Ninja |
-| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Summoner, Spellblade, Ninja |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Spellblade, Squire, Geomancer, Dragoon |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Summoner, Monk, Dragoon, Oracle, Geomancer, White Mage |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Ninja, Monk, Archer, Geomancer |
-| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Paladin, Dragoon, Black Mage |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Squire, Thief, White Mage, Knight, Ninja |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Summoner, Spellblade, White Mage, Black Mage, Squire, Dragoon |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Spellblade, Ninja, Geomancer, White Mage, Oracle |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Spellblade, Geomancer, Thief, Black Mage |
+| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, Archer, Time Weaver |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Chemist, Monk |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Oracle, Archer, Thief |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Chemist, Spellblade, Geomancer |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Chemist, Thief, Ninja, Spellblade |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Spellblade, Summoner, Monk, Time Weaver |
+| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Oracle, Spellblade, Time Weaver |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Chemist, Monk, Squire, Dragoon |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Summoner, Thief, Dragoon, Paladin, Geomancer, White Mage |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Thief, Archer, Squire |
+| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Spellblade, Dragoon, White Mage |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Squire, Summoner, Dragoon, Knight, White Mage, Time Weaver |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Oracle, Chemist, Dragoon, White Mage, Squire, Ninja |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Chemist, Ninja, Squire, Dragoon, Paladin, Spellblade |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Chemist, Geomancer, Summoner, Black Mage |
 
 *Floors continue forever; the table shows the first 15.*

@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.19.0] - 2026-11-23
+
+### Added — the Chemist (16 jobs, 93 abilities)
+- **A new job, open once a unit reaches Squire Lv 2:** a field medic and bomb-maker in a cap and brass goggles.
+  - **Salve:** heals an ally up to 3 tiles away, from ATK, for no MP.
+  - **Purge:** lifts every ailment from an ally up to 3 tiles away.
+  - **Acid Flask:** light damage and Breach (+25% physical damage taken), thrown up to 3 tiles.
+  - **Smoke Bomb:** Blinds every foe within 1 tile of the target.
+  - **Field Dressing** (reaction): when a blow leaves you under half HP, recover 15% of max HP.
+  - **Pharmacology** (support): items you use work 50% better (heal, MP, damage and revives) and reach a tile further. Any job can equip it once learned.
+- Mastery: +8 HP at Chemist Lv 5, +20 at Master. Enemy Chemists appear in the Trials.
+
+### Added — two supplies (8 in all)
+- **Frost Flask** (160 G, after Chapter II): 45 ice damage and Slow on the target and every foe beside it.
+- **Elixir** (600 G, after Chapter III): restores every point of HP and MP.
+
+### Added — install it, play offline
+- **The web version is an installable app.** Browsers that support it show **Install app** in the Menu (Android Chrome, desktop Chrome and Edge); on an iPhone or iPad use Safari's Share → Add to Home Screen. It opens full screen with its own icon.
+- **It plays offline** once it has loaded once: the whole game is cached on the device. A new version downloads in the background and is used from the next launch.
+- Inside itch.io nothing changes (itch's page can't install apps).
+
+### Changed
+- The item menu and forecast show the boosted reach and amounts when Pharmacology is equipped; the forecast shows the ailment a flask adds ("-45 HP + SLOW") and "FULL HP & MP" for an Elixir.
+- **The roadmap is rewritten** for where the game is now: the next step is playing it by hand on real devices; then AI that handles high ground and facing, world map events, recruiting and mastery abilities.
+
+### Developer
+- `chemist` in `src/data/jobs.ts`, with art in `CharacterArt.ts` (cap and goggles, front, side and portrait), starting gear, a veteran reaction for enemy Chemists, and a mastery entry. `JobSystem.itemPotency(unit)`.
+- Consumables can carry an ailment (`inflicts`), applied by `CombatEngine.useItem` to foes that survive.
+- `public/manifest.webmanifest`, icons in `public/icons/` (drawn from the game's own sprite), and `scripts/sw-plugin.ts`, a Vite plugin that writes `dist/sw.js` with this build's files and a per-version cache. `platform.setupInstall` registers it on https outside itch. `npm run test:build` now checks the worker's file list and the manifest's icons.
+- 8 new tests (156 total) in `tests/chemist.test.ts`; two supply tests updated. [ADR 0027](docs/adr/0027-chemist-and-installable-app.md).
+
 ## [0.18.0] - 2026-11-23
 
 ### Added — difficulty

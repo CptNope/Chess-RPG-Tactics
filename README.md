@@ -5,12 +5,12 @@
 [![Support the game](https://img.shields.io/badge/support-donate%20on%20itch-ff69b4?logo=githubsponsors&logoColor=white)](https://cptnope.itch.io/chess-rpg-tactics/donate)
 <br />
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.18.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.19.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, fifteen mix-and-match jobs, a branching campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
+A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, sixteen mix-and-match jobs, a two-act campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
 
 ### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/) · [on itch.io](https://cptnope.itch.io/chess-rpg-tactics) · [♥ Support development](https://cptnope.itch.io/chess-rpg-tactics/donate)
 
@@ -23,12 +23,13 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | | |
 | :--- | :--- |
 | **Tactics** | Speed-based turn order (CT), front / flank / back attacks, height advantage, terrain movement costs, area spells |
-| **Squad building** | 15 jobs on a job tree (jobs level up, unlock advanced jobs, and give permanent mastery bonuses), 87 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
+| **Squad building** | 16 jobs on a job tree (jobs level up, unlock advanced jobs, and give permanent mastery bonuses), 93 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
 | **Gear & gil** | 54 pieces of gear, some with traits; earn gil from battles; buy and sell at the market; steal gear off enemies |
-| **Items** | Potions, Ethers, Remedies, Phoenix Feathers and Blast Flasks, used in battle with the Item command |
+| **Items** | Eight supplies (Potions, Ethers, Remedies, Phoenix Feathers, Elixirs and three kinds of flask) used with the Item command; Chemists make them go further |
 | **World map** | Between missions the squad walks a map of the realm: visit the market, pick which road the story takes, fight optional side battles, enter the Trials |
 | **Easy to pick up** | Easy, Normal and Hard; tips the first time each thing comes up; undo for a misplaced move; a Fast battle speed |
 | **Saves** | Three slots in your browser, plus export and import to back a save up or move it to another device |
+| **Install it** | The web version installs as an app (home screen, Start menu, dock) and plays offline |
 | **Campaign** | A two-act campaign (seven chapters, six per playthrough, with a branch in the first act) on 16×16 battlefields, with two recruits, boss fights with enrage phases, and gear rewards |
 | **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters. **AUTO** lets it play your turn |
@@ -107,7 +108,7 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` I
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 148 rule tests
+npm test             # 156 rule tests
 npm run build        # type-check + production build
 npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
 npm run balance      # headless AUTO battles: win rate per chapter

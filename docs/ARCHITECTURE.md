@@ -62,7 +62,7 @@ flowchart TB
 | **WorldMap** | `src/ui/WorldMap.ts` | Draws the map (a painted 320×180 canvas with real buttons over it), walks the party marker, shows what the current place offers. Talks to the game through a small `WorldHost` interface | World, CharacterArt |
 | **Skirmish** | `src/core/Skirmish.ts` | Side battles: the three places, when each opens, enemy level from the squad and past wins, the generated roster, the gil bonus | data, Trials (seeded RNG) |
 | **Tutorial** | `src/ui/Tutorial.ts` | First-time tips: which have been seen (per device), showing one at a time without taking focus | — |
-| **consumables** | `src/data/consumables.ts` | The six supplies; turns one into an `Ability` for the engine; clamps saved inventories | types |
+| **consumables** | `src/data/consumables.ts` | The eight supplies; turns one into an `Ability` for the engine; clamps saved inventories | types |
 | **Scenario** | `src/core/Scenario.ts` | Workshop scenario format: create, copy, sanitise untrusted input, validate, turn into a chapter, share-link encoding, library | data |
 | **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor | Grid, VFX, PixelTextures |
 | **Atmosphere** | `src/renderer/Atmosphere.ts` | Per-map presets: sky gradient, fog, hemisphere/sun/rim lights, exposure, bloom, torch colour | — |
@@ -405,6 +405,21 @@ Deploying from a separate job, with a retry, avoids the "No artifacts named gith
 
 ---
 
+### Installable app and offline play (0.19)
+
+```mermaid
+flowchart LR
+    Build["vite build"] --> Plugin["sw-plugin.ts<br/>lists every built file"] --> SW["dist/sw.js<br/>cache: chess-rpg-tactics-&lt;version&gt;"]
+    Page["Web version (https, not itch)"] --> Reg["platform.setupInstall()<br/>registers ./sw.js"]
+    Reg --> Install["install: precache the build"]
+    Install --> Activate["activate: drop older caches"]
+    Activate --> Fetch{"fetch"}
+    Fetch -->|"page"| Net1["network first,<br/>cached page offline"]
+    Fetch -->|"assets"| Cache1["cache first<br/>(fingerprinted files)"]
+```
+
+Pages come from the network when it's there, so a new release is picked up at once; its new fingerprinted assets aren't in the old cache and are fetched. Once the new worker activates (next launch) it replaces the old cache. Inside itch.io, inside another page's iframe, and on http (the dev server) nothing is registered.
+
 ## 10. Source tree
 
 ```text
@@ -434,7 +449,8 @@ src/
 ├── ui/                     UIManager, Workshop, WorldMap, Tutorial
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty (148 rule tests)
-scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist (156 rule tests)
+scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts, sw-plugin.ts (offline worker), package-itch.mjs
+public/                     manifest.webmanifest, icons/ (installable app)
 docs/                       This documentation + ADRs
 ```

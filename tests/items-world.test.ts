@@ -34,8 +34,10 @@ describe('consumables', () => {
       expect(c.price).toBeGreaterThan(0);
       expect(c.description.length).toBeGreaterThan(8);
       expect(c.range).toBeGreaterThanOrEqual(1);
+      // One job each, except the Elixir (HP and MP); a flask's ailment rides on its damage
       const effects = [c.heal, c.mp, c.cleanse, c.revive, c.damage].filter(Boolean).length;
-      expect(effects, id).toBe(1);
+      expect(effects, id).toBe(id === 'elixir' ? 2 : 1);
+      if (c.inflicts) expect(c.damage, id).toBeGreaterThan(0);
       const a = consumableAbility(c);
       expect(a.id).toBe(ITEM_ABILITY_PREFIX + id);
       expect(a.mpCost).toBe(0);
@@ -52,7 +54,10 @@ describe('consumables', () => {
   it('the market stocks the basics from the start and the rest after the first victory', () => {
     const early = consumableStock(0).map((c) => c.id);
     expect(early).toEqual(['potion', 'remedy', 'phoenix_feather']);
-    expect(consumableStock(1).length).toBe(Object.keys(CONSUMABLES).length);
+    expect(consumableStock(1).map((c) => c.id).sort()).toEqual(['blast_flask', 'ether', 'hi_potion', 'phoenix_feather', 'potion', 'remedy']);
+    expect(consumableStock(2).map((c) => c.id)).toContain('frost_flask');
+    expect(consumableStock(2).map((c) => c.id)).not.toContain('elixir');
+    expect(consumableStock(3).length).toBe(Object.keys(CONSUMABLES).length);
     const prices = consumableStock(3).map((c) => c.price);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
   });

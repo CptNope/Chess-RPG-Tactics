@@ -716,6 +716,8 @@ export class UIManager {
       this.subMenuItemsEl.appendChild(empty);
       return;
     }
+    // Pharmacology (Chemist): a tile more reach, half again the effect
+    const boost = this.subMenuFor && JobSystem.itemPotency(this.subMenuFor.unit) > 1 ? 1 : 0;
     for (const c of owned) {
       const btn = document.createElement('button');
       btn.className = 'action-item-btn';
@@ -724,7 +726,7 @@ export class UIManager {
           <span>${c.name}</span>
           <span class="action-mp">×${stock[c.id]}</span>
         </div>
-        <div class="action-desc">Rng: ${c.range}${c.aoe ? ` · Area ${c.aoe}` : ''} | ${c.description}</div>
+        <div class="action-desc">Rng: ${c.range + boost}${c.aoe ? ` · Area ${c.aoe}` : ''} | ${c.description}${boost ? ' (Pharmacology: +50%)' : ''}</div>
       `;
       btn.addEventListener('click', () => {
         SoundFX.playMenuBlip();
@@ -811,10 +813,11 @@ export class UIManager {
       this.fcFacingBadge.textContent = ab.name.toUpperCase();
       this.fcFacingBadge.className = 'badge-front';
       this.fcHitRate.textContent = '100%';
-      this.fcDamage.textContent = ab.revive ? `REVIVE ${Math.round(ab.revive * 100)}% HP`
-        : ab.fixedDamage ? `-${ab.fixedDamage} HP`
-        : ab.fixedHeal ? `+${ab.fixedHeal} HP`
-        : ab.fixedMp ? `+${ab.fixedMp} MP`
+      const potency = JobSystem.itemPotency(forecast.attacker); // Pharmacology
+      this.fcDamage.textContent = (ab.fixedHeal || 0) >= 9999 ? 'FULL HP & MP' : ab.revive ? `REVIVE ${Math.round(Math.min(1, ab.revive * potency) * 100)}% HP`
+        : ab.fixedDamage ? `-${Math.round(ab.fixedDamage * potency)} HP${ab.appliesStatus ? ` + ${ab.appliesStatus.toUpperCase()}` : ''}`
+        : ab.fixedHeal ? `+${Math.round(ab.fixedHeal * potency)} HP`
+        : ab.fixedMp ? `+${Math.round(ab.fixedMp * potency)} MP`
         : ab.cleanse ? 'CURE AILMENTS' : '—';
       this.forecastEl.classList.remove('hidden');
       this.focusForNav(this.btnForecastConfirm as HTMLElement);

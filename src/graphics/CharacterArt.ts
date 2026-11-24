@@ -169,6 +169,8 @@ function lookFor(job: string, enemy: boolean): Look {
       return { ...base, weapon: 'sword', hair: '#c9cfe0', main: e ? '#5a1f4a' : '#5b3fa8', sub: e ? '#2e0f26' : '#2f2466', trim: '#7dd3fc', pants: '#2a2f45', boots: '#1f2333', cape: e ? '#2e0f26' : '#2f2466' };
     case 'monk':
       return { ...base, weapon: 'fists', skin: '#e0ad7e', hair: '#2b2018', main: e ? '#7a2e1a' : '#efe6d2', sub: e ? '#b91c1c' : '#d9631a', trim: '#f4c430', pants: e ? '#4a1d12' : '#d8cdb5', boots: '#5b3a22' };
+    case 'chemist':
+      return { ...base, weapon: 'dagger', hair: '#7a4a2a', main: e ? '#6b3a1a' : '#2f8a7a', sub: e ? '#3d200e' : '#1f5e56', trim: '#e8c66a', pants: e ? '#3a2614' : '#4b3a2a' };
     case 'thief':
       return { ...base, weapon: 'dagger', hair: '#6b3a1f', main: e ? '#6b2626' : '#3f6a3a', sub: e ? '#3d1414' : '#24401f', trim: '#c08a3e', pants: e ? '#3a1d1d' : '#4b3a2a', boots: '#2e2118' };
     case 'summoner':
@@ -323,6 +325,20 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       p.r(x + 5, hy - 1, 2, 1, shade(L.hair, 0.3));
       p.r(x - 1, hy + 3, 14, 2, L.sub);
       p.r(back ? x + 5 : x + 12, hy + 4, 2, 4, L.sub);
+      break;
+    }
+    case 'chemist': {
+      // Flat cap with brass goggles pushed up on the brim, and a fringe
+      if (!back) { p.r(x, hy + 4, 3, 3, L.hair); p.r(x + 9, hy + 4, 3, 3, L.hair); }
+      p.b(x - 1, hy - 1, 14, 5, L.sub);
+      p.r(x - 2, hy + 3, 16, 1, shade(L.sub, -0.25));
+      if (!back) {
+        p.r(x + 1, hy + 1, 4, 3, '#b7791f'); p.r(x + 7, hy + 1, 4, 3, '#b7791f');
+        p.r(x + 2, hy + 2, 2, 1, '#9ee7f0'); p.r(x + 8, hy + 2, 2, 1, '#9ee7f0');
+        p.r(x + 5, hy + 2, 2, 1, '#6b4a1a');
+      } else {
+        p.r(x - 1, hy + 2, 14, 1, '#6b4a1a');
+      }
       break;
     }
     case 'thief': {
@@ -685,6 +701,12 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.r(hx, hy + 3, 13, 2, L.sub);
       p.r(hx - 2, hy + 4, 2, 4, L.sub);
       break;
+    case 'chemist':
+      p.b(hx, hy - 1, 13, 5, L.sub);
+      p.r(hx - 2, hy + 3, 15, 1, shade(L.sub, -0.25));
+      p.r(hx + 1, hy + 4, 4, 4, L.hair);
+      p.r(hx + 6, hy + 1, 4, 3, '#b7791f'); p.r(hx + 7, hy + 2, 2, 1, '#9ee7f0');
+      break;
     case 'thief':
       p.b(hx, hy - 1, 13, 6, L.sub);
       p.r(hx + 1, hy + 4, 4, 4, L.hair);
@@ -992,6 +1014,13 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.b(hx + 10, hy - 8, 8, 8, F.enemy ? '#2b2018' : L.hair); // topknot
         p.r(hx - 2, hy + 6, 32, 3, L.sub);
         p.r(hx + 28, hy + 8, 4, 8, L.sub);
+        break;
+      case 'chemist':
+        p.b(hx - 3, hy - 2, 34, 11, L.sub);
+        p.r(hx - 5, hy + 8, 38, 2, shade(L.sub, -0.25));
+        p.r(hx + 2, hy + 2, 10, 6, '#b7791f'); p.r(hx + 16, hy + 2, 10, 6, '#b7791f');
+        p.r(hx + 4, hy + 3, 6, 3, '#9ee7f0'); p.r(hx + 18, hy + 3, 6, 3, '#9ee7f0');
+        p.r(hx + 12, hy + 4, 4, 2, '#6b4a1a');
         break;
       case 'thief':
         p.b(hx - 3, hy - 2, 34, 12, L.sub);

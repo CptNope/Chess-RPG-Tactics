@@ -183,8 +183,11 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
   | Remedy | 60 G | Cures every ailment | 2 |
   | Phoenix Feather | 250 G | Raises a fallen ally at a quarter of their HP | 2 |
   | Blast Flask | 110 G | 70 fire damage to a target and every foe beside it | 3 |
+  | Frost Flask | 160 G | 45 ice damage and Slow to a target and every foe beside it | 3 |
+  | Elixir | 600 G | Restores every point of HP and MP | 2 |
 
-  You start with 3 Potions and a Phoenix Feather. Hi-Potions, Ethers and Blast Flasks are stocked after your first victory.
+  You start with 3 Potions and a Phoenix Feather. Hi-Potions, Ethers and Blast Flasks are stocked after your first victory, Frost Flasks after Chapter II and Elixirs after Chapter III.
+* **Chemists make supplies go further.** A Chemist (open once a unit reaches Squire Lv 2) heals for free with Salve, cures with Purge, burns armour with Acid Flask and blinds a group with Smoke Bomb. Its support ability **Pharmacology**, which any unit can equip once learned, makes every item it uses 50% stronger and reach a tile further.
 * **A fallen ally isn't lost.** A ✝ marker with their name stays where they fell. Stand within 2 tiles, choose **ITEM → Phoenix Feather** and pick that tile. They rise with no statuses and wait for their next turn. A **White Mage** can learn **Raise**, which does the same from 3 tiles for 18 MP and brings them back with a third of their HP.
 * **Enemy White Mages raise their dead too**, but only one per battle. Take them down first. Bosses can never be raised.
 * Mix jobs: equip another job's skillset as your **secondary action**, and any learned reaction, support or movement ability in the other slots (click the slot to cycle).
