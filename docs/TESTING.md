@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 95 tests"]
+        T2["Unit tests<br/>vitest · 119 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
     end
@@ -39,9 +39,9 @@ flowchart TB
 
 ---
 
-## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`)
+## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`)
 
-All 95 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 119 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -55,6 +55,7 @@ All 95 tests import `src/core` and `src/data` directly in Node. No browser is ne
 | **Turn manager** | 1 | Speed order; timeline prediction doesn't mutate state |
 | **Jobs and gear (0.13)** | 30 | The four new jobs' kits; status bookkeeping (every status is a buff or an ailment); Breach, Shell, Blind, Silence, Sleep (skips turns, wakes on damage, wears off) and Regen; cleanse, drain, ATK-scaled healing, Steal (order, odds, bosses); Conserve; the new reactions and supports; gear guard, start-status and element-boost traits; old-save JP migration; the AI never Steals or wastes ailments on guarded targets |
 | **Progression (0.14)** | 21 | Job levels from lifetime JP (spending never lowers them); `gainJp` level-ups and unlocks; the job tree (real jobs, no cycles, base jobs open, advanced jobs locked, units created in a job meet its needs, a held job is never locked, old-save migration); shop tiers, relics never sold, bounties, chapter payouts in range, resale; Paladin and Spellblade rules (ATK-scaled elemental strikes, Zeal, Arcane Edge, Runic, Divine Grace) |
+| **Items, market and world map (0.15)** | 24 | Supplies are well formed and never clash with ability ids; items always land, do fixed amounts, draw no reaction; Ether, Remedy, Phoenix Feather (only the fallen, clean slate, quarter HP) and Blast Flask (wakes sleepers, spares allies); saved inventories are clamped; worn gear and relics can't be sold; every chapter has a place on the map and every place a road; one battle open on a new game, two after Chapter I, the other road closes once you march, nothing open after the finale; old saves get a sensible cleared list; the next shelf opens when a chapter is won |
 | **Workshop scenarios** | 11 | Blank and remixed scenarios are playable; scenarios become chapters without sharing state; validation errors and warnings; hostile JSON (huge sizes, `__proto__` job ids, control characters, duplicate tiles, unknown items) is clamped or dropped; old editor maps import; share links round-trip under 4 KB and damaged links fail cleanly |
 
 Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `rng` so tests force hits, misses and crits.
@@ -71,6 +72,7 @@ These scripts ran during 0.7–0.8 development against `npm run preview` with `?
 | **Device matrix** | Loads 7 viewports (375×667 to 1920×1080, touch on for phones and tablets) and opens 11 screens; measures off-screen panels, overlapping HUD panels, and touch targets under 40px | No off-screen panels, no unintended overlaps, no small targets |
 | **Input suite** (run on Low graphics, since CI machines have no GPU) | CDP multi-touch (tap, drag, pinch, twist, two-finger tap), pen pointer events (hover, tap, barrel button, drag), mouse (wheel, left/right drag, click), a full keyboard-only turn, a full turn on an emulated standard gamepad, the Workshop driven by keyboard and controller only (open, navigate, place, undo, close and resume the battle), and Workshop brush strokes by mouse and by touch (each tile once, one undo step, panning still pans) | 63 / 63 |
 | **Workshop flow** | Desktop, phone portrait and phone landscape: open from the menu, sculpt with a brush, undo, switch every tab, set a title and objective, play, win via the boss objective, spoils, end screen, back to the campaign | No console errors on all three |
+| **Items and world map** (0.15) | Uses every item through the Item menu and forecast; raises a fallen ally; wins Chapter I and lands on the map; buys and sells at the market (and is refused away from it and in battle); saves on the map and continues onto it; marches by keyboard; loses and falls back to the map; finishes the story, enters the Trials from the gate and steps back out; opens the Workshop from the map and returns; loads a 0.14 save. Then the map, Item menu and both shop counters at 390×844, 844×390 and 820×1180 with touch | No console errors; nothing off screen; no touch target under 40px; the road not taken stays closed after a reload |
 
 Committing these to the repo and running them in CI is on the [roadmap](ROADMAP.md).
 
@@ -111,4 +113,7 @@ The Final Chapter is near 0% on pure AUTO in 0.9 as well; the campaign bot clear
 | ☐ | Screen reader spot-check: command buttons, dialogs and the banner are announced |
 | ☐ | `prefers-reduced-motion`: shake is subtle, the banner fades instead of sliding |
 | ☐ | Save, reload the page, load: squad, armory and chapter restored |
+| ☐ | Save on the world map, reload, Continue: back on the map at the same place with the same purse and supplies |
+| ☐ | World map on a phone in both orientations: every place can be tapped, the March button is on screen |
+| ☐ | Use each item once in battle; raise a fallen ally with a Phoenix Feather |
 | ☐ | Play the Final Chapter with a re-geared squad: hard but fair |

@@ -16,7 +16,9 @@ import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
 import { buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
 import { JOB_LEVEL_JP } from '../src/core/JobSystem';
-import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress } from '../src/core/Economy';
+import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress, resaleValue } from '../src/core/Economy';
+import { CONSUMABLES, MAX_STACK, STARTING_INVENTORY, consumableStock } from '../src/data/consumables';
+import { WORLD_NODES, WORLD_ROADS, worldNode } from '../src/core/World';
 
 const OUT = path.resolve('docs/CONTENT_REFERENCE.md');
 const lines: string[] = [];
@@ -47,7 +49,7 @@ w('> **Generated file — do not edit by hand.** Run `npm run docs:gen` after ch
 w();
 w('Every number here is read straight from the game data, so it always matches what ships.');
 w();
-w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Shop](#shop--gil) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
+w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
 w();
 
 // ---------------------------------------------------------------- Jobs
@@ -189,6 +191,19 @@ for (const slot of slots) {
   w();
 }
 
+// ---------------------------------------------------------------- Supplies
+w('## Supplies');
+w();
+w(`Used in battle with the **ITEM** command; one is spent each time. The squad shares them and can carry ${MAX_STACK} of each. A new squad starts with ${Object.entries(STARTING_INVENTORY).map(([id, n]) => `${n} × ${CONSUMABLES[id].name}`).join(' and ')}. Items always hit and do a fixed amount.`);
+w();
+w('| Supply | Effect | Reach | Area | Buy | Sell | Stocked |');
+w('| :--- | :--- | :---: | :---: | ---: | ---: | :--- |');
+for (const c of consumableStock(3)) {
+  const effect = c.heal ? `Restores ${c.heal} HP` : c.mp ? `Restores ${c.mp} MP` : c.cleanse ? 'Cures every ailment' : c.revive ? `Raises a fallen ally at ${Math.round(c.revive * 100)}% HP` : `${c.damage} ${c.element || ''} damage to each foe hit`.replace('  ', ' ');
+  w(`| **${c.name}** \`${c.id}\` | ${effect} | ${c.range} | ${c.aoe || '—'} | ${c.price} | ${resaleValue(c)} | ${c.stockedFrom === 0 ? 'Always' : 'After the first victory'} |`);
+}
+w();
+
 // ---------------------------------------------------------------- Shop
 w('## Shop & gil');
 w();
@@ -196,10 +211,32 @@ w(`A new game starts with **${STARTING_GIL} gil**. A defeated enemy pays 20 + 10
 w();
 w('| Stage | Price cap | Items on the shelves |');
 w('| :--- | ---: | ---: |');
-const stages = ['Chapter I', 'Chapter II', 'Final Chapter', 'Campaign cleared / Trials'];
+const stages = ['Before the first victory', 'Chapter I won', 'Chapter II won', 'Campaign cleared / Trials'];
 stages.forEach((name, i) => w(`| ${name} | ${Number.isFinite(SHOP_PRICE_CAP[i as ShopProgress]) ? SHOP_PRICE_CAP[i as ShopProgress] : 'none'} | ${shopStock(i as ShopProgress).length} |`));
 w();
 w(`Never sold (won only): ${UNIQUE_ITEMS.map(itemName).join(', ')}.`);
+w();
+w('Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the three relics above can\'t be sold.');
+w();
+
+// ---------------------------------------------------------------- World map
+w('## World map');
+w();
+w('Where the squad stands between missions. Roads join the places; the squad walks the shortest way along them.');
+w();
+w('```mermaid');
+w('flowchart LR');
+for (const n of WORLD_NODES) w(`  ${n.id}["${n.name}${n.chapterId ? `<br/><i>${CAMPAIGN_CHAPTERS[n.chapterId].title}</i>` : n.kind === 'market' ? '<br/><i>buy and sell</i>' : '<br/><i>post-game</i>'}"]`);
+for (const [a, b] of WORLD_ROADS) w(`  ${a} --- ${b}`);
+w('```');
+w();
+w('| Place | Kind | What happens there | Roads to |');
+w('| :--- | :--- | :--- | :--- |');
+for (const n of WORLD_NODES) {
+  const roads = WORLD_ROADS.filter(([a, b]) => a === n.id || b === n.id).map(([a, b]) => worldNode(a === n.id ? b : a)!.name).join(', ');
+  const what = n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
+  w(`| **${n.name}** | ${n.kind} | ${what} | ${roads} |`);
+}
 w();
 
 // ---------------------------------------------------------------- Armory

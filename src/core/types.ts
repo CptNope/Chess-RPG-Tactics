@@ -87,6 +87,16 @@ export interface Ability {
   drain?: number;
   /** Thief: takes one piece of the target's gear instead of dealing damage. */
   steal?: boolean;
+  /** Set on the action for using a consumable: the id of the item it spends (see data/consumables.ts). */
+  item?: string;
+  /** Items: a fixed amount of HP restored, whatever the user's stats. */
+  fixedHeal?: number;
+  /** Items: a fixed amount of MP restored. */
+  fixedMp?: number;
+  /** Items: fixed damage, never missing or critting. */
+  fixedDamage?: number;
+  /** Items: raises a fallen unit with this share of its max HP. Only fallen units can be targeted. */
+  revive?: number;
 }
 
 export interface Job {

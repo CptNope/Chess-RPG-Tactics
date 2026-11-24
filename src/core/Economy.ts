@@ -24,9 +24,14 @@ export const SHOP_PRICE_CAP: Record<ShopProgress, number> = { 0: 380, 1: 480, 2:
 
 const CHAPTER_PROGRESS: Record<string, ShopProgress> = { chapter_1: 0, chapter_2a: 1, chapter_2b: 1, chapter_3: 2 };
 
-export function shopProgress(campaignChapterId: string, campaignCleared: boolean, inTrials: boolean): ShopProgress {
+/**
+ * @param chapterWon the chapter the campaign is at has been won (the squad is on the world map,
+ *   between missions): the next shelf opens as soon as the battle is over, not at the next one.
+ */
+export function shopProgress(campaignChapterId: string, campaignCleared: boolean, inTrials: boolean, chapterWon = false): ShopProgress {
   if (campaignCleared || inTrials) return 3;
-  return CHAPTER_PROGRESS[campaignChapterId] ?? 0;
+  const base = CHAPTER_PROGRESS[campaignChapterId] ?? 0;
+  return (chapterWon ? Math.min(3, base + 1) : base) as ShopProgress;
 }
 
 const SLOT_ORDER: EquipmentSlot[] = ['weapon', 'shield', 'head', 'body', 'accessory'];
@@ -61,7 +66,18 @@ export function victoryGil(enemies: Unit[], mode: 'campaign' | 'trials' | 'custo
   return enemies.reduce((n, e) => n + (e.isDead ? bountyFor(e) : 0), 0) + clearBonus(mode, trialsFloor);
 }
 
-/** What a fence pays for gear the squad already owns. */
-export function resaleValue(item: Item): number {
+/** What the market (or a fence) pays for anything: half its price. */
+export function resaleValue(item: { price: number }): number {
   return Math.round(item.price / 2);
+}
+
+/**
+ * Why a piece of gear can't be sold, or null when it can: relics are never sold, and nobody
+ * sells the gear off a comrade's back.
+ */
+export function gearSaleBlock(id: string, armory: string[], squad: Unit[]): string | null {
+  if (!armory.includes(id) || !ITEMS[id]) return 'Not owned';
+  if (UNIQUE_ITEMS.includes(id)) return 'Relic';
+  const wearer = squad.find((u) => Object.values(u.equipment).some((it) => it?.id === id));
+  return wearer ? `Worn by ${wearer.name}` : null;
 }

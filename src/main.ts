@@ -5,7 +5,10 @@ import { UIManager } from './ui/UIManager';
 import { TurnManager } from './core/TurnManager';
 import { JobSystem, JpGain, MAX_JOB_LEVEL } from './core/JobSystem';
 import { JOBS } from './data/jobs';
-import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue } from './core/Economy';
+import { WorldMap } from './ui/WorldMap';
+import { Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
+import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
+import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue, gearSaleBlock } from './core/Economy';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
@@ -49,6 +52,8 @@ class TacticsGame {
   private armory: string[] = [...STARTING_ARMORY];
   /** Gear stolen this battle (shown on the spoils screen). */
   private stolenThisBattle: string[] = [];
+  /** Consumables the squad carries: item id to count. */
+  private inventory: Record<string, number> = { ...STARTING_INVENTORY };
   /** The squad's purse. */
   private gil = STARTING_GIL;
   /** Gil from fencing stolen duplicates this battle. */
@@ -59,6 +64,12 @@ class TacticsGame {
   private mode: 'campaign' | 'trials' | 'custom' = 'campaign';
   /** The campaign chapter to return to after Workshop battles (and to save). */
   private campaignChapterId = 'chapter_1';
+  /** Campaign chapters won this run, in order. */
+  private clearedChapters: string[] = [];
+  /** The world map shown between missions. */
+  private world!: WorldMap;
+  /** True while the Workshop is open over the world map. */
+  private mapParked = false;
 
   // Workshop
   private workshop!: Workshop;
@@ -95,12 +106,45 @@ class TacticsGame {
 
   constructor() {
     this.ui = new UIManager();
+    this.world = new WorldMap({
+      state: () => ({
+        current: this.campaignChapterId,
+        cleared: this.clearedChapters,
+        trialsOpen: this.campaignCleared || this.mode === 'trials',
+        trialsFloor: Math.max(1, this.trialsFloor),
+        bestTrial: SaveManager.getBestTrialFloor(),
+        gil: this.gil,
+        leaderJob: this.squad[0]?.jobId || 'squire'
+      }),
+      march: (m) => this.marchTo(m),
+      enterTrials: () => { this.world.close(); this.startTrial(Math.max(1, this.trialsFloor)); },
+      newGamePlus: () => this.startNewGamePlus(),
+      openTeam: () => this.openTeamFor(null),
+      openShop: () => {
+        this.openTeamFor(null);
+        const tab = document.getElementById('btn-tab-shop')!;
+        tab.click();
+        tab.focus({ preventScroll: true }); // before the modal's own first-focus pass, so the Shop tab is where you are
+      },
+      save: () => this.saveGame(true),
+      menu: () => this.ui.toggleSystemMenu(),
+      focus: (el) => this.ui.focusForNav(el),
+      blip: () => SoundFX.playMenuBlip()
+    });
+    this.ui.onJobModalClosed = () => this.world.refresh();
     this.ui.armory = this.armory;
+    this.ui.inventory = () => this.inventory;
     this.ui.shop = {
       gil: () => this.gil,
       stock: () => shopStock(this.shopLevel()),
       nextCap: () => nextShopCap(this.shopLevel()),
-      buy: (id) => this.buyItem(id)
+      buy: (id) => this.buyItem(id),
+      open: () => this.marketOpen(),
+      supplies: () => consumableStock(this.shopLevel()),
+      buySupply: (id) => this.buyConsumable(id),
+      sellSupply: (id) => this.sellConsumable(id),
+      sellGear: (id) => this.sellGear(id),
+      saleBlock: (id) => gearSaleBlock(id, this.armory, this.squad)
     };
     this.squad = this.createStartingSquad();
 
@@ -302,7 +346,10 @@ class TacticsGame {
   // ---------------------------------------------------------------------------
 
   private bindEvents(): void {
-    this.ui.onMapChanged = (mapId) => this.switchBattlefield(mapId);
+    this.ui.onMapChanged = (mapId) => {
+      // The battlefield picker belongs to a battle: on the world map there is none to redraw
+      if (!this.world.isOpen) this.switchBattlefield(mapId);
+    };
 
     this.ui.onWorkshop = () => this.openWorkshop();
 
@@ -596,6 +643,7 @@ class TacticsGame {
       else if (k === '2') this.clickIfEnabled('btn-action-act');
       else if (k === '3') this.clickIfEnabled('btn-action-wait');
       else if (k === '4' || lower === 't') this.handleAutoCommand();
+      else if (k === '5' || lower === 'i') this.clickIfEnabled('btn-action-item');
     }
   }
 
@@ -610,13 +658,18 @@ class TacticsGame {
 
   private saveGame(announce: boolean): void {
     // Workshop battles never overwrite campaign progress: save the chapter you'll return to
-    const custom = this.mode === 'custom';
-    const ok = SaveManager.saveGame(custom ? this.campaignChapterId : this.currentChapter.id, this.squad, {
+    // Between missions (and in the Trials) the story's place is the campaign chapter, not the last battlefield
+    const inStoryBattle = this.mode === 'campaign' && !this.world.isOpen;
+    const ok = SaveManager.saveGame(inStoryBattle ? this.currentChapter.id : this.campaignChapterId, this.squad, {
       armory: this.armory,
       mode: this.mode === 'custom' ? 'campaign' : this.mode,
       trialsFloor: this.trialsFloor,
       campaignCleared: this.campaignCleared,
-      gil: this.gil
+      gil: this.gil,
+      inventory: this.inventory,
+      clearedChapters: this.clearedChapters,
+      onWorldMap: this.world.isOpen,
+      worldLocation: this.world.location
     });
     if (ok && announce) {
       SoundFX.playTurnChime();
@@ -668,7 +721,22 @@ class TacticsGame {
 
     this.campaignCleared = !!data.campaignCleared;
     this.gil = typeof data.gil === 'number' && data.gil >= 0 ? Math.floor(data.gil) : STARTING_GIL;
-    if (data.mode === 'trials' && data.trialsFloor) {
+    this.inventory = sanitizeInventory(data.inventory);
+    const chapterId = CAMPAIGN_CHAPTERS[data.currentChapterId] ? data.currentChapterId : 'chapter_1';
+    this.clearedChapters = sanitizeCleared(data.clearedChapters, chapterId);
+    // A Trials save from before 0.15.0 has no list of won chapters, but the story is certainly over
+    if (!Array.isArray(data.clearedChapters) && data.mode === 'trials' && this.campaignCleared) this.clearedChapters = clearedAfterStory();
+    this.campaignChapterId = chapterId;
+    this.world.close();
+    if (data.onWorldMap) {
+      // Saved between missions: back to the map, where the squad was standing
+      this.mode = data.mode === 'trials' ? 'trials' : 'campaign';
+      this.customScenario = null;
+      this.trialsFloor = Math.max(0, Math.floor(data.trialsFloor || 0));
+      this.campaignChapterId = chapterId;
+      this.ui.showBanner('SAVE FILE RESTORED!');
+      this.openWorldMap(data.worldLocation);
+    } else if (data.mode === 'trials' && data.trialsFloor) {
       this.ui.showBanner('SAVE FILE RESTORED!');
       this.startTrial(data.trialsFloor);
     } else {
@@ -818,12 +886,21 @@ class TacticsGame {
       return;
     }
 
-    this.currentMode = 'targeting';
-    (document.activeElement as HTMLElement | null)?.blur();
     const supportive = CombatEngine.isSupportive(ability);
-    const tiles = this.grid.mapData.tiles.filter((t) =>
+    let tiles = this.grid.mapData.tiles.filter((t) =>
       this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive)
     );
+    if (ability.revive) {
+      // Only the tiles where a fallen ally can be raised
+      tiles = tiles.filter((t) => this.victimsFor(active, ability, t.x, t.z).length > 0);
+      if (tiles.length === 0) {
+        this.ui.showBanner('NO FALLEN ALLY IN REACH');
+        this.selectedAbility = null;
+        return;
+      }
+    }
+    this.currentMode = 'targeting';
+    (document.activeElement as HTMLElement | null)?.blur();
     this.scene.setHighlights(tiles, supportive ? 0x22c55e : 0xdc2626);
   }
 
@@ -980,8 +1057,13 @@ class TacticsGame {
   private victimsFor(caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
     if (ability.isSelfOnly) return [caster];
     if (ability.aoe > 0) return unitsInBlast(caster, ability, tx, tz, this.units);
-    const u = this.units.find((v) => !v.isDead && v.x === tx && v.z === tz);
-    return u ? [u] : [];
+    const living = this.units.find((v) => !v.isDead && v.x === tx && v.z === tz);
+    if (ability.revive) {
+      // A fallen ally lying on the tile, unless someone is standing over them
+      const fallen = this.units.find((v) => v.isDead && v.team === caster.team && v.x === tx && v.z === tz);
+      return fallen && !living ? [fallen] : [];
+    }
+    return living ? [living] : [];
   }
 
   private forecastFor(attacker: Unit, target: Unit, ability: Ability, aim?: { x: number; z: number }): CombatForecast {
@@ -1005,6 +1087,7 @@ class TacticsGame {
     const victims = this.victimsFor(caster, ability, tx, tz);
     caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
     caster.hasActed = true;
+    if (ability.item) this.inventory[ability.item] = Math.max(0, (this.inventory[ability.item] || 0) - 1);
 
     if (!ability.isSelfOnly) {
       caster.facing = faceTowards(caster.x, caster.z, tx, tz);
@@ -1019,7 +1102,7 @@ class TacticsGame {
 
     let anyKill = false;
     for (const target of victims) {
-      if (target.isDead) continue;
+      if (target.isDead && !ability.revive) continue;
       const forecast = this.forecastFor(caster, target, ability, { x: tx, z: tz });
       const result = CombatEngine.executeAttack(forecast);
       this.presentResult(target, forecast, result);
@@ -1037,9 +1120,10 @@ class TacticsGame {
 
     // Player progression: JP for the current job, EXP for acting and for kills
     if (caster.team === 'player' && !caster.isDead) {
-      const jpGain = Math.round(24 * (caster.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
-      this.announceJobGain(caster, JobSystem.gainJp(caster, jpGain));
-      const levels = JobSystem.grantExp(caster, 10 + (anyKill ? 20 : 0));
+      // Using a supply isn't practising a job: no JP and no EXP for the act, only for a kill it makes
+      const jpGain = ability.item ? 0 : Math.round(24 * (caster.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
+      if (jpGain > 0) this.announceJobGain(caster, JobSystem.gainJp(caster, jpGain));
+      const levels = JobSystem.grantExp(caster, (ability.item ? 0 : 10) + (anyKill ? 20 : 0));
       if (levels > 0) {
         const h = this.grid.getHeight(caster.x, caster.z);
         this.scene.spawnFloatingDamage(caster.x, h + 0.4, caster.z, `LEVEL UP! Lv ${caster.level}`, 'heal');
@@ -1057,9 +1141,27 @@ class TacticsGame {
     const h = this.grid.getHeight(target.x, target.z);
     const ability = forecast.ability;
 
+    if (result.revived) {
+      SoundFX.playHeal();
+      this.scene.updateUnits(this.units);
+      this.fx.heal(target);
+      this.scene.spawnFloatingDamage(target.x, h, target.z, 'REVIVED', 'heal');
+      this.ui.addLogEntry(`[ITEM] ${target.name} is back on their feet with ${result.damageDealt} HP!`, 'heal');
+      this.updateTimeline();
+      return;
+    }
+    if (ability.item && result.hit && !result.isHeal && result.damageDealt === 0 && result.cleansed === undefined) {
+      // An Ether (or an item with nothing left to do)
+      SoundFX.playHeal();
+      this.fx.heal(target);
+      this.scene.spawnFloatingDamage(target.x, h, target.z, result.mpRestored ? `MP +${result.mpRestored}` : 'NO EFFECT', result.mpRestored ? 'heal' : 'miss');
+      this.ui.addLogEntry(`[ITEM] ${target.name} recovers ${result.mpRestored || 0} MP.`, 'heal');
+      return;
+    }
+
     if (!result.hit) {
       SoundFX.playMenuBlip();
-      this.scene.spawnFloatingDamage(target.x, h, target.z, 'MISS', 'miss');
+      this.scene.spawnFloatingDamage(target.x, h, target.z, ability.item ? 'NO EFFECT' : 'MISS', 'miss');
       if (result.reaction?.type === 'parry') {
         this.ui.showBanner(result.reaction.description);
         this.ui.addLogEntry(`[PARRY] ${result.reaction.description}`, 'reaction');
@@ -1292,6 +1394,7 @@ class TacticsGame {
     this.ui.hideDialogue();
     this.ui.hideResultModal();
     this.ui.toggleSystemMenu(false);
+    this.world.close();
     Music.stop();
     const cont = document.getElementById('title-continue') as HTMLButtonElement;
     cont.classList.toggle('hidden', !SaveManager.hasSave());
@@ -1386,6 +1489,9 @@ class TacticsGame {
     this.ui.hideResultModal();
     this.ui.toggleSystemMenu(false);
     this.ui.toggleSubMenu(false);
+    // Opened from the world map: step off it, and come back to it when the Workshop closes
+    this.mapParked = this.world.isOpen;
+    this.world.close();
     this.currentMode = 'editor';
     this.units = [];
     this.scene.setActiveUnit(null);
@@ -1431,6 +1537,13 @@ class TacticsGame {
   }
 
   private returnToCampaign(): void {
+    // Between missions (the chapter is already won, or the Workshop was opened from the map): back to the map
+    if (this.mapParked || this.clearedChapters.includes(this.campaignChapterId)) {
+      this.mapParked = false;
+      this.ui.addLogEntry('[SYSTEM] Back to the campaign.', 'system');
+      this.openWorldMap();
+      return;
+    }
     this.ui.addLogEntry('[SYSTEM] Back to the campaign: the chapter starts fresh.', 'system');
     this.loadChapter(this.campaignChapterId);
   }
@@ -1507,6 +1620,7 @@ class TacticsGame {
     if (!playersAlive) {
       this.battleOver = true;
       this.currentMode = 'menu';
+      this.ui.toggleSubMenu(false);
       Music.stop();
       this.ui.showBanner('DEFEAT... ALL ALLIES FALLEN');
       this.ui.addLogEntry('=== DEFEAT! All allies have fallen. ===', 'defeat');
@@ -1516,6 +1630,7 @@ class TacticsGame {
     if (!enemiesAlive) {
       this.battleOver = true;
       this.currentMode = 'menu';
+      this.ui.toggleSubMenu(false);
       Music.playTrack('victory');
       SoundFX.playVictoryFanfare();
       this.ui.showBanner(winText);
@@ -1538,10 +1653,11 @@ class TacticsGame {
     const buttons: { label: string; primary?: boolean; onClick: () => void }[] = [
       { label: 'Retry Battle', primary: true, onClick: retry }
     ];
+    buttons.push({ label: 'World Map', onClick: () => this.openWorldMap(this.mode === 'trials' ? 'trials' : undefined) });
     if (SaveManager.hasSave()) buttons.push({ label: 'Load Save', onClick: () => this.loadGame() });
     this.ui.showResultModal({
       title: 'DEFEAT',
-      subtitle: 'Your squad keeps the EXP and JP it earned. Retry with a new formation, swap jobs in Team, or load your save.',
+      subtitle: 'Your squad keeps the EXP and JP it earned. Retry with a new formation, or fall back to the world map to restock at the market.',
       buttons
     });
   }
@@ -1578,7 +1694,7 @@ class TacticsGame {
     this.gil += earned;
     if (earned > 0 || this.fencedThisBattle > 0) {
       const fenced = this.fencedThisBattle > 0 ? ` · +${this.fencedThisBattle} from fenced loot` : '';
-      rows.push(`<div class="result-loot result-gil"><b>GIL:</b> +${earned}${fenced} · Purse: ${this.gil.toLocaleString('en-US')}<br><small>Spend it in ★ Team → Shop.</small></div>`);
+      rows.push(`<div class="result-loot result-gil"><b>GIL:</b> +${earned}${fenced} · Purse: ${this.gil.toLocaleString('en-US')}<br><small>Spend it at the market on the world map.</small></div>`);
     }
     if (this.stolenThisBattle.length > 0) {
       rows.push(`<div class="result-loot"><b>STOLEN:</b> ${this.stolenThisBattle.map((id) => esc(ITEMS[id].name)).join(', ')}</div>`);
@@ -1600,7 +1716,7 @@ class TacticsGame {
         bodyHtml: rows.join(''),
         buttons: [
           { label: `Next Trial (${this.trialsFloor + 1})`, primary: true, onClick: () => { this.trialsFloor++; this.saveGame(false); this.startTrial(this.trialsFloor); } },
-          { label: 'Save', onClick: () => { this.saveGame(true); this.trialsFloor++; this.saveGame(false); this.startTrial(this.trialsFloor); } }
+          { label: 'World Map', onClick: () => { this.trialsFloor++; this.openWorldMap('trials'); } }
         ]
       });
       return;
@@ -1623,29 +1739,46 @@ class TacticsGame {
     }
   }
 
+  /** A campaign battle is won: on to the world map, or the epilogue after the last one. */
   private handleChapterVictoryChoices(): void {
     this.currentMode = 'menu';
+    const won = this.currentChapter.id;
+    if (!this.clearedChapters.includes(won)) this.clearedChapters.push(won);
     if (this.currentChapter.choices && this.currentChapter.choices.length > 0) {
-      this.ui.showChoiceModal(
-        `${this.currentChapter.title} — VICTORY!`,
-        'The enemy forces are in disarray! How shall we proceed, Commander?',
-        this.currentChapter.choices,
-        (choice) => {
-          for (const id of choice.rewardItemIds || []) if (!this.armory.includes(id)) this.armory.push(id);
-          this.ui.showBanner(`ORDERS: ${choice.text}`);
-          this.ui.addLogEntry(`[ARMORY] ${choice.rewardText}`, 'system');
-          later(() => {
-            this.loadChapter(choice.nextChapterId);
-            this.saveGame(false); // autosave at the start of each chapter
-          }, 1200);
-        }
-      );
+      this.openWorldMap(nodeForChapter(won)?.id);
       return;
     }
 
     this.campaignCleared = true;
     this.saveGame(false);
     this.showEpilogue();
+  }
+
+  /** Shows the world map (and autosaves there): the squad's home between missions. */
+  private openWorldMap(location?: string): void {
+    if (this.mode === 'custom') { this.mode = 'campaign'; this.customScenario = null; }
+    this.currentMode = 'menu';
+    this.battleOver = true;
+    this.scene.clearHighlights();
+    this.ui.hideResultModal();
+    this.ui.hideDialogue();
+    this.ui.toggleSystemMenu(false);
+    Music.playTrack('dialogue');
+    this.world.open(location);
+    this.saveGame(false);
+  }
+
+  /** Leaves the world map for a battle. Orders that came with a story choice bring their reward. */
+  private marchTo(mission: Mission): void {
+    const choice = mission.choice;
+    if (choice) {
+      for (const id of choice.rewardItemIds || []) if (!this.armory.includes(id)) this.armory.push(id);
+      this.ui.addLogEntry(`[ORDERS] ${choice.text}`, 'system');
+      if (choice.rewardText) this.ui.addLogEntry(`[ARMORY] ${choice.rewardText}`, 'system');
+    }
+    this.world.close();
+    this.loadChapter(mission.chapterId);
+    this.saveGame(false); // autosave at the start of each chapter
   }
 
   private showEpilogue(): void {
@@ -1655,7 +1788,8 @@ class TacticsGame {
       subtitle: 'Campaign complete! Twelve more seals stir beneath the mountain: the Trials of the Zodiac are endless generated battles with rare gear and a Warden boss every fifth floor.',
       bodyHtml: best > 0 ? `<div class="result-row"><span class="result-name">BEST TRIAL</span><span class="result-detail">Floor ${best}</span></div>` : '',
       buttons: [
-        { label: 'Enter the Trials', primary: true, onClick: () => this.startTrial(1) },
+        { label: 'World Map', primary: true, onClick: () => this.openWorldMap('summit') },
+        { label: 'Enter the Trials', onClick: () => this.startTrial(1) },
         { label: 'New Game+', onClick: () => this.startNewGamePlus() }
       ]
     });
@@ -1667,16 +1801,53 @@ class TacticsGame {
     this.armory.length = 0;
     this.armory.push(...STARTING_ARMORY);
     this.gil = STARTING_GIL;
+    this.inventory = { ...STARTING_INVENTORY };
     this.campaignCleared = false;
+    this.clearedChapters = [];
+    this.trialsFloor = 0;
+    this.world.close();
+    this.world.location = 'ruins';
     this.mode = 'campaign';
     this.customScenario = null;
     this.loadChapter('chapter_1');
   }
 
+  /** The market trades only while the party stands at it on the world map. */
+  private marketOpen(): boolean {
+    return this.world.isOpen && this.world.location === 'market';
+  }
+
+  /** Buys one consumable. False when the market is closed, the purse is short or the stack is full. */
+  private buyConsumable(id: string): boolean {
+    const c = CONSUMABLES[id];
+    if (!c || !this.marketOpen() || this.gil < c.price || (this.inventory[id] || 0) >= MAX_STACK) return false;
+    if (!consumableStock(this.shopLevel()).some((x) => x.id === id)) return false;
+    this.gil -= c.price;
+    this.inventory[id] = (this.inventory[id] || 0) + 1;
+    return true;
+  }
+
+  /** Sells one consumable for half its price. */
+  private sellConsumable(id: string): boolean {
+    const c = CONSUMABLES[id];
+    if (!c || !this.marketOpen() || !(this.inventory[id] > 0)) return false;
+    this.inventory[id]--;
+    this.gil += resaleValue(c);
+    return true;
+  }
+
+  /** Sells a piece of gear out of the armory for half its price (not relics, not gear someone is wearing). */
+  private sellGear(id: string): boolean {
+    if (!this.marketOpen() || gearSaleBlock(id, this.armory, this.squad)) return false;
+    this.armory.splice(this.armory.indexOf(id), 1);
+    this.gil += resaleValue(ITEMS[id]);
+    return true;
+  }
+
   /** Buys an item for the armory. Returns false when the purse is short or it's already owned. */
   private buyItem(id: string): boolean {
     const item = ITEMS[id];
-    if (!item || this.armory.includes(id) || this.gil < item.price) return false;
+    if (!item || !this.marketOpen() || this.armory.includes(id) || this.gil < item.price) return false;
     if (!shopStock(this.shopLevel()).some((it) => it.id === id)) return false;
     this.gil -= item.price;
     this.armory.push(id);
@@ -1685,12 +1856,16 @@ class TacticsGame {
   }
 
   private shopLevel() {
-    return shopProgress(this.campaignChapterId, this.campaignCleared, this.mode === 'trials');
+    return shopProgress(this.campaignChapterId, this.campaignCleared, this.mode === 'trials', this.clearedChapters.includes(this.campaignChapterId));
   }
 
   /** Replays the campaign from Chapter I keeping squad levels, jobs, abilities and armory. */
   private startNewGamePlus(): void {
     this.ui.addLogEntry('[SYSTEM] New Game+ : your squad keeps its levels, jobs and gear.', 'system');
+    this.clearedChapters = [];
+    this.world.close();
+    this.world.location = 'ruins';
+    this.ui.hideResultModal();
     this.loadChapter('chapter_1');
   }
 
@@ -1736,7 +1911,8 @@ class TacticsGame {
       }
     }
 
-    if (this.scene) this.scene.render();
+    // Nothing of the battlefield shows behind the world map: skip drawing it
+    if (this.scene && !this.world?.isOpen) this.scene.render();
   }
 }
 

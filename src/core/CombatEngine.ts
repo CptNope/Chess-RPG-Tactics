@@ -39,6 +39,10 @@ export interface AttackResult {
   stolen?: Item;
   /** The blow woke a sleeping target. */
   woke?: boolean;
+  /** MP an item restored. */
+  mpRestored?: number;
+  /** The target was raised from the fallen. */
+  revived?: boolean;
 }
 
 /** Statuses that help the unit carrying them (cast on allies, never on foes). */
@@ -85,6 +89,7 @@ const MAGIC_SCALE = 3;
 export class CombatEngine {
   /** True for heals and buffs: abilities meant for the caster's own side. */
   public static isSupportive(ability: Ability): boolean {
+    if (ability.item) return !ability.fixedDamage;
     if (ability.power < 0) return true;
     if (ability.power !== 0 || ability.steal) return false;
     return !!ability.cleanse || (!!ability.appliesStatus && BENEFICIAL_STATUSES.includes(ability.appliesStatus));
@@ -166,9 +171,14 @@ export class CombatEngine {
     // A sleeper can't dodge
     if (has(target, 'sleep') && !supportive && !isSelf) hitChance = 100;
     if (ability.steal && !this.stealableItem(target)) hitChance = 0;
+    // Items always work, and do the same whoever uses them
+    if (ability.item) hitChance = 100;
 
     let baseDamage = 0;
-    if (ability.id === 'tm_gravity') {
+    if (ability.item) {
+      // Fixed amounts: negative = healing, like spells
+      baseDamage = ability.fixedDamage || -(ability.fixedHeal || 0);
+    } else if (ability.id === 'tm_gravity') {
       // Gravity shears 25% of current HP; bosses resist it (12%).
       baseDamage = Math.max(1, Math.round(target.currentHp * (target.isBoss ? 0.12 : 0.25)));
     } else if ((supportive && ability.power === 0) || ability.steal) {
@@ -192,7 +202,7 @@ export class CombatEngine {
       baseDamage *= 1.2;
     }
 
-    if (ability.power > 0 && ability.id !== 'tm_gravity') {
+    if (ability.power > 0 && ability.id !== 'tm_gravity' && !ability.item) {
       // Arcane Edge: the basic Attack carries the wielder's magic
       if (attacker.equippedAbilities.support === 'sb_arcane_edge' && ability.id === 'basic_attack') {
         baseDamage += JobSystem.getMagicPower(attacker) * 1.5;
@@ -291,8 +301,58 @@ export class CombatEngine {
    * Executes the attack and returns result details.
    * `rng` is injectable so tests can make rolls deterministic.
    */
+  /** Boss enrage: the first time a boss drops to 50% HP it gains Haste and +20% power. */
+  private static checkBossEnrage(target: Unit): boolean {
+    if (!target.isBoss || target.isDead || target.isEnraged || target.currentHp > target.maxHp / 2) return false;
+    target.isEnraged = true;
+    target.statuses = target.statuses.filter((s) => s.type !== 'slow' && s.type !== 'immobilize');
+    target.statuses.push({ type: 'haste', duration: 99 });
+    JobSystem.recalculateDerivedStats(target);
+    return true;
+  }
+
+  /** True when the item's action can do something for this unit (revives need the fallen; the rest, the living). */
+  public static itemCanTarget(ability: Ability, target: Unit): boolean {
+    return ability.revive ? target.isDead : !target.isDead;
+  }
+
+  /**
+   * Resolves a consumable. Items never miss, crit or trigger reactions, and their amounts are
+   * fixed: a Potion heals the same in anyone's hands.
+   */
+  private static useItem(forecast: CombatForecast): AttackResult {
+    const { target, ability } = forecast;
+    const none: AttackResult = { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
+    if (!this.itemCanTarget(ability, target)) return none;
+
+    if (ability.revive) {
+      target.isDead = false;
+      target.statuses = [];
+      target.ct = 0;
+      JobSystem.recalculateDerivedStats(target);
+      target.currentHp = Math.max(1, Math.round(target.maxHp * ability.revive));
+      return { hit: true, damageDealt: target.currentHp, isCrit: false, isHeal: true, revived: true };
+    }
+
+    const cleansed = ability.cleanse ? this.cleanse(target) : undefined;
+    let mpRestored: number | undefined;
+    if (ability.fixedMp) {
+      mpRestored = Math.min(ability.fixedMp, target.maxMp - target.currentMp);
+      target.currentMp += mpRestored;
+    }
+    if (ability.fixedDamage) {
+      const dealt = Math.min(target.currentHp, ability.fixedDamage);
+      const woke = this.damage(target, ability.fixedDamage);
+      return { hit: true, damageDealt: dealt, isCrit: false, isHeal: false, woke, bossEnraged: this.checkBossEnrage(target) };
+    }
+    const heal = ability.fixedHeal ? Math.min(ability.fixedHeal, target.maxHp - target.currentHp) : 0;
+    target.currentHp += heal;
+    return { hit: true, damageDealt: heal, isCrit: false, isHeal: heal > 0 || !!ability.fixedHeal, cleansed, mpRestored };
+  }
+
   public static executeAttack(forecast: CombatForecast, rng: () => number = Math.random): AttackResult {
     const { attacker, target, ability } = forecast;
+    if (ability.item) return this.useItem(forecast);
     const roll = rng() * 100;
     const hit = roll <= forecast.hitChance;
 
@@ -386,15 +446,7 @@ export class CombatEngine {
       }
     }
 
-    // Boss enrage: the first time a boss drops to 50% HP it gains Haste and +20% power
-    let bossEnraged = false;
-    if (target.isBoss && !target.isDead && !target.isEnraged && target.currentHp <= target.maxHp / 2) {
-      target.isEnraged = true;
-      target.statuses = target.statuses.filter((s) => s.type !== 'slow' && s.type !== 'immobilize');
-      target.statuses.push({ type: 'haste', duration: 99 });
-      JobSystem.recalculateDerivedStats(target);
-      bossEnraged = true;
-    }
+    const bossEnraged = this.checkBossEnrage(target);
 
     return {
       hit: true,

@@ -32,6 +32,7 @@ timeline
     section Nov 23
         0.13.0 : Monk, Thief, Summoner, Oracle : 6 new statuses : Gear traits : Steal
         0.14.0 : Job levels and job tree : Paladin, Spellblade : Gil and shop : Status pips
+        0.15.0 : Items in battle : World map between missions : Market, buy and sell : Haste effect fix
 ```
 
 | Version | Theme | Highlights |
@@ -44,6 +45,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.15 | A world between battles | The Item command and six supplies (a revive among them), a world map where the story branch is a march and defeat is a retreat, Larkmoor Market with buy and sell, the Haste effect back on the unit |
 | 0.14 | Progression | Job levels and an enforced job tree, Paladin and Spellblade (15 jobs, 86 abilities), gil and a shop that grows with the campaign, status pips over units, readable HP bars |
 | 0.13 | Bigger squad | Monk, Thief, Summoner and Oracle (13 jobs, 75 abilities), Shell / Regen / Blind / Silence / Sleep / Breach, 25 new items with traits, Steal, Rend Armor and Armor Mastery fixed |
 | 0.12 | Ship it | itch.io release (HTML5 zip, store page, butler publishing), title screen, fullscreen, bundled fonts, iframe-safe input |
@@ -56,17 +58,17 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.15)"]
+    subgraph NOW["Now (0.16)"]
         direction TB
         N1["Job mastery rewards"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Devlog + site post<br/>for the itch release"]
     end
-    subgraph NEXT["Next (0.16 – 0.18)"]
+    subgraph NEXT["Next (0.17 – 0.19)"]
         direction TB
         X1["Equipment rules:<br/>weapon types per job"]
-        X2["Consumable items:<br/>potions, remedies"]
+        X2["World map events:<br/>side battles, travellers"]
         X3["Smarter AI:<br/>reactions, facing, 2-ply"]
         X4["Undo move"]
         X5["Multiple save slots"]
@@ -75,7 +77,7 @@ flowchart LR
     subgraph LATER["Later (1.0+)"]
         direction TB
         L1["Chapter IV+ campaign arc"]
-        L2["More jobs: Paladin, Bard,<br/>Dancer; a Revive spell"]
+        L2["More jobs: Bard, Dancer;<br/>a Revive spell"]
         L3["Workshop: community<br/>scenario gallery"]
         L4["Remappable controls"]
         L5["Localization"]
@@ -85,21 +87,23 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.15): finish and ship what exists
+### Now (0.16): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
 | **Job mastery rewards** | Job levels 4–8 unlock nothing yet | S | A small permanent bonus or a mastery ability per job at Master |
 | **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **Devlog** | Tell people what's new | S | itch devlog for 0.13 and 0.14 (the site's project page is live) |
+| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.15 (the site's project page is live) |
 
-### Next (0.16 – 0.18): depth
+### Next (0.17 – 0.19): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
 | **Equipment rules**: weapon and armor types per job | Every job can wear everything; Armor Mastery (0.13) could become "wear plate as any job" once rules exist | M |
-| **Consumables** (potions, remedies, a revive) and an Item command | Gil has little to buy once the armory is full | M |
+| **World map events**: optional side battles, a travelling merchant with one rare item, a camp scene between chapters | The map has six places and nothing happens on the road | M |
+| **More supplies and a Chemist job**: an elixir, status-inflicting flasks, a job that doubles item effects and throws them further | Items are six plain supplies | M |
+| **AI: items** | Bosses could carry a potion; AUTO could use yours with a setting | S |
 | **AI: reactions and facing** | AI ignores Weapon Guard and leaves its back open ([details](ENEMY_AI.md#5-known-limits)) | M |
 | **AI: two-ply look-ahead** | Lets enemies set up combos and retreat to heal | L |
 | **Undo move** (before acting) | Standard tactics-game comfort | S |
@@ -112,7 +116,7 @@ flowchart LR
 | Item | Size |
 | :--- | :---: |
 | Campaign Chapters IV–VI with new maps and a third recruit | L |
-| More jobs (Paladin, Bard, Dancer) and a Revive spell (needs dead units to be targetable) | L |
+| More jobs (Bard, Dancer) and a Revive spell for the White Mage (fallen units are targetable since 0.15) | L |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns) | M |
 | Remappable keyboard and controller bindings | M |
@@ -142,7 +146,7 @@ quadrantChart
     "Save slots": [0.22, 0.36]
     "PWA offline": [0.3, 0.52]
     "Equipment rules": [0.55, 0.53]
-    "Consumable items": [0.6, 0.62]
+    "World map events": [0.55, 0.66]
     "AI 2-ply": [0.75, 0.6]
     "New chapters": [0.8, 0.85]
     "More jobs": [0.7, 0.7]
@@ -163,6 +167,8 @@ quadrantChart
 | QA | Browser play-tests not in CI | Medium | Now |
 | A11y | Font sizes are fixed px; no text-size setting | Low | Next |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
+| Rules | Retrying a lost battle keeps the supplies spent in it, while loading a save restores them | Low | Decide on one rule; a retry could refund |
+| World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Open on the map once there is more than one thing to do there at the start |
 | Balance | `npm run balance` ignores reactions and gear, so its numbers are relative; the Final Chapter is near 0% on pure AUTO (as in 0.9) and needs re-geared or hands-on play | Low | Tune after real playtests |
 
 ---

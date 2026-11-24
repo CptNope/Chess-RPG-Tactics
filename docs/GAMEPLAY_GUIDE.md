@@ -15,6 +15,10 @@ flowchart LR
     Move --> Act
     Act --> Move
     Move & Act --> Wait["WAIT<br/>choose facing"]
+    Turn --> Item["ITEM<br/>pick a supply → target"]
+    Move --> Item
+    Item --> Move
+    Item --> Wait
     Turn --> Auto["AUTO<br/>AI plays this turn"]
     Turn --> Wait
     Wait --> Next(["Next unit by CT"])
@@ -25,6 +29,7 @@ flowchart LR
 | :--- | :--- | :--- |
 | **MOVE** | Walk up to *Move* tiles; climb steps up to *Jump* height | Water and swamp cost 2 Move |
 | **ACT** | Attack or use an ability; a **forecast** shows hit %, damage, facing and how many units an area spell catches | Spell *damage* ignores facing; physical hits from the back deal +30% |
+| **ITEM** | Use a supply instead of acting: heal, restore MP, cure ailments, raise a fallen ally, or throw a Blast Flask. Items never miss | A Potion heals the same in anyone's hands, so let your fighters carry the healing |
 | **WAIT** | End the turn and choose which way to face | Face the enemy: back attacks crit far more often |
 | **AUTO** | The AI plays this unit's turn | Great for grinding the Trials |
 | **STATUS** | Opens this unit's jobs and gear | |
@@ -78,7 +83,37 @@ flowchart LR
 | II-B | Night Battlement | Dragoon Commander | Bria (Geomancer) | Crystal Helm |
 | Final | Zodiac Summit | Zodiac Champion | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail |
 
-Each branch choice also adds gear to your armory the moment you pick it ([details](CONTENT_REFERENCE.md#campaign)). The game autosaves at the start of every chapter.
+Each road also adds gear to your armory the moment you march down it ([details](CONTENT_REFERENCE.md#campaign)). The game autosaves at the start of every chapter and whenever you reach the world map.
+
+### The world map
+
+Between missions the squad stands on a map of the realm. Select a place to walk there along the roads; the panel beside the map says what you can do.
+
+![The world map](images/world-map.webp)
+
+```mermaid
+flowchart LR
+    M["◆ Larkmoor Market<br/>buy and sell"] --- R["Riverside Ruins<br/>Chapter I"]
+    M --- B["Night Battlement<br/>Chapter II-B"]
+    R --- G["Gloomy Mire<br/>Chapter II-A"]
+    R --- B
+    G --- Z["Zodiac Summit<br/>Final Chapter"]
+    B --- Z
+    Z --- T["★ Gate of Trials<br/>opens after the story"]
+```
+
+| On the map | Means |
+| :--- | :--- |
+| ⚔ red pin, pulsing | A battle you can march to. **March to battle** starts it |
+| ✓ green pin | Won |
+| 🔒 grey pin | Not open: the road you didn't take, or a place the story hasn't reached |
+| ◆ Larkmoor Market | The only place to buy and sell |
+| ★ Gate of Trials | Sealed until the Final Chapter is won |
+
+* **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough.
+* **Team**, **Save** and **Menu** (sound, graphics, load, the Workshop, title screen) are in the top bar. Team works everywhere; buying and selling only at the market.
+* **Continue** on the title screen puts you back on the map where you stood.
+* A brand-new game opens straight on Chapter I; the map appears once that battle is over.
 
 ### Bosses
 Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP they **enrage**: permanent Haste and +20% damage, and Slow or Immobilize is cleansed. Save your burst for after the enrage, or burn them down from full in one round.
@@ -92,7 +127,24 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 * Every action earns **EXP** and **JP**; winning adds more on the **Spoils of War** screen.
 * 100 EXP is a level. JP is spent per job in **Team → Jobs → Learn abilities**.
 * **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Two advanced jobs, **Paladin** and **Spellblade**, each need two other jobs.
-* **Spend your gil in Team → Shop.** Enemies pay bounties and every win pays a bonus. Whatever you buy, the whole squad can equip. New stock arrives after each chapter.
+* **Spend your gil at Larkmoor Market** on the world map. Enemies pay bounties and every win pays a bonus. Gear you buy, the whole squad can equip. New stock arrives each time you win a chapter. In battle, **Team → Shop** shows the shelves but the market is closed.
+
+  ![Larkmoor Market: supplies and gear on the BUY counter](images/market.webp)
+
+* **Sell what you don't need** at the market's SELL counter for half price. Gear someone is wearing has to come off first; the three relics are never sold.
+* **Carry supplies.** Up to 9 of each, shared by the squad:
+
+  | Supply | Price | Does | Reach |
+  | :--- | ---: | :--- | :---: |
+  | Potion | 40 G | Restores 80 HP | 2 |
+  | Hi-Potion | 150 G | Restores 200 HP | 2 |
+  | Ether | 120 G | Restores 40 MP | 2 |
+  | Remedy | 60 G | Cures every ailment | 2 |
+  | Phoenix Feather | 250 G | Raises a fallen ally at a quarter of their HP | 2 |
+  | Blast Flask | 110 G | 70 fire damage to a target and every foe beside it | 3 |
+
+  You start with 3 Potions and a Phoenix Feather. Hi-Potions, Ethers and Blast Flasks are stocked after your first victory.
+* **A fallen ally isn't lost.** A ✝ marker with their name stays where they fell. Stand within 2 tiles, choose **ITEM → Phoenix Feather** and pick that tile. They rise with no statuses and wait for their next turn.
 * Mix jobs: equip another job's skillset as your **secondary action**, and any learned reaction, support or movement ability in the other slots (click the slot to cycle).
 * New gear appears in **Team → Equipment** as soon as you win it.
 * **Thieves steal.** Put a Thief next to an enemy and use *Steal*: the piece of gear it takes goes straight into your armory (best from the side or behind; bosses hold on tight). It's the fastest way to get gear early.
@@ -107,13 +159,13 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
 ![Defeat screen](images/defeat.webp)
 
-You keep the EXP and JP earned during a lost battle. **Retry Battle** restarts it with your current squad, or **Load Save** goes back to your last save. Swapping jobs or gear between attempts often turns a loss around.
+You keep the EXP and JP earned during a lost battle. **Retry Battle** restarts it with your current squad, **World Map** falls back to the map (buy supplies, change jobs and gear, then march again: the battle waits), and **Load Save** goes back to your last save. Supplies used in a lost battle stay spent when you retry.
 
 ---
 
 ## 6. Trials of the Zodiac
 
-Unlocked after the Final Chapter.
+Unlocked after the Final Chapter. Enter at the **Gate of Trials** on the world map; after each floor choose **Next Trial** or step back out to the **World Map** to restock.
 
 | Rule | Value |
 | :--- | :--- |
@@ -198,4 +250,5 @@ Workshop battles use your real squad, which keeps any EXP, JP and reward gear, b
 4. **Give Knights Weapon Guard and keep them facing forward.** Parries only work from the front.
 5. **Don't bunch up** against Black Mages: area spells hit everything within 1 tile.
 6. **Haste your best hitter.** An extra turn beats almost any single spell.
-7. **Use AUTO** to speed through easy Trial floors, then take over for Warden floors.
+7. **Use AUTO** to speed through easy Trial floors, then take over for Warden floors. AUTO never spends your supplies.
+8. **Pack for the fight.** Remedies for the Mire's poison, a Phoenix Feather for boss fights, and a Blast Flask to wake nothing by accident: it wakes sleeping enemies it hits.

@@ -97,6 +97,7 @@ Then each plan gets small adjustments:
 | :--- | :--- | :--- |
 | One-turn horizon | Doesn't set up combos or retreat to heal | Two-ply search on the best N plans |
 | Ignores enemy reactions except Counter Tackle | Will hit a Weapon Guard knight from the front | Add expected-parry and counter terms |
+| Never uses items (0.15) | Enemies carry no supplies, and AUTO won't spend yours | Give bosses a potion or two and a rule for when to drink |
 | Doesn't value facing after moving | Can leave its back open | Score exposed backs against foes that can reach |
 | AUTO uses the same weights | Plays aggressively for the player | Optional "careful" profile for AUTO |
 

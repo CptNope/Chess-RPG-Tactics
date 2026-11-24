@@ -37,12 +37,13 @@ const GEOMANCY: Record<string, Cue> = {
 
 /** Buffs and ailments, by status id. */
 const STATUS: Record<string, Cue> = {
-  haste: { id: 'status/haste', wrap: true, holdFor: 1.3 },
+  // Our own effect: the library's Haste trails after-images two tiles behind the unit
+  haste: { id: 'local/quicken', wrap: true, holdFor: 1.3 },
   slow: { id: 'status/slowed', wrap: true, holdFor: 1.6 },
   protect: { id: 'holy/divine-shield', wrap: true, holdFor: 1.4 },
   poison: { id: 'status/poisoned', wrap: true, holdFor: 1.4 },
   immobilize: { id: 'nature/root-snare', startAt: 0.45, speed: 1.3, wrap: true },
-  focus: { id: 'arcane/mana-burst', speed: 1.3 },
+  focus: { id: 'status/rage', wrap: true, holdFor: 1.3 },
   shell: { id: 'arcane/rune-circle', holdFor: 1.3, speed: 1.4 },
   regen: { id: 'nature/healing-bloom', speed: 1.5 },
   blind: { id: 'status/stunned', wrap: true, holdFor: 1.4 },
