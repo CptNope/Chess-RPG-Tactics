@@ -3,7 +3,8 @@ import { BattleGrid } from './Grid';
 import { CombatEngine, HARMFUL_STATUSES, guardsAgainst } from './CombatEngine';
 import { JobSystem } from './JobSystem';
 import { resolveTerrainAbility } from './Geomancy';
-import { isCentered, performedBy } from './Performance';
+import { isCentered, noFalloff, performedBy } from './Performance';
+import { callsLandingOn, rebirthOf } from './Summons';
 
 export interface AiPlan {
   /** Tile to move to before acting (may equal the current tile). */
@@ -84,6 +85,17 @@ export function unitsInBlast(caster: Unit, ability: Ability, cx: number, cz: num
   });
 }
 
+/**
+ * Everyone an ability aimed at (cx, cz) touches, each with the ability as it applies to them: a
+ * summon that also raises the fallen (Cinderwing, 0.24.0) heals the living and raises the fallen.
+ */
+export function summonVictims(caster: Unit, ability: Ability, cx: number, cz: number, units: Unit[]): { unit: Unit; ability: Ability }[] {
+  const out = unitsInBlast(caster, ability, cx, cz, units).map((unit) => ({ unit, ability }));
+  const raise = rebirthOf(ability);
+  if (raise) for (const unit of unitsInBlast(caster, raise, cx, cz, units)) out.push({ unit, ability: raise });
+  return out;
+}
+
 const SUPPORT_BUFFS = ['haste', 'protect', 'shell', 'regen'];
 
 /**
@@ -110,7 +122,7 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
   for (const v of victims) {
     const vH = grid.getHeight(v.x, v.z);
     // A performance has no centre target: everyone in it takes the full effect
-    const isSplash = ability.aoe > 0 && !isCentered(ability) && (v.x !== aim.x || v.z !== aim.z);
+    const isSplash = ability.aoe > 0 && !noFalloff(ability) && (v.x !== aim.x || v.z !== aim.z);
     const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash);
     let p = fc.hitChance / 100;
     // A knight with Weapon Guard parries 30% of frontal physical blows: hit them from the side
@@ -188,7 +200,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
   }
 
   const tiles: { x: number; z: number }[] = unit.hasMoved ? [origin] : [origin, ...grid.getReachableTiles(unit, units)];
-  const baseAbilities = JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp && !(opts.noRevive && a.revive));
+  const baseAbilities = JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp && !(opts.noRevive && (a.revive || a.rebirth)));
 
   // Walking distance from each foe, by this unit's own movement rules: shared by the self-buff
   // approach below and the fallback walk
@@ -218,6 +230,8 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
       const adjacentFoes = foes.filter((f) => Math.abs(f.x - tile.x) + Math.abs(f.z - tile.z) === 1).length;
       if (adjacentFoes >= 2) posScore -= 6;
       if (holding && (tile.x !== origin.x || tile.z !== origin.z)) posScore -= 12;
+      // A foe's grand summon lands here at the start of its caster's next turn (0.24.0): get clear
+      posScore -= callsLandingOn(unit, tile.x, tile.z, units) * 30;
 
       for (const raw of baseAbilities) {
         const ability = performedBy(unit, resolveTerrainAbility(raw, terrain));
@@ -227,6 +241,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
         // A performance is centred on the performer, wherever it stands
         const aimUnits = ability.isSelfOnly || isCentered(ability) ? [unit]
           : ability.revive ? units.filter((u) => u.isDead && u.team === unit.team) // a revive aims at the fallen
+          : ability.rebirth ? units.filter((u) => u.team === unit.team && u.id !== unit.id) // heals the living, raises the fallen
           : supportive ? alliesOf(unit, units) : foes;
         for (const aim of aimUnits) {
           const ax = aim.id === unit.id ? tile.x : aim.x;
@@ -234,10 +249,16 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
           if (!ability.isSelfOnly && !isCentered(ability) && !grid.canTarget(tile.x, tile.z, ax, az, ability.range, ability.heightTolerance, supportive)) continue;
 
           const victims = ability.isSelfOnly ? [unit] : unitsInBlast(unit, ability, ax, az, units);
-          if (victims.length === 0) continue;
+          const raise = rebirthOf(ability);
+          const fallen = raise ? unitsInBlast(unit, raise, ax, az, units) : [];
+          if (victims.length === 0 && fallen.length === 0) continue;
 
-          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units);
+          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units)
+            + (raise && fallen.length ? scoreAbility(unit, raise, fallen, grid, { x: ax, z: az }, units) : 0);
           if (score <= 0) continue;
+          // A grand summon lands on the caster's next turn, and its targets can see it coming
+          // (0.24.0): worth less than the same blow now, but it doesn't cost this turn's move
+          if (ability.charge) score *= 0.7;
           // A performance plays again on the next turns if the performer stays put
           if (ability.performance) score *= 1.4;
           // A Master signature can be used once a battle: keep it for a moment that matters
@@ -280,10 +301,12 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
   });
   const target = pick.f;
   const distFrom = (t: { x: number; z: number }) => pick.d.get(key(t.x, t.z)) ?? manhattan(target, t) + 100;
+  // ... and never into an area a foe's grand summon is about to land on (0.24.0)
+  const walkScore = (t: { x: number; z: number }) => distFrom(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50;
   let moveTo = origin;
-  let bestDist = distFrom(origin);
+  let bestDist = walkScore(origin);
   for (const t of tiles) {
-    const d = distFrom(t) - grid.getHeight(t.x, t.z) * 0.05;
+    const d = walkScore(t);
     if (d < bestDist) {
       bestDist = d;
       moveTo = t;

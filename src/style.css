@@ -909,6 +909,9 @@ body, html {
 .status-sleep { background: #1e3a8a; color: #bfdbfe; }
 .status-breach { background: #9a3412; color: #ffedd5; }
 .status-encore { background: #a21caf; color: #fae8ff; }
+.status-calling { background: #6d28d9; color: #ede9fe; animation: calling-pulse 1.2s ease-in-out infinite; }
+@keyframes calling-pulse { 50% { background: #a855f7; } }
+@media (prefers-reduced-motion: reduce) { .status-calling { animation: none; } }
 
 /* Story / Tactical Cutscene Dialogue Box */
 #dialogue-box {

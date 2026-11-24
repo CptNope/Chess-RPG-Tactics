@@ -4,6 +4,7 @@ import { ITEMS } from '../data/items';
 import { SIGNATURES } from '../data/signatures';
 
 import { STATUS_DURATION } from './CombatEngine';
+import { ENEMY_GRAND_SUMMON_LEVEL } from './Summons';
 
 /** Signature passives veteran enemies of each job fight with. */
 export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: string }> = {
@@ -523,6 +524,7 @@ export class JobSystem {
     unit.usedDragonheart = false;
     unit.usedIronWill = false;
     unit.performing = undefined;
+    unit.calling = undefined;
     unit.usedSignatures = [];
     unit.ct = 0;
     unit.hasMoved = false;
@@ -554,7 +556,7 @@ export class JobSystem {
 
   /**
    * Gives veteran enemies (level 4+) their job's signature reaction/support and every action in
-   * its skillset, so they fight like the player's units. Shared by the game and the balance sim.
+   * its skillset (grand summons from level 6), so they fight like the player's units. Shared by the game and the balance sim.
    */
   public static equipVeteranPassives(u: Unit): void {
     const p = VETERAN_PASSIVES[u.jobId] || {};
@@ -568,7 +570,8 @@ export class JobSystem {
       u.equippedAbilities.support = p.support;
     }
     for (const a of JOBS[u.jobId]?.abilities || []) {
-      if (a.type === 'action') u.unlockedAbilities[a.id] = true;
+      // Grand summons only from level 6 (0.24.0)
+      if (a.type === 'action' && !(a.charge && u.level < ENEMY_GRAND_SUMMON_LEVEL)) u.unlockedAbilities[a.id] = true;
     }
   }
 

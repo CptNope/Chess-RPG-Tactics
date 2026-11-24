@@ -78,7 +78,7 @@ quadrantChart
 | **Time Weaver** | Tempo control | Haste, Slow, Gravity, Regen, Critical Quick, Teleport |
 | **Monk** *(0.13)* | Fist fighter and field medic | Aura Wave (range 3), Chakra (free area heal + cleanse, from ATK), Pummel, Iron Will, Brawler, Ki Flow |
 | **Thief** *(0.13)* | Fast skirmisher | Steal (gear into your armory), Sand Toss (Blind), Hamstring (Slow), Quick Hands, Backstab, Fleet Foot |
-| **Summoner** *(0.13)* | Radius-2 spells | Salamander, Undine, Storm Roc, Sylph (heal + Regen), Golem (area Protect), Mana Spring, Conserve |
+| **Summoner** *(0.13)* | Radius-2 spells, each with its own creature on screen (0.24) | Salamander, Undine, Storm Roc, Sylph (heal + Regen), Golem (area Protect); grand summons (0.24): Cinderwing, Tidewyrm, Elder Wyrm; Mana Spring, Conserve |
 | **Paladin** *(0.14, advanced)* | Holy front-liner | Holy Blade, Lay on Hands, Rebuke (Silence), Aegis (area Shell), Divine Grace, Zeal |
 | **Spellblade** *(0.14, advanced)* | Elemental duelist | Flame Edge, Frost Edge (Slow), Thunder Lunge (reach 2), Runic, Arcane Edge |
 | **Chemist** *(0.19)* | Field medic, bomb-maker | Salve (free heal from ATK, reach 3), Purge (cleanse), Acid Flask (Breach), Smoke Bomb (area Blind), Field Dressing (heals 15% when a blow leaves you under half HP), **Pharmacology** (items +50% and +1 reach) |
@@ -96,6 +96,32 @@ A Bard's song or a Dancer's dance fills the area around the performer (radius 2)
 | Encore (Dancer) | Every performance plays 2 more turns (five in all) |
 
 Both supports work on either job's performances, so a Bard who learned Encore keeps songs going longer, and a Dancer with Resonance dances wider. The rules are in `src/core/Performance.ts`.
+
+### Summons and grand summons (0.24)
+
+Every Summoner call brings its creature onto the battlefield: the camera comes in, the board darkens, and the damage lands with the creature's attack (Salamander's fire breath, Undine's wave, Storm Roc's lightning, Sylph's healing rain, Golem's shield, and the signature Celestial Call).
+
+Three **grand summons** take a turn to arrive. They are marked ✦ in the ACT menu.
+
+| Grand summon | JP | MP | Range | Area | Effect |
+| :--- | ---: | ---: | ---: | ---: | :--- |
+| Cinderwing | 450 | 36 | 4 | 2 | Heals allies (×1.0) and raises the fallen with 34% HP |
+| Tidewyrm | 520 | 40 | 4 | 3 | Ice ×1.25 and Slow |
+| Elder Wyrm | 640 | 48 | 5 | 2 | Dark ×1.35 |
+
+```mermaid
+sequenceDiagram
+    participant S as Summoner
+    participant B as Board
+    participant F as Foes
+    S->>B: Calls (MP and action spent, area marked, ✦ CALLING)
+    F->>B: Their turns: step out, or hit the caller
+    Note over S,F: KO, Sleep or Silence on the caller: the call is broken
+    S->>B: Next turn starts: the creature lands on whoever is in the area
+    S->>S: Then acts as normal
+```
+
+A grand summon hits **everyone in the area at full force** (no splash falloff) and at +30 hit. Using one earns JP and EXP when it's called; a kill it makes when it lands earns its EXP then. Enemy Summoners call grand summons from level 6, and the AI steps out of the area of yours. The rules are in `src/core/Summons.ts`.
 
 Older jobs gained an action each in 0.13: Squire *Rally*, Knight *Bulwark*, Archer *Arrow Rain*, Black Mage *Firestorm*, White Mage *Shell*, *Purify* and *Healing Circle*, Ninja *Smoke Bomb*, Time Weaver *Regen*. The Knight's support is now **Armor Mastery** (+50% HP from armor, helms and shields).
 

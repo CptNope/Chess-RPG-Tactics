@@ -13,7 +13,9 @@ export type StatusEffectType =
   // Added in 0.13.0
   | 'shell' | 'regen' | 'blind' | 'silence' | 'sleep' | 'breach'
   // Added in 0.22.0: a Bard or Dancer holding a performance; it plays again each turn
-  | 'encore';
+  | 'encore'
+  // Added in 0.24.0: a Summoner calling a grand summon; it arrives at the start of their next turn
+  | 'calling';
 
 export interface ActiveStatus {
   type: StatusEffectType;
@@ -109,6 +111,16 @@ export interface Ability {
   centered?: boolean;
   /** A Master signature (0.23.0): earned by mastering its job, usable in any job once per battle. */
   signature?: boolean;
+  /** The creature a summon calls up on screen (0.24.0): picks its effect, not its rules. */
+  summon?: string;
+  /**
+   * A grand summon (0.24.0): using it marks the area and the creature arrives at the start of the
+   * caster's next turn, hitting whoever stands there then. KO, Sleep or Silence break the call
+   * (see core/Summons.ts).
+   */
+  charge?: boolean;
+  /** Also raises fallen allies in the area, with this share of their max HP (0.24.0). */
+  rebirth?: number;
 }
 
 export interface Job {
@@ -201,6 +213,8 @@ export interface Unit {
   performing?: string;
   /** Master signatures already used this battle (0.23.0). */
   usedSignatures?: string[];
+  /** A grand summon on its way, with the tile it was aimed at, while the unit has Calling (0.24.0). */
+  calling?: { abilityId: string; x: number; z: number };
   /** Iron Will can fire only once per battle. */
   usedIronWill?: boolean;
 }

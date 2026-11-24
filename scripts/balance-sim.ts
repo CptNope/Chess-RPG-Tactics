@@ -13,14 +13,16 @@ import { BattleGrid } from '../src/core/Grid';
 import { TurnManager } from '../src/core/TurnManager';
 import { JobSystem } from '../src/core/JobSystem';
 import { CombatEngine } from '../src/core/CombatEngine';
-import { planTurn, unitsInBlast } from '../src/core/EnemyAI';
+import { planTurn, summonVictims } from '../src/core/EnemyAI';
+import { noFalloff } from '../src/core/Performance';
+import { callDue, startCall } from '../src/core/Summons';
 import { DIFFICULTIES, enemyLevel, sanitizeDifficulty, scaleBoss } from '../src/core/Difficulty';
 
 /** DIFFICULTY=easy|normal|hard npm run balance */
 const DIFF = sanitizeDifficulty(process.env.DIFFICULTY);
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
-import type { Unit } from '../src/core/types';
+import type { Ability, Unit } from '../src/core/types';
 
 function squad(level: number, bria: boolean, sable = false): Unit[] {
   const s = [
@@ -57,6 +59,18 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
   sq.forEach((m, i) => JobSystem.resetForBattle(m, spawns[i % spawns.length].x, spawns[i % spawns.length].z));
   const units = [...sq, ...enemies];
   const tm = new TurnManager(units);
+  const resolve = (u: Unit, ab: Ability, tx: number, tz: number) => {
+    const victims = ab.isSelfOnly ? [{ unit: u, ability: ab }]
+      : ab.aoe > 0 || ab.revive ? summonVictims(u, ab, tx, tz, units)
+      : units.filter((v) => !v.isDead && v.x === tx && v.z === tz).map((unit) => ({ unit, ability: ab }));
+    for (const { unit: t, ability: a } of victims) {
+      if (t.isDead && !a.revive) continue;
+      const isSplash = a.aoe > 0 && !noFalloff(a) && (t.x !== tx || t.z !== tz);
+      const f = CombatEngine.getForecast(u, t, a, grid.getHeight(u.x, u.z), grid.getHeight(t.x, t.z), grid.getTile(t.x, t.z)?.terrain, isSplash);
+      CombatEngine.executeAttack(f);
+      if (u.isDead) break;
+    }
+  };
   let enemyRaises = 0;
   for (let turn = 0; turn < 400; turn++) {
     if (!units.some((u) => !u.isDead && u.team === 'player')) return 'loss';
@@ -65,20 +79,18 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     if (!r) return 'timeout';
     const u = r.activeUnit;
     if (u.isDead) { tm.endTurn(u); continue; }
+    // A grand summon called last turn lands before the unit acts (0.24.0)
+    const call = callDue(u);
+    if (call && call !== 'broken') resolve(u, call.ability, call.x, call.z);
+    if (u.isDead) { tm.endTurn(u); continue; }
     const plan = planTurn(u, units, grid, { noRevive: u.team === 'enemy' && enemyRaises >= DIFFICULTIES[DIFF].raiseCap });
     if (plan.ability?.revive && u.team === 'enemy') enemyRaises++;
     u.x = plan.moveTo.x; u.z = plan.moveTo.z; u.hasMoved = true;
     if (plan.ability && plan.targetTile) {
       const ab = plan.ability, { x: tx, z: tz } = plan.targetTile;
       u.currentMp = Math.max(0, u.currentMp - ab.mpCost);
-      const victims = ab.isSelfOnly ? [u] : ab.aoe > 0 || ab.revive ? unitsInBlast(u, ab, tx, tz, units) : units.filter((v) => !v.isDead && v.x === tx && v.z === tz);
-      for (const t of victims) {
-        if (t.isDead && !ab.revive) continue;
-        const isSplash = ab.aoe > 0 && !ab.performance && !ab.centered && (t.x !== tx || t.z !== tz);
-        const f = CombatEngine.getForecast(u, t, ab, grid.getHeight(u.x, u.z), grid.getHeight(t.x, t.z), grid.getTile(t.x, t.z)?.terrain, isSplash);
-        CombatEngine.executeAttack(f);
-        if (u.isDead) break;
-      }
+      if (ab.charge) startCall(u, ab, tx, tz);
+      else resolve(u, ab, tx, tz);
     }
     u.hasActed = true;
     if (!u.isDead) u.facing = plan.facing;
