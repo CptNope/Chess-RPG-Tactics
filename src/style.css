@@ -2393,3 +2393,25 @@ html[data-text-size="larger"] { --ts: 1.3; }
 /* Master signatures (0.23.0) */
 .action-item-btn.signature { border-color: var(--gold); box-shadow: inset 0 0 0 1px rgba(244, 196, 48, 0.35); }
 .action-item-btn.signature .action-name-row span:first-child { color: var(--gold-glow); }
+
+/* Recruiting and the party (0.25.0) */
+.wm-recruits { padding: 8px; border: 1px solid #60a5fa; border-radius: 4px; background: rgba(96, 165, 250, 0.07); display: flex; flex-direction: column; gap: 8px; }
+.wm-recruits .wm-merchant-head { color: #bfdbfe; }
+.wm-recruit-sprite { width: 40px; height: 40px; flex: 0 0 40px; image-rendering: pixelated; }
+.wm-recruit small { font-style: italic; }
+.party-count { font-family: var(--font-pixel); font-size: calc(12px * var(--ts)); color: var(--gold-glow); margin-bottom: 8px; }
+.party-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.party-card { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border-color, #334155); border-radius: 4px; background: rgba(15, 23, 42, 0.6); }
+.party-card.in { border-color: var(--gold); background: rgba(244, 196, 48, 0.1); }
+.party-card canvas { width: 40px; height: 40px; flex: 0 0 40px; image-rendering: pixelated; }
+.party-card .party-info { flex: 1 1 auto; min-width: 0; }
+.party-card .party-info b { display: block; font-family: var(--font-pixel); font-size: calc(10px * var(--ts)); color: #fff; }
+.party-card .party-info small { font-size: calc(12px * var(--ts)); color: var(--text-muted); }
+.party-card .party-buttons { display: flex; flex-direction: column; gap: 4px; }
+.party-card button { min-width: 84px; }
+.party-card button[data-act="dismiss"] { font-size: calc(10px * var(--ts)); opacity: 0.85; }
+.party-card .party-lock { font-size: calc(10px * var(--ts)); color: var(--gold-glow); text-align: center; }
+.party-card button { font-family: var(--font-pixel); font-size: calc(9px * var(--ts)); min-height: 32px; padding: 4px 10px; border: 1px solid var(--panel-border); border-radius: 3px; background: var(--btn-bg); color: var(--text-light); cursor: pointer; }
+.party-card button.primary { border-color: var(--gold); color: var(--gold-glow); }
+.party-card button:hover, .party-card button:focus-visible { background: var(--btn-bg-hover); }
+.party-card button:disabled { opacity: 0.45; cursor: not-allowed; }

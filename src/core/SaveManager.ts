@@ -1,4 +1,5 @@
 import { sanitizeMerchantSales } from './Merchant';
+import { MAX_SQUAD, sanitizeParty, sanitizeRecruitHires } from './Recruits';
 import { Unit } from './types';
 import { MapData } from '../data/maps';
 import { JOBS } from '../data/jobs';
@@ -36,6 +37,10 @@ export interface GameSaveData {
   campSeen?: string[];
   /** What was bought from the travelling merchant on her current visit (0.21.0). */
   merchantSales?: { visit: number; ids: string[] };
+  /** The party the player last picked, by unit id, when the squad outgrew it (0.25.0). */
+  party?: string[];
+  /** Who was hired from the market's current recruiting board (0.25.0). */
+  recruitHires?: { visit: number; slots: number[] };
 }
 
 const BEST_FLOOR_KEY = 'chess_rpg_tactics_best_trial_v1';
@@ -56,13 +61,13 @@ export class SaveManager {
   public static saveGame(
     chapterId: string,
     playerUnits: Unit[],
-    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation' | 'skirmishWins' | 'difficulty' | 'campSeen' | 'merchantSales'> = {},
+    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation' | 'skirmishWins' | 'difficulty' | 'campSeen' | 'merchantSales' | 'party' | 'recruitHires'> = {},
     slot = 1
   ): boolean {
     if (!validSlot(slot)) return false;
     try {
       const saveData: GameSaveData = {
-        version: '0.24.0',
+        version: '0.25.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,
@@ -158,7 +163,7 @@ export class SaveManager {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('That is not a Chess RPG Tactics save file.');
     const d = raw as Record<string, unknown>;
     if (!Array.isArray(d.units) || typeof d.currentChapterId !== 'string') throw new Error('That is not a Chess RPG Tactics save file.');
-    const units = d.units.slice(0, 8).map((u, i) => importUnit(u, i)).filter((u): u is Unit => !!u);
+    const units = d.units.slice(0, MAX_SQUAD).map((u, i) => importUnit(u, i)).filter((u): u is Unit => !!u);
     if (units.length === 0) throw new Error('That save has no squad in it.');
     const strings = (v: unknown, max: number) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x.length <= 40).slice(0, max) : undefined);
     const counts = (v: unknown) => {
@@ -184,7 +189,9 @@ export class SaveManager {
       skirmishWins: counts(d.skirmishWins),
       difficulty: d.difficulty === 'easy' || d.difficulty === 'hard' ? d.difficulty : 'normal',
       campSeen: strings(d.campSeen, 32),
-      merchantSales: sanitizeMerchantSales(d.merchantSales)
+      merchantSales: sanitizeMerchantSales(d.merchantSales),
+      party: sanitizeParty(d.party),
+      recruitHires: sanitizeRecruitHires(d.recruitHires)
     };
   }
 

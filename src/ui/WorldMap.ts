@@ -13,6 +13,8 @@ import { MERCHANT_NAME, MerchantVisit } from '../core/Merchant';
 import { ITEMS } from '../data/items';
 import { itemStatText } from '../core/Economy';
 import { CAMP_JP } from '../data/camp';
+import { JOBS } from '../data/jobs';
+import { MAX_SQUAD, PARTY_SIZE, RecruitOffer } from '../core/Recruits';
 
 export interface WorldState {
   /** The chapter the campaign is at. */
@@ -36,6 +38,10 @@ export interface WorldState {
   merchant: MerchantVisit | null;
   /** The camp scene waiting to be played (0.21.0), or null. */
   camp: { title: string } | null;
+  /** The market's recruiting board (0.25.0). */
+  recruits: RecruitOffer[];
+  /** How many units the squad has. */
+  squadSize: number;
 }
 
 export interface WorldHost {
@@ -48,6 +54,10 @@ export interface WorldHost {
   buyFromMerchant(id: string): boolean;
   /** Plays the waiting camp scene. */
   makeCamp(): void;
+  /** Hires a hopeful from the recruiting board (0.25.0). False when it can't be done. */
+  hire(slot: number): boolean;
+  /** Opens the barracks: pick the party, dismiss hired units (0.25.0). */
+  barracks(): void;
   newGamePlus(): void;
   openTeam(): void;
   openShop(): void;
@@ -224,6 +234,7 @@ export class WorldMap {
     if (node.kind === 'market') {
       add('p', 'wm-status', 'The market is open. Stock up on potions before the next battle.');
       action('◆ Buy & sell', () => this.host.openShop(), true);
+      this.renderRecruits(st);
     } else if (node.kind === 'trials') {
       if (state === 'locked') {
         add('p', 'wm-status locked', 'Sealed. The gate opens once the Zodiac Seal on the Summit is won.');
@@ -273,6 +284,52 @@ export class WorldMap {
       if (next.length) add('p', 'wm-hint', `Next battle: ${next.join(' or ')}. Select it on the map.`);
       else if (st.trialsOpen) add('p', 'wm-hint', 'The story is told. The Gate of Trials stands open.');
     }
+  }
+
+  /** The recruiting board at the market (0.25.0): three hopefuls, and the barracks. */
+  private renderRecruits(st: WorldState): void {
+    const p = this.panelEl;
+    const box = document.createElement('div');
+    box.className = 'wm-recruits';
+    const head = document.createElement('p');
+    head.className = 'wm-merchant-head';
+    const full = st.squadSize >= MAX_SQUAD;
+    head.textContent = `🛡 Recruiting board. Barracks ${st.squadSize}/${MAX_SQUAD}${st.squadSize > PARTY_SIZE ? ` · ${PARTY_SIZE} fight, you choose who` : ''}. New faces after your next win.`;
+    box.appendChild(head);
+    for (const r of st.recruits) {
+      const row = document.createElement('div');
+      row.className = 'wm-ware wm-recruit';
+      const pic = document.createElement('canvas');
+      pic.width = 48;
+      pic.height = 48;
+      pic.className = 'wm-recruit-sprite';
+      pic.getContext('2d')!.drawImage(drawSprite(r.jobId, 'S', false, 'idle0'), 0, 0);
+      const text = document.createElement('div');
+      const name = document.createElement('b');
+      name.textContent = `${r.name} · ${JOBS[r.jobId]?.name || r.jobId} Lv ${r.level}`;
+      const note = document.createElement('small');
+      note.textContent = `“${r.pitch}”`;
+      text.append(name, document.createElement('br'), note);
+      const hire = document.createElement('button');
+      hire.className = 'wm-action';
+      hire.textContent = r.hired ? 'Hired' : `Hire ${r.price.toLocaleString('en-US')} G`;
+      hire.setAttribute('aria-label', r.hired ? `${r.name}: hired` : `Hire ${r.name}, ${JOBS[r.jobId]?.name} level ${r.level}, for ${r.price} gil`);
+      hire.disabled = !!r.hired || full || st.gil < r.price;
+      if (!r.hired && hire.disabled) hire.title = full ? `The barracks are full (${MAX_SQUAD})` : 'Not enough gil';
+      if (r.hired) row.classList.add('sold');
+      hire.addEventListener('click', () => {
+        this.host.blip();
+        if (this.host.hire(r.slot)) this.refresh();
+      });
+      row.append(pic, text, hire);
+      box.appendChild(row);
+    }
+    p.appendChild(box);
+    const b = document.createElement('button');
+    b.className = 'wm-action';
+    b.textContent = st.squadSize > PARTY_SIZE ? `⚑ Barracks: choose your party (${PARTY_SIZE} of ${st.squadSize})` : `⚑ Barracks (${st.squadSize}/${MAX_SQUAD})`;
+    b.addEventListener('click', () => { this.host.blip(); this.host.barracks(); });
+    p.appendChild(b);
   }
 
   /** The travelling merchant's blanket, when she is here; a pointer to her when she isn't. */
