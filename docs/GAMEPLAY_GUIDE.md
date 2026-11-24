@@ -227,11 +227,11 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
 **Difficulty** is chosen when you start a new game, and can be changed any time from **Menu → Difficulty** (it applies from the next battle).
 
-| | Enemy levels | Bosses | Enemy raises per battle |
-| :--- | :---: | :---: | :---: |
-| **Easy** | one lower | 30% less HP | none |
-| **Normal** | as designed | as designed | one |
-| **Hard** | one higher | 15% more HP | two |
+| | Enemy levels | Bosses | Enemy raises per battle | Enemy items (0.31) | Enemies think ahead (0.31) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Easy** | one lower | 30% less HP | none | none | no |
+| **Normal** | as designed | as designed | one | bosses, Chemists, every third enemy | once below half HP |
+| **Hard** | one higher | 15% more HP | two | everyone (Chemists carry more) | always |
 
 It covers story battles, side battles and the Trials; Workshop scenarios keep their author's levels.
 
@@ -330,7 +330,7 @@ Workshop battles use your real squad, which keeps any EXP, JP and reward gear, b
 
 1. **Face your enemies when you WAIT.** Back attacks are +30% damage with a 30% crit chance.
 2. **Take the high ground** with archers and mages.
-3. **Kill order matters more than damage.** The enemy AI focuses whoever it can finish, and so should you.
+3. **Kill order matters more than damage.** The enemy AI focuses whoever it can finish, and so should you. Since 0.31 a hurt enemy backs off or drinks a Potion (🎒 on its card shows what it carries): finish it before its turn, and you salvage what it didn't use.
 4. **Give Knights Weapon Guard and keep them facing forward.** Parries only work from the front.
 5. **Don't bunch up** against Black Mages: area spells hit everything within 1 tile.
 6. **Haste your best hitter.** An extra turn beats almost any single spell.

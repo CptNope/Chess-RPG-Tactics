@@ -1351,6 +1351,7 @@ body, html {
 /* Boss markers */
 .timeline-unit.boss { box-shadow: 0 0 0 2px #f59e0b inset; }
 .status-badge.status-boss { background: #7c2d12; color: #fde68a; }
+.status-badge.status-pouch { background: #3f2d14; color: #fcd34d; cursor: help; }
 .status-badge.status-enraged { background: #dc2626; color: #fff; animation: enragePulse 1s infinite alternate; }
 @keyframes enragePulse { from { opacity: 0.7; } to { opacity: 1; } }
 

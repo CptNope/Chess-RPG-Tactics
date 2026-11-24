@@ -48,6 +48,7 @@ timeline
         0.28.0 : Beast Tamer job : Tame monsters : Beasts join the squad
         0.29.0 : Beast gear: barding and collars
         0.30.0 : Equipment rules per job
+        0.31.0 : Enemies think a turn ahead : Enemies use items
 ```
 
 | Version | Theme | Highlights |
@@ -60,6 +61,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.31 | Smarter enemies | Enemies weigh what you could do to them next turn (hurt ones on Normal, everyone on Hard) and carry Potions and more by role; 🎒 on their card; salvage what they didn't use |
 | 0.30 | Gear by job | Each job uses its own weapon types, and shields, heavy armor and robes belong to some jobs; job changes swap gear for the best you own; the Team screen and market show who can use what |
 | 0.29 | Beast gear | Six pieces of barding and collars only tamed beasts can wear, on their own market shelf; every new beast arrives in a Leather Collar |
 | 0.28 | Beast Tamer | The Beast Tamer (19 jobs, 114 abilities): Tame wins a hurt monster over to fight for you, and survivors join the squad as named beasts that wear no gear; Snare, Treat, Soothe, Snarl, Beast Lore and the Stampede signature; the Drover's Whip |
@@ -86,7 +88,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.30.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.31.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -99,7 +101,7 @@ flowchart LR
     end
     subgraph NEXT["Next (0.31 – 0.33): depth"]
         direction TB
-        X1["AI: items and<br/>two-ply look-ahead"]
+        X1["AI: combos with allies;<br/>simulate foe turns"]
         X5["Play-tests in CI"]
     end
     subgraph LATER["Later (1.0+): breadth"]
@@ -129,7 +131,7 @@ flowchart LR
 | :--- | :--- | :---: |
 | **Reserve training** | Units in reserve earn nothing (0.25); if a big squad falls behind in hand play, a share of the spoils for the reserve | S |
 | **Play-test suite in CI** | Device matrix, input, campaign and feature bots exist but aren't committed | M |
-| **AI: items and two-ply look-ahead** | Bosses could carry a potion; enemies could set up combos and retreat to heal. A one-turn threat term was tried in 0.20 and changed nothing ([details](ENEMY_AI.md#5-known-limits)) | L |
+| **AI: combos and a real second ply** | Since 0.31 enemies avoid likely KOs and use items; next they could set up combos with allies (Slow then strike) and simulate the squad's replies instead of estimating them ([details](ENEMY_AI.md#5-known-limits)) | L |
 
 ### Later (1.0+): breadth
 

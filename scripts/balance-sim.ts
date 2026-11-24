@@ -20,6 +20,12 @@ import { DIFFICULTIES, enemyLevel, sanitizeDifficulty, scaleBoss } from '../src/
 
 /** DIFFICULTY=easy|normal|hard npm run balance */
 const DIFF = sanitizeDifficulty(process.env.DIFFICULTY);
+/** OLD_AI=1 plays without 0.31's caution and enemy items, to compare. */
+const OLD_AI = process.env.OLD_AI === '1';
+/** For experiments: CAUTION=enemy|player|none (default both sides), ITEMS=0 (no enemy pouches). */
+const CAUTION = process.env.CAUTION || 'both';
+const ITEMS = process.env.ITEMS !== '0';
+import { enemyCaution, enemyPouch } from '../src/core/EnemyPouch';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import type { Ability, Unit } from '../src/core/types';
@@ -52,6 +58,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     const u = JobSystem.createUnit(`e${i}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', enemyLevel(e.level, DIFF));
     if (e.isBoss) { JobSystem.makeBoss(u); scaleBoss(u, DIFF); }
     passives(u);
+    if (!OLD_AI && ITEMS) u.pouch = enemyPouch(u, i, DIFF);
     return u;
   });
   const sq = squad(level, chId !== 'chapter_1', /chapter_[456]/.test(chId));
@@ -83,12 +90,18 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     const call = callDue(u);
     if (call && call !== 'broken') resolve(u, call.ability, call.x, call.z);
     if (u.isDead) { tm.endTurn(u); continue; }
-    const plan = planTurn(u, units, grid, { noRevive: u.team === 'enemy' && enemyRaises >= DIFFICULTIES[DIFF].raiseCap });
+    const foe = u.team === 'enemy';
+    const plan = planTurn(u, units, grid, {
+      noRevive: foe && enemyRaises >= DIFFICULTIES[DIFF].raiseCap,
+      caution: OLD_AI ? false : foe ? (CAUTION === 'both' || CAUTION === 'enemy' ? enemyCaution(DIFF) : false) : (CAUTION === 'both' || CAUTION === 'player' ? 'full' : false),
+      pouch: foe ? u.pouch : undefined
+    });
     if (plan.ability?.revive && u.team === 'enemy') enemyRaises++;
     u.x = plan.moveTo.x; u.z = plan.moveTo.z; u.hasMoved = true;
     if (plan.ability && plan.targetTile) {
       const ab = plan.ability, { x: tx, z: tz } = plan.targetTile;
       u.currentMp = Math.max(0, u.currentMp - ab.mpCost);
+      if (ab.item && u.pouch) u.pouch[ab.item] = Math.max(0, (u.pouch[ab.item] || 0) - 1);
       if (ab.charge) startCall(u, ab, tx, tz);
       else resolve(u, ab, tx, tz);
     }

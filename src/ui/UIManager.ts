@@ -2,6 +2,7 @@ import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainTy
 import { JOBS, PLAYER_JOB_IDS } from '../data/jobs';
 import { JobSystem, BEAST_SLOTS, MAX_JOB_LEVEL , JOB_MASTERY, VETERAN_JOB_LEVEL, masteryLabel } from '../core/JobSystem';
 import { CONSUMABLES, MAX_STACK, Consumable, consumableAbility } from '../data/consumables';
+import { pouchText } from '../core/EnemyPouch';
 import { ITEMS } from '../data/items';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
@@ -650,6 +651,15 @@ export class UIManager {
       const badge = document.createElement('span');
       badge.className = `status-badge ${unit.isEnraged ? 'status-enraged' : 'status-boss'}`;
       badge.textContent = unit.isEnraged ? 'ENRAGED' : 'BOSS';
+      this.unitStatusesEl.appendChild(badge);
+    }
+    // What an enemy carries (0.31.0)
+    const carried = unit.team === 'enemy' ? pouchText(unit.pouch, CONSUMABLES) : '';
+    if (carried) {
+      const badge = document.createElement('span');
+      badge.className = 'status-badge status-pouch';
+      badge.textContent = `🎒 ${Object.values(unit.pouch || {}).reduce((a, b) => a + b, 0)}`;
+      badge.title = `Carries: ${carried}. It may use them; what it doesn't, you salvage if you win.`;
       this.unitStatusesEl.appendChild(badge);
     }
     unit.statuses.forEach((status) => {

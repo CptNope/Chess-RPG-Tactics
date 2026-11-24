@@ -20,9 +20,9 @@ export interface DifficultyRules {
 }
 
 export const DIFFICULTIES: Record<Difficulty, DifficultyRules> = {
-  easy: { label: 'Easy', levelShift: -1, raiseCap: 0, bossHp: 0.7, blurb: 'Enemies are a level lower, bosses have less HP, and nobody raises the fallen. For enjoying the story.' },
-  normal: { label: 'Normal', levelShift: 0, raiseCap: 1, bossHp: 1, blurb: 'The game as designed. Enemy healers can raise one ally per battle.' },
-  hard: { label: 'Hard', levelShift: 1, raiseCap: 2, bossHp: 1.15, blurb: 'Enemies are a level higher, bosses are tougher, and healers can raise two allies per battle.' }
+  easy: { label: 'Easy', levelShift: -1, raiseCap: 0, bossHp: 0.7, blurb: 'Enemies are a level lower, bosses have less HP, nobody raises the fallen, and enemies carry no items. For enjoying the story.' },
+  normal: { label: 'Normal', levelShift: 0, raiseCap: 1, bossHp: 1, blurb: 'The game as designed. Enemy healers can raise one ally per battle; some enemies carry a Potion, and hurt ones think before stepping into reach.' },
+  hard: { label: 'Hard', levelShift: 1, raiseCap: 2, bossHp: 1.15, blurb: 'Enemies are a level higher, bosses are tougher, healers can raise two allies, every enemy carries items, and all of them think a turn ahead.' }
 };
 
 export const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'normal', 'hard'];
