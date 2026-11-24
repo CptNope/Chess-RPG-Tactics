@@ -25,6 +25,40 @@ function alliesOf(unit: Unit, units: Unit[]): Unit[] {
   return units.filter((u) => !u.isDead && u.team === unit.team);
 }
 
+/**
+ * Walking distance from every tile to (from.x, from.z), by the unit's own rules: walkable tiles,
+ * steps no higher than its Jump, water and swamp costing 2 (unless it water-walks). Units are
+ * ignored: they move. Used to approach foes across terraces and around cliffs, where straight-line
+ * distance points at a wall (0.20.0).
+ */
+export function walkingDistances(grid: BattleGrid, from: { x: number; z: number }, unit: Unit): Map<string, number> {
+  const k = (x: number, z: number) => `${x},${z}`;
+  const dist = new Map<string, number>([[k(from.x, from.z), 0]]);
+  const waterWalk = unit.equippedAbilities.movement === 'ni_water_walk';
+  const jump = Math.max(1, unit.jump);
+  const open: { x: number; z: number; d: number }[] = [{ x: from.x, z: from.z, d: 0 }];
+  while (open.length) {
+    let bi = 0;
+    for (let i = 1; i < open.length; i++) if (open[i].d < open[bi].d) bi = i;
+    const cur = open.splice(bi, 1)[0];
+    if (cur.d > (dist.get(k(cur.x, cur.z)) ?? Infinity)) continue;
+    const here = grid.getTile(cur.x, cur.z);
+    if (!here) continue;
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const t = grid.getTile(cur.x + dx, cur.z + dz);
+      if (!t || !t.walkable || Math.abs(t.height - here.height) > jump) continue;
+      // Cost of stepping off `t` toward the foe (the search runs backwards from the foe)
+      const cost = !waterWalk && (t.terrain === 'water' || t.terrain === 'swamp') ? 2 : 1;
+      const nd = cur.d + cost;
+      if (nd < (dist.get(k(t.x, t.z)) ?? Infinity)) {
+        dist.set(k(t.x, t.z), nd);
+        open.push({ x: t.x, z: t.z, d: nd });
+      }
+    }
+  }
+  return dist;
+}
+
 /** Direction from (x, z) that faces (tx, tz). */
 export function faceTowards(x: number, z: number, tx: number, tz: number): FacingDirection {
   const dx = tx - x;
@@ -49,6 +83,18 @@ export function unitsInBlast(caster: Unit, ability: Ability, cx: number, cz: num
   });
 }
 
+const SUPPORT_BUFFS = ['haste', 'protect', 'shell', 'regen'];
+
+/**
+ * A healer or buffer: a unit with a heal, a raise or a buff for others it can still pay for. The AI
+ * values hurting these more, the way a player learns to drop the medic first (0.20.0).
+ */
+export function isSupportCaster(u: Unit): boolean {
+  if (u.statuses.some((s) => s.type === 'silence')) return false;
+  return JobSystem.getCombatActionAbilities(u).some((a) => !a.item && !a.isSelfOnly && a.mpCost <= u.currentMp
+    && (a.power < 0 || !!a.revive || (!!a.appliesStatus && SUPPORT_BUFFS.includes(a.appliesStatus))));
+}
+
 /**
  * Scores what an ability would achieve against each unit it touches.
  * Positive = good for the caster. Uses forecasts (expected values), never rolls dice.
@@ -64,7 +110,9 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     const vH = grid.getHeight(v.x, v.z);
     const isSplash = ability.aoe > 0 && (v.x !== aim.x || v.z !== aim.z);
     const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash);
-    const p = fc.hitChance / 100;
+    let p = fc.hitChance / 100;
+    // A knight with Weapon Guard parries 30% of frontal physical blows: hit them from the side
+    if (v.equippedAbilities.reaction === 'kn_parry' && ability.element === 'physical' && ability.power > 0 && fc.facingType === 'front' && v.id !== caster.id) p *= 0.7;
 
     // Raising a fallen ally is worth about as much as a kill: it puts a whole unit back on the board
     if (ability.revive) {
@@ -108,8 +156,9 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     // healthy unit never outranks finishing off a wounded one.
     let dmg = fc.expectedDamage * (fc.willDualWield ? 1.9 : 1);
     dmg = Math.min(dmg, v.currentHp);
-    score += (dmg / v.maxHp) * 100 * p;
-    if (fc.expectedDamage >= v.currentHp) score += (120 + (v.isBoss ? 40 : 0)) * p; // likely kill
+    const support = isSupportCaster(v);
+    score += (dmg / v.maxHp) * 100 * p * (support ? 1.3 : 1);
+    if (fc.expectedDamage >= v.currentHp) score += (120 + (v.isBoss ? 40 : 0) + (support ? 30 : 0)) * p; // likely kill
     if (ability.appliesStatus && !v.statuses.some((s) => s.type === ability.appliesStatus) && !guardsAgainst(v, ability.appliesStatus)) score += 15 * p;
     if (ability.drain) score += (Math.min(fc.expectedDamage * ability.drain, caster.maxHp - caster.currentHp) / caster.maxHp) * 60 * p;
     // Hitting a sleeper wakes it: only worth it for real damage
@@ -138,6 +187,14 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
 
   const tiles: { x: number; z: number }[] = unit.hasMoved ? [origin] : [origin, ...grid.getReachableTiles(unit, units)];
   const baseAbilities = JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp && !(opts.noRevive && a.revive));
+
+  // Walking distance from each foe, by this unit's own movement rules: shared by the self-buff
+  // approach below and the fallback walk
+  const key = (x: number, z: number) => `${x},${z}`;
+  const manhattan = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.abs(a.x - b.x) + Math.abs(a.z - b.z);
+  const fields = foes.map((f) => ({ f, d: walkingDistances(grid, f, unit) }));
+  const walkToFoes = (t: { x: number; z: number }) =>
+    Math.min(...fields.map((e) => e.d.get(key(t.x, t.z)) ?? manhattan(e.f, t) + 20));
 
   let best: AiPlan | null = null;
   const savedX = unit.x;
@@ -174,15 +231,18 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
           let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units);
           if (score <= 0) continue;
           score += posScore;
+          // A self-buff (Bulwark, Focus) can be cast anywhere, so cast it on the way in rather
+          // than standing still (0.20.0)
+          if (ability.isSelfOnly) score -= walkToFoes(tile) * 0.6;
           score -= ability.mpCost * 0.15; // spend MP when it matters
 
           if (!best || score > best.score) {
             const nearestFoe = foes.reduce((a, b) =>
               Math.abs(a.x - tile.x) + Math.abs(a.z - tile.z) <= Math.abs(b.x - tile.x) + Math.abs(b.z - tile.z) ? a : b
             );
-            const facing = supportive || ability.isSelfOnly
-              ? faceTowards(tile.x, tile.z, nearestFoe.x, nearestFoe.z)
-              : faceTowards(tile.x, tile.z, ax, az);
+            // End the turn facing the closest foe (the one most likely to strike next), so the
+            // back isn't left open to it; a melee target is that foe anyway
+            const facing = faceTowards(tile.x, tile.z, nearestFoe.x, nearestFoe.z);
             best = { moveTo: { ...tile }, ability, targetTile: { x: ax, z: az }, facing, score };
           }
         }
@@ -195,16 +255,20 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
 
   if (best) return best;
 
-  // No action possible this turn: close distance to the weakest reachable foe, prefer high ground
-  const target = foes.reduce((a, b) => {
-    const da = Math.abs(a.x - unit.x) + Math.abs(a.z - unit.z) + a.currentHp / 100;
-    const db = Math.abs(b.x - unit.x) + Math.abs(b.z - unit.z) + b.currentHp / 100;
+  // No action possible this turn: walk toward the weakest foe it can actually reach, by real
+  // walking distance (climbing only where Jump allows), and prefer high ground on the way
+  const reachableFoes = fields.filter((e) => e.d.has(key(unit.x, unit.z)));
+  const pick = (reachableFoes.length ? reachableFoes : fields).reduce((a, b) => {
+    const da = (a.d.get(key(unit.x, unit.z)) ?? manhattan(a.f, unit)) + a.f.currentHp / 100;
+    const db = (b.d.get(key(unit.x, unit.z)) ?? manhattan(b.f, unit)) + b.f.currentHp / 100;
     return da <= db ? a : b;
   });
+  const target = pick.f;
+  const distFrom = (t: { x: number; z: number }) => pick.d.get(key(t.x, t.z)) ?? manhattan(target, t) + 100;
   let moveTo = origin;
-  let bestDist = Math.abs(target.x - unit.x) + Math.abs(target.z - unit.z);
+  let bestDist = distFrom(origin);
   for (const t of tiles) {
-    const d = Math.abs(target.x - t.x) + Math.abs(target.z - t.z) - grid.getHeight(t.x, t.z) * 0.05;
+    const d = distFrom(t) - grid.getHeight(t.x, t.z) * 0.05;
     if (d < bestDist) {
       bestDist = d;
       moveTo = t;

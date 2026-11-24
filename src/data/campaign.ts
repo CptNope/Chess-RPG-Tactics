@@ -143,11 +143,13 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       }
     ],
     enemyRoster: [
+      // 0.20.0: the escorts are a level lower, and the Chronomancer and the assassin are gone.
+      // A healer behind a Haste caster and four level-5 escorts made this the hardest fight in the
+      // game (0% in the balance sim even for a level-7 squad), and since 0.17 it is the middle of
+      // the story, not its end
       { name: 'Zodiac Champion', jobId: 'dragoon', level: 5, x: 7, z: 2, isBoss: true },
-      { name: 'Zealot Medic', jobId: 'white_mage', level: 5, x: 8, z: 0 },
-      { name: 'Grand Chronomancer', jobId: 'time_mage', level: 5, x: 5, z: 3 },
-      { name: 'Black Archmage', jobId: 'black_mage', level: 5, x: 10, z: 3 },
-      { name: 'Shadow Assassin', jobId: 'ninja', level: 5, x: 7, z: 6 },
+      { name: 'Zealot Medic', jobId: 'white_mage', level: 4, x: 8, z: 0 },
+      { name: 'Black Archmage', jobId: 'black_mage', level: 4, x: 10, z: 3 },
       { name: 'Altar Sentinel', jobId: 'knight', level: 4, x: 9, z: 6 }
     ]
   },

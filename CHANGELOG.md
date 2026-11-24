@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.20.0] - 2026-11-23
+
+### Changed — smarter foes
+- **Enemies walk the real path.** A unit with nothing in reach now heads for a foe it can actually get to, along the route its Jump allows, instead of marching at the foot of a cliff toward a foe on top of it.
+- **They face you.** Every enemy ends its turn facing the closest foe, so a flank or back attack has to be earned.
+- **They respect Weapon Guard.** A knight that parries is attacked from the side or back when possible.
+- **They drop your healers first.** Given a choice, enemies aim at units that can still heal, raise or buff others.
+- **Knights cast Bulwark on the way in**, rather than standing still to do it.
+- AUTO uses the same planner, so your units do all of this too.
+
+### Changed — Chapter III
+- **Awakening at the Summit is easier.** The Grand Chronomancer and the Shadow Assassin no longer guard the Zodiac Champion, and the remaining escorts are a level lower. Even before this release's AI changes, the fight was out of reach in the balance simulation at every squad level and difficulty; it now plays like the middle of a two-act story, not its end.
+
+### Added
+- **Menu → Text size:** Normal, Large or Larger. Menus, panels, the log and the title screen all scale; the choice is saved on the device.
+
+### Fixed
+- Unit HP bars showed through open menus and panels; they now sit beneath them.
+- On phones in portrait, the STATUS button's label overflowed its button.
+
+### Developer
+- `walkingDistances()` and `isSupportCaster()` in `src/core/EnemyAI.ts`; parry, support-target and self-buff approach terms in the planner. [docs/ENEMY_AI.md](docs/ENEMY_AI.md) has the new terms and limits.
+- `src/ui/TextSize.ts`; every UI font size of 22px or less in `style.css` (and the job and gear lists) is `calc(Npx * var(--ts))`.
+- 10 new tests (166 total) in `tests/ai.test.ts`. [ADR 0028](docs/adr/0028-smarter-foes-and-text-size.md) records the balance experiments behind the Chapter III change.
+
 ## [0.19.0] - 2026-11-23
 
 ### Added — the Chemist (16 jobs, 93 abilities)

@@ -8,6 +8,7 @@ import { JOBS } from './data/jobs';
 import { WorldMap } from './ui/WorldMap';
 import { DIFFICULTIES, DIFFICULTY_ORDER, Difficulty, enemyLevel, sanitizeDifficulty, scaleBoss } from './core/Difficulty';
 import { Tutorial, TipId, TIPS } from './ui/Tutorial';
+import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize } from './ui/TextSize';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
 import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
@@ -33,6 +34,9 @@ import '@fontsource/press-start-2p/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
 
 type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
+
+// The saved text size applies before anything is drawn, the title screen included (0.20.0)
+applyTextSize(savedTextSize());
 
 /** ?fast speeds every animation delay up (used by the automated play-test). */
 const TEST_FAST = new URLSearchParams(location.search).has('fast');
@@ -477,6 +481,17 @@ class TacticsGame {
       this.ui.addLogEntry('[SYSTEM] Controller connected. Press View/Back for the controls.', 'system');
     };
     this.pad.onDisconnect = () => this.ui.showBanner('CONTROLLER DISCONNECTED');
+
+    // Text size: Normal → Large → Larger. Saved on this device (0.20.0)
+    const textBtn = document.getElementById('btn-text-size');
+    const showTextSize = (v: TextSize) => { if (textBtn) textBtn.textContent = `Text size: ${TEXT_SIZE_LABEL[v]}`; };
+    showTextSize(savedTextSize());
+    textBtn?.addEventListener('click', () => {
+      const next = nextTextSize(savedTextSize());
+      applyTextSize(next, true);
+      showTextSize(next);
+      this.ui.showBanner(`TEXT SIZE: ${TEXT_SIZE_LABEL[next].toUpperCase()}`);
+    });
 
     // Battle speed: Normal ↔ Fast (pauses halved, walking doubled). Saved on this device.
     const speedBtn = document.getElementById('btn-speed');
