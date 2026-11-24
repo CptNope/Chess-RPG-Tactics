@@ -1,14 +1,18 @@
 # Chess RPG Tactics
 
+[![Play on itch.io](https://img.shields.io/badge/play-itch.io-fa5c5c?logo=itchdotio&logoColor=white)](https://cptnope.itch.io/chess-rpg-tactics)
+[![Play on the web](https://img.shields.io/badge/play-in%20your%20browser-10b981?logo=googlechrome&logoColor=white)](https://cptnope.github.io/Chess-RPG-Tactics/)
+[![Support the game](https://img.shields.io/badge/support-donate%20on%20itch-ff69b4?logo=githubsponsors&logoColor=white)](https://cptnope.itch.io/chess-rpg-tactics/donate)
+<br />
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.12.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.16.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, fifteen mix-and-match jobs, a branching campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
 
-### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/) · [on itch.io](https://cptnope.itch.io/chess-rpg-tactics)
+### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/) · [on itch.io](https://cptnope.itch.io/chess-rpg-tactics) · [♥ Support development](https://cptnope.itch.io/chess-rpg-tactics/donate)
 
 ![A battle on Riverside Ruins](docs/images/battle-desktop.webp)
 
@@ -146,9 +150,21 @@ src/
 tests/           Vitest rule tests
 scripts/         build check, docs generator
 docs/            guides, ADRs, images
+.github/         CI and deploy workflows; FUNDING.yml (the Sponsor button → itch.io donations)
 ```
 
 ---
+
+## Support the game
+
+Chess RPG Tactics is free, has no ads, and its code is open. If you enjoy it, you can **[leave a donation on itch.io](https://cptnope.itch.io/chess-rpg-tactics/donate)**. Any amount helps more games get made, and none is expected.
+
+| | |
+| :--- | :--- |
+| **Donate** | [cptnope.itch.io/chess-rpg-tactics/donate](https://cptnope.itch.io/chess-rpg-tactics/donate) |
+| **Rate or comment** | [The game's itch.io page](https://cptnope.itch.io/chess-rpg-tactics) |
+| **About the project** | [jeremyanderson.tech/project/chess-rpg-tactics](https://jeremyanderson.tech/project/chess-rpg-tactics/) |
+| **Made by** | [Jeremy Anderson Tech](https://jeremyanderson.tech) |
 
 ## License
 
