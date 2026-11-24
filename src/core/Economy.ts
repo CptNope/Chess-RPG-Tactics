@@ -14,7 +14,7 @@ export const STARTING_GIL = 300;
 export const UNIQUE_ITEMS = ['zodiac_blade', 'ribbon', 'dragon_mail'];
 
 /**
- * How far the campaign has come: 0 = Chapter I, 1 = Chapter II, 2 = the Final Chapter,
+ * How far the campaign has come: 0 = Chapter I, 1 = Chapter II, 2 = Chapter III,
  * 3 = campaign cleared (and the Trials). The shop's shelves grow with it.
  */
 export type ShopProgress = 0 | 1 | 2 | 3;
@@ -22,7 +22,7 @@ export type ShopProgress = 0 | 1 | 2 | 3;
 /** The dearest item the shop stocks at each stage of the campaign. */
 export const SHOP_PRICE_CAP: Record<ShopProgress, number> = { 0: 380, 1: 480, 2: 580, 3: Infinity };
 
-const CHAPTER_PROGRESS: Record<string, ShopProgress> = { chapter_1: 0, chapter_2a: 1, chapter_2b: 1, chapter_3: 2 };
+const CHAPTER_PROGRESS: Record<string, ShopProgress> = { chapter_1: 0, chapter_2a: 1, chapter_2b: 1, chapter_3: 2, chapter_4: 3, chapter_5: 3, chapter_6: 3 };
 
 /**
  * @param chapterWon the chapter the campaign is at has been won (the squad is on the world map,

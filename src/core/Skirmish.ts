@@ -41,7 +41,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     mapId: 'gloomy_swamp',
     foe: 'Mire Cultists',
     jobs: [['black_mage', 'Hexer'], ['oracle', 'Augur'], ['summoner', 'Caller'], ['time_mage', 'Seer'], ['white_mage', 'Acolyte'], ['ninja', 'Shade']],
-    opensAfter: ['chapter_2a', 'chapter_2b'],
+    opensAfter: ['chapter_2a', 'chapter_2b', 'chapter_3'], // chapter_3 covers old saves that don't record which road was taken
     intro: 'Robed figures chant among the sunken stones. Break the circle before the rite is done.'
   },
   ridge: {
@@ -50,7 +50,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     mapId: 'night_fortress',
     foe: 'Night Raiders',
     jobs: [['knight', 'Raider'], ['dragoon', 'Lancer'], ['archer', 'Marksman'], ['ninja', 'Shade'], ['spellblade', 'Duelist'], ['geomancer', 'Warden']],
-    opensAfter: ['chapter_2a', 'chapter_2b'],
+    opensAfter: ['chapter_2a', 'chapter_2b', 'chapter_3'], // chapter_3 covers old saves that don't record which road was taken
     objective: { type: 'survive', rounds: 6 },
     intro: 'Raiders come up the ridge in the dark. Hold the watchfire until the garrison arrives.'
   }

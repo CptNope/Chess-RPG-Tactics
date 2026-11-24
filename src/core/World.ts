@@ -29,6 +29,9 @@ export const WORLD_NODES: WorldNode[] = [
   { id: 'battlement', name: 'Night Battlement', kind: 'mission', chapterId: 'chapter_2b', x: 0.55, y: 0.36, blurb: 'The northern fortress, under siege.' },
   { id: 'summit', name: 'Zodiac Summit', kind: 'mission', chapterId: 'chapter_3', x: 0.8, y: 0.56, blurb: 'The mountain where the seals sleep.' },
   { id: 'trials', name: 'Gate of Trials', kind: 'trials', x: 0.88, y: 0.24, blurb: 'Twelve more seals stir behind this gate: endless battles, rare gear.' },
+  { id: 'harbor', name: 'Emberwick Harbor', kind: 'mission', chapterId: 'chapter_4', x: 0.14, y: 0.78, blurb: 'The realm\'s western port, its quay lined with warehouses.' },
+  { id: 'isle', name: 'Greywatch Isle', kind: 'mission', chapterId: 'chapter_5', x: 0.13, y: 0.14, blurb: 'A lighthouse on a bare rock, a morning\'s sail from the market.' },
+  { id: 'cape', name: 'Stormbreak Cape', kind: 'mission', chapterId: 'chapter_6', x: 0.6, y: 0.1, blurb: 'The northern point, where the old kingdom built an altar to the sea.' },
   { id: 'thornwood', name: SKIRMISHES.thornwood.name, kind: 'skirmish', skirmishId: 'thornwood', x: 0.37, y: 0.21, blurb: 'A river crossing in the northern woods, held by bandits.' },
   { id: 'shrine', name: SKIRMISHES.shrine.name, kind: 'skirmish', skirmishId: 'shrine', x: 0.66, y: 0.68, blurb: 'A flooded chapel at the edge of the mire, where a cult gathers.' },
   { id: 'ridge', name: SKIRMISHES.ridge.name, kind: 'skirmish', skirmishId: 'ridge', x: 0.88, y: 0.78, blurb: 'An old watch-fort on the cliffs below the summit, its signal fire still kept.' }
@@ -46,7 +49,11 @@ export const WORLD_ROADS: [string, string][] = [
   ['market', 'thornwood'],
   ['thornwood', 'battlement'],
   ['mire', 'shrine'],
-  ['summit', 'ridge']
+  ['summit', 'ridge'],
+  ['ruins', 'harbor'],
+  ['market', 'harbor'],
+  ['market', 'isle'],
+  ['thornwood', 'cape']
 ];
 
 export const worldNode = (id: string): WorldNode | undefined => WORLD_NODES.find((n) => n.id === id);
@@ -84,12 +91,18 @@ const isFinale = (id: string): boolean => !!CAMPAIGN_CHAPTERS[id] && !(CAMPAIGN_
 export const storyFinished = (cleared: string[]): boolean => cleared.some(isFinale);
 
 /**
- * The cleared list for an old (pre-0.15) save that is already past the story: the first and the
+ * The cleared list for an old (pre-0.15) save that is already past the first act: its first and
  * last battle are certain, the branch in between is not recorded and stays unmarked.
  */
 export function clearedAfterStory(): string[] {
-  return ['chapter_1', ...Object.keys(CAMPAIGN_CHAPTERS).filter((id) => id !== 'chapter_1' && isFinale(id))];
+  return ['chapter_1', FIRST_ACT_FINALE];
 }
+
+/**
+ * The battle that ended the story before Act II (0.17.0). A save that says "campaign cleared"
+ * without a list of won chapters finished here, and carries on into Chapter IV.
+ */
+export const FIRST_ACT_FINALE = 'chapter_3';
 
 export type NodeState = 'open' | 'cleared' | 'locked';
 

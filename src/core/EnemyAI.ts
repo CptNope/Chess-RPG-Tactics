@@ -124,7 +124,10 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
  * Plans an enemy turn: tries every reachable tile x every affordable ability x every valid
  * target, and picks the highest-value combination. Falls back to advancing on the closest foe.
  */
-export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid): AiPlan {
+/** How many fallen allies the enemy side may raise in one battle. Keeps a healer from undoing a whole fight. */
+export const ENEMY_RAISE_CAP = 1;
+
+export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { noRevive?: boolean } = {}): AiPlan {
   const foes = foesOf(unit, units);
   const origin = { x: unit.x, z: unit.z };
   const fallbackFacing = unit.facing;
@@ -134,7 +137,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid): AiPlan {
   }
 
   const tiles: { x: number; z: number }[] = unit.hasMoved ? [origin] : [origin, ...grid.getReachableTiles(unit, units)];
-  const baseAbilities = JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp);
+  const baseAbilities = JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp && !(opts.noRevive && a.revive));
 
   let best: AiPlan | null = null;
   const savedX = unit.x;

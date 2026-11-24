@@ -342,19 +342,19 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
 | **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop |
 | **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
-| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win FINAL CHAPTER |
+| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III |
 | **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear |
 | **Tiger Claws** `tiger_claws` | knuckles | 1 | ATTACK +10, SPEED +1 | — | 480 | Trials drop |
 | **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear |
-| **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Trials drop |
+| **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop |
 | **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop |
-| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Trials drop |
+| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win FINAL CHAPTER · Trials drop |
 | **Siege Crossbow** `siege_crossbow` | bow | 4 | ATTACK +11, SPEED -1 | — | 480 | Trials drop |
 | **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop |
 | **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop |
 | **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop |
 | **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop |
-| **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Trials drop |
+| **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop |
 
 ### Shield (5)
 
@@ -364,7 +364,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Kite Shield** `kite_shield` | EVASION +22, HP +15 | — | 220 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
 | **Aegis Barrier** `aegis_shield` | EVASION +32, HP +30, MP +15 | — | 450 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
 | **Mirror Shield** `mirror_shield` | EVASION +18, MP +10 | starts with shell | 420 | Win CHAPTER II-B · Trials drop |
-| **Oathkeeper** `oath_shield` | EVASION +20, HP +20 | guards sleep, blind | 500 | Trials drop |
+| **Oathkeeper** `oath_shield` | EVASION +20, HP +20 | guards sleep, blind | 500 | Win CHAPTER IV · Trials drop |
 
 ### Head (8)
 
@@ -387,11 +387,11 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Platinum Plate Mail** `platinum_armor` | HP +90, SPEED -1 | — | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
 | **Astral Silk Robe** `silk_robe` | HP +30, MP +45, MAGIC +5 | — | 260 | Starting gear |
 | **Nightwalker Tunic** `shinobi_garb` | HP +35, SPEED +1, EVASION +12 | — | 300 | Starting gear |
-| **Wyrmscale Mail** `dragon_mail` | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win FINAL CHAPTER · Trials drop |
+| **Wyrmscale Mail** `dragon_mail` | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win CHAPTER III · Trials drop |
 | **Leather Vest** `leather_vest` | HP +25, EVASION +3 | — | 90 | Starting gear |
 | **Brawler's Gi** `brawler_gi` | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop |
 | **Summoner's Robe** `summoner_robe` | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop |
-| **Templar Mail** `templar_mail` | HP +75, SPEED -1 | starts with shell | 560 | Trials drop |
+| **Templar Mail** `templar_mail` | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop |
 
 ### Accessory (11)
 
@@ -402,9 +402,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Hermes Slippers** `hermes_shoes` | SPEED +2 | — | 400 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
 | **Gauntlet of Might** `power_wrist` | ATTACK +4 | — | 200 | Win CHAPTER I · Trials drop |
 | **Ring of Arcana** `mage_ring` | MAGIC +4, MP +25 | — | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
-| **Zodiac Ribbon** `ribbon` | HP +20, MP +20, SPEED +1, EVASION +5 | guards poison, slow, immobilize, blind, silence, sleep, breach | 800 | Win FINAL CHAPTER · Trials drop |
+| **Zodiac Ribbon** `ribbon` | HP +20, MP +20, SPEED +1, EVASION +5 | guards poison, slow, immobilize, blind, silence, sleep, breach | 800 | Win CHAPTER III · Trials drop |
 | **Verdant Charm** `verdant_charm` | HP +10 | starts with regen | 600 | Win CHAPTER II-A · Trials drop |
-| **Warding Amulet** `warding_amulet` | HP +10 | starts with protect + shell | 520 | Trials drop |
+| **Warding Amulet** `warding_amulet` | HP +10 | starts with protect + shell | 520 | Choose "Sail for Greywatch Isle before the Tidecaller finds the seal!" · Trials drop |
 | **Purity Bangle** `purity_bangle` | HP +10 | guards poison, slow, immobilize, breach | 420 | Trials drop |
 | **Sprinter's Anklet** `sprinter_anklet` | MOVE +1, JUMP +1 | — | 620 | Trials drop |
 | **Berserker Band** `berserker_band` | ATTACK +7, EVASION -5 | — | 460 | Trials drop |
@@ -447,8 +447,11 @@ flowchart LR
   ruins["Riverside Ruins<br/><i>CHAPTER I</i>"]
   mire["Gloomy Mire<br/><i>CHAPTER II-A</i>"]
   battlement["Night Battlement<br/><i>CHAPTER II-B</i>"]
-  summit["Zodiac Summit<br/><i>FINAL CHAPTER</i>"]
+  summit["Zodiac Summit<br/><i>CHAPTER III</i>"]
   trials["Gate of Trials<br/><i>post-game</i>"]
+  harbor["Emberwick Harbor<br/><i>CHAPTER IV</i>"]
+  isle["Greywatch Isle<br/><i>CHAPTER V</i>"]
+  cape["Stormbreak Cape<br/><i>FINAL CHAPTER</i>"]
   thornwood["Thornwood Ford<br/><i>side battle</i>"]
   shrine["Drowned Shrine<br/><i>side battle</i>"]
   ridge["Watchfire Ridge<br/><i>side battle</i>"]
@@ -463,17 +466,24 @@ flowchart LR
   thornwood --- battlement
   mire --- shrine
   summit --- ridge
+  ruins --- harbor
+  market --- harbor
+  market --- isle
+  thornwood --- cape
 ```
 
 | Place | Kind | What happens there | Roads to |
 | :--- | :--- | :--- | :--- |
-| **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement, Thornwood Ford |
-| **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement |
+| **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement, Thornwood Ford, Emberwick Harbor, Greywatch Isle |
+| **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement, Emberwick Harbor |
 | **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit, Drowned Shrine |
 | **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit, Thornwood Ford |
-| **Zodiac Summit** | mission | FINAL CHAPTER: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials, Watchfire Ridge |
+| **Zodiac Summit** | mission | CHAPTER III: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials, Watchfire Ridge |
 | **Gate of Trials** | trials | Enter the Trials of the Zodiac (after the story) | Zodiac Summit |
-| **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement |
+| **Emberwick Harbor** | mission | CHAPTER IV: Fire on the Water | Riverside Ruins, Larkmoor Market |
+| **Greywatch Isle** | mission | CHAPTER V: The Greywatch Light | Larkmoor Market |
+| **Stormbreak Cape** | mission | FINAL CHAPTER: The Drowned Regent | Thornwood Ford |
+| **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement, Stormbreak Cape |
 | **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
 
@@ -484,8 +494,8 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | Place | Battlefield | Enemies | Drawn from | Goal | Opens after |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Thornwood Ford** | Riverside Ruins | Thornwood Bandits | Cutpurse (Thief), Poacher (Archer), Footpad (Squire), Bruiser (Monk), Deserter (Knight) | Defeat every enemy | CHAPTER I |
-| **Drowned Shrine** | Gloomy Mire | Mire Cultists | Hexer (Black Mage), Augur (Oracle), Caller (Summoner), Seer (Time Weaver), Acolyte (White Mage), Shade (Ninja) | Defeat every enemy | CHAPTER II-A or CHAPTER II-B |
-| **Watchfire Ridge** | Night Battlement | Night Raiders | Raider (Knight), Lancer (Dragoon), Marksman (Archer), Shade (Ninja), Duelist (Spellblade), Warden (Geomancer) | Survive 6 rounds | CHAPTER II-A or CHAPTER II-B |
+| **Drowned Shrine** | Gloomy Mire | Mire Cultists | Hexer (Black Mage), Augur (Oracle), Caller (Summoner), Seer (Time Weaver), Acolyte (White Mage), Shade (Ninja) | Defeat every enemy | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
+| **Watchfire Ridge** | Night Battlement | Night Raiders | Raider (Knight), Lancer (Dragoon), Marksman (Archer), Shade (Ninja), Duelist (Spellblade), Warden (Geomancer) | Survive 6 rounds | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
 
 ## Armory & drops
 
@@ -502,6 +512,9 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Night Battlement** | `night_fortress` | 16×16 | night | 0.5–4.5 | stone 61%, parapet 17%, water 12%, dirt 9%, wood 1% | 4 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Gloomy Mire** | `gloomy_swamp` | 16×16 | swamp | 0.4–3 | swamp 41%, grass 36%, wood 14%, dirt 5%, stone 2%, water 2% | 5 | (6, 14) (7, 14) (8, 14) (7, 15) (6, 15) (8, 15) |
 | **Zodiac Summit** | `zodiac_summit` | 16×16 | night | 1–5 | parapet 35%, grass 24%, stone 16%, dirt 12%, water 11%, wood 2% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Emberwick Harbor** | `ember_harbor` | 16×16 | day | 0.4–4 | stone 36%, wood 30%, water 27%, dirt 6% | 72 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Greywatch Isle** | `greywatch_isle` | 16×16 | night | 0.4–7 | water 44%, dirt 21%, stone 15%, grass 15%, parapet 5% | 90 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Stormbreak Cape** | `stormbreak_cape` | 16×16 | night | 0.4–5.4 | grass 27%, stone 23%, dirt 21%, parapet 18%, water 10%, wood 2% | 14 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 
 ## Campaign
 
@@ -510,13 +523,19 @@ flowchart LR
   chapter_1["CHAPTER I<br/>Ambush at Riverside Ruins<br/><i>Riverside Ruins</i>"]
   chapter_2a["CHAPTER II-A<br/>The Sunken Crypts (Gloomy Mire)<br/><i>Gloomy Mire</i>"]
   chapter_2b["CHAPTER II-B<br/>The Siege of Night Battlement<br/><i>Night Battlement</i>"]
-  chapter_3["FINAL CHAPTER<br/>The Awakening at the Summit<br/><i>Zodiac Summit</i>"]
+  chapter_3["CHAPTER III<br/>The Awakening at the Summit<br/><i>Zodiac Summit</i>"]
+  chapter_4["CHAPTER IV<br/>Fire on the Water<br/><i>Emberwick Harbor</i>"]
+  chapter_5["CHAPTER V<br/>The Greywatch Light<br/><i>Greywatch Isle</i>"]
+  chapter_6["FINAL CHAPTER<br/>The Drowned Regent<br/><i>Stormbreak Cape</i>"]
   epilogue(["Epilogue<br/>New Game+ / Trials"])
   chapter_1 -->|"Pursue the fleeing sorcerer into the Gloomy Mire"| chapter_2a
   chapter_1 -->|"Rush to reinforce the garrison at Night Battlement"| chapter_2b
   chapter_2a -->|"Ascend to the Zodiac Summit for the final battle"| chapter_3
   chapter_2b -->|"Storm the fortress inner sanctum for the final confrontation"| chapter_3
-  chapter_3 --> epilogue
+  chapter_3 -->|"Ride for Emberwick Harbor and find out who is hunting the second seal"| chapter_4
+  chapter_4 -->|"Sail for Greywatch Isle before the Tidecaller finds the seal"| chapter_5
+  chapter_5 -->|"Make for Stormbreak Cape and stop the Drowned Regent at the water's edge"| chapter_6
+  chapter_6 --> epilogue
 ```
 
 | Chapter | Map | Enemies | Boss | Recruit | Win reward | Branch rewards |
@@ -524,7 +543,10 @@ flowchart LR
 | **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
 | **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 5 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
 | **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm, Mirror Shield | Aegis Barrier + Platinum Blade |
-| **FINAL CHAPTER**: The Awakening at the Summit | Zodiac Summit | 6 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | — |
+| **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | 6 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
+| **CHAPTER IV**: Fire on the Water | Emberwick Harbor | 6 | Captain Varrow (Ninja L7) | Sable (Thief) | Oathkeeper | Warding Amulet |
+| **CHAPTER V**: The Greywatch Light | Greywatch Isle | 6 | Tidecaller Maelis (Summoner L7) | — | Runeblade | Templar Mail |
+| **FINAL CHAPTER**: The Drowned Regent | Stormbreak Cape | 7 | The Drowned Regent (Paladin L9) | — | Dawnbringer | — |
 
 <details><summary><b>CHAPTER I</b> enemy roster</summary>
 
@@ -562,7 +584,7 @@ flowchart LR
 
 </details>
 
-<details><summary><b>FINAL CHAPTER</b> enemy roster</summary>
+<details><summary><b>CHAPTER III</b> enemy roster</summary>
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
@@ -572,6 +594,46 @@ flowchart LR
 | Black Archmage | Black Mage | 5 | (10, 3) |  |
 | Shadow Assassin | Ninja | 5 | (7, 6) |  |
 | Altar Sentinel | Knight | 4 | (9, 6) |  |
+
+</details>
+
+<details><summary><b>CHAPTER IV</b> enemy roster</summary>
+
+| Enemy | Job | Level | Tile | Boss |
+| :--- | :--- | :---: | :---: | :---: |
+| Captain Varrow | Ninja | 7 | (7, 1) | ★ |
+| Corsair Mate | Spellblade | 6 | (9, 1) |  |
+| Deck Gunner | Archer | 6 | (11, 0) |  |
+| Corsair Cutthroat | Thief | 6 | (3, 4) |  |
+| Corsair Brawler | Monk | 6 | (12, 5) |  |
+| Ship Chanter | White Mage | 5 | (5, 1) |  |
+
+</details>
+
+<details><summary><b>CHAPTER V</b> enemy roster</summary>
+
+| Enemy | Job | Level | Tile | Boss |
+| :--- | :--- | :---: | :---: | :---: |
+| Tidecaller Maelis | Summoner | 7 | (7, 2) | ★ |
+| Tower Acolyte | White Mage | 6 | (9, 1) |  |
+| Tide Augur | Oracle | 6 | (5, 3) |  |
+| Greywatch Sentinel | Knight | 6 | (7, 5) |  |
+| Greywatch Lancer | Dragoon | 6 | (10, 4) |  |
+| Storm Hexer | Black Mage | 6 | (6, 1) |  |
+
+</details>
+
+<details><summary><b>FINAL CHAPTER</b> enemy roster</summary>
+
+| Enemy | Job | Level | Tile | Boss |
+| :--- | :--- | :---: | :---: | :---: |
+| The Drowned Regent | Paladin | 9 | (7, 1) | ★ |
+| Drowned Chaplain | White Mage | 8 | (9, 1) |  |
+| Drowned Magus | Black Mage | 8 | (5, 1) |  |
+| Tomb Knight | Knight | 8 | (7, 4) |  |
+| Wraith Duelist | Spellblade | 8 | (3, 7) |  |
+| Wraith Lancer | Dragoon | 8 | (12, 7) |  |
+| Hourglass Seer | Time Weaver | 8 | (12, 3) |  |
 
 </details>
 

@@ -116,7 +116,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
 
   chapter_3: {
     id: 'chapter_3',
-    title: 'FINAL CHAPTER',
+    title: 'CHAPTER III',
     subtitle: 'The Awakening at the Summit',
     mapId: 'zodiac_summit',
     rewardItemIds: ['zodiac_blade', 'ribbon', 'dragon_mail'],
@@ -130,7 +130,16 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Zodiac Champion', portrait: 'foe_dragoon', portraitClass: '👑', side: 'right', text: 'How could... mortal hands... break the celestial ward?! NOOOO!' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'The stone is sealed. The realm is saved! Honor and victory to our companions!' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The songs will remember this day. Well fought, Rowan!' },
-      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The stone is quiet, but not empty. I can hear twelve more seals beneath the mountain... The Trials of the Zodiac await anyone brave enough.' }
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The stone is quiet, but not empty. Something answered it from the sea. A second seal, far to the north... and it is waking.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then we are not done. A rider just came in from the coast: black sails off Emberwick, and the harbor is burning.' }
+    ],
+    choices: [
+      {
+        text: 'Ride for Emberwick Harbor and find out who is hunting the second seal!',
+        nextChapterId: 'chapter_4',
+        rewardText: 'Armory: Moonfang',
+        rewardItemIds: ['moonfang']
+      }
     ],
     enemyRoster: [
       { name: 'Zodiac Champion', jobId: 'dragoon', level: 5, x: 7, z: 2, isBoss: true },
@@ -139,6 +148,105 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Black Archmage', jobId: 'black_mage', level: 5, x: 10, z: 3 },
       { name: 'Shadow Assassin', jobId: 'ninja', level: 5, x: 7, z: 6 },
       { name: 'Altar Sentinel', jobId: 'knight', level: 4, x: 9, z: 6 }
+    ]
+  },
+
+  chapter_4: {
+    id: 'chapter_4',
+    title: 'CHAPTER IV',
+    subtitle: 'Fire on the Water',
+    mapId: 'ember_harbor',
+    rewardItemIds: ['oath_shield'],
+    recruit: { id: 'sable', name: 'Sable', jobId: 'thief', level: 6 },
+    introDialogue: [
+      { speaker: 'Captain Varrow', portrait: 'foe_ninja', portraitClass: '☠', side: 'right', text: 'Load the last of it! The Tidecaller pays in gold for every chart of these waters, and she pays double for speed.' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'Knights! Over here. I know that ship, I used to crew her. Get me aboard and I will show you where Varrow keeps the charts.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then you fight with us. The sea is too deep to wade: we take the piers. Watch the cross-pier, they will try to get behind us.' },
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Three piers, one ship. Split them up and meet on the deck.' }
+    ],
+    victoryDialogue: [
+      { speaker: 'Captain Varrow', portrait: 'foe_ninja', portraitClass: '☠', side: 'right', text: 'Keep the ship... The charts are already gone. She sailed for Greywatch on the morning tide.' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'Greywatch Isle. There is a lighthouse on that rock, and under it a door nobody has opened in my lifetime. I am coming with you.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The Tidecaller means to use the light to find the seal. We should reach it before the next spring tide.' }
+    ],
+    choices: [
+      {
+        text: 'Sail for Greywatch Isle before the Tidecaller finds the seal!',
+        nextChapterId: 'chapter_5',
+        rewardText: 'Armory: Warding Amulet',
+        rewardItemIds: ['warding_amulet']
+      }
+    ],
+    enemyRoster: [
+      { name: 'Captain Varrow', jobId: 'ninja', level: 7, x: 7, z: 1, isBoss: true },
+      { name: 'Corsair Mate', jobId: 'spellblade', level: 6, x: 9, z: 1 },
+      { name: 'Deck Gunner', jobId: 'archer', level: 6, x: 11, z: 0 },
+      { name: 'Corsair Cutthroat', jobId: 'thief', level: 6, x: 3, z: 4 },
+      { name: 'Corsair Brawler', jobId: 'monk', level: 6, x: 12, z: 5 },
+      { name: 'Ship Chanter', jobId: 'white_mage', level: 5, x: 5, z: 1 }
+    ]
+  },
+
+  chapter_5: {
+    id: 'chapter_5',
+    title: 'CHAPTER V',
+    subtitle: 'The Greywatch Light',
+    mapId: 'greywatch_isle',
+    rewardItemIds: ['runeblade'],
+    introDialogue: [
+      { speaker: 'Tidecaller Maelis', portrait: 'foe_summoner', portraitClass: '🌊', side: 'right', text: 'You are late, little knights. The light has shown me where the Drowned Regent sleeps. Stay, and watch the tide come in.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'She holds the high ground the whole way up. Every terrace we take makes the next one easier.' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The shallows on either side are slow going, but nobody watches them. Her healer stands by the tower door: get to him, or we will kill the same cultists twice.' }
+    ],
+    victoryDialogue: [
+      { speaker: 'Tidecaller Maelis', portrait: 'foe_summoner', portraitClass: '🌊', side: 'right', text: 'It makes no difference. The door is open. He is already walking up out of the sea at Stormbreak...' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The second seal was never a stone. It was a tomb. Whatever the old kingdom drowned out there, she has let it out.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then we meet it on the cape, before it reaches a single village. One more fight.' }
+    ],
+    choices: [
+      {
+        text: 'Make for Stormbreak Cape and stop the Drowned Regent at the water\'s edge!',
+        nextChapterId: 'chapter_6',
+        rewardText: 'Armory: Templar Mail',
+        rewardItemIds: ['templar_mail']
+      }
+    ],
+    enemyRoster: [
+      { name: 'Tidecaller Maelis', jobId: 'summoner', level: 7, x: 7, z: 2, isBoss: true },
+      { name: 'Tower Acolyte', jobId: 'white_mage', level: 6, x: 9, z: 1 },
+      { name: 'Tide Augur', jobId: 'oracle', level: 6, x: 5, z: 3 },
+      { name: 'Greywatch Sentinel', jobId: 'knight', level: 6, x: 7, z: 5 },
+      { name: 'Greywatch Lancer', jobId: 'dragoon', level: 6, x: 10, z: 4 },
+      { name: 'Storm Hexer', jobId: 'black_mage', level: 6, x: 6, z: 1 }
+    ]
+  },
+
+  chapter_6: {
+    id: 'chapter_6',
+    title: 'FINAL CHAPTER',
+    subtitle: 'The Drowned Regent',
+    mapId: 'stormbreak_cape',
+    rewardItemIds: ['dawn_blade'],
+    introDialogue: [
+      { speaker: 'The Drowned Regent', portrait: 'foe_paladin', portraitClass: '👑', side: 'right', text: 'Three hundred years beneath the tide, and still they send children with swords. Kneel. Your kingdom was mine before it had a name.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'It stopped being yours when they sealed you under the sea. Squad, with me!' },
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The chasm splits the climb. Pick a side and go together, or cross the rope bridge and take his guard in the flank.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'He is still half drowned. Wound him and the old seal will drag at him... but it will make him furious first.' }
+    ],
+    victoryDialogue: [
+      { speaker: 'The Drowned Regent', portrait: 'foe_paladin', portraitClass: '👑', side: 'right', text: 'The sea... takes me back. Remember who it was... that stood here...' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'Gone, armour and all. I have robbed a lot of tombs. First time I have put anything back in one.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Both seals are quiet. The realm is safe, and this time I believe it. Thank you, all of you.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Safe, yes. Though the mountain still hums at night. If any of you grow restless, the Gate of Trials stands open.' }
+    ],
+    enemyRoster: [
+      { name: 'The Drowned Regent', jobId: 'paladin', level: 9, x: 7, z: 1, isBoss: true },
+      { name: 'Drowned Chaplain', jobId: 'white_mage', level: 8, x: 9, z: 1 },
+      { name: 'Drowned Magus', jobId: 'black_mage', level: 8, x: 5, z: 1 },
+      { name: 'Tomb Knight', jobId: 'knight', level: 8, x: 7, z: 4 },
+      { name: 'Wraith Duelist', jobId: 'spellblade', level: 8, x: 3, z: 7 },
+      { name: 'Wraith Lancer', jobId: 'dragoon', level: 8, x: 12, z: 7 },
+      { name: 'Hourglass Seer', jobId: 'time_mage', level: 8, x: 12, z: 3 }
     ]
   }
 };

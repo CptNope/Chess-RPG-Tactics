@@ -8,7 +8,7 @@ import { JOBS } from './data/jobs';
 import { WorldMap } from './ui/WorldMap';
 import { Tutorial, TipId, TIPS } from './ui/Tutorial';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
-import { Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
+import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
 import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
 import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue, gearSaleBlock , BattleMode } from './core/Economy';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
@@ -19,7 +19,7 @@ import { SoundFX } from './audio/SoundEffects';
 import { Music } from './audio/MusicSynthesizer';
 import { SaveManager, GameSaveData } from './core/SaveManager';
 import { resolveTerrainAbility } from './core/Geomancy';
-import { planTurn, unitsInBlast, faceTowards } from './core/EnemyAI';
+import { planTurn, unitsInBlast, faceTowards, ENEMY_RAISE_CAP } from './core/EnemyAI';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
 import { getQualitySetting, setQualitySetting, resolveQuality, QualitySetting, PROFILES } from './renderer/GraphicsQuality';
@@ -73,6 +73,8 @@ class TacticsGame {
   private mode: BattleMode = 'campaign';
   /** The side battle being fought (mode 'skirmish'), and wins so far at each place. */
   private currentSkirmish: string | null = null;
+  /** Fallen enemies raised by the enemy side this battle (capped). */
+  private enemyRaises = 0;
   private skirmishWins: Record<string, number> = {};
   /** The campaign chapter to return to after Workshop battles (and to save). */
   private campaignChapterId = 'chapter_1';
@@ -306,6 +308,7 @@ class TacticsGame {
     this.units = [...this.squad, ...enemies];
     this.turnManager = new TurnManager(this.units);
     this.kills = {};
+    this.enemyRaises = 0;
     this.stolenThisBattle = [];
     this.fencedThisBattle = 0;
     this.jobNews = {};
@@ -785,10 +788,14 @@ class TacticsGame {
     this.gil = typeof data.gil === 'number' && data.gil >= 0 ? Math.floor(data.gil) : STARTING_GIL;
     this.inventory = sanitizeInventory(data.inventory);
     this.skirmishWins = sanitizeSkirmishWins(data.skirmishWins);
-    const chapterId = CAMPAIGN_CHAPTERS[data.currentChapterId] ? data.currentChapterId : 'chapter_1';
+    let chapterId = CAMPAIGN_CHAPTERS[data.currentChapterId] ? data.currentChapterId : 'chapter_1';
     this.clearedChapters = sanitizeCleared(data.clearedChapters, chapterId);
-    // A Trials save from before 0.15.0 has no list of won chapters, but the story is certainly over
-    if (!Array.isArray(data.clearedChapters) && data.mode === 'trials' && this.campaignCleared) this.clearedChapters = clearedAfterStory();
+    // A Trials save from before 0.15.0 has no list of won chapters, but the first act is certainly
+    // over: it stands at the Summit, with Chapter IV ahead
+    if (!Array.isArray(data.clearedChapters) && data.mode === 'trials' && this.campaignCleared) {
+      this.clearedChapters = clearedAfterStory();
+      chapterId = FIRST_ACT_FINALE;
+    }
     this.campaignChapterId = chapterId;
     this.world.close();
     if (data.onWorldMap) {
@@ -1468,7 +1475,9 @@ class TacticsGame {
 
   private async runAiTurn(enemy: Unit): Promise<void> {
     if (this.battleOver) return;
-    const plan = planTurn(enemy, this.units, this.grid);
+    // Enemies may raise only so many of their fallen per battle; AUTO for your own units is not limited
+    const plan = planTurn(enemy, this.units, this.grid, { noRevive: enemy.team === 'enemy' && this.enemyRaises >= ENEMY_RAISE_CAP });
+    if (plan.ability?.revive && enemy.team === 'enemy') this.enemyRaises++;
 
     if (plan.moveTo.x !== enemy.x || plan.moveTo.z !== enemy.z) {
       const walkMs = this.scene.walkPath(enemy.id, this.grid.findPath(enemy, this.units, plan.moveTo.x, plan.moveTo.z));
@@ -1931,10 +1940,10 @@ class TacticsGame {
     const best = SaveManager.getBestTrialFloor();
     this.ui.showResultModal({
       title: 'THE REALM IS AT PEACE',
-      subtitle: 'Campaign complete! Twelve more seals stir beneath the mountain: the Trials of the Zodiac are endless generated battles with rare gear and a Warden boss every fifth floor.',
+      subtitle: 'Campaign complete! Both seals are quiet. The mountain still hums at night, though: the Trials of the Zodiac are endless generated battles with rare gear and a Warden boss every fifth floor.',
       bodyHtml: best > 0 ? `<div class="result-row"><span class="result-name">BEST TRIAL</span><span class="result-detail">Floor ${best}</span></div>` : '',
       buttons: [
-        { label: 'World Map', primary: true, onClick: () => this.openWorldMap('summit') },
+        { label: 'World Map', primary: true, onClick: () => this.openWorldMap(nodeForChapter(this.campaignChapterId)?.id) },
         { label: 'Enter the Trials', onClick: () => this.startTrial(1) },
         { label: 'New Game+', onClick: () => this.startNewGamePlus() }
       ]

@@ -62,7 +62,7 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 - **Master your jobs.** Jobs level up, unlock advanced jobs, and pay permanent bonuses a unit keeps in every job.
 - **Easy to pick up.** Tips the first time each thing comes up, undo for a misplaced move, and a Fast battle speed.
 - **Items in battle.** Potions, Ethers, Remedies, Blast Flasks, and Phoenix Feathers to raise fallen allies.
-- **A branching campaign** across 16×16 battlefields, with a recruit, story choices, and bosses that enrage at half health.
+- **A two-act campaign** across seven 16×16 battlefields (a harbor fought along its piers, a lighthouse rock, a cliff-top altar…), with a branch, two recruits, and bosses that enrage at half health.
 - **Trials of the Zodiac:** endless seeded floors with rare gear and a Warden boss every fifth floor, plus New Game+.
 - **The Workshop:** sculpt terrain, place enemies and bosses, write the dialogue, pick a goal (rout them, defeat the boss, or survive N rounds), then play it or share it as a link.
 - **Hand-made pixel art** in a 3D world: animated units, drawn portraits, and pixel spell effects that wrap the actual characters.
