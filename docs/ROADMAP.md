@@ -46,6 +46,7 @@ timeline
         0.26.0 : Monsters : Howling Hollow side battle : Beasts in the Trials
         0.27.0 : Monsters in every story chapter from II : Natural stats for monsters
         0.28.0 : Beast Tamer job : Tame monsters : Beasts join the squad
+        0.29.0 : Beast gear: barding and collars
 ```
 
 | Version | Theme | Highlights |
@@ -58,6 +59,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.29 | Beast gear | Six pieces of barding and collars only tamed beasts can wear, on their own market shelf; every new beast arrives in a Leather Collar |
 | 0.28 | Beast Tamer | The Beast Tamer (19 jobs, 114 abilities): Tame wins a hurt monster over to fight for you, and survivors join the squad as named beasts that wear no gear; Snare, Treat, Soothe, Snarl, Beast Lore and the Stampede signature; the Drover's Whip |
 | 0.27 | Into the story | A monster in every story battle from Chapter II, each introduced in the dialogue; monsters get natural stats in place of gear; Lure toned down; every chapter checked against the balance sim |
 | 0.26 | Monsters | Five monsters with bodies and abilities of their own (Dire Wolf, Wyvern, Bog Ooze, Marsh Wisp, Stonehide Brute); the Howling Hollow side battle and its trophy; monsters on Trials floors from 3; Workshop enemies |
@@ -82,7 +84,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.28.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.29.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -102,7 +104,7 @@ flowchart LR
     subgraph LATER["Later (1.0+): breadth"]
         direction TB
         L1["Act III"]
-        L2["More monsters;<br/>beast gear"]
+        L2["More monsters"]
         L4["Workshop gallery"]
         L5["Remappable controls"]
         L6["Localization"]
@@ -134,7 +136,7 @@ flowchart LR
 | Item | Size |
 | :--- | :---: |
 | Act III: Chapters VII to IX, new battlefields and map places | L |
-| More monsters, and gear for beasts (collars, barding) so tamed ones keep up at high levels (the Beast Tamer arrived in 0.28) | M |
+| More monsters to meet and tame (the Beast Tamer arrived in 0.28, beast gear in 0.29) | M |
 | More jobs (a gunner) | L |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |

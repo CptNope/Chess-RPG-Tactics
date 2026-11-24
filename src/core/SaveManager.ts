@@ -67,7 +67,7 @@ export class SaveManager {
     if (!validSlot(slot)) return false;
     try {
       const saveData: GameSaveData = {
-        version: '0.28.0',
+        version: '0.29.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,
@@ -306,12 +306,12 @@ function importUnit(raw: unknown, i: number): Unit | null {
   for (const slot of ['reaction', 'support', 'movement'] as const) {
     if (knownAbility(eq[slot]) && u.unlockedAbilities[eq[slot]]) u.equippedAbilities[slot] = eq[slot];
   }
-  // Beasts wear no gear (0.28.0)
-  if (r.equipment && typeof r.equipment === 'object' && !JOBS[jobId].monster) {
+  if (r.equipment && typeof r.equipment === 'object') {
     for (const slot of Object.keys(u.equipment) as (keyof Unit['equipment'])[]) {
       const it = r.equipment[slot];
       const item = it && typeof it.id === 'string' && own(ITEMS, it.id) ? ITEMS[it.id] : undefined;
-      if (item && item.slot === slot) u.equipment[slot] = item;
+      // Only what this unit may wear: beasts wear only beast gear (0.28.0, 0.29.0)
+      if (item && item.slot === slot && JobSystem.canEquip(u, item)) u.equipment[slot] = item;
     }
   }
   JobSystem.recalculateDerivedStats(u);

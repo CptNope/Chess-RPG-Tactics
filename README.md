@@ -5,7 +5,7 @@
 [![Support the game](https://img.shields.io/badge/support-donate%20on%20itch-ff69b4?logo=githubsponsors&logoColor=white)](https://cptnope.itch.io/chess-rpg-tactics/donate)
 <br />
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.28.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.29.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -24,7 +24,7 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | :--- | :--- |
 | **Tactics** | Speed-based turn order (CT), front / flank / back attacks, height advantage, terrain movement costs, area spells |
 | **Squad building** | 19 jobs on a job tree (jobs level up, unlock advanced jobs, and give permanent mastery bonuses), 114 abilities plus a Master signature for every job, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
-| **Gear & gil** | 62 pieces of gear, some with traits; earn gil from battles; buy and sell at the market; steal gear off enemies |
+| **Gear & gil** | 68 pieces of gear (six of them barding and collars for tamed beasts), some with traits; earn gil from battles; buy and sell at the market; steal gear off enemies |
 | **Items** | Eight supplies (Potions, Ethers, Remedies, Phoenix Feathers, Elixirs and three kinds of flask) used with the Item command; Chemists make them go further |
 | **World map** | Between missions the squad walks a map of the realm: visit the market, pick which road the story takes, fight optional side battles for their trophies, buy from a travelling merchant, make camp, enter the Trials |
 | **Easy to pick up** | Easy, Normal and Hard; tips the first time each thing comes up; undo for a misplaced move; a Fast battle speed |
@@ -108,7 +108,7 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` I
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 249 rule tests
+npm test             # 255 rule tests
 npm run build        # type-check + production build
 npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
 npm run balance      # headless AUTO battles: win rate per chapter

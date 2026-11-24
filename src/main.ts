@@ -2143,8 +2143,12 @@ class TacticsGame {
           continue;
         }
         const beast = beastFromTamed(t, this.squad);
+        // Every new beast gets a collar; the first one brings it into the armory (0.29.0)
+        if (!this.armory.includes('leather_collar')) this.armory.push('leather_collar');
+        JobSystem.equipItem(beast, ITEMS.leather_collar);
+        beast.currentHp = beast.maxHp;
         this.squad.push(beast);
-        rows.push(`<div class="result-loot"><b>NEW BEAST:</b> ${esc(beast.name)} the ${esc(JOBS[beast.jobId].name)} (Lv ${beast.level}) joins your squad!<br><small>Beasts wear no gear and never change jobs. Pick your party at the Barracks.</small></div>`);
+        rows.push(`<div class="result-loot"><b>NEW BEAST:</b> ${esc(beast.name)} the ${esc(JOBS[beast.jobId].name)} (Lv ${beast.level}) joins your squad, wearing a Leather Collar!<br><small>Beasts never change jobs and wear only beast gear (barding and collars, at the market). Pick your party at the Barracks.</small></div>`);
       }
     }
     if (newItems.length > 0) {

@@ -583,6 +583,63 @@ export const ITEMS: Record<string, Item> = {
     price: 560,
     stats: { hp: 25, evasion: 6, move: 1 },
     traits: { guard: ['poison'] }
+  },
+
+  // BEAST GEAR (0.29.0): only a tamed beast wears these, and a beast wears nothing else
+  leather_collar: {
+    id: 'leather_collar',
+    name: 'Leather Collar',
+    slot: 'accessory',
+    beast: true,
+    description: 'Beasts only. A stout collar with a brass tag: the beast stands its ground and slips a blow or two.',
+    price: 160,
+    stats: { hp: 20, evasion: 4 }
+  },
+  hide_barding: {
+    id: 'hide_barding',
+    name: 'Hide Barding',
+    slot: 'body',
+    beast: true,
+    description: 'Beasts only. Boiled-leather plates strapped over the back and flanks.',
+    price: 200,
+    stats: { hp: 30, attack: 1 }
+  },
+  spiked_collar: {
+    id: 'spiked_collar',
+    name: 'Spiked Collar',
+    slot: 'accessory',
+    beast: true,
+    description: 'Beasts only. Iron spikes round the neck put an edge on every bite and charge.',
+    price: 320,
+    stats: { attack: 5 }
+  },
+  glowstone_charm: {
+    id: 'glowstone_charm',
+    name: 'Glowstone Charm',
+    slot: 'accessory',
+    beast: true,
+    description: 'Beasts only. A pebble that holds the marsh-light. Wisps burn brighter with one; anything else just likes the shine.',
+    price: 340,
+    stats: { magic: 6, mp: 15 }
+  },
+  chain_barding: {
+    id: 'chain_barding',
+    name: 'Chain Barding',
+    slot: 'body',
+    beast: true,
+    description: 'Beasts only. Mail made for a warhorse, cut down to fit. Heavy, but very hard to get through.',
+    price: 440,
+    stats: { hp: 50, attack: 2, evasion: -3 }
+  },
+  runed_barding: {
+    id: 'runed_barding',
+    name: 'Runed Barding',
+    slot: 'body',
+    beast: true,
+    description: 'Beasts only. Hide stitched with calming runes: no Sleep or Silence takes hold.',
+    price: 560,
+    stats: { hp: 40, mp: 15 },
+    traits: { guard: ['sleep', 'silence'] }
   }
 };
 

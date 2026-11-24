@@ -55,6 +55,8 @@ export interface Item {
   };
   range?: number;
   traits?: ItemTraits;
+  /** Beast gear (0.29.0): barding and collars only a tamed beast can wear (see JobSystem.canEquip). */
+  beast?: boolean;
 }
 
 export interface TileData {

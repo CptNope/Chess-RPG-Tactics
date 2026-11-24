@@ -3,8 +3,8 @@
  *
  * A tamed monster changes sides on the spot and fights for the squad, under the player's orders,
  * for the rest of the battle. If it is still standing when the battle is won, it joins the squad
- * as a beast: it keeps its job and level, wears no gear and never changes job (its fangs, hide
- * and glow are its gear, see data/monsters.ts). With the squad full it goes back to the wild.
+ * as a beast: it keeps its job and level and never changes job. Its fangs, hide and glow are its
+ * gear (see data/monsters.ts); from 0.29.0 it can also wear beast gear, barding and a collar. With the squad full it goes back to the wild.
  *
  * Only monsters can be tamed, never a boss, and only by the player's side. The weaker the monster,
  * the likelier it gives in: a sleeping one is easier still, and Beast Lore helps.
