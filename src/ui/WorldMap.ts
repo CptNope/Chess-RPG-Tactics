@@ -365,6 +365,21 @@ export function paintWorld(canvas: HTMLCanvasElement): void {
       for (let k = 0; k < 11; k++) r(x - k, y - 10 + k, k * 2 + 1, 1, k < 3 ? '#f4f7fb' : k % 2 ? '#8b909c' : '#7a7f8c');
       r(x, y - 15, 1, 5, '#f4c430'); r(x - 2, y - 13, 5, 1, '#f4c430'); r(x - 1, y - 14, 3, 3, '#ffe27a');
     },
+    harbor: (x, y) => {
+      r(x - 9, y + 1, 18, 2, '#6b4a2a'); r(x - 7, y + 3, 1, 2, '#3b2a17'); r(x + 5, y + 3, 1, 2, '#3b2a17'); // pier
+      r(x - 5, y - 2, 9, 3, '#3b2a17'); r(x - 4, y - 1, 7, 1, '#8b5a2b'); r(x - 1, y - 10, 1, 8, '#3b2a17'); // hull and mast
+      r(x, y - 9, 5, 4, '#1f2937'); r(x, y - 9, 5, 1, '#111827'); r(x + 1, y - 7, 2, 1, '#e5e7eb'); // black sail
+    },
+    isle: (x, y) => {
+      r(x - 7, y + 1, 14, 3, '#7a7f8c'); r(x - 5, y, 10, 1, '#8b909c'); // rock
+      r(x - 2, y - 9, 4, 10, '#e5e7eb'); r(x - 2, y - 6, 4, 2, '#b91c1c'); r(x - 2, y - 2, 4, 1, '#b91c1c'); // tower
+      r(x - 3, y - 11, 6, 2, '#374151'); r(x - 1, y - 11, 2, 2, '#fde68a'); r(x - 7, y - 11, 4, 1, '#fde68a'); r(x + 3, y - 11, 4, 1, '#fde68a'); // lamp and beam
+    },
+    cape: (x, y) => {
+      r(x - 8, y + 1, 16, 3, '#6e7380'); r(x - 6, y, 12, 1, '#8b909c'); // headland
+      r(x - 6, y - 8, 2, 9, '#b9bec9'); r(x + 4, y - 8, 2, 9, '#b9bec9'); r(x - 6, y - 10, 12, 2, '#d3d8e2'); // sea arch
+      r(x - 2, y - 3, 4, 3, '#4b5563'); r(x - 1, y - 5, 2, 2, '#38bdf8'); r(x - 1, y - 6, 1, 1, '#bae6fd'); // altar and its light
+    },
     trials: (x, y) => {
       r(x - 6, y - 8, 3, 12, '#6e7380'); r(x + 3, y - 8, 3, 12, '#6e7380'); r(x - 6, y - 10, 12, 3, '#8b909c'); r(x - 6, y - 10, 12, 1, '#c3c8d2');
       r(x - 3, y - 7, 6, 11, '#3b1d6e'); r(x - 2, y - 5, 4, 8, '#7c3aed'); r(x - 1, y - 3, 2, 4, '#c4b5fd');

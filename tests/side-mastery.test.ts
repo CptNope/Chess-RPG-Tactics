@@ -14,7 +14,7 @@ import { clearBonus, victoryGil } from '../src/core/Economy';
 import {
   SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, sanitizeSkirmishWins, skirmishBonus, skirmishLevel, skirmishOpen
 } from '../src/core/Skirmish';
-import { WORLD_NODES, nodeState, route, worldNode } from '../src/core/World';
+import { WORLD_NODES, nodeState, openMissions, route, worldNode } from '../src/core/World';
 import { Ability, Unit } from '../src/core/types';
 
 function unit(job: string, team: 'player' | 'enemy' = 'player', x = 0, z = 0, level = 5): Unit {
@@ -239,5 +239,71 @@ describe('Raise', () => {
     expect(plan.targetTile).toEqual({ x: 3, z: 5 });
     wm.currentMp = 0;
     expect(planTurn(wm, units, grid).ability?.id).not.toBe('wm_raise');
+  });
+});
+
+describe('Act II (0.17.0)', () => {
+  const firstAct = ['chapter_1', 'chapter_2a', 'chapter_3'];
+
+  it('the story runs on from the Summit to a single new finale', () => {
+    const order: string[] = [];
+    let at = CAMPAIGN_CHAPTERS.chapter_3;
+    for (let i = 0; i < 10 && at.choices?.length; i++) {
+      expect(at.choices.length, at.id).toBe(1); // Act II is one road
+      at = CAMPAIGN_CHAPTERS[at.choices[0].nextChapterId];
+      order.push(at.id);
+    }
+    expect(order).toEqual(['chapter_4', 'chapter_5', 'chapter_6']);
+    expect(CAMPAIGN_CHAPTERS.chapter_6.choices).toBeUndefined();
+    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => !c.choices?.length).map((c) => c.id)).toEqual(['chapter_6']);
+    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => /FINAL/.test(c.title)).map((c) => c.id)).toEqual(['chapter_6']);
+  });
+
+  it('a squad that finished the first act finds Chapter IV waiting, and nothing behind it reopens', () => {
+    expect(openMissions('chapter_3', firstAct).map((m) => m.chapterId)).toEqual(['chapter_4']);
+    expect(openMissions('chapter_3', firstAct)[0].choice?.rewardItemIds).toEqual(['moonfang']);
+    expect(nodeState(worldNode('harbor')!, 'chapter_3', firstAct, true)).toBe('open');
+    expect(nodeState(worldNode('isle')!, 'chapter_3', firstAct, true)).toBe('locked');
+    expect(nodeState(worldNode('battlement')!, 'chapter_3', firstAct, true)).toBe('locked');
+    expect(openMissions('chapter_4', [...firstAct, 'chapter_4']).map((m) => m.chapterId)).toEqual(['chapter_5']);
+    expect(openMissions('chapter_5', [...firstAct, 'chapter_4']).map((m) => m.chapterId)).toEqual(['chapter_5']); // marched, not yet won
+  });
+
+  it('each new battlefield can be climbed from the deployment tiles to every enemy', () => {
+    for (const id of ['chapter_4', 'chapter_5', 'chapter_6']) {
+      const ch = CAMPAIGN_CHAPTERS[id];
+      const map = MAPS[ch.mapId]();
+      const at = (x: number, z: number) => map.tiles.find((t) => t.x === x && t.z === z);
+      // Flood from the first deployment tile over walkable tiles a Jump of 2 can climb
+      const start = map.playerSpawns![0];
+      const seen = new Set([`${start.x},${start.z}`]);
+      const queue = [start];
+      while (queue.length) {
+        const c = queue.shift()!;
+        for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const n = at(c.x + dx, c.z + dz), here = at(c.x, c.z)!;
+          if (!n || !n.walkable || seen.has(`${n.x},${n.z}`) || Math.abs(n.height - here.height) > 2) continue;
+          seen.add(`${n.x},${n.z}`);
+          queue.push({ x: n.x, z: n.z });
+        }
+      }
+      for (const s of map.playerSpawns!) expect(at(s.x, s.z)?.walkable, `${id} spawn ${s.x},${s.z}`).toBe(true);
+      for (const e of ch.enemyRoster) expect(seen.has(`${e.x},${e.z}`), `${id}: ${e.name} at ${e.x},${e.z} is cut off`).toBe(true);
+      // Nobody deploys on top of anybody else
+      const spots = [...map.playerSpawns!.map((s) => `${s.x},${s.z}`), ...ch.enemyRoster.map((e) => `${e.x},${e.z}`)];
+      expect(new Set(spots).size, id).toBe(spots.length);
+      expect(map.playerSpawns!.length).toBeGreaterThanOrEqual(6); // the squad is six strong once Sable joins
+    }
+  });
+
+  it('gets harder chapter by chapter, with one boss each and a recruit in Chapter IV', () => {
+    const avg = (id: string) => { const r = CAMPAIGN_CHAPTERS[id].enemyRoster; return r.reduce((n, e) => n + e.level, 0) / r.length; };
+    expect(avg('chapter_4')).toBeGreaterThan(avg('chapter_3'));
+    expect(avg('chapter_5')).toBeGreaterThan(avg('chapter_4'));
+    expect(avg('chapter_6')).toBeGreaterThan(avg('chapter_5'));
+    for (const id of ['chapter_4', 'chapter_5', 'chapter_6']) expect(CAMPAIGN_CHAPTERS[id].enemyRoster.filter((e) => e.isBoss).length, id).toBe(1);
+    expect(CAMPAIGN_CHAPTERS.chapter_4.recruit).toMatchObject({ id: 'sable', jobId: 'thief' });
+    const sable = JobSystem.createUnit('sable', 'Sable', 'player', 'thief', 0, 0, 'N', 6);
+    expect(JobSystem.canChangeJob(sable, 'thief')).toBe(true);
   });
 });

@@ -34,6 +34,7 @@ timeline
         0.14.0 : Job levels and job tree : Paladin, Spellblade : Gil and shop : Status pips
         0.15.0 : Items in battle : World map between missions : Market, buy and sell : Haste effect fix
         0.16.0 : Side battles : Job mastery : Raise : Undo move, battle speed, tips
+        0.17.0 : Act II, Chapters IV to VI : Three battlefields : Sable joins : Enemy raise cap
 ```
 
 | Version | Theme | Highlights |
@@ -46,6 +47,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.17 | A second act | Chapters IV to VI on three new battlefields (harbor piers, a lighthouse rock, a cliff altar), a third recruit, six battles per playthrough; finished saves continue; enemies raise once per battle |
 | 0.16 | Room to grow | Three replayable side battles on the map, permanent job mastery bonuses at job level 5 and 8, the White Mage's Raise (used by the AI too), undo move, a Fast battle speed, first-battle tips |
 | 0.15 | A world between battles | The Item command and six supplies (a revive among them), a world map where the story branch is a march and defeat is a retreat, Larkmoor Market with buy and sell, the Haste effect back on the unit |
 | 0.14 | Progression | Job levels and an enforced job tree, Paladin and Spellblade (15 jobs, 86 abilities), gil and a shop that grows with the campaign, status pips over units, readable HP bars |
@@ -60,19 +62,19 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.17)"]
+    subgraph NOW["Now (0.18)"]
         direction TB
-        N1["Campaign Chapters IV–VI"]
+        N1["Difficulty settings"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Devlog + site post<br/>for the itch release"]
     end
-    subgraph NEXT["Next (0.18 – 0.20)"]
+    subgraph NEXT["Next (0.19 – 0.21)"]
         direction TB
         X1["Equipment rules:<br/>weapon types per job"]
         X2["World map events:<br/>travellers, camp scenes"]
         X3["Smarter AI:<br/>reactions, facing, 2-ply"]
-        X4["Difficulty settings"]
+        X4["Mastery abilities"]
         X5["Multiple save slots"]
         X6["Installable PWA, offline"]
     end
@@ -89,22 +91,22 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.17): finish and ship what exists
+### Now (0.18): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
-| **Campaign Chapters IV–VI** | A playthrough is three battles; the map, market, items and mastery now have more depth than the story gives time to use | L | New maps, a third recruit, new places on the world map |
+| **Difficulty settings** | Act II was tuned with an AI-versus-AI sim and a starter-geared squad, not by hand; an easier and a harder setting would cover the spread | S | Scale enemy levels by ±1 and bounties to match |
+| **Play Act II by hand** | The sim says Chapter V is the hardest of the three | S | Tune rosters after real playthroughs |
 | **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.16 (the site's project page is live) |
+| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.17 (the site's project page is live) |
 
-### Next (0.18 – 0.20): depth
+### Next (0.19 – 0.21): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
 | **Equipment rules**: weapon and armor types per job | Every job can wear everything; Armor Mastery (0.13) could become "wear plate as any job" once rules exist | M |
 | **World map events**: a travelling merchant with one rare item, a camp scene between chapters, side battles with their own rewards | Side battles (0.16) all pay the same; nothing happens on the road | M |
-| **Difficulty settings** | The Final Chapter is near 0% on pure AUTO; an easier and a harder setting would widen who finishes | S |
 | **Recruiting at the market** | The squad is fixed plus one story recruit; hiring would give gil a second sink | M |
 | **Mastery abilities** | Mastery (0.16) is stat bonuses only; a signature ability per job at Master would give builds an identity | M |
 | **More supplies and a Chemist job**: an elixir, status-inflicting flasks, a job that doubles item effects and throws them further | Items are six plain supplies | M |
@@ -151,7 +153,7 @@ quadrantChart
     "Equipment rules": [0.55, 0.53]
     "World map events": [0.55, 0.66]
     "AI 2-ply": [0.75, 0.6]
-    "New chapters": [0.8, 0.85]
+    "Act III": [0.8, 0.7]
     "More jobs": [0.7, 0.7]
     "Online duels": [0.86, 0.68]
     "Localization": [0.6, 0.3]
@@ -170,7 +172,8 @@ quadrantChart
 | QA | Browser play-tests not in CI | Medium | Now |
 | A11y | Font sizes are fixed px; no text-size setting | Low | Next |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
-| Balance | Enemy White Mages now raise their dead (0.16); the balance sim shows no clear shift, but it hasn't been played by hand against Chapter II-A's healer | Medium | Play it; cap AI raises per battle if it drags |
+| Balance | Act II (0.17) is tuned by simulation only: a starter-geared squad wins Chapter IV about half the time at level 7, Chapter V about 7% at level 8, the finale about 17% at level 9. A geared squad with a healer and items should do far better, but nobody has played it through | Medium | Now (play it by hand) |
+| Story | New Game+ and the Trials still unlock at the very end; a player who stops after Act I never sees them | Low | Consider opening the Gate after Chapter III |
 | Tips | First-battle tips are remembered per device, not per save, and aren't translated into controller glyphs | Low | Fine for now |
 | Rules | Retrying a lost battle keeps the supplies spent in it, while loading a save restores them | Low | Decide on one rule; a retry could refund |
 | World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Open on the map once there is more than one thing to do there at the start |

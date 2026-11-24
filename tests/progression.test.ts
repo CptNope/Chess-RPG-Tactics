@@ -187,7 +187,8 @@ describe('gil and the shop', () => {
       });
       const gil = victoryGil(foes, 'campaign', 0);
       expect(gil, ch.id).toBeGreaterThanOrEqual(400);
-      expect(gil, ch.id).toBeLessThanOrEqual(900);
+      // The first act pays for an item or two a chapter; Act II fights are bigger and pay for more
+      expect(gil, ch.id).toBeLessThanOrEqual(/chapter_[456]/.test(ch.id) ? 1250 : 900);
     }
   });
 

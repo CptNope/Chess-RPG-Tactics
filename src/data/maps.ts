@@ -220,6 +220,101 @@ export function createZodiacSummitMap(): MapData {
   return b.build('zodiac_summit', 'Zodiac Summit', 'night', SOUTH_SPAWNS);
 }
 
+/**
+ * Emberwick Harbor (16×16): a stone quay with warehouses in the south, and three piers running
+ * north over deep water to a moored corsair ship. The sea can't be crossed: the piers are the
+ * only way aboard, and the cross-pier lets a flank get round.
+ */
+export function createHarborMap(): MapData {
+  const b = new MapBuilder(16, 16, 1, 'stone');
+
+  // Deep water north of the quay
+  b.rect(0, 0, 15, 8, 0.4, 'water', false);
+  // Shallows along the quay wall (wadeable, slow)
+  b.rect(0, 8, 15, 8, 0.7, 'water', true);
+
+  // Piers: west, centre (wide), east, and a cross-pier joining them
+  b.rect(2, 3, 3, 8, 1.0, 'wood', true);
+  b.rect(7, 2, 8, 8, 1.0, 'wood', true);
+  b.rect(12, 3, 13, 8, 1.0, 'wood', true);
+  b.rect(2, 4, 13, 5, 1.0, 'wood', true);
+
+  // The corsair ship across the north, with a raised stern deck and gangways down to the piers
+  b.rect(3, 0, 12, 1, 1.5, 'wood', true);
+  b.rect(10, 0, 12, 1, 2.2, 'wood', true);
+  b.set(2, 2, 1.2, 'wood', true).set(3, 2, 1.2, 'wood', true).set(12, 2, 1.2, 'wood', true).set(13, 2, 1.2, 'wood', true);
+  b.set(5, 0, 4.0, 'wood', false); // mast
+
+  // Quay: a road, a customs house you can climb, warehouses and crates for cover
+  b.rect(0, 12, 15, 12, undefined, 'dirt');
+  b.rect(11, 10, 14, 11, 2.0, 'stone', true);
+  b.set(10, 10, 1.5, 'stone', true);
+  b.rect(0, 10, 2, 11, 3.2, 'stone', false);
+  for (const [x, z] of [[5, 10], [6, 13], [9, 13], [4, 5], [11, 4]]) b.set(x, z, 1.9, 'wood', false);
+
+  return b.build('ember_harbor', 'Emberwick Harbor', 'day', SOUTH_SPAWNS);
+}
+
+/**
+ * Greywatch Isle (16×16): a rock in the sea. A landing beach in the south, tidal shallows on
+ * both sides, and terraces climbing north to the lighthouse. High ground all the way up.
+ */
+export function createGreywatchMap(): MapData {
+  const b = new MapBuilder(16, 16, 0.4, 'water');
+  b.each((t) => { t.walkable = false; });
+
+  // Landing beach and the causeway up from it
+  b.rect(3, 12, 12, 15, 1.0, 'dirt', true);
+  b.rect(6, 9, 9, 11, 1.0, 'stone', true);
+  // Tidal shallows: slow going, but they let a flank through
+  b.rect(1, 9, 5, 11, 0.7, 'water', true);
+  b.rect(10, 9, 14, 11, 0.7, 'water', true);
+  // Side ledges
+  b.rect(0, 6, 2, 8, 1.2, 'dirt', true);
+  b.rect(13, 6, 15, 8, 1.2, 'dirt', true);
+
+  // Terraces
+  b.rect(3, 5, 12, 8, 1.5, 'grass', true);
+  b.rect(4, 3, 11, 4, 2.5, 'stone', true);
+  b.rect(5, 0, 10, 2, 3.5, 'parapet', true);
+  // The lighthouse itself, and its door step
+  b.rect(7, 0, 8, 0, 7.0, 'stone', false);
+  b.set(7, 1, 4.0, 'stone', true).set(8, 1, 4.0, 'stone', true);
+
+  // Rocks
+  for (const [x, z] of [[4, 13], [11, 13], [5, 7], [10, 6], [2, 7], [13, 7]]) b.set(x, z, 2.4, 'stone', false);
+
+  return b.build('greywatch_isle', 'Greywatch Isle', 'night', SOUTH_SPAWNS);
+}
+
+/**
+ * Stormbreak Cape (16×16): a meadow, then cliffs stepping up to a sea altar on the point. A
+ * chasm splits the middle shelf, so the climb goes up one flank or the other; tide pools sit
+ * beside the altar.
+ */
+export function createCapeMap(): MapData {
+  const b = new MapBuilder(16, 16, 1, 'grass');
+
+  b.rect(0, 9, 15, 11, 1.5, 'dirt');
+  b.rect(0, 6, 15, 8, 2.5, 'stone');
+  // The chasm, with one rope bridge across its narrowest point
+  b.rect(6, 6, 9, 8, 0.4, 'water', false);
+  b.rect(6, 7, 9, 7, 2.5, 'wood', true);
+  b.rect(0, 3, 15, 5, 3.5, 'parapet');
+  // The altar on the point
+  b.rect(5, 0, 10, 2, 4.5, 'stone');
+  b.rect(7, 0, 8, 0, 5.2, 'stone');
+  // Tide pools either side
+  b.rect(0, 0, 2, 2, 3.0, 'water');
+  b.rect(13, 0, 15, 2, 3.0, 'water');
+  // Standing stones
+  for (const [x, z] of [[2, 4], [13, 4], [5, 2], [10, 2], [4, 10], [11, 10]]) b.set(x, z, 5.4, 'stone', false);
+  // Meadow path
+  b.rect(7, 12, 8, 15, undefined, 'dirt');
+
+  return b.build('stormbreak_cape', 'Stormbreak Cape', 'night', SOUTH_SPAWNS);
+}
+
 /** The squad's deployment tiles on a map (map-defined, else the southern rows). */
 export function spawnsFor(map: MapData): { x: number; z: number }[] {
   if (map.playerSpawns && map.playerSpawns.length > 0) return map.playerSpawns;
@@ -232,5 +327,8 @@ export const MAPS: Record<string, () => MapData> = {
   river_ruins: createRuinsMap,
   night_fortress: createFortressNightMap,
   gloomy_swamp: createSwampMap,
-  zodiac_summit: createZodiacSummitMap
+  zodiac_summit: createZodiacSummitMap,
+  ember_harbor: createHarborMap,
+  greywatch_isle: createGreywatchMap,
+  stormbreak_cape: createCapeMap
 };

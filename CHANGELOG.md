@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.17.0] - 2026-11-23
+
+### Added — Act II: three new chapters
+- **The story no longer ends at the Summit.** Winning Chapter III now leads on to a second act, and a playthrough is six battles instead of three.
+- **Chapter IV, Fire on the Water** (Emberwick Harbor): corsairs are looting the port. The sea is too deep to wade, so the fight runs along three piers and a cross-pier to their moored ship. Boss: Captain Varrow.
+- **Chapter V, The Greywatch Light** (Greywatch Isle): a climb from a landing beach up terraces to a lighthouse, with slow tidal shallows on both flanks. Boss: Tidecaller Maelis.
+- **Final Chapter, The Drowned Regent** (Stormbreak Cape): cliffs stepping up to a sea altar, split by a chasm with one rope bridge. Boss: the Drowned Regent, a Paladin.
+- **A third recruit:** Sable, a Thief, joins at the start of Chapter IV, so the squad is six strong.
+- **Six pieces of gear** come with the new chapters: Moonfang, the Oathkeeper shield, a Warding Amulet, the Runeblade, Templar Mail and the Dawnbringer blade, as road and victory rewards.
+- **Three new places on the world map** (the harbor in the south-west, the isle off the north-west, the cape on the northern point), each with its own icon, and three new battlefields in the Menu's battlefield list and the Workshop.
+
+### Changed
+- **The old finale is now Chapter III.** The epilogue, the Gate of Trials and "campaign cleared" move to the end of Chapter VI. **If you had already finished the story, you keep the Trials**, and Chapter IV is waiting on the map.
+- **Enemies can raise one fallen ally per battle**, not as many as their healer has MP for. AUTO for your own units isn't limited.
+- The two side battles that open after Chapter II also open for older saves that don't record which road was taken.
+- Everything is on sale at the market once Chapter III is won, as before.
+
+### Developer
+- `chapter_4` to `chapter_6` in `src/data/campaign.ts`; `createHarborMap`, `createGreywatchMap`, `createCapeMap` in `src/data/maps.ts`. The story's shape is still data: Chapter III gained a single `choices` entry, and "a won chapter with no choices is the finale" picks up the new ending without code changes.
+- `World.FIRST_ACT_FINALE`: a pre-0.15 save that says "campaign cleared" with no list of won chapters is placed at the Summit with Chapter IV ahead.
+- `EnemyAI.ENEMY_RAISE_CAP` and `planTurn(..., { noRevive })`.
+- `npm run balance` covers the new chapters (at higher squad levels, with Sable) and resolves revives properly.
+- 4 new tests (138 total): the story runs from the Summit to a single finale, finished saves find Chapter IV, every enemy on the new battlefields can be reached from the deployment tiles, and difficulty rises chapter by chapter. [ADR 0025](docs/adr/0025-act-two.md).
+
 ## [0.16.0] - 2026-11-23
 
 ### Added — side battles

@@ -13,12 +13,12 @@ import { BattleGrid } from '../src/core/Grid';
 import { TurnManager } from '../src/core/TurnManager';
 import { JobSystem } from '../src/core/JobSystem';
 import { CombatEngine } from '../src/core/CombatEngine';
-import { planTurn, unitsInBlast } from '../src/core/EnemyAI';
+import { planTurn, unitsInBlast , ENEMY_RAISE_CAP } from '../src/core/EnemyAI';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import type { Unit } from '../src/core/types';
 
-function squad(level: number, bria: boolean): Unit[] {
+function squad(level: number, bria: boolean, sable = false): Unit[] {
   const s = [
     JobSystem.createUnit('p1', 'Rowan', 'player', 'squire', 0, 0, 'N', level),
     JobSystem.createUnit('p2', 'Maren', 'player', 'knight', 0, 0, 'N', level),
@@ -29,6 +29,7 @@ function squad(level: number, bria: boolean): Unit[] {
   s[0].unlockedAbilities['sq_move_plus'] = true; s[0].equippedAbilities.movement = 'sq_move_plus'; JobSystem.recalculateDerivedStats(s[0]);
   s[3].unlockedAbilities['dr_jump'] = true; s[3].unlockedAbilities['dr_ignore_height'] = true; s[3].equippedAbilities.movement = 'dr_ignore_height'; JobSystem.recalculateDerivedStats(s[3]);
   if (bria) s.push(JobSystem.createUnit('bria', 'Bria', 'player', 'geomancer', 0, 0, 'N', Math.max(4, level)));
+  if (sable) s.push(JobSystem.createUnit('sable', 'Sable', 'player', 'thief', 0, 0, 'N', Math.max(6, level)));
   return s;
 }
 
@@ -47,11 +48,12 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     passives(u);
     return u;
   });
-  const sq = squad(level, chId !== 'chapter_1');
+  const sq = squad(level, chId !== 'chapter_1', /chapter_[456]/.test(chId));
   const spawns = spawnsFor(map);
   sq.forEach((m, i) => JobSystem.resetForBattle(m, spawns[i % spawns.length].x, spawns[i % spawns.length].z));
   const units = [...sq, ...enemies];
   const tm = new TurnManager(units);
+  let enemyRaises = 0;
   for (let turn = 0; turn < 400; turn++) {
     if (!units.some((u) => !u.isDead && u.team === 'player')) return 'loss';
     if (!units.some((u) => !u.isDead && u.team === 'enemy')) return 'win';
@@ -59,14 +61,15 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     if (!r) return 'timeout';
     const u = r.activeUnit;
     if (u.isDead) { tm.endTurn(u); continue; }
-    const plan = planTurn(u, units, grid);
+    const plan = planTurn(u, units, grid, { noRevive: u.team === 'enemy' && enemyRaises >= ENEMY_RAISE_CAP });
+    if (plan.ability?.revive && u.team === 'enemy') enemyRaises++;
     u.x = plan.moveTo.x; u.z = plan.moveTo.z; u.hasMoved = true;
     if (plan.ability && plan.targetTile) {
       const ab = plan.ability, { x: tx, z: tz } = plan.targetTile;
       u.currentMp = Math.max(0, u.currentMp - ab.mpCost);
-      const victims = ab.isSelfOnly ? [u] : ab.aoe > 0 ? unitsInBlast(u, ab, tx, tz, units) : units.filter((v) => !v.isDead && v.x === tx && v.z === tz);
+      const victims = ab.isSelfOnly ? [u] : ab.aoe > 0 || ab.revive ? unitsInBlast(u, ab, tx, tz, units) : units.filter((v) => !v.isDead && v.x === tx && v.z === tz);
       for (const t of victims) {
-        if (t.isDead) continue;
+        if (t.isDead && !ab.revive) continue;
         const isSplash = ab.aoe > 0 && (t.x !== tx || t.z !== tz);
         const f = CombatEngine.getForecast(u, t, ab, grid.getHeight(u.x, u.z), grid.getHeight(t.x, t.z), grid.getTile(t.x, t.z)?.terrain, isSplash);
         CombatEngine.executeAttack(f);
@@ -83,11 +86,13 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
 const N = Number(process.argv[2] || 30);
 // Optional roster override to try changes without editing the data: '{"chapter_2b": [EnemySpawn...]}'
 if (process.argv[5]) Object.assign(CAMPAIGN_CHAPTERS[Object.keys(JSON.parse(process.argv[5]))[0]], { enemyRoster: Object.values(JSON.parse(process.argv[5]))[0] });
-const chapters = (process.argv[3] || 'chapter_1,chapter_2a,chapter_2b,chapter_3').split(',');
+const chapters = (process.argv[3] || 'chapter_1,chapter_2a,chapter_2b,chapter_3,chapter_4,chapter_5,chapter_6').split(',');
 const levels = (process.argv[4] || '3,4,5').split(',').map(Number);
+// Act II is met at higher levels: shift the default levels up by the chapter's enemy level
+const ACT_TWO_SHIFT: Record<string, number> = { chapter_4: 3, chapter_5: 4, chapter_6: 5 };
 for (const ch of chapters) {
   const row: string[] = [];
-  for (const lv of levels) {
+  for (const lv of process.argv[4] ? levels : levels.map((l) => l + (ACT_TWO_SHIFT[ch] || 0))) {
     let w = 0, l = 0, t = 0;
     for (let i = 0; i < N; i++) { const r = battle(ch, lv); if (r === 'win') w++; else if (r === 'loss') l++; else t++; }
     row.push(`L${lv}: ${Math.round((w / N) * 100)}%${t ? ` (${t} timeouts)` : ''}`);

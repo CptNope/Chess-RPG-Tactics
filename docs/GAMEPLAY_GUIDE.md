@@ -73,9 +73,12 @@ flowchart TB
 flowchart LR
     C1["Chapter I<br/>Ambush at Riverside Ruins"] -->|"Pursue the sorcerer"| C2a["Chapter II-A<br/>The Sunken Crypts"]
     C1 -->|"Reinforce the garrison"| C2b["Chapter II-B<br/>Siege of Night Battlement"]
-    C2a --> C3["Final Chapter<br/>Awakening at the Summit"]
+    C2a --> C3["Chapter III<br/>Awakening at the Summit"]
     C2b --> C3
-    C3 --> E(["Epilogue"])
+    C3 --> C4["Chapter IV<br/>Fire on the Water"]
+    C4 --> C5["Chapter V<br/>The Greywatch Light"]
+    C5 --> C6["Final Chapter<br/>The Drowned Regent"]
+    C6 --> E(["Epilogue"])
     E --> NG["New Game+<br/>keep your squad"]
     E --> TR["Trials of the Zodiac<br/>endless"]
 ```
@@ -85,7 +88,20 @@ flowchart LR
 | I | Riverside Ruins | Bandit Chief | — | Gauntlet of Might, plus your branch reward |
 | II-A | Gloomy Mire | Arch-Warlock | Bria (Geomancer) | Gaia Staff |
 | II-B | Night Battlement | Dragoon Commander | Bria (Geomancer) | Crystal Helm |
-| Final | Zodiac Summit | Zodiac Champion | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail |
+| III | Zodiac Summit | Zodiac Champion | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail |
+| IV | Emberwick Harbor | Captain Varrow | Sable (Thief) | Oathkeeper, plus Moonfang for marching |
+| V | Greywatch Isle | Tidecaller Maelis | — | Runeblade, plus a Warding Amulet for marching |
+| Final | Stormbreak Cape | The Drowned Regent | — | Dawnbringer, plus Templar Mail for marching |
+
+**Act II** (Chapters IV to VI) is one road with bigger fights, and each battlefield asks something different:
+
+* **Emberwick Harbor:** the sea can't be crossed. Three piers lead to the corsair ship and a cross-pier joins them, so guard it or use it.
+* **Greywatch Isle:** uphill all the way. The shallows on either side are slow but unwatched, and the healer by the tower door is worth reaching early.
+* **Stormbreak Cape:** a chasm splits the climb. Go up one flank together, or send someone over the rope bridge.
+
+![Chapter IV: the squad on the quay at Emberwick Harbor, with the corsair ship across the piers](images/act2-harbor.webp)
+
+If you finished the story before Act II existed, Chapter IV is waiting on your map and the Trials stay open.
 
 Each road also adds gear to your armory the moment you march down it ([details](CONTENT_REFERENCE.md#campaign)). The game autosaves at the start of every chapter and whenever you reach the world map.
 
@@ -104,6 +120,13 @@ flowchart LR
     G --- Z["Zodiac Summit<br/>Final Chapter"]
     B --- Z
     Z --- T["★ Gate of Trials<br/>opens after the story"]
+    R --- H["Emberwick Harbor<br/>Chapter IV"]
+    M --- H
+    M --- I["Greywatch Isle<br/>Chapter V"]
+    M --- TF["⚑ Thornwood Ford"] --- B
+    TF --- CP["Stormbreak Cape<br/>Final Chapter"]
+    G --- DS["⚑ Drowned Shrine"]
+    Z --- WR["⚑ Watchfire Ridge"]
 ```
 
 | On the map | Means |
@@ -163,7 +186,7 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
   You start with 3 Potions and a Phoenix Feather. Hi-Potions, Ethers and Blast Flasks are stocked after your first victory.
 * **A fallen ally isn't lost.** A ✝ marker with their name stays where they fell. Stand within 2 tiles, choose **ITEM → Phoenix Feather** and pick that tile. They rise with no statuses and wait for their next turn. A **White Mage** can learn **Raise**, which does the same from 3 tiles for 18 MP and brings them back with a third of their HP.
-* **Enemy White Mages raise their dead too.** Take them down first. Bosses can never be raised.
+* **Enemy White Mages raise their dead too**, but only one per battle. Take them down first. Bosses can never be raised.
 * Mix jobs: equip another job's skillset as your **secondary action**, and any learned reaction, support or movement ability in the other slots (click the slot to cycle).
 * New gear appears in **Team → Equipment** as soon as you win it.
 * **Thieves steal.** Put a Thief next to an enemy and use *Steal*: the piece of gear it takes goes straight into your armory (best from the side or behind; bosses hold on tight). It's the fastest way to get gear early.

@@ -12,7 +12,7 @@ import { CombatEngine } from '../src/core/CombatEngine';
 import { unitsInBlast } from '../src/core/EnemyAI';
 import { UNIQUE_ITEMS, gearSaleBlock, resaleValue, shopProgress } from '../src/core/Economy';
 import {
-  WORLD_NODES, WORLD_ROADS, clearedAfterStory, clearedBefore, nodeForChapter, nodeState, openMissions, route,
+  FIRST_ACT_FINALE, WORLD_NODES, WORLD_ROADS, clearedAfterStory, clearedBefore, nodeForChapter, nodeState, openMissions, route,
   sanitizeCleared, storyFinished, worldNode
 } from '../src/core/World';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
@@ -255,13 +255,15 @@ describe('the world map', () => {
   });
 
   it('nothing is open once the story is won', () => {
-    const cleared = ['chapter_1', 'chapter_2b', 'chapter_3'];
+    const cleared = ['chapter_1', 'chapter_2b', 'chapter_3', 'chapter_4', 'chapter_5', 'chapter_6'];
     expect(storyFinished(cleared)).toBe(true);
     expect(storyFinished(['chapter_1', 'chapter_2b'])).toBe(false);
-    expect(openMissions('chapter_3', cleared)).toEqual([]);
+    expect(storyFinished(['chapter_1', 'chapter_2b', 'chapter_3'])).toBe(false); // the Summit is no longer the end
+    expect(openMissions('chapter_6', cleared)).toEqual([]);
     expect(openMissions('chapter_1', cleared)).toEqual([]);
-    expect(nodeState(worldNode('mire')!, 'chapter_3', cleared, true)).toBe('locked');
-    expect(nodeState(worldNode('summit')!, 'chapter_3', cleared, true)).toBe('cleared');
+    expect(nodeState(worldNode('mire')!, 'chapter_6', cleared, true)).toBe('locked');
+    expect(nodeState(worldNode('summit')!, 'chapter_6', cleared, true)).toBe('cleared');
+    expect(nodeState(worldNode('cape')!, 'chapter_6', cleared, true)).toBe('cleared');
     expect(openMissions('not_a_chapter', [])).toEqual([]);
   });
 
@@ -271,7 +273,9 @@ describe('the world map', () => {
     expect(sanitizeCleared(undefined, 'chapter_3')).toEqual(['chapter_1']);
     expect(openMissions('chapter_3', sanitizeCleared(undefined, 'chapter_3'))).toEqual([{ chapterId: 'chapter_3' }]);
     expect(sanitizeCleared(['chapter_1', 'chapter_1', 'bogus', 7, 'chapter_2a'], 'chapter_2a')).toEqual(['chapter_1', 'chapter_2a']);
-    expect(storyFinished(clearedAfterStory())).toBe(true);
-    expect(clearedAfterStory()).toContain('chapter_1');
+    // A pre-0.15 save that had finished the first act stands at the Summit with Chapter IV ahead
+    expect(clearedAfterStory()).toEqual(['chapter_1', FIRST_ACT_FINALE]);
+    expect(storyFinished(clearedAfterStory())).toBe(false);
+    expect(openMissions(FIRST_ACT_FINALE, clearedAfterStory()).map((m) => m.chapterId)).toEqual(['chapter_4']);
   });
 });

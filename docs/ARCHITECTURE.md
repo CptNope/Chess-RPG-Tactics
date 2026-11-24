@@ -429,7 +429,7 @@ src/
 ├── ui/                     UIManager, Workshop, WorldMap, Tutorial
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery (134 rule tests)
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery (138 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts
 docs/                       This documentation + ADRs
 ```
