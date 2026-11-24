@@ -47,6 +47,7 @@ timeline
         0.27.0 : Monsters in every story chapter from II : Natural stats for monsters
         0.28.0 : Beast Tamer job : Tame monsters : Beasts join the squad
         0.29.0 : Beast gear: barding and collars
+        0.30.0 : Equipment rules per job
 ```
 
 | Version | Theme | Highlights |
@@ -59,6 +60,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.30 | Gear by job | Each job uses its own weapon types, and shields, heavy armor and robes belong to some jobs; job changes swap gear for the best you own; the Team screen and market show who can use what |
 | 0.29 | Beast gear | Six pieces of barding and collars only tamed beasts can wear, on their own market shelf; every new beast arrives in a Leather Collar |
 | 0.28 | Beast Tamer | The Beast Tamer (19 jobs, 114 abilities): Tame wins a hurt monster over to fight for you, and survivors join the squad as named beasts that wear no gear; Snare, Treat, Soothe, Snarl, Beast Lore and the Stampede signature; the Drover's Whip |
 | 0.27 | Into the story | A monster in every story battle from Chapter II, each introduced in the dialogue; monsters get natural stats in place of gear; Lure toned down; every chapter checked against the balance sim |
@@ -84,7 +86,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.29.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.30.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -95,11 +97,10 @@ flowchart LR
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.28 – 0.30): depth"]
+    subgraph NEXT["Next (0.31 – 0.33): depth"]
         direction TB
         X1["AI: items and<br/>two-ply look-ahead"]
         X5["Play-tests in CI"]
-        X7["Equipment rules"]
     end
     subgraph LATER["Later (1.0+): breadth"]
         direction TB
@@ -122,13 +123,12 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.28 – 0.30): depth
+### Next (0.31 – 0.33): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
 | **Reserve training** | Units in reserve earn nothing (0.25); if a big squad falls behind in hand play, a share of the spoils for the reserve | S |
 | **Play-test suite in CI** | Device matrix, input, campaign and feature bots exist but aren't committed | M |
-| **Equipment rules**: weapon and armor types per job | Every job can wear everything | M |
 | **AI: items and two-ply look-ahead** | Bosses could carry a potion; enemies could set up combos and retreat to heal. A one-turn threat term was tried in 0.20 and changed nothing ([details](ENEMY_AI.md#5-known-limits)) | L |
 
 ### Later (1.0+): breadth
@@ -163,9 +163,8 @@ quadrantChart
     "Devlog + store": [0.1, 0.55]
     "AI look-ahead": [0.75, 0.5]
     "Play-tests in CI": [0.4, 0.6]
-    "Equipment rules": [0.55, 0.4]
     "Act III": [0.8, 0.7]
-    "Beast tamer": [0.55, 0.6]
+    "More monsters": [0.55, 0.55]
     "Online duels": [0.88, 0.6]
     "Localization": [0.6, 0.28]
 ```

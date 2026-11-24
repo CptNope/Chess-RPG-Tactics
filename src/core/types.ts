@@ -57,6 +57,8 @@ export interface Item {
   traits?: ItemTraits;
   /** Beast gear (0.29.0): barding and collars only a tamed beast can wear (see JobSystem.canEquip). */
   beast?: boolean;
+  /** Body and head gear (0.30.0): heavy armor and helms, or robes. Unmarked is light, for anyone (see data/gear-rules.ts). */
+  armor?: 'heavy' | 'robe';
 }
 
 export interface TileData {

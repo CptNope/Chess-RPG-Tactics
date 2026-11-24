@@ -2,6 +2,7 @@ import { Unit, Team, FacingDirection, EquippedAbilities, EquippedGear, Item, Equ
 import { JOBS, BASIC_ATTACK, PLAYER_JOB_IDS } from '../data/jobs';
 import { ITEMS } from '../data/items';
 import { SIGNATURES } from '../data/signatures';
+import { jobCanUse } from '../data/gear-rules';
 
 import { STATUS_DURATION } from './CombatEngine';
 import { ENEMY_GRAND_SUMMON_LEVEL } from './Summons';
@@ -431,12 +432,26 @@ export class JobSystem {
   }
 
   /**
-   * Who can wear what (0.29.0): a beast wears only beast gear (barding and a collar or charm),
-   * and people never wear beast gear.
+   * Who can wear what: a beast wears only beast gear (barding and a collar or charm, 0.29.0);
+   * a person wears what their job allows (0.30.0, see data/gear-rules.ts), never beast gear.
    */
   public static canEquip(unit: Unit, item: Item): boolean {
     if (JOBS[unit.jobId]?.monster) return !!item.beast && BEAST_SLOTS.includes(item.slot);
-    return !item.beast;
+    return jobCanUse(unit.jobId, item);
+  }
+
+  /** Takes off whatever the unit's job can't use (after a job change, or from an old save). Returns what came off. */
+  public static removeForbiddenGear(unit: Unit): Item[] {
+    const off: Item[] = [];
+    for (const slot of Object.keys(unit.equipment) as EquipmentSlot[]) {
+      const it = unit.equipment[slot];
+      if (it && !this.canEquip(unit, it)) {
+        off.push(it);
+        unit.equipment[slot] = null;
+      }
+    }
+    if (off.length) this.recalculateDerivedStats(unit);
+    return off;
   }
 
   public static equipItem(unit: Unit, item: Item): void {
@@ -450,12 +465,32 @@ export class JobSystem {
     this.recalculateDerivedStats(unit);
   }
 
-  public static changeJob(unit: Unit, newJobId: string): void {
-    if (!JOBS[newJobId]) return;
-    if (JOBS[unit.jobId]?.monster && newJobId !== unit.jobId) return; // a beast stays a beast (0.28.0)
+  /**
+   * Fills the given (empty) slots with the best piece the unit can use from `owned`: the job's own
+   * kind of armor first (a robe for a mage, mail for a knight), then the priciest, so a job change
+   * doesn't leave someone empty-handed (0.30.0). Returns what went on.
+   */
+  public static fillSlots(unit: Unit, slots: EquipmentSlot[], owned: Item[]): Item[] {
+    const on: Item[] = [];
+    for (const slot of slots) {
+      if (unit.equipment[slot]) continue;
+      const best = owned.filter((it) => it.slot === slot && this.canEquip(unit, it))
+        .sort((a, b) => Number(!!b.armor) - Number(!!a.armor) || b.price - a.price)[0];
+      if (best) { unit.equipment[slot] = best; on.push(best); }
+    }
+    if (on.length) this.recalculateDerivedStats(unit);
+    return on;
+  }
+
+  /** Switches job. Gear the new job can't use comes off (0.30.0); the pieces are returned. */
+  public static changeJob(unit: Unit, newJobId: string): Item[] {
+    if (!JOBS[newJobId]) return [];
+    if (JOBS[unit.jobId]?.monster && newJobId !== unit.jobId) return []; // a beast stays a beast (0.28.0)
     unit.jobId = newJobId;
     unit.equippedAbilities.primaryJobId = newJobId;
+    const off = this.removeForbiddenGear(unit);
     this.recalculateDerivedStats(unit);
+    return off;
   }
 
   public static setSecondarySkillset(unit: Unit, secondaryJobId: string | null): void {

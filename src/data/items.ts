@@ -92,6 +92,7 @@ export const ITEMS: Record<string, Item> = {
   // HEAD
   iron_helm: {
     id: 'iron_helm',
+    armor: 'heavy',
     name: 'Steel Bascinet',
     slot: 'head',
     description: 'Stout steel helmet guarding against lethal cranial blows.',
@@ -118,6 +119,7 @@ export const ITEMS: Record<string, Item> = {
   // BODY
   chainmail: {
     id: 'chainmail',
+    armor: 'heavy',
     name: 'Reinforced Hauberk',
     slot: 'body',
     description: 'Interlocking steel rings offering durable all-round combat protection.',
@@ -126,6 +128,7 @@ export const ITEMS: Record<string, Item> = {
   },
   platinum_armor: {
     id: 'platinum_armor',
+    armor: 'heavy',
     name: 'Platinum Plate Mail',
     slot: 'body',
     description: 'Heavy tempered cuirass. Immense physical resilience at a minor weight cost.',
@@ -134,6 +137,7 @@ export const ITEMS: Record<string, Item> = {
   },
   silk_robe: {
     id: 'silk_robe',
+    armor: 'robe',
     name: 'Astral Silk Robe',
     slot: 'body',
     description: 'Flowing mystic vestment that amplifies mana pool and magical power.',
@@ -224,6 +228,7 @@ export const ITEMS: Record<string, Item> = {
   },
   crystal_helm: {
     id: 'crystal_helm',
+    armor: 'heavy',
     name: 'Crystal Helm',
     slot: 'head',
     description: 'Faceted helm cut from a single sky-crystal.',
@@ -232,6 +237,7 @@ export const ITEMS: Record<string, Item> = {
   },
   dragon_mail: {
     id: 'dragon_mail',
+    armor: 'heavy',
     name: 'Wyrmscale Mail',
     slot: 'body',
     description: 'Overlapping dragon scales that turn aside blade and flame alike.',
@@ -395,6 +401,7 @@ export const ITEMS: Record<string, Item> = {
   },
   barbute: {
     id: 'barbute',
+    armor: 'heavy',
     name: 'Barbute',
     slot: 'head',
     description: 'An open-faced steel helm that leaves room to see the next swing.',
@@ -437,6 +444,7 @@ export const ITEMS: Record<string, Item> = {
   },
   summoner_robe: {
     id: 'summoner_robe',
+    armor: 'robe',
     name: 'Summoner\'s Robe',
     slot: 'body',
     description: 'Embroidered with the seals of the four spirits. A deep well of MP.',
@@ -445,6 +453,7 @@ export const ITEMS: Record<string, Item> = {
   },
   templar_mail: {
     id: 'templar_mail',
+    armor: 'heavy',
     name: 'Templar Mail',
     slot: 'body',
     description: 'Consecrated plate. Starts every battle with Shell.',
@@ -567,6 +576,7 @@ export const ITEMS: Record<string, Item> = {
   },
   watchfire_helm: {
     id: 'watchfire_helm',
+    armor: 'heavy',
     name: 'Watchfire Helm',
     slot: 'head',
     description: 'The ridge garrison\'s helm, worn through long nights on watch. Its wearer neither sleeps nor loses sight of the dark.',
