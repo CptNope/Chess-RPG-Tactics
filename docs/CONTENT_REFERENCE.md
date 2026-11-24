@@ -459,7 +459,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-62 items across five gear slots.
+68 items across five gear slots.
 
 ### Weapon (24)
 
@@ -514,7 +514,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Circlet of Clarity** `clarity_circlet` | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop |
 | **Watchfire Helm** `watchfire_helm` | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge |
 
-### Body (10)
+### Body (13)
 
 | Item | Stats | Traits | Price | How to get |
 | :--- | :--- | :--- | ---: | :--- |
@@ -528,8 +528,11 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Summoner's Robe** `summoner_robe` | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop |
 | **Templar Mail** `templar_mail` | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop |
 | **Wolfpelt Mantle** `wolfpelt_mantle` | HP +25, EVASION +6, MOVE +1 | guards poison | 560 | First win at Howling Hollow |
+| **Hide Barding** `hide_barding` | HP +30, ATTACK +1 | — | 200 | Starting gear of a job |
+| **Chain Barding** `chain_barding` | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job |
+| **Runed Barding** `runed_barding` | HP +40, MP +15 | guards sleep, silence | 560 | Starting gear of a job |
 
-### Accessory (14)
+### Accessory (17)
 
 | Item | Stats | Traits | Price | How to get |
 | :--- | :--- | :--- | ---: | :--- |
@@ -547,6 +550,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Lucky Coin** `lucky_coin` | HP +10, EVASION +10 | guards blind | 380 | Wenna the Pedlar only |
 | **Wayfarer Boots** `wayfarer_boots` | MOVE +1, SPEED +1 | — | 760 | Wenna the Pedlar only |
 | **Chanting Censer** `chanting_censer` | MAGIC +4, MP +20 | guards silence | 540 | First win at Drowned Shrine |
+| **Leather Collar** `leather_collar` | HP +20, EVASION +4 | — | 160 | Starting gear of a job |
+| **Spiked Collar** `spiked_collar` | ATTACK +5 | — | 320 | Starting gear of a job |
+| **Glowstone Charm** `glowstone_charm` | MAGIC +6, MP +15 | — | 340 | Starting gear of a job |
 
 ## Supplies
 
@@ -569,10 +575,10 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 
 | Stage | Price cap | Items on the shelves |
 | :--- | ---: | ---: |
-| Before the first victory | 380 | 30 |
-| Chapter I won | 480 | 43 |
-| Chapter II won | 580 | 49 |
-| Campaign cleared / Trials | none | 52 |
+| Before the first victory | 380 | 34 |
+| Chapter I won | 480 | 48 |
+| Chapter II won | 580 | 55 |
+| Campaign cleared / Trials | none | 58 |
 
 Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle.
 

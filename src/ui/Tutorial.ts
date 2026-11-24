@@ -52,7 +52,7 @@ export const TIPS: Record<TipId, { title: string; text: string }> = {
   },
   tamed: {
     title: 'A BEAST ON YOUR SIDE',
-    text: 'The tamed monster takes orders from you now. Keep it standing: if it lives to see the victory, it joins your squad. Beasts wear no gear and never change jobs.'
+    text: 'The tamed monster takes orders from you now. Keep it standing: if it lives to see the victory, it joins your squad. Beasts never change jobs, and wear only beast gear: barding and a collar.'
   },
   worldMap: {
     title: 'THE WORLD MAP',

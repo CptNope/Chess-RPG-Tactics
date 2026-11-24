@@ -1,6 +1,6 @@
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainType, EquipmentSlot, StoryChoice, Item } from '../core/types';
 import { JOBS, PLAYER_JOB_IDS } from '../data/jobs';
-import { JobSystem, MAX_JOB_LEVEL , JOB_MASTERY, VETERAN_JOB_LEVEL, masteryLabel } from '../core/JobSystem';
+import { JobSystem, BEAST_SLOTS, MAX_JOB_LEVEL , JOB_MASTERY, VETERAN_JOB_LEVEL, masteryLabel } from '../core/JobSystem';
 import { CONSUMABLES, MAX_STACK, Consumable, consumableAbility } from '../data/consumables';
 import { ITEMS } from '../data/items';
 import { getItemsForSlot } from '../data/items';
@@ -1018,9 +1018,12 @@ export class UIManager {
     const gearBodyVal = document.getElementById('gear-body-val')!;
     const gearAccessoryVal = document.getElementById('gear-accessory-val')!;
 
-    gearWeaponVal.textContent = unit.equipment.weapon ? unit.equipment.weapon.name : 'None';
-    gearShieldVal.textContent = unit.equipment.shield ? unit.equipment.shield.name : 'None';
-    gearHeadVal.textContent = unit.equipment.head ? unit.equipment.head.name : 'None';
+    // A beast fills only its barding and collar slots (0.29.0)
+    const noSlot = beast ? '— (beasts don\'t)' : 'None';
+    if (beast && !BEAST_SLOTS.includes(this.selectedGearSlot)) this.selectedGearSlot = 'body';
+    gearWeaponVal.textContent = unit.equipment.weapon ? unit.equipment.weapon.name : noSlot;
+    gearShieldVal.textContent = unit.equipment.shield ? unit.equipment.shield.name : noSlot;
+    gearHeadVal.textContent = unit.equipment.head ? unit.equipment.head.name : noSlot;
     gearBodyVal.textContent = unit.equipment.body ? unit.equipment.body.name : 'None';
     gearAccessoryVal.textContent = unit.equipment.accessory ? unit.equipment.accessory.name : 'None';
 
@@ -1043,15 +1046,14 @@ export class UIManager {
     this.inventoryHeaderEl.textContent = `AVAILABLE ${this.selectedGearSlot.toUpperCase()} INVENTORY`;
     this.inventoryListEl.innerHTML = '';
     if (beast) {
-      this.inventoryHeaderEl.textContent = 'BEASTS WEAR NO GEAR';
+      this.inventoryHeaderEl.textContent = `BEAST GEAR · ${this.selectedGearSlot === 'body' ? 'BARDING' : 'COLLARS & CHARMS'}`;
       const note = document.createElement('div');
       note.className = 'learn-item';
-      note.innerHTML = `<div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${unit.name} fights with what nature gave it: its fangs, hide or glow count as its gear. It knows all its moves already and grows stronger as it levels.</div>`;
+      note.innerHTML = `<div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${unit.name} wears only beast gear: barding on its body and a collar or charm. Its fangs, hide or glow do the rest. Buy beast gear at the market.</div>`;
       this.inventoryListEl.appendChild(note);
-      return;
     }
 
-    const availableItems = getItemsForSlot(this.selectedGearSlot, this.armory.length > 0 ? this.armory : undefined);
+    const availableItems = getItemsForSlot(this.selectedGearSlot, this.armory.length > 0 ? this.armory : undefined).filter((it) => JobSystem.canEquip(unit, it));
 
     // Unequip option
     const unequipBtn = document.createElement('div');
@@ -1176,7 +1178,9 @@ export class UIManager {
       }
       let lastSlot = '';
       for (const item of shop.stock()) {
-        if (item.slot !== lastSlot) head(slotNames[(lastSlot = item.slot) as EquipmentSlot]);
+        const shelf = item.beast ? 'beast' : item.slot;
+        if (shelf !== lastSlot) head(item.beast ? 'BEAST GEAR (TAMED BEASTS ONLY)' : slotNames[item.slot]);
+        lastSlot = shelf;
         const owned = this.armory.includes(item.id);
         row({
           key: `g:${item.id}`, name: item.name, stats: statText(item), desc: item.description,

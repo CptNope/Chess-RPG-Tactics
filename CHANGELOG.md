@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.29.0] - 2026-11-24
+
+### Added — beast gear
+- **Gear for tamed beasts.** Beasts can now wear **barding** on the body and a **collar or charm** as an accessory, so a tamed monster keeps up with geared people as the squad grows. Six pieces, on a shelf of their own at the market (**Beast gear, tamed beasts only**):
+  - **Leather Collar** (HP +20, Evasion +4), 160 G.
+  - **Hide Barding** (HP +30, ATK +1), 200 G.
+  - **Spiked Collar** (ATK +5), 320 G.
+  - **Glowstone Charm** (MAG +6, MP +15), 340 G, for wisps.
+  - **Chain Barding** (HP +50, ATK +2, Evasion −3), 440 G.
+  - **Runed Barding** (HP +40, MP +15, no Sleep or Silence), 560 G.
+- **Every new beast arrives wearing a Leather Collar**; the first one brings the collar into your armory.
+
+### Changed
+- **Beasts wear only beast gear, and people never do.** On a beast's Team → Equipment screen the weapon, shield and headgear slots read "beasts don't", and the lists show only what it can wear.
+
+### Developer
+- `Item.beast`, `JobSystem.canEquip` (used by `equipItem`, the gear lists and save import) and `BEAST_SLOTS`. `shopStock` puts beast gear last.
+- 6 new tests (255 total) in `tests/beast-gear.test.ts`. [ADR 0037](docs/adr/0037-beast-gear.md).
+
 ## [0.28.0] - 2026-11-24
 
 ### Added — the Beast Tamer

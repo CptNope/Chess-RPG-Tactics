@@ -71,6 +71,9 @@ export interface JpGain {
   unlocked: string[];
 }
 
+/** The gear slots a beast can fill (0.29.0): barding on the body, a collar or charm as its accessory. */
+export const BEAST_SLOTS: EquipmentSlot[] = ['body', 'accessory'];
+
 export class JobSystem {
   /**
    * Creates a unit with proper base stats, job stat scaling, and equipped gear.
@@ -427,8 +430,17 @@ export class JobSystem {
     unit.evasion = gearEva + mastery.evasion;
   }
 
+  /**
+   * Who can wear what (0.29.0): a beast wears only beast gear (barding and a collar or charm),
+   * and people never wear beast gear.
+   */
+  public static canEquip(unit: Unit, item: Item): boolean {
+    if (JOBS[unit.jobId]?.monster) return !!item.beast && BEAST_SLOTS.includes(item.slot);
+    return !item.beast;
+  }
+
   public static equipItem(unit: Unit, item: Item): void {
-    if (JOBS[unit.jobId]?.monster) return; // beasts wear no gear (0.28.0)
+    if (!this.canEquip(unit, item)) return;
     unit.equipment[item.slot] = item;
     this.recalculateDerivedStats(unit);
   }

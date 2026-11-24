@@ -44,7 +44,8 @@ export function shopStock(progress: ShopProgress): Item[] {
   const cap = SHOP_PRICE_CAP[progress];
   return Object.values(ITEMS)
     .filter((it) => it.price <= cap && !UNIQUE_ITEMS.includes(it.id) && !MERCHANT_ITEMS.includes(it.id))
-    .sort((a, b) => SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot) || a.price - b.price);
+    // Beast gear (0.29.0) on a shelf of its own, after everything else
+    .sort((a, b) => Number(!!a.beast) - Number(!!b.beast) || SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot) || a.price - b.price);
 }
 
 /** The lowest price cap above the current one, for "more stock after the next chapter" hints. */
