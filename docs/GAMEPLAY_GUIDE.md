@@ -186,7 +186,7 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
   ![Team → Jobs: each job lists its two mastery bonuses, ticked once earned](images/mastery.webp)
 
 * **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Five advanced jobs, **Paladin**, **Spellblade**, **Bard**, **Dancer** and **Beast Tamer**, each need two other jobs.
-* **Spend your gil at Larkmoor Market** on the world map. Enemies pay bounties and every win pays a bonus. Gear you buy, the whole squad can equip. New stock arrives each time you win a chapter. In battle, **Team → Shop** shows the shelves but the market is closed.
+* **Spend your gil at Larkmoor Market** on the world map. Enemies pay bounties and every win pays a bonus. Gear you buy, anyone in the squad whose job can use it can equip. New stock arrives each time you win a chapter. In battle, **Team → Shop** shows the shelves but the market is closed.
 
   ![Larkmoor Market: supplies and gear on the BUY counter](images/market.webp)
 
@@ -214,6 +214,7 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 * **Enemy White Mages raise their dead too**, but only one per battle. Take them down first. Bosses can never be raised.
 * Mix jobs: equip another job's skillset as your **secondary action**, and any learned reaction, support or movement ability in the other slots (click the slot to cycle).
 * New gear appears in **Team → Equipment** as soon as you win it.
+* **Each job has its own gear** (0.30). Weapons go by type, and shields, heavy armor and helms, and robes belong to some jobs: a Knight carries swords or spears, a shield and plate; a Black Mage, a staff or rod and a robe; a Monk, knuckles. Light clothes, caps, hats, circlets and every accessory suit anyone. **Team → Jobs** shows what each job can use, and **Team → Equipment** greys out what this unit can't wear, with who can. Changing job takes off what the new job can't use and puts on the best piece you own that it can ([full table](CONTENT_REFERENCE.md#equipment-rules)).
 * **Thieves steal.** Put a Thief next to an enemy and use *Steal*: the piece of gear it takes goes straight into your armory (best from the side or behind; bosses hold on tight). It's the fastest way to get gear early.
 * **Watch the statuses**: pips above each unit's HP bar (round = buff, square = ailment) and named badges on the unit card. Ailments: Poison, Slow, Immobilize, **Blind** (misses blows), **Silence** (no MP abilities), **Sleep** (loses turns until hit) and **Breach** (takes more physical damage). Buffs: Haste, Protect, Focus, **Shell** (takes less spell damage) and **Regen**. *Purify* (White Mage) and *Chakra* (Monk) clear every ailment.
 * Some gear has a **trait**: the Verdant Charm gives Regen all battle, rods boost one element, and circlets and bangles ward off ailments. Read the item text in Team → Equipment.

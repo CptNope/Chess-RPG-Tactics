@@ -75,6 +75,32 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 
 Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
 
+## Equipment rules
+
+Each job uses its own weapon types (0.30.0). Shields, heavy armor and helms, and robes belong to some jobs; light clothes, caps, hats, circlets and every accessory suit anyone. Changing job takes off what the new job can't use. Tamed beasts wear only beast gear.
+
+| Job | Can use |
+| :--- | :--- |
+| **Squire** | Swords, Daggers · Shields · Heavy armor & helms |
+| **Knight** | Swords, Spears · Shields · Heavy armor & helms |
+| **Archer** | Bows, Daggers |
+| **Black Mage** | Staves & rods · Robes |
+| **White Mage** | Staves & rods · Robes |
+| **Dragoon** | Spears · Heavy armor & helms |
+| **Ninja** | Daggers |
+| **Geomancer** | Staves & rods, Swords · Heavy armor & helms · Robes |
+| **Time Weaver** | Staves & rods · Robes |
+| **Chemist** | Daggers, Staves & rods |
+| **Monk** | Knuckles |
+| **Thief** | Daggers, Knuckles |
+| **Summoner** | Staves & rods · Robes |
+| **Oracle** | Staves & rods · Robes |
+| **Paladin** | Swords · Shields · Heavy armor & helms |
+| **Spellblade** | Swords, Daggers · Shields · Robes |
+| **Bard** | Bows, Staves & rods · Robes |
+| **Dancer** | Daggers, Whips |
+| **Beast Tamer** | Whips, Daggers, Bows |
+
 ## Job mastery
 
 A permanent bonus for sticking with a job. A unit earns the first amount at job level 5 (700 lifetime JP) and the second, which replaces it, at level 8 (Master, 1900 JP). It keeps the bonus in every job, and bonuses from different jobs add up. Master also brings the job's **signature**: an action usable in any job, once per battle, for no MP, at +30 hit.
@@ -463,96 +489,96 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ### Weapon (24)
 
-| Item | Type | Range | Stats | Traits | Price | How to get |
-| :--- | :--- | :---: | :--- | :--- | ---: | :--- |
-| **Iron Broadsword** `iron_sword` | sword | 1 | ATTACK +4 | — | 100 | Starting gear |
-| **Platinum Blade** `platinum_blade` | sword | 1 | ATTACK +9, HP +15 | — | 350 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
-| **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear |
-| **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | — | 250 | Starting gear |
-| **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear |
-| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
-| **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop |
-| **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
-| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III |
-| **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear |
-| **Tiger Claws** `tiger_claws` | knuckles | 1 | ATTACK +10, SPEED +1 | — | 480 | Trials drop |
-| **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear |
-| **Drover's Whip** `drovers_whip` | whip | 2 | ATTACK +5, SPEED +1 | — | 260 | Starting gear |
-| **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop |
-| **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop |
-| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win FINAL CHAPTER · Trials drop |
-| **Siege Crossbow** `siege_crossbow` | bow | 4 | ATTACK +11, SPEED -1 | — | 480 | Trials drop |
-| **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop |
-| **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop |
-| **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop |
-| **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop |
-| **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop |
-| **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only |
-| **Fordwarden's Bow** `fordwarden_bow` | bow | 5 | ATTACK +8, SPEED +1, EVASION +5 | — | 520 | First win at Thornwood Ford |
+| Item | Type | Range | Stats | Traits | Price | How to get | Who |
+| :--- | :--- | :---: | :--- | :--- | ---: | :--- | :--- |
+| **Iron Broadsword** `iron_sword` | sword | 1 | ATTACK +4 | — | 100 | Starting gear | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Platinum Blade** `platinum_blade` | sword | 1 | ATTACK +9, HP +15 | — | 350 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear | Knight, Dragoon |
+| **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | — | 250 | Starting gear | Archer, Bard, Beast Tamer |
+| **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer |
+| **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop | Archer, Bard, Beast Tamer |
+| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear | Monk, Thief |
+| **Tiger Claws** `tiger_claws` | knuckles | 1 | ATTACK +10, SPEED +1 | — | 480 | Trials drop | Monk, Thief |
+| **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer |
+| **Drover's Whip** `drovers_whip` | whip | 2 | ATTACK +5, SPEED +1 | — | 260 | Starting gear | Dancer, Beast Tamer |
+| **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer |
+| **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop | Knight, Dragoon |
+| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win FINAL CHAPTER · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Siege Crossbow** `siege_crossbow` | bow | 4 | ATTACK +11, SPEED -1 | — | 480 | Trials drop | Archer, Bard, Beast Tamer |
+| **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only | Knight, Dragoon |
+| **Fordwarden's Bow** `fordwarden_bow` | bow | 5 | ATTACK +8, SPEED +1, EVASION +5 | — | 520 | First win at Thornwood Ford | Archer, Bard, Beast Tamer |
 
 ### Shield (5)
 
-| Item | Stats | Traits | Price | How to get |
-| :--- | :--- | :--- | ---: | :--- |
-| **Bronze Buckler** `buckler` | EVASION +12 | — | 80 | Starting gear |
-| **Kite Shield** `kite_shield` | EVASION +22, HP +15 | — | 220 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
-| **Aegis Barrier** `aegis_shield` | EVASION +32, HP +30, MP +15 | — | 450 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop |
-| **Mirror Shield** `mirror_shield` | EVASION +18, MP +10 | starts with shell | 420 | Win CHAPTER II-B · Trials drop |
-| **Oathkeeper** `oath_shield` | EVASION +20, HP +20 | guards sleep, blind | 500 | Win CHAPTER IV · Trials drop |
+| Item | Kind | Stats | Traits | Price | How to get | Who |
+| :--- | :--- | :--- | :--- | ---: | :--- | :--- |
+| **Bronze Buckler** `buckler` | shield | EVASION +12 | — | 80 | Starting gear | Squire, Knight, Paladin, Spellblade |
+| **Kite Shield** `kite_shield` | shield | EVASION +22, HP +15 | — | 220 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop | Squire, Knight, Paladin, Spellblade |
+| **Aegis Barrier** `aegis_shield` | shield | EVASION +32, HP +30, MP +15 | — | 450 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop | Squire, Knight, Paladin, Spellblade |
+| **Mirror Shield** `mirror_shield` | shield | EVASION +18, MP +10 | starts with shell | 420 | Win CHAPTER II-B · Trials drop | Squire, Knight, Paladin, Spellblade |
+| **Oathkeeper** `oath_shield` | shield | EVASION +20, HP +20 | guards sleep, blind | 500 | Win CHAPTER IV · Trials drop | Squire, Knight, Paladin, Spellblade |
 
 ### Head (9)
 
-| Item | Stats | Traits | Price | How to get |
-| :--- | :--- | :--- | ---: | :--- |
-| **Steel Bascinet** `iron_helm` | HP +30 | — | 120 | Starting gear |
-| **Pointed Wizard Hat** `wizard_hat` | HP +15, MP +25, MAGIC +3 | — | 150 | Starting gear |
-| **Shadow Headband** `shinobi_band` | HP +20, SPEED +1, EVASION +5 | — | 180 | Starting gear |
-| **Crystal Helm** `crystal_helm` | HP +30, MP +10, EVASION +3 | — | 380 | Win CHAPTER II-B · Trials drop |
-| **Leather Cap** `leather_cap` | HP +15 | — | 60 | Starting gear |
-| **Barbute** `barbute` | HP +45, ATTACK +2 | — | 340 | Trials drop |
-| **Sage's Circlet** `sage_circlet` | HP +10, MP +15, MAGIC +5 | — | 360 | Trials drop |
-| **Circlet of Clarity** `clarity_circlet` | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop |
-| **Watchfire Helm** `watchfire_helm` | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge |
+| Item | Kind | Stats | Traits | Price | How to get | Who |
+| :--- | :--- | :--- | :--- | ---: | :--- | :--- |
+| **Steel Bascinet** `iron_helm` | heavy | HP +30 | — | 120 | Starting gear | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Pointed Wizard Hat** `wizard_hat` | light | HP +15, MP +25, MAGIC +3 | — | 150 | Starting gear | Anyone |
+| **Shadow Headband** `shinobi_band` | light | HP +20, SPEED +1, EVASION +5 | — | 180 | Starting gear | Anyone |
+| **Crystal Helm** `crystal_helm` | heavy | HP +30, MP +10, EVASION +3 | — | 380 | Win CHAPTER II-B · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Leather Cap** `leather_cap` | light | HP +15 | — | 60 | Starting gear | Anyone |
+| **Barbute** `barbute` | heavy | HP +45, ATTACK +2 | — | 340 | Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Sage's Circlet** `sage_circlet` | light | HP +10, MP +15, MAGIC +5 | — | 360 | Trials drop | Anyone |
+| **Circlet of Clarity** `clarity_circlet` | light | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop | Anyone |
+| **Watchfire Helm** `watchfire_helm` | heavy | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge | Squire, Knight, Dragoon, Geomancer, Paladin |
 
 ### Body (13)
 
-| Item | Stats | Traits | Price | How to get |
-| :--- | :--- | :--- | ---: | :--- |
-| **Reinforced Hauberk** `chainmail` | HP +50 | — | 180 | Starting gear |
-| **Platinum Plate Mail** `platinum_armor` | HP +90, SPEED -1 | — | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop |
-| **Astral Silk Robe** `silk_robe` | HP +30, MP +45, MAGIC +5 | — | 260 | Starting gear |
-| **Nightwalker Tunic** `shinobi_garb` | HP +35, SPEED +1, EVASION +12 | — | 300 | Starting gear |
-| **Wyrmscale Mail** `dragon_mail` | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win CHAPTER III · Trials drop |
-| **Leather Vest** `leather_vest` | HP +25, EVASION +3 | — | 90 | Starting gear |
-| **Brawler's Gi** `brawler_gi` | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop |
-| **Summoner's Robe** `summoner_robe` | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop |
-| **Templar Mail** `templar_mail` | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop |
-| **Wolfpelt Mantle** `wolfpelt_mantle` | HP +25, EVASION +6, MOVE +1 | guards poison | 560 | First win at Howling Hollow |
-| **Hide Barding** `hide_barding` | HP +30, ATTACK +1 | — | 200 | Starting gear of a job |
-| **Chain Barding** `chain_barding` | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job |
-| **Runed Barding** `runed_barding` | HP +40, MP +15 | guards sleep, silence | 560 | Starting gear of a job |
+| Item | Kind | Stats | Traits | Price | How to get | Who |
+| :--- | :--- | :--- | :--- | ---: | :--- | :--- |
+| **Reinforced Hauberk** `chainmail` | heavy | HP +50 | — | 180 | Starting gear | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Platinum Plate Mail** `platinum_armor` | heavy | HP +90, SPEED -1 | — | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Astral Silk Robe** `silk_robe` | robe | HP +30, MP +45, MAGIC +5 | — | 260 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard |
+| **Nightwalker Tunic** `shinobi_garb` | light | HP +35, SPEED +1, EVASION +12 | — | 300 | Starting gear | Anyone |
+| **Wyrmscale Mail** `dragon_mail` | heavy | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win CHAPTER III · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Leather Vest** `leather_vest` | light | HP +25, EVASION +3 | — | 90 | Starting gear | Anyone |
+| **Brawler's Gi** `brawler_gi` | light | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop | Anyone |
+| **Summoner's Robe** `summoner_robe` | robe | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard |
+| **Templar Mail** `templar_mail` | heavy | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Wolfpelt Mantle** `wolfpelt_mantle` | light | HP +25, EVASION +6, MOVE +1 | guards poison | 560 | First win at Howling Hollow | Anyone |
+| **Hide Barding** `hide_barding` | beast | HP +30, ATTACK +1 | — | 200 | Starting gear of a job | Tamed beasts |
+| **Chain Barding** `chain_barding` | beast | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job | Tamed beasts |
+| **Runed Barding** `runed_barding` | beast | HP +40, MP +15 | guards sleep, silence | 560 | Starting gear of a job | Tamed beasts |
 
 ### Accessory (17)
 
-| Item | Stats | Traits | Price | How to get |
-| :--- | :--- | :--- | ---: | :--- |
-| **Battle Greaves** `battle_boots` | JUMP +1 | — | 150 | Starting gear |
-| **Featherlight Boots** `feather_boots` | MOVE +1 | — | 350 | Starting gear |
-| **Hermes Slippers** `hermes_shoes` | SPEED +2 | — | 400 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop |
-| **Gauntlet of Might** `power_wrist` | ATTACK +4 | — | 200 | Win CHAPTER I · Trials drop |
-| **Ring of Arcana** `mage_ring` | MAGIC +4, MP +25 | — | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop |
-| **Zodiac Ribbon** `ribbon` | HP +20, MP +20, SPEED +1, EVASION +5 | guards poison, slow, immobilize, blind, silence, sleep, breach | 800 | Win CHAPTER III · Trials drop |
-| **Verdant Charm** `verdant_charm` | HP +10 | starts with regen | 600 | Win CHAPTER II-A · Trials drop |
-| **Warding Amulet** `warding_amulet` | HP +10 | starts with protect + shell | 520 | Choose "Sail for Greywatch Isle before the Tidecaller finds the seal!" · Trials drop |
-| **Purity Bangle** `purity_bangle` | HP +10 | guards poison, slow, immobilize, breach | 420 | Trials drop |
-| **Sprinter's Anklet** `sprinter_anklet` | MOVE +1, JUMP +1 | — | 620 | Trials drop |
-| **Berserker Band** `berserker_band` | ATTACK +7, EVASION -5 | — | 460 | Trials drop |
-| **Lucky Coin** `lucky_coin` | HP +10, EVASION +10 | guards blind | 380 | Wenna the Pedlar only |
-| **Wayfarer Boots** `wayfarer_boots` | MOVE +1, SPEED +1 | — | 760 | Wenna the Pedlar only |
-| **Chanting Censer** `chanting_censer` | MAGIC +4, MP +20 | guards silence | 540 | First win at Drowned Shrine |
-| **Leather Collar** `leather_collar` | HP +20, EVASION +4 | — | 160 | Starting gear of a job |
-| **Spiked Collar** `spiked_collar` | ATTACK +5 | — | 320 | Starting gear of a job |
-| **Glowstone Charm** `glowstone_charm` | MAGIC +6, MP +15 | — | 340 | Starting gear of a job |
+| Item | Kind | Stats | Traits | Price | How to get | Who |
+| :--- | :--- | :--- | :--- | ---: | :--- | :--- |
+| **Battle Greaves** `battle_boots` | light | JUMP +1 | — | 150 | Starting gear | Anyone |
+| **Featherlight Boots** `feather_boots` | light | MOVE +1 | — | 350 | Starting gear | Anyone |
+| **Hermes Slippers** `hermes_shoes` | light | SPEED +2 | — | 400 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop | Anyone |
+| **Gauntlet of Might** `power_wrist` | light | ATTACK +4 | — | 200 | Win CHAPTER I · Trials drop | Anyone |
+| **Ring of Arcana** `mage_ring` | light | MAGIC +4, MP +25 | — | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop | Anyone |
+| **Zodiac Ribbon** `ribbon` | light | HP +20, MP +20, SPEED +1, EVASION +5 | guards poison, slow, immobilize, blind, silence, sleep, breach | 800 | Win CHAPTER III · Trials drop | Anyone |
+| **Verdant Charm** `verdant_charm` | light | HP +10 | starts with regen | 600 | Win CHAPTER II-A · Trials drop | Anyone |
+| **Warding Amulet** `warding_amulet` | light | HP +10 | starts with protect + shell | 520 | Choose "Sail for Greywatch Isle before the Tidecaller finds the seal!" · Trials drop | Anyone |
+| **Purity Bangle** `purity_bangle` | light | HP +10 | guards poison, slow, immobilize, breach | 420 | Trials drop | Anyone |
+| **Sprinter's Anklet** `sprinter_anklet` | light | MOVE +1, JUMP +1 | — | 620 | Trials drop | Anyone |
+| **Berserker Band** `berserker_band` | light | ATTACK +7, EVASION -5 | — | 460 | Trials drop | Anyone |
+| **Lucky Coin** `lucky_coin` | light | HP +10, EVASION +10 | guards blind | 380 | Wenna the Pedlar only | Anyone |
+| **Wayfarer Boots** `wayfarer_boots` | light | MOVE +1, SPEED +1 | — | 760 | Wenna the Pedlar only | Anyone |
+| **Chanting Censer** `chanting_censer` | light | MAGIC +4, MP +20 | guards silence | 540 | First win at Drowned Shrine | Anyone |
+| **Leather Collar** `leather_collar` | beast | HP +20, EVASION +4 | — | 160 | Starting gear of a job | Tamed beasts |
+| **Spiked Collar** `spiked_collar` | beast | ATTACK +5 | — | 320 | Starting gear of a job | Tamed beasts |
+| **Glowstone Charm** `glowstone_charm` | beast | MAGIC +6, MP +15 | — | 340 | Starting gear of a job | Tamed beasts |
 
 ## Supplies
 

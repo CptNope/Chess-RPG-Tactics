@@ -1136,6 +1136,10 @@ body, html {
 .job-item .job-lv { float: right; font-family: var(--font-pixel); font-size: calc(8px * var(--ts)); color: var(--text-light); }
 .job-item .job-lv.master { color: var(--gold-glow); }
 .job-item .job-req { font-size: calc(13px * var(--ts)); color: #fca5a5; }
+/* Equipment rules (0.30.0) */
+.job-item .job-gear { font-size: calc(12px * var(--ts)); color: #93c5fd; margin-top: 2px; }
+.learn-item.locked-gear { opacity: 0.55; cursor: not-allowed; }
+.shop-desc .gear-who { display: block; margin-top: 2px; color: #93c5fd; }
 .job-item .job-mastery { font-size: calc(13px * var(--ts)); color: var(--text-muted); }
 .job-item .job-mastery .got { color: var(--hp-green); }
 .job-item .job-bar { height: 3px; margin-top: 4px; background: #0b0f1c; border-radius: 2px; overflow: hidden; }

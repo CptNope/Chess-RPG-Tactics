@@ -868,6 +868,11 @@ class TacticsGame {
     }
     this.armory.length = 0;
     this.armory.push(...owned);
+    // Equipment rules (0.30.0): gear a job can't use comes off, back to the armory
+    const changed = this.squad.map((u) => ({ u, off: JobSystem.removeForbiddenGear(u) })).filter((c) => c.off.length);
+    for (const { u, off } of changed) {
+      this.ui.addLogEntry(`[GEAR] Each job now has its own gear. ${u.name} (${JOBS[u.jobId]?.name}) took off ${off.map((it) => it.name).join(', ')}: back in the armory.`, 'system');
+    }
 
     this.campaignCleared = !!data.campaignCleared;
     this.difficulty = sanitizeDifficulty(data.difficulty);

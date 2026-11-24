@@ -18,6 +18,7 @@ import { TERRAIN_SPELLS } from '../src/core/Geomancy';
 import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
 import { TRIAL_MONSTERS_FROM, buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
+import { gearKind, jobGearText, whoCanUse } from '../src/data/gear-rules';
 import { JOB_LEVEL_JP, JOB_MASTERY, VETERAN_JOB_LEVEL, MAX_JOB_LEVEL, masteryLabel } from '../src/core/JobSystem';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../src/core/Difficulty';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus } from '../src/core/Skirmish';
@@ -99,6 +100,16 @@ w('| :--- | :--- |');
 for (const j of jobs) w(`| **${j.name}** | ${(j.prerequisites || []).map((p) => `${jobName(p.jobId)} Lv ${p.level}`).join(' + ') || '— (open to everyone)'} |`);
 w();
 w('Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.');
+w();
+
+// ---------------------------------------------------------------- Equipment rules
+w('## Equipment rules');
+w();
+w('Each job uses its own weapon types (0.30.0). Shields, heavy armor and helms, and robes belong to some jobs; light clothes, caps, hats, circlets and every accessory suit anyone. Changing job takes off what the new job can\'t use. Tamed beasts wear only beast gear.');
+w();
+w('| Job | Can use |');
+w('| :--- | :--- |');
+for (const j of jobs) w(`| **${j.name}** | ${jobGearText(j.id)} |`);
 w();
 
 // ---------------------------------------------------------------- Job mastery
@@ -230,12 +241,13 @@ for (const slot of slots) {
   const list = items.filter((i) => i.slot === slot);
   w(`### ${slot[0].toUpperCase() + slot.slice(1)} (${list.length})`);
   w();
-  w(slot === 'weapon' ? '| Item | Type | Range | Stats | Traits | Price | How to get |' : '| Item | Stats | Traits | Price | How to get |');
-  w(slot === 'weapon' ? '| :--- | :--- | :---: | :--- | :--- | ---: | :--- |' : '| :--- | :--- | :--- | ---: | :--- |');
+  w(slot === 'weapon' ? '| Item | Type | Range | Stats | Traits | Price | How to get | Who |' : '| Item | Kind | Stats | Traits | Price | How to get | Who |');
+  w(slot === 'weapon' ? '| :--- | :--- | :---: | :--- | :--- | ---: | :--- | :--- |' : '| :--- | :--- | :--- | :--- | ---: | :--- | :--- |');
   for (const i of list) {
     const stats = fmtStats(i.stats as Record<string, number | undefined>);
-    if (slot === 'weapon') w(`| **${i.name}** \`${i.id}\` | ${i.weaponType} | ${i.range ?? 1} | ${stats} | ${fmtTraits(i)} | ${i.price} | ${source(i.id)} |`);
-    else w(`| **${i.name}** \`${i.id}\` | ${stats} | ${fmtTraits(i)} | ${i.price} | ${source(i.id)} |`);
+    const who = whoCanUse(i)?.join(', ') || 'Anyone';
+    if (slot === 'weapon') w(`| **${i.name}** \`${i.id}\` | ${i.weaponType} | ${i.range ?? 1} | ${stats} | ${fmtTraits(i)} | ${i.price} | ${source(i.id)} | ${who} |`);
+    else w(`| **${i.name}** \`${i.id}\` | ${i.beast ? 'beast' : gearKind(i)} | ${stats} | ${fmtTraits(i)} | ${i.price} | ${source(i.id)} | ${who} |`);
   }
   w();
 }

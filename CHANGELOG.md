@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.30.0] - 2026-11-24
+
+### Added — equipment rules
+- **Each job has its own gear.** Weapons go by type (swords, spears, bows, staves and rods, daggers, knuckles, whips); shields, heavy armor and helms, and robes belong to some jobs. Light clothes, caps, hats, circlets and every accessory still suit anyone. For example:
+  - **Knight**: swords and spears, shields, heavy armor and helms.
+  - **Black Mage**: staves and rods, robes.
+  - **Monk**: knuckles.
+  - **Beast Tamer**: whips, daggers and bows.
+  - The full table is in the [content reference](docs/CONTENT_REFERENCE.md#equipment-rules).
+- **Team → Jobs** shows each job's gear under its name (⚔ Swords, Spears · Shields · Heavy armor & helms).
+- **Team → Equipment** lists what this unit can wear first, then what its job can't use, greyed out, with who can (🔒 Platinum Plate Mail · For: Squire, Knight, Dragoon, Geomancer, Paladin). A job that carries no shield says so in the shield slot.
+- **The market** names who can use each weapon, shield and piece of heavy armor or robe.
+
+### Changed
+- **Changing job takes off what the new job can't use**, back to the armory, and **puts on the best piece the new job can use** that you own (the job's own kind of armor first). A banner says what came off and what went on.
+- **Old saves:** gear a unit's job can't use comes off when the save loads (it stays in the armory), with a note in the battle log.
+- Every job's starting gear, enemies' included, already follows the rules, so story and Trials battles play as before.
+
+### Developer
+- `src/data/gear-rules.ts`: `JOB_GEAR`, `jobCanUse`, `whoCanUse`, `gearKind`, `jobGearText`. `Item.armor` ('heavy' | 'robe') marks heavy armor, helms and robes. `JobSystem.canEquip` now applies the job rules; `changeJob` returns what came off; `removeForbiddenGear`, `fillSlots`.
+- The content reference gains an **Equipment rules** table and a **Who** column for every item.
+- 7 new tests (262 total) in `tests/equipment-rules.test.ts`. [ADR 0038](docs/adr/0038-equipment-rules.md).
+
 ## [0.29.0] - 2026-11-24
 
 ### Added — beast gear

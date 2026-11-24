@@ -6,6 +6,7 @@ import { ITEMS } from '../data/items';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
 import { itemStatText } from '../core/Economy';
+import { JOB_GEAR, gearKindName, jobGearText, whoCanUse } from '../data/gear-rules';
 import { encoreTurns, performedBy } from '../core/Performance';
 import { SIGNATURES } from '../data/signatures';
 import { portraitCanvas, portraitDataUrl, portraitForSpeaker } from '../graphics/CharacterArt';
@@ -901,6 +902,7 @@ export class UIManager {
         <div style="font-family: var(--font-pixel); font-size: calc(10px * var(--ts)); color: var(--gold);">${locked ? '🔒 ' : ''}${job.name}
           <span class="job-lv ${master ? 'master' : ''}">${master ? '★ MASTER' : `Lv ${prog.level}`}</span></div>
         <div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${job.role} | Move: ${job.baseMove} Jump: ${job.baseJump}</div>
+        ${beast ? '' : `<div class="job-gear" title="What this job can use (light gear and accessories: anyone)">⚔ ${jobGearText(jobId)}</div>`}
         ${locked ? `<div class="job-req">Needs ${need}</div>` : ''}
         ${mastery ? `<div class="job-mastery" title="Mastery bonuses stay with the unit in every job"><span class="${tier >= 1 ? 'got' : ''}">${tier >= 1 ? '✓ ' : ''}Lv ${VETERAN_JOB_LEVEL}: ${masteryLabel(mastery.stat, mastery.veteran)}</span> · <span class="${tier >= 2 ? 'got' : ''}">${tier >= 2 ? '✓ ' : ''}Master: ${masteryLabel(mastery.stat, mastery.master)}${SIGNATURES[job.id] ? ` + ★ ${SIGNATURES[job.id].name}` : ''}</span></div>` : ''}
         ${!locked && !master ? `<div class="job-bar" title="${prog.into} / ${prog.need} JP to Lv ${prog.level + 1}"><span style="width:${Math.round((prog.into / prog.need) * 100)}%"></span></div>` : ''}
@@ -911,8 +913,12 @@ export class UIManager {
           return;
         }
         SoundFX.playMenuBlip();
-        JobSystem.changeJob(unit, jobId);
+        const off = JobSystem.changeJob(unit, jobId);
+        // Gear the new job can't use goes back to the armory, and the best owned piece it can use
+        // takes its place (0.30.0)
+        const on = JobSystem.fillSlots(unit, [...new Set(off.map((it) => it.slot))], this.armory.map((id) => ITEMS[id]).filter(Boolean));
         this.populateJobCustomizer(units, selectedUnitIndex);
+        if (off.length) this.showBanner(`TOOK OFF ${off.map((it) => it.name.toUpperCase()).join(', ')}${on.length ? ` · PUT ON ${on.map((it) => it.name.toUpperCase()).join(', ')}` : ''}`);
       });
       this.jobListEl.appendChild(jobItem);
     }
@@ -1020,9 +1026,10 @@ export class UIManager {
 
     // A beast fills only its barding and collar slots (0.29.0)
     const noSlot = beast ? '— (beasts don\'t)' : 'None';
+    const rules = JOB_GEAR[unit.jobId];
     if (beast && !BEAST_SLOTS.includes(this.selectedGearSlot)) this.selectedGearSlot = 'body';
     gearWeaponVal.textContent = unit.equipment.weapon ? unit.equipment.weapon.name : noSlot;
-    gearShieldVal.textContent = unit.equipment.shield ? unit.equipment.shield.name : noSlot;
+    gearShieldVal.textContent = unit.equipment.shield ? unit.equipment.shield.name : !beast && rules && !rules.shield ? `— (no shields for a ${JOBS[unit.jobId].name})` : noSlot;
     gearHeadVal.textContent = unit.equipment.head ? unit.equipment.head.name : noSlot;
     gearBodyVal.textContent = unit.equipment.body ? unit.equipment.body.name : 'None';
     gearAccessoryVal.textContent = unit.equipment.accessory ? unit.equipment.accessory.name : 'None';
@@ -1053,7 +1060,10 @@ export class UIManager {
       this.inventoryListEl.appendChild(note);
     }
 
-    const availableItems = getItemsForSlot(this.selectedGearSlot, this.armory.length > 0 ? this.armory : undefined).filter((it) => JobSystem.canEquip(unit, it));
+    const owned = getItemsForSlot(this.selectedGearSlot, this.armory.length > 0 ? this.armory : undefined);
+    const availableItems = owned.filter((it) => JobSystem.canEquip(unit, it));
+    // People see what their job can't use, greyed, with who can (0.30.0); beasts don't need the list
+    const lockedItems = beast ? [] : owned.filter((it) => !it.beast && !JobSystem.canEquip(unit, it));
 
     // Unequip option
     const unequipBtn = document.createElement('div');
@@ -1093,6 +1103,27 @@ export class UIManager {
 
       this.inventoryListEl.appendChild(el);
     }
+
+    if (lockedItems.length) {
+      const head = document.createElement('div');
+      head.className = 'shop-slot-head';
+      head.textContent = `NOT FOR A ${JOBS[unit.jobId].name.toUpperCase()}`;
+      this.inventoryListEl.appendChild(head);
+    }
+    for (const item of lockedItems) {
+      const el = document.createElement('div');
+      el.className = 'learn-item locked-gear';
+      el.setAttribute('aria-disabled', 'true');
+      el.innerHTML = `
+        <div style="display:flex; justify-content:space-between; font-family: var(--font-pixel); font-size: calc(9px * var(--ts));">
+          <span>🔒 ${item.name}</span>
+          <span>${itemStatText(item)}</span>
+        </div>
+        <div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">For: ${(whoCanUse(item) || []).join(', ')}</div>
+      `;
+      el.onclick = () => this.showBanner(`${JOBS[unit.jobId].name.toUpperCase()}S CAN'T USE ${gearKindName(item).toUpperCase()}`);
+      this.inventoryListEl.appendChild(el);
+    }
   }
 
   /** The Shop tab: buy supplies and gear, or sell them back for half. Trading needs the party at the market. */
@@ -1105,7 +1136,7 @@ export class UIManager {
     this.gilBadgeEl.textContent = `${gil.toLocaleString('en-US')} G`;
     this.shopNoteEl.textContent = open
       ? this.shopMode === 'buy'
-        ? 'Gear outfits the whole squad once bought. Supplies are used up in battle with the ITEM command.' + (shop.nextCap() ? ' More stock arrives after the next chapter.' : '')
+        ? 'Gear, once bought, outfits everyone whose job can use it. Supplies are used up in battle with the ITEM command.' + (shop.nextCap() ? ' More stock arrives after the next chapter.' : '')
         : 'The market pays half price. Gear someone is wearing has to come off first.'
       : 'The market is on the world map. Travel there between battles to buy and sell. You can browse the shelves from here.';
     this.shopListEl.innerHTML = '';
@@ -1182,8 +1213,9 @@ export class UIManager {
         if (shelf !== lastSlot) head(item.beast ? 'BEAST GEAR (TAMED BEASTS ONLY)' : slotNames[item.slot]);
         lastSlot = shelf;
         const owned = this.armory.includes(item.id);
+        const who = whoCanUse(item);
         row({
-          key: `g:${item.id}`, name: item.name, stats: statText(item), desc: item.description,
+          key: `g:${item.id}`, name: item.name, stats: statText(item), desc: who && !item.beast ? `${item.description} <span class="gear-who">For: ${who.join(', ')}</span>` : item.description,
           label: owned ? 'OWNED' : `${item.price} G`, enabled: open && !owned && gil >= item.price, dim: owned,
           why: owned ? '' : !open ? closed : 'Not enough gil',
           act: () => shop.buy(item.id), done: `Bought ${item.name}`
