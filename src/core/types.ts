@@ -11,7 +11,9 @@ export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark
 export type StatusEffectType =
   | 'haste' | 'slow' | 'protect' | 'immobilize' | 'poison' | 'focus'
   // Added in 0.13.0
-  | 'shell' | 'regen' | 'blind' | 'silence' | 'sleep' | 'breach';
+  | 'shell' | 'regen' | 'blind' | 'silence' | 'sleep' | 'breach'
+  // Added in 0.22.0: a Bard or Dancer holding a performance; it plays again each turn
+  | 'encore';
 
 export interface ActiveStatus {
   type: StatusEffectType;
@@ -97,6 +99,12 @@ export interface Ability {
   fixedDamage?: number;
   /** Items: raises a fallen unit with this share of its max HP. Only fallen units can be targeted. */
   revive?: number;
+  /**
+   * Bard songs and Dancer dances (0.22.0): an area centred on the performer (range 0, radius
+   * `aoe`). Songs reach allies, dances foes. It plays again at the start of each of the performer's
+   * turns while they hold their ground (see core/Performance.ts).
+   */
+  performance?: boolean;
 }
 
 export interface Job {
@@ -104,7 +112,7 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist';
+    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer';
   spriteClass: string;
   baseMove: number;
   baseJump: number;
@@ -185,6 +193,8 @@ export interface Unit {
   isEnraged?: boolean;
   /** Dragonheart can save a unit only once per battle. */
   usedDragonheart?: boolean;
+  /** The performance (ability id) the unit is holding, while it has the Encore status (0.22.0). */
+  performing?: string;
   /** Iron Will can fire only once per battle. */
   usedIronWill?: boolean;
 }

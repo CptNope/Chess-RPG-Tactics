@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.22.0] - 2026-11-23
+
+### Added — two performers (18 jobs, 105 abilities)
+- **Bard** (needs Archer Lv 2 and White Mage Lv 2), with a feathered hat and a lute:
+  - **Battle Hymn**: Focus for you and allies within 2 tiles.
+  - **Mending Air**: heals you and allies within 2 tiles.
+  - **Quickening Ballad**: Haste for you and allies within 2 tiles.
+  - **Discord**: dark damage and Silence, up to 4 tiles away.
+  - **Healing Refrain** (reaction): a blow may bring Regen.
+  - **Resonance** (support): songs and dances reach a tile further.
+- **Dancer** (needs Thief Lv 2 and Monk Lv 2), in silks with a veil and paired blades:
+  - **Blade Waltz**: a free cut on every foe within 2 tiles.
+  - **Veil of Silks**: Blinds foes within 2 tiles.
+  - **Leaden Reel**: Slows foes within 2 tiles.
+  - **Feint**: damage and Breach.
+  - **Captivate** (reaction): a melee attacker may fall asleep.
+  - **Encore** (support): songs and dances last two more turns.
+- Mastery: Bard +8 / +20 MP, Dancer +1 / +2 Speed. Both turn up in the Trials as Minstrels and Bladedancers.
+
+### Added — performances
+- **A song or a dance plays again by itself** at the start of the performer's next three turns, free, before they act. The unit card shows ♪ and the encores left.
+- It ends if the performer moves, does anything else, is put to sleep or silenced, or falls. Undoing the move brings it back.
+- Choosing one highlights the area around the performer; any tile in it confirms.
+- Everyone in a performance takes its full effect (no splash reduction).
+- Enemy performers keep playing rather than wander off, unless something clearly better turns up.
+
+### Fixed
+- Changing to a job (or gear) with less HP or MP could leave a unit above its new maximum.
+
+### Developer
+- `src/core/Performance.ts` (`startPerformance`, `endPerformance`, `encoreDue`, `performedBy`, `encoreTurns`); `Ability.performance`, `Unit.performing` and the `encore` status. The battle screen plays an encore through `performAction(..., { encore: true })`, which spends no MP and earns no JP.
+- The planner aims performances at the performer's tile, values them ×1.4, and weighs what moving or switching would throw away.
+- Sprites and portraits for both jobs, and a lute.
+- 16 new tests (198 total) in `tests/performers.test.ts`. [ADR 0030](docs/adr/0030-bard-dancer-performances.md).
+
 ## [0.21.0] - 2026-11-23
 
 ### Added — on the road

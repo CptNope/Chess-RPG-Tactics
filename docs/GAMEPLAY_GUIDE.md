@@ -170,7 +170,7 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
   ![Team → Jobs: each job lists its two mastery bonuses, ticked once earned](images/mastery.webp)
 
-* **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Two advanced jobs, **Paladin** and **Spellblade**, each need two other jobs.
+* **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Four advanced jobs, **Paladin**, **Spellblade**, **Bard** and **Dancer**, each need two other jobs.
 * **Spend your gil at Larkmoor Market** on the world map. Enemies pay bounties and every win pays a bonus. Gear you buy, the whole squad can equip. New stock arrives each time you win a chapter. In battle, **Team → Shop** shows the shelves but the market is closed.
 
   ![Larkmoor Market: supplies and gear on the BUY counter](images/market.webp)
@@ -191,6 +191,7 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
   You start with 3 Potions and a Phoenix Feather. Hi-Potions, Ethers and Blast Flasks are stocked after your first victory, Frost Flasks after Chapter II and Elixirs after Chapter III.
 * **Chemists make supplies go further.** A Chemist (open once a unit reaches Squire Lv 2) heals for free with Salve, cures with Purge, burns armour with Acid Flask and blinds a group with Smoke Bomb. Its support ability **Pharmacology**, which any unit can equip once learned, makes every item it uses 50% stronger and reach a tile further.
+* **Bards and Dancers perform.** A Bard (Archer Lv 2 and White Mage Lv 2) sings: Battle Hymn, Mending Air and Quickening Ballad strengthen, heal or haste every ally within 2 tiles. A Dancer (Thief Lv 2 and Monk Lv 2) dances: Blade Waltz cuts, Veil of Silks blinds and Leaden Reel slows every foe within 2. A song or dance **plays again by itself at the start of the performer's next three turns** (♪ on the unit card) as long as they hold their ground: moving, or doing anything else, ends it. Park a Bard behind your front line, or send a Dancer into the middle of the enemy and keep her there.
 * **A fallen ally isn't lost.** A ✝ marker with their name stays where they fell. Stand within 2 tiles, choose **ITEM → Phoenix Feather** and pick that tile. They rise with no statuses and wait for their next turn. A **White Mage** can learn **Raise**, which does the same from 3 tiles for 18 MP and brings them back with a third of their HP.
 * **Enemy White Mages raise their dead too**, but only one per battle. Take them down first. Bosses can never be raised.
 * Mix jobs: equip another job's skillset as your **secondary action**, and any learned reaction, support or movement ability in the other slots (click the slot to cycle).

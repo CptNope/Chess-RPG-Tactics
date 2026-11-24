@@ -8,7 +8,7 @@ Every number here is read straight from the game data, so it always matches what
 
 ## Jobs
 
-16 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+18 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -28,14 +28,16 @@ Every number here is read straight from the game data, so it always matches what
 | **Oracle** `oracle` | Hexer | 3 | 2 | 0.90× | 1.20× | 0.70× | 1.20× | 1.00× | 6 |
 | **Paladin** `paladin` | Templar | 3 | 2 | 1.25× | 0.90× | 1.15× | 0.95× | 0.95× | 6 |
 | **Spellblade** `spellblade` | Battlemage | 4 | 3 | 1.05× | 1.10× | 1.10× | 1.10× | 1.00× | 5 |
+| **Bard** `bard` | Troubadour | 3 | 2 | 0.85× | 1.10× | 0.80× | 1.05× | 1.05× | 6 |
+| **Dancer** `dancer` | Performer | 4 | 3 | 0.90× | 0.90× | 1.00× | 0.85× | 1.15× | 6 |
 
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
@@ -66,6 +68,8 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 | **Oracle** | Time Weaver Lv 2 |
 | **Paladin** | Knight Lv 3 + White Mage Lv 2 |
 | **Spellblade** | Knight Lv 2 + Black Mage Lv 2 |
+| **Bard** | Archer Lv 2 + White Mage Lv 2 |
+| **Dancer** | Thief Lv 2 + Monk Lv 2 |
 
 Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
 
@@ -91,16 +95,18 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 | **Oracle** | +8 MP | +20 MP |
 | **Paladin** | +12 HP | +30 HP |
 | **Spellblade** | +1 MAG | +2 MAG |
+| **Bard** | +8 MP | +20 MP |
+| **Dancer** | +1 Speed | +2 Speed |
 
 ## Abilities
 
-93 learnable abilities: 56 actions, 16 reactions, 12 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+105 learnable abilities: 64 actions, 18 reactions, 14 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 56
-  "Reaction" : 16
-  "Support" : 12
+  "Action" : 64
+  "Reaction" : 18
+  "Support" : 14
   "Movement" : 9
 ```
 
@@ -309,6 +315,32 @@ pie showData title Abilities by slot type
 | **Runic** `sb_runic` | Reaction | 200 | — | — | — | — | — | — | — | When struck by a spell, the blade drinks it in: recover 20% of max MP. |
 | **Arcane Edge** `sb_arcane_edge` | Support | 260 | — | — | — | — | — | — | — | Your Attack carries your magic: bonus damage from MAG. |
 
+### Bard
+
+*A travelling singer whose songs carry over the din of battle. Holds a spot and keeps the squad hasted, healed and fierce for as long as the song lasts.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Battle Hymn** `bd_battle_hymn` | Action | 80 | 6 | 0 | 2 | 2 | — | holy | inflicts **focus** | Song: you and allies within 2 tiles gain Focus (+25% physical damage). Plays again at the start of your next 3 turns while you hold your ground. |
+| **Mending Air** `bd_mending_air` | Action | 140 | 10 | 0 | 2 | 2 | Heal 0.45 | holy | — | Song: heals you and allies within 2 tiles (from MAG), and again at the start of each of your next 3 turns while you hold your ground. |
+| **Discord** `bd_discord` | Action | 180 | 10 | 4 | 3 | — | 0.8 | dark | inflicts **silence** | A jarring chord up to 4 tiles away: dark damage (MAG) and Silence. |
+| **Quickening Ballad** `bd_quickening` | Action | 320 | 18 | 0 | 2 | 2 | — | time | inflicts **haste** | Song: you and allies within 2 tiles gain Haste, renewed at the start of each of your next 3 turns while you hold your ground. |
+| **Healing Refrain** `bd_refrain` | Reaction | 200 | — | — | — | — | — | — | — | When a blow lands on you, hum through the pain: 50% chance to gain Regen. |
+| **Resonance** `bd_resonance` | Support | 260 | — | — | — | — | — | — | — | Your songs and dances reach 1 tile further. |
+
+### Dancer
+
+*A blade-dancer in flowing silks. Dances in the thick of the enemy, cutting, blinding and slowing everyone around her each turn she keeps dancing.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Blade Waltz** `dn_blade_waltz` | Action | 90 | 0 | 0 | 2 | 2 | 0.45 | physical | scales with ATK | Dance: every foe within 2 tiles takes a light cut (ATK), and again at the start of each of your next 3 turns while you hold your ground. Free. |
+| **Feint** `dn_feint` | Action | 120 | 0 | 1 | 1.5 | — | 1 | physical | inflicts **breach** | A false step, then a real cut: damage to an adjacent foe and Breach (+25% physical damage taken). |
+| **Veil of Silks** `dn_veil_of_silks` | Action | 150 | 8 | 0 | 2 | 2 | — | physical | inflicts **blind** | Dance: foes within 2 tiles are Blinded by whirling silks, again at the start of each of your next 3 turns while you hold your ground. |
+| **Leaden Reel** `dn_leaden_reel` | Action | 280 | 14 | 0 | 2 | 2 | — | time | inflicts **slow** | Dance: foes within 2 tiles are Slowed, again at the start of each of your next 3 turns while you hold your ground. |
+| **Captivate** `dn_captivate` | Reaction | 220 | — | — | — | — | — | — | — | When struck in melee, turn the blow into a dance: 35% chance the attacker falls asleep. |
+| **Encore** `dn_encore` | Support | 240 | — | — | — | — | — | — | — | Your songs and dances play on for 2 more turns. |
+
 ## Status effects
 
 | Status | Kind | Lasts (turns) | Effect |
@@ -321,6 +353,7 @@ pie showData title Abilities by slot type
 | **focus** | Buff | 4 | Physical power ×1.25 |
 | **shell** | Buff | 3 | Spell damage taken ×0.7 |
 | **regen** | Buff | 4 | Recover 8% max HP at the start of each turn (Regen from gear lasts the whole battle) |
+| **encore** | Buff | 4 |  |
 | **blind** | Ailment | 3 | Physical accuracy −40 |
 | **silence** | Ailment | 3 | Abilities that cost MP are sealed |
 | **sleep** | Ailment | 2 | Turns pass without acting; any damage wakes the unit, and sleepers cannot dodge (100% hit) |
@@ -696,20 +729,20 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
-| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Knight, Archer, Time Weaver |
-| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Chemist, Monk |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Oracle, Archer, Thief |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Chemist, Spellblade, Geomancer |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Chemist, Thief, Ninja, Spellblade |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Spellblade, Summoner, Monk, Time Weaver |
-| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Oracle, Spellblade, Time Weaver |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Chemist, Monk, Squire, Dragoon |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Summoner, Thief, Dragoon, Paladin, Geomancer, White Mage |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Thief, Archer, Squire |
-| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Spellblade, Dragoon, White Mage |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Squire, Summoner, Dragoon, Knight, White Mage, Time Weaver |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Oracle, Chemist, Dragoon, White Mage, Squire, Ninja |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Chemist, Ninja, Squire, Dragoon, Paladin, Spellblade |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Chemist, Geomancer, Summoner, Black Mage |
+| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Archer, Time Weaver |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Dancer, Thief, Summoner |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Spellblade, Archer, Oracle |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Dancer, Bard, Squire |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Dancer, Summoner, Ninja, Chemist |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Bard, Oracle, Paladin, Thief, Time Weaver |
+| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Paladin, Bard, Geomancer, Spellblade |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dancer, Thief, Monk, Ninja |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Paladin, Summoner, Ninja, Spellblade, Squire, Dragoon |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Summoner, Archer, Monk, Ninja |
+| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Bard, Ninja, White Mage |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Thief, Paladin, Dragoon, Knight, Geomancer |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Spellblade, Dancer, Dragoon, White Mage, Monk, Ninja |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Dancer, Time Weaver, Monk, Dragoon, Spellblade, Bard |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dancer, Ninja, Squire, Oracle, Black Mage |
 
 *Floors continue forever; the table shows the first 15.*

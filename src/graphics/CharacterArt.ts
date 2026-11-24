@@ -124,7 +124,7 @@ function outline(canvas: HTMLCanvasElement, color = OUTLINE): void {
 // ---------------------------------------------------------------------------
 
 type Body = 'light' | 'armor' | 'robe';
-type Weapon = 'sword' | 'broadsword' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia' | 'fists' | 'dagger' | 'horn' | 'orb';
+type Weapon = 'sword' | 'broadsword' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia' | 'fists' | 'dagger' | 'horn' | 'orb' | 'lute';
 
 interface Look {
   body: Body;
@@ -177,6 +177,10 @@ function lookFor(job: string, enemy: boolean): Look {
       return { ...base, body: 'robe', weapon: 'horn', hair: '#2f7f73', main: e ? '#6b1d4a' : '#1f6f6a', sub: e ? '#3e0e2b' : '#f4c430', trim: '#7dd3fc' };
     case 'oracle':
       return { ...base, body: 'robe', weapon: 'orb', hair: '#d8d4e8', main: e ? '#3a0f2a' : '#3b2f6b', sub: e ? '#b91c1c' : '#c4b5fd', trim: '#fde68a' };
+    case 'bard':
+      return { ...base, weapon: 'lute', hair: '#b45309', main: e ? '#7a1f3a' : '#6d28d9', sub: e ? '#3d0f1f' : '#facc15', trim: '#fde68a', pants: e ? '#3a1424' : '#3b2f5c', cape: e ? '#5e1616' : '#4c1d95' };
+    case 'dancer':
+      return { ...base, weapon: 'daggers', hair: '#5b2a14', main: e ? '#9d174d' : '#e11d48', sub: e ? '#4a0d24' : '#fbbf24', trim: '#fde68a', pants: e ? '#6b1035' : '#fb7185', boots: '#7c2d12' };
     default: // squire
       return { ...base, weapon: 'sword', main: e ? '#b83232' : '#2f6fd6', sub: e ? '#7a1f1f' : '#1d4aa8', trim: '#d9a441' };
   }
@@ -293,6 +297,29 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       p.r(x - 1, hy + 3, 14, 2, L.sub); // headband
       p.r(back ? x + 4 : x + 12, hy + 3, 3, 1, L.sub);
       p.r(back ? x + 5 : x + 13, hy + 4, 3, 1, L.sub); // tails
+      break;
+    }
+    case 'bard': {
+      // Wide-brimmed hat with a band and a long plume
+      if (!back) { p.r(x, hy + 1, 12, 4, L.hair); p.r(x - 1, hy + 4, 3, 6, L.hair); p.r(x + 10, hy + 4, 3, 6, L.hair); }
+      else p.r(x - 1, hy + 2, 14, 10, L.hair);
+      p.b(x + 1, hy - 4, 10, 6, L.main);
+      p.r(x - 4, hy + 1, 20, 2, shade(L.main, -0.2));
+      p.r(x + 1, hy, 10, 1, L.sub);
+      p.line(x + 9, hy - 2, x + 15, hy - 9, L.trim);
+      p.line(x + 10, hy - 2, x + 16, hy - 8, '#fff7c2');
+      break;
+    }
+    case 'dancer': {
+      // Topknot, a jewelled circlet and a silk veil over the mouth
+      if (!back) { p.r(x, hy + 1, 12, 3, L.hair); p.r(x - 1, hy + 3, 2, 6, L.hair); p.r(x + 11, hy + 3, 2, 6, L.hair); }
+      else p.r(x - 1, hy, 14, 9, L.hair);
+      p.b(x - 1, hy - 1, 14, 4, L.hair);
+      p.b(x + 4, hy - 6, 4, 6, L.hair);
+      p.r(x + 7, hy - 4, 4, 1, L.sub);
+      p.r(x - 1, hy + 2, 14, 1, L.trim);
+      if (!back) { p.px(x + 6, hy + 2, '#38bdf8'); p.r(x + 1, hy + 9, 10, 3, shade(L.main, 0.3)); }
+      else p.r(x + 5, hy + 4, 3, 10, L.hair);
       break;
     }
     case 'archer': {
@@ -563,6 +590,17 @@ function weapon(p: Painter, L: Look, hx: number, hy: number, pose: Pose, view: '
       }
       break;
     }
+    case 'lute': {
+      // A round-bodied lute; notes rise when it's played
+      const tilt = strike ? 3 : 0;
+      p.b(hx - 3, hy - 1, 7, 7, '#a16207');
+      p.r(hx - 2, hy, 5, 1, shade('#a16207', 0.3));
+      p.px(hx, hy + 2, '#3b2414');
+      p.line(hx + 1, hy - 1, hx + 4 + tilt, hy - 10, '#6b4423', 2);
+      p.r(hx + 3 + tilt, hy - 12, 3, 2, '#3b2414');
+      if (strike) { p.px(hx + 6, hy - 6, '#fff7c2'); p.px(hx + 8, hy - 9, '#fde68a'); p.px(hx + 5, hy - 13, '#ffffff'); }
+      break;
+    }
     case 'fists': {
       // Knuckle wraps over the hand
       p.r(hx - 1, hy - 1, 4, 3, L.trim);
@@ -683,6 +721,21 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.r(hx + 9, hy + 6, 2, 2, '#1b1f33');
       p.r(hx, hy + 3, 13, 2, L.sub);
       p.r(hx - 4, hy + 3, 4, 1, L.sub); p.r(hx - 5, hy + 4, 4, 1, L.sub);
+      break;
+    case 'bard':
+      p.r(hx + 1, hy + 1, 6, 9, L.hair);
+      p.b(hx + 1, hy - 4, 9, 6, L.main);
+      p.r(hx - 3, hy + 1, 18, 2, shade(L.main, -0.2));
+      p.r(hx + 1, hy, 9, 1, L.sub);
+      p.line(hx + 2, hy - 2, hx - 4, hy - 9, L.trim);
+      break;
+    case 'dancer':
+      p.b(hx, hy - 1, 12, 4, L.hair);
+      p.r(hx + 1, hy + 1, 4, 6, L.hair);
+      p.b(hx + 3, hy - 6, 4, 6, L.hair);
+      p.r(hx - 2, hy - 3, 3, 11, L.hair);
+      p.r(hx, hy + 2, 13, 1, L.trim);
+      p.r(hx + 8, hy + 8, 5, 3, shade(L.main, 0.3));
       break;
     case 'archer':
       p.r(hx + 1, hy + 1, 6, 9, L.hair);
@@ -838,7 +891,7 @@ function faceFor(id: string): Face {
   return {
     job, enemy,
     hair: enemy ? '#3a2a24' : L.hair,
-    hairStyle: enemy ? 'short' : 'short',
+    hairStyle: !enemy && job === 'dancer' ? 'long' : 'short',
     skin: enemy ? '#d8a47e' : SKIN,
     eyes: enemy ? '#7a1f1f' : '#2f4f8f',
     brows: enemy ? '#1a1414' : undefined,
@@ -886,6 +939,8 @@ function drawPortrait(id: string): HTMLCanvasElement {
     if (F.job === 'ninja') p.line(12, 50, 52, 62, L.sub, 3);
     if (F.job === 'monk') { p.tri(22, 46, 32, 58, 42, 46, shade(L.main, -0.15)); p.r(8, 60, 48, 4, L.sub); }
     if (F.job === 'thief') p.line(14, 50, 46, 64, '#4a2e1c', 3);
+    if (F.job === 'bard') { p.line(10, 50, 50, 64, '#8b5a2b', 3); p.r(8, 48, 48, 2, L.sub); }
+    if (F.job === 'dancer') { p.tri(22, 46, 32, 56, 42, 46, shade(L.main, -0.2)); p.r(8, 60, 48, 4, L.sub); }
   }
   // Neck
   p.b(27, 41, 10, 8, shade(F.skin, -0.18));
@@ -999,6 +1054,21 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.b(hx - 2, ey + 4, 32, 14, L.main);
         p.r(hx - 2, hy + 7, 32, 3, L.sub);
         p.r(hx + 29, hy + 7, 8, 2, L.sub); p.r(hx + 31, hy + 9, 6, 2, L.sub);
+        break;
+      case 'bard':
+        p.b(hx + 3, hy - 12, 22, 14, L.main);
+        p.b(hx - 8, hy + 1, 44, 5, shade(L.main, -0.2));
+        p.r(hx + 3, hy - 1, 22, 3, L.sub);
+        p.line(hx + 20, hy - 4, hx + 36, hy - 22, L.trim, 3);
+        p.line(hx + 22, hy - 4, hx + 38, hy - 19, '#fff7c2', 2);
+        break;
+      case 'dancer':
+        p.b(hx + 9, hy - 10, 10, 12, F.hair);
+        p.r(hx + 18, hy - 7, 10, 3, L.sub);
+        p.r(hx - 2, hy + 4, 32, 3, L.trim);
+        p.b(hx + 12, hy + 3, 4, 5, '#38bdf8');
+        p.b(hx + 2, ey + 8, 24, 9, shade(L.main, 0.3));
+        p.r(hx + 2, ey + 8, 24, 1, shade(L.main, 0.5));
         break;
       case 'archer':
         p.b(hx - 3, hy - 2, 34, 8, L.main);

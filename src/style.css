@@ -908,6 +908,7 @@ body, html {
 .status-silence { background: #4c1d95; color: #e9d5ff; }
 .status-sleep { background: #1e3a8a; color: #bfdbfe; }
 .status-breach { background: #9a3412; color: #ffedd5; }
+.status-encore { background: #a21caf; color: #fae8ff; }
 
 /* Story / Tactical Cutscene Dialogue Box */
 #dialogue-box {

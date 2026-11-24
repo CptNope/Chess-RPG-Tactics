@@ -141,7 +141,7 @@ $$\text{Base Damage} = \text{MAG} \times |\text{Power}| \times 3$$
 | `cleanse` | Purify, Chakra | removes every ailment (Poison, Slow, Immobilize, Blind, Silence, Sleep, Breach) |
 | `steal` | Steal | no damage; −25 hit (−45 vs a boss), 0% when the target has no gear |
 
-**Regen** heals 8% max HP at the start of each turn, after Poison. **Silence** removes every ability that costs MP from the unit's ACT menu. **Conserve** (`su_conserve`) halves MP costs, rounding up; the halved cost is what the menu shows and what's spent.
+**Regen** heals 8% max HP at the start of each turn, after Poison. **Encore** (0.22) marks a performer whose song or dance plays again at the start of each of its turns ([Performances](JOB_SYSTEM.md#performances-022)); everyone in a performance takes its full effect, with no splash reduction, and Sleep or Silence on the performer ends it. **Silence** removes every ability that costs MP from the unit's ACT menu. **Conserve** (`su_conserve`) halves MP costs, rounding up; the halved cost is what the menu shows and what's spent.
 
 ---
 
@@ -171,6 +171,8 @@ Boss units have $+60\%$ HP and $+15\%$ ATK/MAG. The first time a boss drops to $
 | Hex Ward (`or_hex_ward`) | Oracle | 35%: Blind the attacker |
 | Divine Grace (`pa_divine_grace`) | Paladin | 30%: recover 15% max HP |
 | Runic (`sb_runic`) | Spellblade | Struck by a spell: recover 20% max MP |
+| Healing Refrain (`bd_refrain`) | Bard | 50%: gain Regen (not while it already has it) |
+| Captivate (`dn_captivate`) | Dancer | Adjacent attacker, 35%: the attacker falls asleep (gear that guards Sleep stops it) |
 
 Before 0.7.0, Counter Tackle, Arcane Retaliation and Critical Quick were checked against ability ids that did not exist, so they never fired. A unit test now fails if engine code references an unknown ability id.
 

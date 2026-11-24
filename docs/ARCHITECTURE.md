@@ -62,6 +62,7 @@ flowchart TB
 | **WorldMap** | `src/ui/WorldMap.ts` | Draws the map (a painted 320×180 canvas with real buttons over it), walks the party marker, shows what the current place offers. Talks to the game through a small `WorldHost` interface | World, CharacterArt |
 | **Skirmish** | `src/core/Skirmish.ts` | Side battles: the three places, when each opens, enemy level from the squad and past wins, the generated roster, the gil bonus | data, Trials (seeded RNG) |
 | **Tutorial** | `src/ui/Tutorial.ts` | First-time tips: which have been seen (per device), showing one at a time without taking focus | — |
+| **Performances** | `src/core/Performance.ts` | Bard songs and Dancer dances: Encore turns, Resonance's reach, starting, ending and the encore due at a turn's start (0.22) | jobs data |
 | **Travelling merchant** | `src/core/Merchant.ts` | Where Wenna is and what she sells, worked out from progress the save already keeps (won chapters, side-battle wins, shelf, armory), plus the wares sold on this visit (0.21) | — |
 | **Camp scenes** | `src/data/camp.ts` | A short scene after each story battle, which one is waiting, and the seen list for old saves (0.21) | — |
 | **Text size** | `src/ui/TextSize.ts` | Normal / Large / Larger, saved per device; sets `data-text-size` on `<html>`, which picks the `--ts` multiplier every UI font size uses (0.20) | — |
@@ -444,6 +445,7 @@ src/
 │   ├── World.ts            World map rules: places, roads, open battles
 │   ├── Skirmish.ts         Side battles: generated, replayable, scaled to the squad
 │   ├── Merchant.ts         The travelling merchant: where she is, what she sells
+│   ├── Performance.ts      Songs and dances that play again each turn
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
 ├── data/                   Content: jobs, items, consumables, maps, campaign, camp scenes
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
@@ -453,7 +455,7 @@ src/
 ├── ui/                     UIManager, Workshop, WorldMap, Tutorial, TextSize
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events (182 rule tests)
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events, performers (198 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts, sw-plugin.ts (offline worker), package-itch.mjs
 public/                     manifest.webmanifest, icons/ (installable app)
 docs/                       This documentation + ADRs

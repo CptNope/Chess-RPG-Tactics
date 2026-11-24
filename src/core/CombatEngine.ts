@@ -1,10 +1,11 @@
+import { endPerformance } from './Performance';
 import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainType, Item, EquipmentSlot } from './types';
 import { JobSystem } from './JobSystem';
 
 export interface ReactionTrigger {
   name: string;
   type: 'counter_attack' | 'auto_potion' | 'speed_save' | 'dragonheart' | 'critical_quick' | 'parry' | 'earthen_ward'
-    | 'iron_will' | 'quick_hands' | 'mana_spring' | 'hex_ward' | 'divine_grace' | 'runic';
+    | 'iron_will' | 'quick_hands' | 'mana_spring' | 'hex_ward' | 'divine_grace' | 'runic' | 'refrain' | 'captivate';
   target: Unit;
   damage?: number;
   heal?: number;
@@ -46,7 +47,7 @@ export interface AttackResult {
 }
 
 /** Statuses that help the unit carrying them (cast on allies, never on foes). */
-export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus', 'shell', 'regen'];
+export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus', 'shell', 'regen', 'encore'];
 
 /** Ailments: what cleansing removes and what gear can guard against. */
 export const HARMFUL_STATUSES: StatusEffectType[] = ['slow', 'immobilize', 'poison', 'blind', 'silence', 'sleep', 'breach'];
@@ -61,6 +62,7 @@ export const STATUS_DURATION: Record<StatusEffectType, number> = {
   focus: 4,
   shell: 3,
   regen: 4,
+  encore: 4,
   blind: 3,
   silence: 3,
   sleep: 2,
@@ -275,6 +277,8 @@ export class CombatEngine {
       const status: ActiveStatus = { type, duration };
       unit.statuses.push(status);
     }
+    // A performer put to sleep or silenced stops performing (0.22.0)
+    if (type === 'sleep' || type === 'silence') endPerformance(unit);
     JobSystem.recalculateDerivedStats(unit);
     return true;
   }
@@ -324,6 +328,7 @@ export class CombatEngine {
   private static raise(target: Unit, share: number): AttackResult {
     target.isDead = false;
     target.statuses = [];
+    target.performing = undefined;
     target.ct = 0;
     JobSystem.recalculateDerivedStats(target);
     target.currentHp = Math.max(1, Math.round(target.maxHp * share));
@@ -618,6 +623,30 @@ export class CombatEngine {
           status: 'blind',
           label: 'BLIND',
           description: `${target.name}'s Hex Ward blinds ${attacker.name}!`
+        };
+      }
+      case 'bd_refrain': {
+        if (rng() * 100 > 50 || has(target, 'regen')) return undefined;
+        this.applyStatus(target, 'regen');
+        return {
+          name: 'Healing Refrain',
+          type: 'refrain',
+          target,
+          status: 'regen',
+          label: 'REGEN',
+          description: `${target.name} hums through the pain: Regen!`
+        };
+      }
+      case 'dn_captivate': {
+        if (dist > 1 || rng() * 100 > 35 || attacker.isDead || has(attacker, 'sleep')) return undefined;
+        if (!this.applyStatus(attacker, 'sleep')) return undefined;
+        return {
+          name: 'Captivate',
+          type: 'captivate',
+          target: attacker,
+          status: 'sleep',
+          label: 'SLEEP',
+          description: `${target.name} turns the blow into a dance; ${attacker.name} stares, spellbound, and falls asleep!`
         };
       }
       case 'pa_divine_grace': {

@@ -39,6 +39,7 @@ timeline
         0.19.0 : Chemist job : Frost Flask, Elixir : Installable app, plays offline
         0.20.0 : Enemies path, face and focus healers : Chapter III rebalanced : Text size
         0.21.0 : Travelling merchant : Camp scenes : Side-battle trophies
+        0.22.0 : Bard and Dancer : Performances that play each turn : Encore and Resonance
 ```
 
 | Version | Theme | Highlights |
@@ -51,6 +52,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.22 | Encore | The Bard and the Dancer (18 jobs, 105 abilities); songs and dances that play again each turn the performer holds its ground; two new reactions; job changes can't leave HP above the maximum |
 | 0.21 | On the road | Wenna the Pedlar, a travelling merchant with early gear and goods of her own; six camp scenes between story battles; a trophy for the first win at each side battle; 6 new items (60) |
 | 0.20 | Smarter foes | Enemies walk the real path round cliffs, face their foes, respect Weapon Guard and drop healers first; Chapter III rebalanced (0% → about 30–60% in the sim); a text-size setting |
 | 0.19 | Kit and reach | The Chemist (16 jobs, 93 abilities) with Pharmacology for supplies, Frost Flask and Elixir (8 supplies), an installable app that plays offline |
@@ -68,18 +70,18 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.21.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.22.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.22): needs a person"]
+    subgraph NOW["Now (0.23): needs a person"]
         direction TB
         N1["Play the campaign by hand:<br/>Chapter III, Act II"]
         N2["Real-device QA:<br/>iOS Safari, Android, pads"]
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.22 – 0.24): depth"]
+    subgraph NEXT["Next (0.23 – 0.25): depth"]
         direction TB
         X1["AI: items and<br/>two-ply look-ahead"]
         X3["Recruiting at the market"]
@@ -91,7 +93,6 @@ flowchart LR
         direction TB
         L1["Act III"]
         L2["Monsters with their<br/>own abilities"]
-        L3["More jobs: Bard, Dancer"]
         L4["Workshop gallery"]
         L5["Remappable controls"]
         L6["Localization"]
@@ -100,16 +101,16 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.22): checks that need a person
+### Now (0.23): checks that need a person
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
 | **Play the campaign by hand** | Act II, difficulty and 0.20's Chapter III change were tuned by an AI-versus-AI sim with a starter-geared squad | S | One run on Normal, one on Easy; note where it drags (Chapter V is the lowest in the sim now) |
 | **Real-device QA** | Input has only been verified in Chromium with synthesized events | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
-| **Devlog and store update** | itch and the project page still describe 0.14 | S | One devlog covering 0.13 to 0.21 |
+| **Devlog and store update** | itch and the project page still describe 0.14 | S | One devlog covering 0.13 to 0.22 |
 
-### Next (0.22 – 0.24): depth
+### Next (0.23 – 0.25): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
@@ -125,7 +126,7 @@ flowchart LR
 | :--- | :---: |
 | Act III: Chapters VII to IX, new battlefields and map places | L |
 | Monsters: enemies that aren't humans in player jobs, with their own abilities | L |
-| More jobs (Bard, Dancer) | L |
+| More jobs (a beast tamer, a gunner) | L |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |
 | Remappable keyboard and controller bindings | M |
@@ -166,6 +167,7 @@ quadrantChart
 
 | Area | Issue | Impact | Plan |
 | :--- | :--- | :---: | :--- |
+| Balance | The balance sim doesn't play encores, so Bards and Dancers (Trials only, on the enemy side) count for less there than in play | Low | Fine for now |
 | Balance | Act II and the difficulty settings are tuned by simulation only (AI against AI, starter gear, no items) | Medium | Now (play it by hand) |
 | Balance | Chapter V is the lowest chapter in the simulation (under 15% at squad level 7–9 on Normal). The sim is pessimistic (no gear upgrades, no items), so a hand play-through decides whether it needs the Chapter III treatment | Medium | Now |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |

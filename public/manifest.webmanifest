@@ -1,7 +1,7 @@
 {
   "name": "Chess RPG Tactics",
   "short_name": "Tactics",
-  "description": "A free isometric tactics RPG: sixteen jobs, facing and height, a two-act campaign, endless Trials and a battle editor.",
+  "description": "A free isometric tactics RPG: eighteen jobs, facing and height, a two-act campaign, endless Trials and a battle editor.",
   "id": "./",
   "start_url": "./?app",
   "scope": "./",
