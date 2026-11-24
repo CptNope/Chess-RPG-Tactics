@@ -49,7 +49,8 @@ const STATUS: Record<string, Cue> = {
   blind: { id: 'status/stunned', wrap: true, holdFor: 1.4 },
   silence: { id: 'status/cursed', wrap: true, holdFor: 1.4 },
   sleep: { id: 'status/sleep', wrap: true, holdFor: 1.8 },
-  breach: { id: 'shadow/hex-sigil', speed: 2.2, startAt: 0.6 }
+  breach: { id: 'shadow/hex-sigil', speed: 2.2, startAt: 0.6 },
+  encore: { id: 'arcane/rune-circle', holdFor: 1.1, speed: 1.6 }
 };
 
 /** Abilities with a look of their own, beyond their element. */

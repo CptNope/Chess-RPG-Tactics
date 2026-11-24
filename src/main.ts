@@ -23,6 +23,7 @@ import { SoundFX } from './audio/SoundEffects';
 import { Music } from './audio/MusicSynthesizer';
 import { SaveManager, GameSaveData, SAVE_SLOTS, MAX_IMPORT_BYTES } from './core/SaveManager';
 import { resolveTerrainAbility } from './core/Geomancy';
+import { encoreDue, endPerformance, performedBy, startPerformance } from './core/Performance';
 import { planTurn, unitsInBlast, faceTowards, ENEMY_RAISE_CAP } from './core/EnemyAI';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
@@ -101,7 +102,8 @@ class TacticsGame {
   /** First-battle tips. */
   private tutor = new Tutorial();
   /** Where the active unit stood before this turn's move, while the move can still be taken back. */
-  private moveUndo: { unitId: string; x: number; z: number; facing: Unit['facing']; hp: number; mp: number } | null = null;
+  /** Where the active unit stood before moving, and what it had (a performance it was holding included), for UNDO. */
+  private moveUndo: { unitId: string; x: number; z: number; facing: Unit['facing']; hp: number; mp: number; performing?: string; encore?: number } | null = null;
   /** True while the Workshop is open over the world map. */
   private mapParked = false;
 
@@ -984,6 +986,29 @@ class TacticsGame {
       this.scene.updateUnits(this.units);
     }
 
+    // A song or dance still playing goes again before the unit acts (0.22.0)
+    const encore = encoreDue(activeUnit);
+    if (encore) {
+      this.currentMode = 'busy';
+      void this.performAction(activeUnit, encore, activeUnit.x, activeUnit.z, { encore: true }).then(() => {
+        if (this.battleOver || this.checkBattleStatus()) return;
+        if (activeUnit.isDead) {
+          // Felled by a counter in the middle of the dance
+          this.turnManager.endTurn(activeUnit);
+          later(() => this.advanceTurn(), 600);
+          return;
+        }
+        this.updateTimeline();
+        this.beginTurnControl(activeUnit, height);
+      });
+      return;
+    }
+    this.beginTurnControl(activeUnit, height);
+  }
+
+  /** Hands the turn to the player, or to the AI. */
+  private beginTurnControl(activeUnit: Unit, height: number): void {
+    this.currentMode = 'idle';
     this.ui.updateUnitCard(activeUnit, height);
     this.ui.populateActionSubMenu(activeUnit, this.grid.getTile(activeUnit.x, activeUnit.z)?.terrain);
     this.ui.updateTurnTimeline(this.turnManager.predictTurnTimeline(8), activeUnit);
@@ -1038,6 +1063,10 @@ class TacticsGame {
     active.facing = u.facing;
     active.currentHp = u.hp; // anything gained on the way (Lifefont) goes back too
     active.currentMp = u.mp;
+    if (u.performing && u.encore) {
+      active.performing = u.performing;
+      if (!active.statuses.some((st) => st.type === 'encore')) active.statuses.push({ type: 'encore', duration: u.encore });
+    }
     active.hasMoved = false;
     this.currentMode = 'idle';
     SoundFX.playMenuBlip();
@@ -1060,10 +1089,22 @@ class TacticsGame {
     let ability = resolveTerrainAbility(raw, this.grid.getTile(active.x, active.z)?.terrain);
     // Pharmacology: items reach a tile further in a Chemist-trained hand
     if (ability.item && JobSystem.itemPotency(active) > 1) ability = { ...ability, range: ability.range + 1 };
+    ability = performedBy(active, ability); // Resonance: a tile further
     this.selectedAbility = ability;
 
     if (ability.isSelfOnly) {
       void this.executePlayerAction(active, ability, active.x, active.z);
+      return;
+    }
+
+    if (ability.performance) {
+      // A song or dance fills the area around the performer: show it, and any tile in it confirms
+      const area = this.grid.mapData.tiles.filter((t) => t.walkable && Math.abs(t.x - active.x) + Math.abs(t.z - active.z) <= ability.aoe);
+      this.currentMode = 'targeting';
+      this.tip('targeting');
+      (document.activeElement as HTMLElement | null)?.blur();
+      this.scene.setHighlights(area, CombatEngine.isSupportive(ability) ? 0x22c55e : 0xdc2626);
+      this.scene.setCursor(active.x, active.z);
       return;
     }
 
@@ -1114,8 +1155,9 @@ class TacticsGame {
   }
 
   private onCanvasClick(): void {
-    const tile = this.scene.hoveredTile;
-    if (!tile) return;
+    const hovered = this.scene.hoveredTile;
+    if (!hovered) return;
+    let tile = hovered;
 
     if (this.workshop.isOpen) {
       this.workshop.applyAt(tile.x, tile.z);
@@ -1139,11 +1181,14 @@ class TacticsGame {
 
       SoundFX.playMoveStep();
       // Until the unit acts, the move can be taken back (UNDO): remember where it stood and what it had
-      this.moveUndo = active.hasActed ? null : { unitId: active.id, x: active.x, z: active.z, facing: active.facing, hp: active.currentHp, mp: active.currentMp };
+      const encore = active.statuses.find((st) => st.type === 'encore')?.duration;
+      this.moveUndo = active.hasActed ? null : { unitId: active.id, x: active.x, z: active.z, facing: active.facing, hp: active.currentHp, mp: active.currentMp, performing: active.performing, encore };
       this.scene.walkPath(active.id, this.grid.findPath(active, this.units, tile.x, tile.z));
       active.x = tile.x;
       active.z = tile.z;
       active.hasMoved = true;
+      // Walking off ends a song or dance (UNDO brings it back)
+      if (endPerformance(active)) this.ui.addLogEntry(`[PERFORMANCE] ${active.name} stops performing to move.`, 'system');
       this.applyRegenWalk(active, dest.cost);
       if (this.moveUndo) this.tip('moved');
       this.scene.updateUnits(this.units);
@@ -1158,7 +1203,14 @@ class TacticsGame {
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
       const ability = this.selectedAbility;
       const supportive = CombatEngine.isSupportive(ability);
-      if (!this.grid.canTarget(active.x, active.z, tile.x, tile.z, ability.range, ability.heightTolerance, supportive)) {
+      if (ability.performance) {
+        // Any tile of the area confirms: the performance is centred on the performer
+        if (Math.abs(tile.x - active.x) + Math.abs(tile.z - active.z) > ability.aoe) {
+          this.ui.showBanner('OUTSIDE THE AREA');
+          return;
+        }
+        tile = { ...tile, x: active.x, z: active.z };
+      } else if (!this.grid.canTarget(active.x, active.z, tile.x, tile.z, ability.range, ability.heightTolerance, supportive)) {
         this.ui.showBanner('OUT OF RANGE');
         return;
       }
@@ -1245,6 +1297,7 @@ class TacticsGame {
   /** Units an ability aimed at (tx, tz) will affect. Single-target abilities hit whoever is on the tile. */
   private victimsFor(caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
     if (ability.isSelfOnly) return [caster];
+    if (ability.performance) return unitsInBlast(caster, ability, caster.x, caster.z, this.units);
     if (ability.aoe > 0) return unitsInBlast(caster, ability, tx, tz, this.units);
     const living = this.units.find((v) => !v.isDead && v.x === tx && v.z === tz);
     if (ability.revive) {
@@ -1256,7 +1309,7 @@ class TacticsGame {
   }
 
   private forecastFor(attacker: Unit, target: Unit, ability: Ability, aim?: { x: number; z: number }): CombatForecast {
-    const isSplash = !!aim && ability.aoe > 0 && (target.x !== aim.x || target.z !== aim.z);
+    const isSplash = !!aim && ability.aoe > 0 && !ability.performance && (target.x !== aim.x || target.z !== aim.z);
     return CombatEngine.getForecast(
       attacker,
       target,
@@ -1272,23 +1325,35 @@ class TacticsGame {
    * Resolves an ability: spends MP once, then rolls it against every unit it touches,
    * plays effects, handles reactions, boss enrage, and awards EXP/JP to player units.
    */
-  private async performAction(caster: Unit, ability: Ability, tx: number, tz: number): Promise<void> {
+  private async performAction(caster: Unit, ability: Ability, tx: number, tz: number, opts: { encore?: boolean } = {}): Promise<void> {
     const victims = this.victimsFor(caster, ability, tx, tz);
-    caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
-    caster.hasActed = true;
-    this.moveUndo = null; // acting commits the move
-    if (ability.item) this.inventory[ability.item] = Math.max(0, (this.inventory[ability.item] || 0) - 1);
+    const encore = !!opts.encore;
+    if (!encore) {
+      caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
+      caster.hasActed = true;
+      this.moveUndo = null; // acting commits the move
+      if (ability.item) this.inventory[ability.item] = Math.max(0, (this.inventory[ability.item] || 0) - 1);
+      // Any other action ends a song or dance; using one starts (or restarts) it (0.22.0)
+      if (ability.performance) startPerformance(caster, ability);
+      else if (endPerformance(caster)) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} stops performing.`, 'system');
+    }
 
-    if (!ability.isSelfOnly) {
+    if (!ability.isSelfOnly && !ability.performance) {
       caster.facing = faceTowards(caster.x, caster.z, tx, tz);
       this.scene.triggerUnitLunge(caster.id, tx, tz);
     }
     this.scene.updateUnits(this.units);
 
     const verb = caster.team === 'player' ? 'executes' : 'uses';
-    const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || 'empty ground';
-    this.ui.addLogEntry(`[ACTION] ${caster.name} ${verb} ${ability.name} on ${targetText}.`, 'attack');
-    if (caster.team === 'enemy') this.ui.showBanner(`${caster.name}: ${ability.name}!`);
+    const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || (ability.performance ? 'nobody in reach' : 'empty ground');
+    if (encore) {
+      this.ui.addLogEntry(`[ENCORE] ${caster.name}'s ${ability.name} plays on (${targetText}).`, 'spell');
+      this.scene.spawnFloatingDamage(caster.x, this.grid.getHeight(caster.x, caster.z) + 0.5, caster.z, `♪ ${ability.name.toUpperCase()}`, 'heal');
+    } else {
+      this.ui.addLogEntry(`[ACTION] ${caster.name} ${verb} ${ability.name} on ${targetText}.`, 'attack');
+      if (ability.performance) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} will keep it up while holding this spot.`, 'system');
+    }
+    if (caster.team === 'enemy' && !encore) this.ui.showBanner(`${caster.name}: ${ability.name}!`);
 
     let anyKill = false;
     for (const target of victims) {
@@ -1309,8 +1374,9 @@ class TacticsGame {
       await wait(victims.length > 1 ? 220 : 120);
     }
 
-    // Player progression: JP for the current job, EXP for acting and for kills
-    if (caster.team === 'player' && !caster.isDead) {
+    // Player progression: JP for the current job, EXP for acting and for kills (not for an
+    // encore: it plays by itself)
+    if (caster.team === 'player' && !caster.isDead && !encore) {
       // Using a supply isn't practising a job: no JP and no EXP for the act, only for a kill it makes
       const jpGain = ability.item ? 0 : Math.round(24 * (caster.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
       if (jpGain > 0) this.announceJobGain(caster, JobSystem.gainJp(caster, jpGain));
@@ -1545,6 +1611,7 @@ class TacticsGame {
       enemy.x = plan.moveTo.x;
       enemy.z = plan.moveTo.z;
       enemy.hasMoved = true;
+      endPerformance(enemy);
       SoundFX.playMoveStep();
       this.scene.updateUnits(this.units);
       this.scene.focusOn(enemy.x, this.grid.getHeight(enemy.x, enemy.z), enemy.z);

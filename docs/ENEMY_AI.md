@@ -69,6 +69,8 @@ Then each plan gets small adjustments:
 | Ending next to 2+ foes | −6 |
 | MP spent | `−0.15 × MP cost` |
 | Self-only buff (Bulwark, Focus) (0.20) | `−0.6 × walking distance to the nearest foe`, so it is cast on the way in |
+| A performance (song or dance) (0.22) | ×1.4: it plays again on the next turns. Aimed at the performer's own tile, never range-checked |
+| Still performing (0.22): moving, or any other action | −12 each, so a song isn't dropped for a small gain; with nothing worth doing, the performer stays put instead of advancing |
 
 Every plan ends **facing the closest foe** (0.20), the one most likely to strike next, so the unit doesn't leave its back open after moving. For a melee attack that foe is the target anyway.
 
@@ -97,6 +99,7 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | Heads for the gap instead of hugging a cliff | `tests/ai.test.ts`: `approaches along the path` |
 | Values a frontal blow on a parrying knight less | `tests/ai.test.ts` |
 | Shoots the unit that can still heal, given two identical targets | `tests/ai.test.ts` |
+| A Bard beside wounded allies sings, centred on itself; a performer still playing holds its ground, but breaks off for a clearly better blow | `tests/performers.test.ts` |
 
 ---
 

@@ -61,6 +61,8 @@ quadrantChart
     Oracle: [0.2, 0.42]
     Paladin: [0.72, 0.35]
     Spellblade: [0.5, 0.5]
+    Bard: [0.25, 0.62]
+    Dancer: [0.62, 0.8]
 ```
 
 | Job | Plays like | Signature tools |
@@ -81,6 +83,19 @@ quadrantChart
 | **Spellblade** *(0.14, advanced)* | Elemental duelist | Flame Edge, Frost Edge (Slow), Thunder Lunge (reach 2), Runic, Arcane Edge |
 | **Chemist** *(0.19)* | Field medic, bomb-maker | Salve (free heal from ATK, reach 3), Purge (cleanse), Acid Flask (Breach), Smoke Bomb (area Blind), Field Dressing (heals 15% when a blow leaves you under half HP), **Pharmacology** (items +50% and +1 reach) |
 | **Oracle** *(0.13)* | Ailments | Dim Sight (Blind), Hush (Silence), Lullaby (area Sleep), Soul Drain, Hex Ward, Hex Mastery |
+| **Bard** *(0.22, advanced)* | Performer: support | Songs that play again each turn: Battle Hymn (Focus), Mending Air (heal), Quickening Ballad (Haste); Discord (dark damage + Silence); Healing Refrain (Regen when hit); **Resonance** (performances reach +1) |
+| **Dancer** *(0.22, advanced)* | Performer: disruption | Dances that play again each turn: Blade Waltz (free damage to every foe within 2), Veil of Silks (Blind), Leaden Reel (Slow); Feint (damage + Breach); Captivate (melee attackers may fall asleep); **Encore** (performances last 2 more turns) |
+
+### Performances (0.22)
+
+A Bard's song or a Dancer's dance fills the area around the performer (radius 2): songs reach the performer and allies, dances reach foes. Using one also gives the performer **Encore** (♪ on the unit card). At the start of each of their next three turns the performance plays again by itself, before they act, at no MP cost. It stops early if the performer moves, uses any other action (an item included), is put to sleep, is silenced, or falls. Undoing a move brings the performance back. Encores earn no JP or EXP.
+
+| Support | Effect |
+| :--- | :--- |
+| Resonance (Bard) | Every performance reaches 1 tile further (radius 3) |
+| Encore (Dancer) | Every performance plays 2 more turns (five in all) |
+
+Both supports work on either job's performances, so a Bard who learned Encore keeps songs going longer, and a Dancer with Resonance dances wider. The rules are in `src/core/Performance.ts`.
 
 Older jobs gained an action each in 0.13: Squire *Rally*, Knight *Bulwark*, Archer *Arrow Rain*, Black Mage *Firestorm*, White Mage *Shell*, *Purify* and *Healing Circle*, Ninja *Smoke Bomb*, Time Weaver *Regen*. The Knight's support is now **Armor Mastery** (+50% HP from armor, helms and shields).
 
@@ -107,6 +122,10 @@ flowchart LR
     Knight --> |Lv 2| Spellblade
     BlackMage --> |Lv 2| Spellblade
     Squire --> |Lv 2| Chemist
+    Archer --> |Lv 2| Bard
+    WhiteMage --> |Lv 2| Bard
+    Thief --> |Lv 2| Dancer
+    Monk --> |Lv 2| Dancer
     Geomancer
 ```
 
@@ -121,13 +140,13 @@ Job levels 5 and 8 pay a permanent bonus. It is derived from the same lifetime J
 
 | Stat | Jobs (Veteran / Master) |
 | :--- | :--- |
-| HP | Squire +10 / +25 · Knight +15 / +35 · Paladin +12 / +30 |
-| MP | White Mage +8 / +20 · Oracle +8 / +20 · Geomancer +6 / +15 |
+| HP | Squire +10 / +25 · Knight +15 / +35 · Paladin +12 / +30 · Chemist +8 / +20 |
+| MP | White Mage +8 / +20 · Oracle +8 / +20 · Bard +8 / +20 · Geomancer +6 / +15 |
 | ATK | Archer +1 / +2 · Monk +1 / +2 |
 | MAG | Black Mage +1 / +2 · Summoner +1 / +2 · Spellblade +1 / +2 |
 | Evasion | Ninja +4 / +8 · Thief +3 / +6 |
 | Jump | Dragoon +1 / +2 |
-| Speed | Time Weaver +1 / +2 |
+| Speed | Time Weaver +1 / +2 · Dancer +1 / +2 |
 
 `JobSystem.masteryBonus(unit)` sums every tier the unit holds; `recalculateDerivedStats`, `getAttackPower` and `getMagicPower` add it after the current job's multipliers, so the bonus is the same whatever job the unit is in. `gainJp` returns `mastery: "+15 HP"` on the gain that reaches a tier. Enemies are created with job levels of 3 at most, so they have none.
 

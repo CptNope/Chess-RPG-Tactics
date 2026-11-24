@@ -3,6 +3,7 @@ import { BattleGrid } from './Grid';
 import { CombatEngine, HARMFUL_STATUSES, guardsAgainst } from './CombatEngine';
 import { JobSystem } from './JobSystem';
 import { resolveTerrainAbility } from './Geomancy';
+import { performedBy } from './Performance';
 
 export interface AiPlan {
   /** Tile to move to before acting (may equal the current tile). */
@@ -108,7 +109,8 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
   let score = 0;
   for (const v of victims) {
     const vH = grid.getHeight(v.x, v.z);
-    const isSplash = ability.aoe > 0 && (v.x !== aim.x || v.z !== aim.z);
+    // A performance has no centre target: everyone in it takes the full effect
+    const isSplash = ability.aoe > 0 && !ability.performance && (v.x !== aim.x || v.z !== aim.z);
     const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash);
     let p = fc.hitChance / 100;
     // A knight with Weapon Guard parries 30% of frontal physical blows: hit them from the side
@@ -196,6 +198,10 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
   const walkToFoes = (t: { x: number; z: number }) =>
     Math.min(...fields.map((e) => e.d.get(key(t.x, t.z)) ?? manhattan(e.f, t) + 20));
 
+  // A performer whose song or dance is still playing loses it by moving or doing anything else
+  // (0.22.0): weigh that, so it isn't thrown away for a small gain
+  const holding = !!unit.performing && unit.statuses.some((st) => st.type === 'encore');
+
   let best: AiPlan | null = null;
   const savedX = unit.x;
   const savedZ = unit.z;
@@ -211,25 +217,30 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
       let posScore = tileH * 0.5;
       const adjacentFoes = foes.filter((f) => Math.abs(f.x - tile.x) + Math.abs(f.z - tile.z) === 1).length;
       if (adjacentFoes >= 2) posScore -= 6;
+      if (holding && (tile.x !== origin.x || tile.z !== origin.z)) posScore -= 12;
 
       for (const raw of baseAbilities) {
-        const ability = resolveTerrainAbility(raw, terrain);
+        const ability = performedBy(unit, resolveTerrainAbility(raw, terrain));
         const supportive = CombatEngine.isSupportive(ability);
 
         // Candidate aim points: every unit on the relevant side within reach
-        const aimUnits = ability.isSelfOnly ? [unit]
+        // A performance is centred on the performer, wherever it stands
+        const aimUnits = ability.isSelfOnly || ability.performance ? [unit]
           : ability.revive ? units.filter((u) => u.isDead && u.team === unit.team) // a revive aims at the fallen
           : supportive ? alliesOf(unit, units) : foes;
         for (const aim of aimUnits) {
           const ax = aim.id === unit.id ? tile.x : aim.x;
           const az = aim.id === unit.id ? tile.z : aim.z;
-          if (!ability.isSelfOnly && !grid.canTarget(tile.x, tile.z, ax, az, ability.range, ability.heightTolerance, supportive)) continue;
+          if (!ability.isSelfOnly && !ability.performance && !grid.canTarget(tile.x, tile.z, ax, az, ability.range, ability.heightTolerance, supportive)) continue;
 
           const victims = ability.isSelfOnly ? [unit] : unitsInBlast(unit, ability, ax, az, units);
           if (victims.length === 0) continue;
 
           let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units);
           if (score <= 0) continue;
+          // A performance plays again on the next turns if the performer stays put
+          if (ability.performance) score *= 1.4;
+          if (holding && ability.id !== unit.performing) score -= 12;
           score += posScore;
           // A self-buff (Bulwark, Focus) can be cast anywhere, so cast it on the way in rather
           // than standing still (0.20.0)
@@ -254,6 +265,8 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
   }
 
   if (best) return best;
+  // Nothing worth doing: a performer keeps playing rather than wandering off
+  if (holding) return { moveTo: origin, ability: null, targetTile: null, facing: fallbackFacing, score: 0 };
 
   // No action possible this turn: walk toward the weakest foe it can actually reach, by real
   // walking distance (climbing only where Jump allows), and prefer high ground on the way

@@ -18,7 +18,9 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   oracle: { reaction: 'or_hex_ward', support: 'or_hex_mastery' },
   paladin: { reaction: 'pa_divine_grace', support: 'pa_zeal' },
   spellblade: { reaction: 'sb_runic', support: 'sb_arcane_edge' },
-  chemist: { reaction: 'ch_field_dressing' }
+  chemist: { reaction: 'ch_field_dressing' },
+  bard: { reaction: 'bd_refrain' },
+  dancer: { reaction: 'dn_captivate' }
 };
 
 /** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
@@ -48,7 +50,9 @@ export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; m
   oracle: { stat: 'mp', veteran: 8, master: 20 },
   paladin: { stat: 'hp', veteran: 12, master: 30 },
   spellblade: { stat: 'magic', veteran: 1, master: 2 },
-  chemist: { stat: 'hp', veteran: 8, master: 20 }
+  chemist: { stat: 'hp', veteran: 8, master: 20 },
+  bard: { stat: 'mp', veteran: 8, master: 20 },
+  dancer: { stat: 'speed', veteran: 1, master: 2 }
 };
 const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
 /** "+10 HP", "+1 ATK"… */
@@ -163,6 +167,15 @@ export class JobSystem {
       initialGear.weapon = ITEMS.chrono_rod;
       initialGear.head = ITEMS.wizard_hat;
       initialGear.body = ITEMS.silk_robe;
+    } else if (jobId === 'bard') {
+      initialGear.weapon = ITEMS.hunting_bow;
+      initialGear.head = ITEMS.wizard_hat;
+      initialGear.body = ITEMS.silk_robe;
+    } else if (jobId === 'dancer') {
+      initialGear.weapon = ITEMS.thief_knife;
+      initialGear.head = ITEMS.shinobi_band;
+      initialGear.body = ITEMS.shinobi_garb;
+      initialGear.accessory = ITEMS.feather_boots;
     }
 
     const jobLevels: Record<string, number> = {};
@@ -353,6 +366,9 @@ export class JobSystem {
     const mastery = this.masteryBonus(unit);
     unit.maxHp = Math.round(unit.baseStats.hp * job.statMultipliers.hp) + gearHp + mastery.hp;
     unit.maxMp = Math.round(unit.baseStats.mp * job.statMultipliers.mp) + gearMp + mastery.mp;
+    // A lighter job or gear can't leave a unit holding more than its new maximum (0.22.0)
+    if (typeof unit.currentHp === 'number' && unit.currentHp > unit.maxHp) unit.currentHp = unit.maxHp;
+    if (typeof unit.currentMp === 'number' && unit.currentMp > unit.maxMp) unit.currentMp = unit.maxMp;
 
     // Speed calculation
     let spd = Math.round(unit.baseStats.speed * job.statMultipliers.speed) + gearSpd + mastery.speed;
@@ -505,6 +521,7 @@ export class JobSystem {
     unit.isEnraged = false;
     unit.usedDragonheart = false;
     unit.usedIronWill = false;
+    unit.performing = undefined;
     unit.ct = 0;
     unit.hasMoved = false;
     unit.hasActed = false;

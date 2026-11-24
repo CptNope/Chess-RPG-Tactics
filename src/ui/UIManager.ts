@@ -6,6 +6,7 @@ import { ITEMS } from '../data/items';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
 import { itemStatText } from '../core/Economy';
+import { encoreTurns, performedBy } from '../core/Performance';
 import { portraitCanvas, portraitDataUrl, portraitForSpeaker } from '../graphics/CharacterArt';
 import { ensureFocusable, focusablesIn, focusVisible } from '../input/FocusNav';
 import { SoundFX } from '../audio/SoundEffects';
@@ -652,7 +653,9 @@ export class UIManager {
     unit.statuses.forEach((status) => {
       const badge = document.createElement('span');
       badge.className = `status-badge status-${status.type}`;
-      badge.textContent = status.duration > 50 ? status.type.substring(0, 4) : `${status.type.substring(0, 4)} ${status.duration}t`;
+      badge.textContent = status.type === 'encore' ? `♪ ${Math.max(0, status.duration - 1)}` // performance: encores left
+        : status.duration > 50 ? status.type.substring(0, 4) : `${status.type.substring(0, 4)} ${status.duration}t`;
+      if (status.type === 'encore') badge.title = 'Performing: plays again at the start of each turn while this unit holds its ground';
       this.unitStatusesEl.appendChild(badge);
     });
 
@@ -742,7 +745,7 @@ export class UIManager {
     this.subMenuFor = { unit, terrain };
     document.getElementById('sub-menu-title')!.textContent = 'ACTIONS';
     this.subMenuItemsEl.innerHTML = '';
-    const abilities = JobSystem.getCombatActionAbilities(unit).map((a) => resolveTerrainAbility(a, terrain));
+    const abilities = JobSystem.getCombatActionAbilities(unit).map((a) => performedBy(unit, resolveTerrainAbility(a, terrain)));
 
     for (const ability of abilities) {
       const btn = document.createElement('button');
@@ -754,7 +757,7 @@ export class UIManager {
           <span>${ability.name}</span>
           <span class="action-mp">${mpText}</span>
         </div>
-        <div class="action-desc">Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''} | ${ability.description}</div>
+        <div class="action-desc">${ability.performance ? `${unit.performing === ability.id ? '♪ Playing · ' : ''}Around you · Area ${ability.aoe} · repeats ${encoreTurns(unit)} turns` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`} | ${ability.description}</div>
       `;
 
       btn.disabled = unit.currentMp < ability.mpCost;
