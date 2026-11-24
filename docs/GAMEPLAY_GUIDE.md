@@ -137,17 +137,20 @@ flowchart LR
 | ◆ Larkmoor Market | The only place to buy and sell |
 | ⚑ orange pin | A **side battle**: optional, and it can be fought again |
 | ★ Gate of Trials | Sealed until Chapter III is won |
+| 🎒 beside a pin | Wenna the Pedlar, the travelling merchant, is there |
 
 * **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough.
 * **Side battles** are for gil, EXP and JP, and for practice when the story gets hard. They never move the story on.
 
-  | Place | Opens | Enemies | Goal |
-  | :--- | :--- | :--- | :--- |
-  | Thornwood Ford | After Chapter I | Bandits: thieves, archers, brawlers | Defeat them all |
-  | Drowned Shrine | After Chapter II | Cultists: mages, oracles, summoners | Defeat them all |
-  | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja | Hold out for 6 rounds |
+  | Place | Opens | Enemies | Goal | Trophy (first win) |
+  | :--- | :--- | :--- | :--- | :--- |
+  | Thornwood Ford | After Chapter I | Bandits: thieves, archers, brawlers | Defeat them all | Fordwarden's Bow (ATK +8, Speed +1, range 5) |
+  | Drowned Shrine | After Chapter II | Cultists: mages, oracles, summoners | Defeat them all | Chanting Censer (MAG +4, MP +20, no Silence) |
+  | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja | Hold out for 6 rounds | Watchfire Helm (HP +40, no Sleep or Blind) |
 
-  Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after.
+  Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after. The first win also brings the place's **trophy**, a piece of gear found nowhere else (it can't be sold).
+* **Wenna the Pedlar** follows the squad around the realm. Once the first battle is won she sets up beside a won battlefield or a side-battle camp, and moves on after every win. She sells two things: a piece the market won't stock until after the next chapter (early, for a quarter more), and one of her own goods that nobody else sells. Walk to her pin to buy.
+* **Camp.** After each story battle the squad makes camp, and the panel offers **Sit by the fire**: a short talk between the squad, once per playthrough, worth 30 JP to everyone.
 * **Team**, **Save** and **Menu** (sound, graphics, battle speed, load, the Workshop, title screen) are in the top bar. Team works everywhere; buying and selling only at the market.
 * **Continue** on the title screen puts you back on the map where you stood.
 * A brand-new game opens straight on Chapter I; the map appears once that battle is over.

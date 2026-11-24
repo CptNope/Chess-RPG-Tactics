@@ -1,3 +1,4 @@
+import { sanitizeMerchantSales } from './Merchant';
 import { Unit } from './types';
 import { MapData } from '../data/maps';
 import { JOBS } from '../data/jobs';
@@ -31,6 +32,10 @@ export interface GameSaveData {
   skirmishWins?: Record<string, number>;
   /** Added in 0.18.0; older saves play on Normal. */
   difficulty?: Difficulty;
+  /** Camp scenes played this playthrough (0.21.0): the chapter ids they follow. */
+  campSeen?: string[];
+  /** What was bought from the travelling merchant on her current visit (0.21.0). */
+  merchantSales?: { visit: number; ids: string[] };
 }
 
 const BEST_FLOOR_KEY = 'chess_rpg_tactics_best_trial_v1';
@@ -51,13 +56,13 @@ export class SaveManager {
   public static saveGame(
     chapterId: string,
     playerUnits: Unit[],
-    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation' | 'skirmishWins' | 'difficulty'> = {},
+    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation' | 'skirmishWins' | 'difficulty' | 'campSeen' | 'merchantSales'> = {},
     slot = 1
   ): boolean {
     if (!validSlot(slot)) return false;
     try {
       const saveData: GameSaveData = {
-        version: '0.20.0',
+        version: '0.21.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,
@@ -177,7 +182,9 @@ export class SaveManager {
       onWorldMap: d.onWorldMap === true,
       worldLocation: typeof d.worldLocation === 'string' ? d.worldLocation.slice(0, 40) : undefined,
       skirmishWins: counts(d.skirmishWins),
-      difficulty: d.difficulty === 'easy' || d.difficulty === 'hard' ? d.difficulty : 'normal'
+      difficulty: d.difficulty === 'easy' || d.difficulty === 'hard' ? d.difficulty : 'normal',
+      campSeen: strings(d.campSeen, 32),
+      merchantSales: sanitizeMerchantSales(d.merchantSales)
     };
   }
 

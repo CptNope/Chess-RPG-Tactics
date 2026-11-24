@@ -23,6 +23,8 @@ export interface SkirmishDef {
   opensAfter: string[];
   objective?: BattleObjective;
   intro: string;
+  /** Gear won the first time the place is cleared (0.21.0). A relic: never sold. */
+  trophy: string;
 }
 
 export const SKIRMISHES: Record<string, SkirmishDef> = {
@@ -33,7 +35,8 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     foe: 'Thornwood Bandits',
     jobs: [['thief', 'Cutpurse'], ['archer', 'Poacher'], ['squire', 'Footpad'], ['monk', 'Bruiser'], ['knight', 'Deserter']],
     opensAfter: ['chapter_1'],
-    intro: 'Bandits hold the ford and rob everyone who crosses. Clear them out.'
+    intro: 'Bandits hold the ford and rob everyone who crosses. Clear them out.',
+    trophy: 'fordwarden_bow'
   },
   shrine: {
     id: 'shrine',
@@ -42,7 +45,8 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     foe: 'Mire Cultists',
     jobs: [['black_mage', 'Hexer'], ['oracle', 'Augur'], ['summoner', 'Caller'], ['time_mage', 'Seer'], ['white_mage', 'Acolyte'], ['ninja', 'Shade']],
     opensAfter: ['chapter_2a', 'chapter_2b', 'chapter_3'], // chapter_3 covers old saves that don't record which road was taken
-    intro: 'Robed figures chant among the sunken stones. Break the circle before the rite is done.'
+    intro: 'Robed figures chant among the sunken stones. Break the circle before the rite is done.',
+    trophy: 'chanting_censer'
   },
   ridge: {
     id: 'ridge',
@@ -52,7 +56,8 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     jobs: [['knight', 'Raider'], ['dragoon', 'Lancer'], ['archer', 'Marksman'], ['ninja', 'Shade'], ['spellblade', 'Duelist'], ['geomancer', 'Warden']],
     opensAfter: ['chapter_2a', 'chapter_2b', 'chapter_3'], // chapter_3 covers old saves that don't record which road was taken
     objective: { type: 'survive', rounds: 6 },
-    intro: 'Raiders come up the ridge in the dark. Hold the watchfire until the garrison arrives.'
+    intro: 'Raiders come up the ridge in the dark. Hold the watchfire until the garrison arrives.',
+    trophy: 'watchfire_helm'
   }
 };
 
@@ -136,4 +141,12 @@ export function sanitizeSkirmishWins(raw: unknown): Record<string, number> {
     if (Number.isFinite(n) && n > 0) out[id] = Math.min(999, n);
   }
   return out;
+}
+
+/**
+ * Trophies a squad has earned but doesn't hold: a save from before 0.21.0 with wins at a place
+ * gets its trophy when loaded.
+ */
+export function missingTrophies(wins: Record<string, number>, armory: string[]): string[] {
+  return Object.values(SKIRMISHES).filter((d) => (wins[d.id] || 0) > 0 && !armory.includes(d.trophy)).map((d) => d.trophy);
 }

@@ -5,13 +5,16 @@
  * everyone. Gil comes from bounties on defeated enemies, a bonus for clearing a battle, and from
  * stealing gear the squad already owns (it's fenced for half its price).
  */
-import { ITEMS } from '../data/items';
+import { ITEMS, MERCHANT_ITEMS } from '../data/items';
 import { Item, Unit, EquipmentSlot } from './types';
 
 export const STARTING_GIL = 300;
 
-/** Relics that are only ever won, never sold. */
-export const UNIQUE_ITEMS = ['zodiac_blade', 'ribbon', 'dragon_mail'];
+/**
+ * Relics that are only ever won, never sold: the story's relics and, since 0.21.0, the trophy
+ * each side-battle place gives the first time it is cleared.
+ */
+export const UNIQUE_ITEMS = ['zodiac_blade', 'ribbon', 'dragon_mail', 'fordwarden_bow', 'chanting_censer', 'watchfire_helm'];
 
 /**
  * How far the campaign has come: 0 = Chapter I, 1 = Chapter II, 2 = Chapter III,
@@ -40,7 +43,7 @@ const SLOT_ORDER: EquipmentSlot[] = ['weapon', 'shield', 'head', 'body', 'access
 export function shopStock(progress: ShopProgress): Item[] {
   const cap = SHOP_PRICE_CAP[progress];
   return Object.values(ITEMS)
-    .filter((it) => it.price <= cap && !UNIQUE_ITEMS.includes(it.id))
+    .filter((it) => it.price <= cap && !UNIQUE_ITEMS.includes(it.id) && !MERCHANT_ITEMS.includes(it.id))
     .sort((a, b) => SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot) || a.price - b.price);
 }
 
@@ -67,6 +70,11 @@ export function clearBonus(mode: BattleMode, trialsFloor: number): number {
 export function victoryGil(enemies: Unit[], mode: BattleMode, trialsFloor: number): number {
   if (mode === 'custom') return 0;
   return enemies.reduce((n, e) => n + (e.isDead ? bountyFor(e) : 0), 0) + clearBonus(mode, trialsFloor);
+}
+
+/** "ATTACK +9, HP +15 · Range 2": an item's numbers as the shop and the merchant show them. */
+export function itemStatText(item: Item): string {
+  return Object.entries(item.stats).map(([stat, val]) => `${stat.toUpperCase()} ${val! >= 0 ? '+' : ''}${val}`).join(', ') + (item.range && item.range > 1 ? ` · Range ${item.range}` : '');
 }
 
 /** What the market (or a fence) pays for anything: half its price. */

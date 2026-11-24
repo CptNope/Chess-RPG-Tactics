@@ -504,8 +504,70 @@ export const ITEMS: Record<string, Item> = {
     description: 'All power, no guard: ATK +7, but evasion drops.',
     price: 460,
     stats: { attack: 7, evasion: -5 }
+  },
+
+  // --- Added in 0.21.0: sold only by the travelling merchant ---
+  lucky_coin: {
+    id: 'lucky_coin',
+    name: 'Lucky Coin',
+    slot: 'accessory',
+    description: 'A worn coin with a hole through it. Its owner never seems to be where the blow lands, and never loses sight of the fight.',
+    price: 380,
+    stats: { hp: 10, evasion: 10 },
+    traits: { guard: ['blind'] }
+  },
+  wayfarer_boots: {
+    id: 'wayfarer_boots',
+    name: 'Wayfarer Boots',
+    slot: 'accessory',
+    description: 'Road-softened boots that have crossed the realm a dozen times. Move +1 and Speed +1.',
+    price: 760,
+    stats: { move: 1, speed: 1 }
+  },
+  starsteel_pike: {
+    id: 'starsteel_pike',
+    name: 'Starsteel Pike',
+    slot: 'weapon',
+    weaponType: 'spear',
+    description: 'Forged from the iron of a fallen star: long, light, and easy to vault with.',
+    price: 780,
+    stats: { attack: 12, jump: 1 },
+    range: 2
+  },
+
+  // --- Added in 0.21.0: won the first time a side battle is cleared ---
+  fordwarden_bow: {
+    id: 'fordwarden_bow',
+    name: "Fordwarden's Bow",
+    slot: 'weapon',
+    weaponType: 'bow',
+    description: 'Taken back from the Thornwood bandits: the old ford warden\'s bow, quick to draw.',
+    price: 520,
+    stats: { attack: 8, speed: 1, evasion: 5 },
+    range: 5
+  },
+  chanting_censer: {
+    id: 'chanting_censer',
+    name: 'Chanting Censer',
+    slot: 'accessory',
+    description: 'A brass censer from the Drowned Shrine. Its smoke steadies the voice: MAG +4, and Silence can\'t take hold.',
+    price: 540,
+    stats: { magic: 4, mp: 20 },
+    traits: { guard: ['silence'] }
+  },
+  watchfire_helm: {
+    id: 'watchfire_helm',
+    name: 'Watchfire Helm',
+    slot: 'head',
+    description: 'The ridge garrison\'s helm, worn through long nights on watch. Its wearer neither sleeps nor loses sight of the dark.',
+    price: 480,
+    stats: { hp: 40 },
+    traits: { guard: ['sleep', 'blind'] }
   }
 };
+
+/** Sold only by the travelling merchant on the world map (0.21.0), never on the market's shelves. */
+export const MERCHANT_ITEMS: string[] = ['lucky_coin', 'wayfarer_boots', 'starsteel_pike'];
 
 /** Gear the squad owns at the start of a new campaign. */
 export const STARTING_ARMORY: string[] = [

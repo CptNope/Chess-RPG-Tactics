@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.21.0] - 2026-11-23
+
+### Added — on the road
+- **Wenna the Pedlar, a travelling merchant.** Once the first battle is won she sets up beside a won battlefield or a side-battle camp (🎒 on the map), and moves on after every win. She sells two things:
+  - one piece the market won't stock until after the next chapter, early, for a quarter more;
+  - one of her own goods, which nobody else sells: **Lucky Coin** (Evasion +10, no Blind), **Wayfarer Boots** (Move +1, Speed +1) and the **Starsteel Pike** (ATK +12, Jump +1, reach 2).
+  A ware you buy stays on her blanket marked Sold until she moves on, so she never turns into a second market.
+- **Camp scenes.** After each story battle the squad makes camp, and the map offers **Sit by the fire**: a short talk around the fire (six in all), once per playthrough, worth 30 JP to everyone. New Game+ tells them again.
+- **Side-battle trophies.** The first win at each side-battle place brings gear found nowhere else, and it can't be sold:
+  - Thornwood Ford: **Fordwarden's Bow** (ATK +8, Speed +1, Evasion +5, range 5).
+  - Drowned Shrine: **Chanting Censer** (MAG +4, MP +20, no Silence).
+  - Watchfire Ridge: **Watchfire Helm** (HP +40, no Sleep or Blind).
+  The side-battle panel shows the trophy until it's won. A save that already won there gets it on loading.
+- 6 new items (60 in all).
+
+### Fixed
+- A hand-edited save could pass `__proto__` off as a won chapter.
+
+### Developer
+- `src/core/Merchant.ts`: the merchant's place and wares are worked out from won chapters, side-battle wins, the shop shelf and the armory, so she needs no save data except what was bought on her current visit (`merchantSales`). Her stride across the stops shares no factor with their number, so she visits every one.
+- `src/data/camp.ts` (`CAMP_SCENES`, `pendingCamp`, `sanitizeCampSeen`); saves keep `campSeen`. Scenes play in the ordinary dialogue box over the world map, with the map inert behind it; Enter / A advance it.
+- `SkirmishDef.trophy`, `missingTrophies()`; trophies join `UNIQUE_ITEMS`. `MERCHANT_ITEMS` are kept off the market's shelves. `itemStatText()` is shared by the shop and the merchant.
+- The content reference lists the merchant, the trophies and the camp scenes.
+- 16 new tests (182 total) in `tests/world-events.test.ts`. [ADR 0029](docs/adr/0029-world-map-events.md).
+
 ## [0.20.0] - 2026-11-23
 
 ### Changed — smarter foes

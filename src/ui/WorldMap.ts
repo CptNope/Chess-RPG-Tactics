@@ -9,6 +9,10 @@ import { CAMPAIGN_CHAPTERS } from '../data/campaign';
 import { drawSprite } from '../graphics/CharacterArt';
 import { Mission, WORLD_NODES, WORLD_ROADS, WorldNode, nodeState, openMissions, route, worldNode } from '../core/World';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus, skirmishLevel } from '../core/Skirmish';
+import { MERCHANT_NAME, MerchantVisit } from '../core/Merchant';
+import { ITEMS } from '../data/items';
+import { itemStatText } from '../core/Economy';
+import { CAMP_JP } from '../data/camp';
 
 export interface WorldState {
   /** The chapter the campaign is at. */
@@ -26,6 +30,12 @@ export interface WorldState {
   squadLevels: number[];
   /** Wins so far at each side-battle place. */
   skirmishWins: Record<string, number>;
+  /** Owned gear ids (a side battle's trophy shows as won). */
+  armory: string[];
+  /** Where the travelling merchant is and what she sells (0.21.0), or null. */
+  merchant: MerchantVisit | null;
+  /** The camp scene waiting to be played (0.21.0), or null. */
+  camp: { title: string } | null;
 }
 
 export interface WorldHost {
@@ -34,6 +44,10 @@ export interface WorldHost {
   enterTrials(): void;
   /** Starts the side battle at a place. */
   skirmish(id: string): void;
+  /** Buys a piece from the travelling merchant. False when the purse is short. */
+  buyFromMerchant(id: string): boolean;
+  /** Plays the waiting camp scene. */
+  makeCamp(): void;
   newGamePlus(): void;
   openTeam(): void;
   openShop(): void;
@@ -81,11 +95,17 @@ export class WorldMap {
     }
     this.isOpen = true;
     this.walking = false;
+    this.root.inert = false; // a camp scene cut short (by loading a save) must not leave the map frozen
     this.root.classList.remove('hidden');
     document.body.classList.add('world-open');
     this.refresh();
     this.placeParty(false);
     this.host.focus(this.panelEl.querySelector<HTMLElement>('.wm-action') || this.nodesEl.querySelector<HTMLElement>(`[data-node="${this.location}"]`));
+  }
+
+  /** Puts focus where opening the map does: the first action here, or the party's pin. */
+  public focusDefault(): void {
+    this.host.focus(this.panelEl.querySelector<HTMLElement>('.wm-action:not(:disabled)') || this.nodesEl.querySelector<HTMLElement>(`[data-node="${this.location}"]`));
   }
 
   public close(): void {
@@ -114,14 +134,15 @@ export class WorldMap {
     for (const node of WORLD_NODES) {
       const state = nodeState(node, st.current, st.cleared, st.trialsOpen);
       const btn = document.createElement('button');
-      btn.className = `wm-node ${node.kind} ${state} ${node.id === this.location ? 'here' : ''}`;
+      const merchantHere = st.merchant?.nodeId === node.id;
+      btn.className = `wm-node ${node.kind} ${state} ${node.id === this.location ? 'here' : ''} ${merchantHere ? 'has-merchant' : ''}`;
       btn.dataset.node = node.id;
       btn.style.left = `${node.x * 100}%`;
       btn.style.top = `${node.y * 100}%`;
       const mark = node.kind === 'market' ? '◆' : state === 'cleared' ? '✓' : state === 'locked' ? '🔒' : node.kind === 'trials' ? '★' : node.kind === 'skirmish' ? '⚑' : '⚔';
       const what = node.kind === 'market' ? 'market' : state === 'cleared' ? 'cleared' : state === 'locked' ? 'locked' : node.kind === 'trials' ? 'the Trials' : node.kind === 'skirmish' ? 'side battle' : 'battle';
-      btn.setAttribute('aria-label', `${node.name}: ${what}${node.id === this.location ? ', you are here' : ''}`);
-      btn.innerHTML = `<span class="wm-pin" aria-hidden="true">${mark}</span><span class="wm-label">${node.name}</span>`;
+      btn.setAttribute('aria-label', `${node.name}: ${what}${merchantHere ? ', travelling merchant' : ''}${node.id === this.location ? ', you are here' : ''}`);
+      btn.innerHTML = `<span class="wm-pin" aria-hidden="true">${mark}</span><span class="wm-label">${node.name}</span>${merchantHere ? '<span class="wm-merchant-badge" aria-hidden="true" title="Travelling merchant">🎒</span>' : ''}`;
       btn.addEventListener('click', () => void this.travel(node.id));
       this.nodesEl.appendChild(btn);
     }
@@ -186,6 +207,17 @@ export class WorldMap {
       box.append(t, ok);
     }
 
+    if (st.camp) {
+      const box = add('div', 'wm-camp', '');
+      const t = document.createElement('p');
+      t.textContent = `🔥 The squad makes camp: ${st.camp.title}`;
+      const go = document.createElement('button');
+      go.className = 'wm-action';
+      go.textContent = `Sit by the fire (+${CAMP_JP} JP each)`;
+      go.addEventListener('click', () => { this.host.blip(); this.host.makeCamp(); });
+      box.append(t, go);
+    }
+
     add('h3', 'wm-place', node.name);
     add('p', 'wm-blurb', node.blurb);
 
@@ -211,6 +243,8 @@ export class WorldMap {
         add('p', 'wm-orders', `${def.intro} ${goal}`);
         add('p', 'wm-status', `Enemies around Lv ${skirmishLevel(st.squadLevels, wins)}. ${wins > 0 ? `Won ${wins} time${wins > 1 ? 's' : ''}${wins < SKIRMISH_MAX_HEAT ? '; they come back stronger' : ''}.` : 'Not fought yet.'}`);
         add('p', 'wm-reward', `Optional and repeatable: bounties, +${skirmishBonus(wins)} G, EXP and JP.`);
+        const trophy = ITEMS[def.trophy];
+        if (trophy) add('p', st.armory.includes(def.trophy) ? 'wm-status won' : 'wm-reward', st.armory.includes(def.trophy) ? `✓ Trophy won: ${trophy.name}` : `First win: ${trophy.name} (${itemStatText(trophy)})`);
         action('⚑ Fight', () => this.host.skirmish(def.id), true);
       }
     } else {
@@ -231,12 +265,61 @@ export class WorldMap {
       }
     }
 
+    this.renderMerchant(st);
+
     // Where to go next, when there's nothing to do here
     if (!p.querySelector('.wm-action.primary')) {
       const next = missions.map((m) => WORLD_NODES.find((n) => n.chapterId === m.chapterId)?.name).filter(Boolean);
       if (next.length) add('p', 'wm-hint', `Next battle: ${next.join(' or ')}. Select it on the map.`);
       else if (st.trialsOpen) add('p', 'wm-hint', 'The story is told. The Gate of Trials stands open.');
     }
+  }
+
+  /** The travelling merchant's blanket, when she is here; a pointer to her when she isn't. */
+  private renderMerchant(st: WorldState): void {
+    const m = st.merchant;
+    if (!m) return;
+    const p = this.panelEl;
+    if (m.nodeId !== this.location) {
+      const where = worldNode(m.nodeId)?.name;
+      const hint = document.createElement('p');
+      hint.className = 'wm-hint';
+      hint.textContent = `🎒 ${MERCHANT_NAME} has set up at ${where}.`;
+      p.appendChild(hint);
+      return;
+    }
+    const box = document.createElement('div');
+    box.className = 'wm-merchant';
+    const head = document.createElement('p');
+    head.className = 'wm-merchant-head';
+    head.textContent = `🎒 ${MERCHANT_NAME} has spread a blanket by the road. She moves on after your next win.`;
+    box.appendChild(head);
+    for (const w of m.wares) {
+      const it = ITEMS[w.id];
+      if (!it) continue;
+      const row = document.createElement('div');
+      row.className = 'wm-ware';
+      const text = document.createElement('div');
+      const name = document.createElement('b');
+      name.textContent = it.name;
+      const note = document.createElement('small');
+      note.textContent = `${itemStatText(it)} · ${w.kind === 'own' ? 'only she sells this' : 'early: the market stocks it after the next chapter'}`;
+      text.append(name, document.createElement('br'), note);
+      const buy = document.createElement('button');
+      buy.className = 'wm-action';
+      buy.textContent = w.sold ? 'Sold' : `Buy ${w.price.toLocaleString('en-US')} G`;
+      buy.setAttribute('aria-label', w.sold ? `${it.name}: sold to you` : `Buy ${it.name} for ${w.price} gil`);
+      buy.disabled = !!w.sold || st.gil < w.price;
+      if (!w.sold && buy.disabled) buy.title = 'Not enough gil';
+      if (w.sold) row.classList.add('sold');
+      buy.addEventListener('click', () => {
+        this.host.blip();
+        if (this.host.buyFromMerchant(w.id)) this.refresh();
+      });
+      row.append(text, buy);
+      box.appendChild(row);
+    }
+    p.appendChild(box);
   }
 }
 

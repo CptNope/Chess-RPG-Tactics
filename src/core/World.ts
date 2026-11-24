@@ -149,5 +149,6 @@ export function clearedBefore(currentChapterId: string): string[] {
 /** Keeps only real chapter ids, once each. */
 export function sanitizeCleared(raw: unknown, currentChapterId: string): string[] {
   if (!Array.isArray(raw)) return clearedBefore(currentChapterId);
-  return [...new Set(raw.filter((id): id is string => typeof id === 'string' && !!CAMPAIGN_CHAPTERS[id]))];
+  // hasOwnProperty, so "__proto__" and friends from a hand-edited save aren't taken for chapters
+  return [...new Set(raw.filter((id): id is string => typeof id === 'string' && Object.prototype.hasOwnProperty.call(CAMPAIGN_CHAPTERS, id)))];
 }

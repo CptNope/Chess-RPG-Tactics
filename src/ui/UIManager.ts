@@ -5,6 +5,7 @@ import { CONSUMABLES, MAX_STACK, Consumable, consumableAbility } from '../data/c
 import { ITEMS } from '../data/items';
 import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
+import { itemStatText } from '../core/Economy';
 import { portraitCanvas, portraitDataUrl, portraitForSpeaker } from '../graphics/CharacterArt';
 import { ensureFocusable, focusablesIn, focusVisible } from '../input/FocusNav';
 import { SoundFX } from '../audio/SoundEffects';
@@ -1135,8 +1136,7 @@ export class UIManager {
       });
       this.shopListEl.appendChild(el);
     };
-    const statText = (item: Item) =>
-      Object.entries(item.stats).map(([stat, val]) => `${stat.toUpperCase()} ${val! >= 0 ? '+' : ''}${val}`).join(', ') + (item.range && item.range > 1 ? ` · Range ${item.range}` : '');
+    const statText = itemStatText;
     const closed = 'The market is on the world map';
     const slotNames: Record<EquipmentSlot, string> = { weapon: 'WEAPONS', shield: 'SHIELDS', head: 'HEADGEAR', body: 'ARMOR & ROBES', accessory: 'ACCESSORIES' };
 
