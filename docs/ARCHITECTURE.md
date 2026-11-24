@@ -59,6 +59,8 @@ flowchart TB
 | **Economy** | `src/core/Economy.ts` | Bounties, shop tiers, resale value, what can't be sold | data |
 | **World** | `src/core/World.ts` | The world map's places and roads; which battles are open, cleared or locked; routes; cleared-chapter lists for old saves | data |
 | **WorldMap** | `src/ui/WorldMap.ts` | Draws the map (a painted 320×180 canvas with real buttons over it), walks the party marker, shows what the current place offers. Talks to the game through a small `WorldHost` interface | World, CharacterArt |
+| **Skirmish** | `src/core/Skirmish.ts` | Side battles: the three places, when each opens, enemy level from the squad and past wins, the generated roster, the gil bonus | data, Trials (seeded RNG) |
+| **Tutorial** | `src/ui/Tutorial.ts` | First-time tips: which have been seen (per device), showing one at a time without taking focus | — |
 | **consumables** | `src/data/consumables.ts` | The six supplies; turns one into an `Ability` for the engine; clamps saved inventories | types |
 | **Scenario** | `src/core/Scenario.ts` | Workshop scenario format: create, copy, sanitise untrusted input, validate, turn into a chapter, share-link encoding, library | data |
 | **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor | Grid, VFX, PixelTextures |
@@ -133,6 +135,8 @@ flowchart LR
     Map -->|"walk to the market"| Shop["Team → Shop<br/>buy · sell"] --> Map
     Map -->|"March to battle<br/>(branch reward applied)"| Battle(["loadChapter"])
     Map -->|"Gate of Trials"| Trial(["startTrial"])
+    Map -->|"⚑ side battle"| Side(["startSkirmish"])
+    Side -->|"win or lose"| Map
     Win -->|"final chapter"| Epi["Epilogue"] --> Map
     Battle --> Win & Lose
     Trial --> Win & Lose
@@ -332,7 +336,7 @@ flowchart LR
 
 | Key | Contents |
 | :--- | :--- |
-| `chess_rpg_tactics_save_v1` | `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared, gil, inventory, clearedChapters, onWorldMap, worldLocation }`. Every field after `units` is optional and filled in on load, so saves from any earlier version still open |
+| `chess_rpg_tactics_save_v1` | `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared, gil, inventory, clearedChapters, onWorldMap, worldLocation, skirmishWins }`. Every field after `units` is optional and filled in on load, so saves from any earlier version still open |
 | `chess_rpg_tactics_best_trial_v1` | Highest Trial floor cleared |
 | `chess_rpg_tactics_workshop_v1` | Workshop library: up to 50 scenarios, newest first, each re-sanitised on load |
 | `chess_rpg_tactics_graphics_v1` | Graphics setting (auto / high / medium / low) |
@@ -415,16 +419,17 @@ src/
 │   ├── SaveManager.ts      localStorage
 │   ├── Economy.ts          Gil, shop tiers, resale
 │   ├── World.ts            World map rules: places, roads, open battles
+│   ├── Skirmish.ts         Side battles: generated, replayable, scaled to the squad
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
 ├── data/                   Content: jobs, items, consumables, maps, campaign
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
 │                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality
 ├── vendor/pixelfx/         Third-party pixel effects (MIT), unchanged + our registry
 ├── graphics/               PixelTextures, CharacterArt (sprites + portraits)
-├── ui/                     UIManager, Workshop, WorldMap
+├── ui/                     UIManager, Workshop, WorldMap, Tutorial
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world (119 rule tests)
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery (134 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts
 docs/                       This documentation + ADRs
 ```

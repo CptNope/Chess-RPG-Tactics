@@ -89,6 +89,7 @@ const MAGIC_SCALE = 3;
 export class CombatEngine {
   /** True for heals and buffs: abilities meant for the caster's own side. */
   public static isSupportive(ability: Ability): boolean {
+    if (ability.revive) return true;
     if (ability.item) return !ability.fixedDamage;
     if (ability.power < 0) return true;
     if (ability.power !== 0 || ability.steal) return false;
@@ -172,7 +173,7 @@ export class CombatEngine {
     if (has(target, 'sleep') && !supportive && !isSelf) hitChance = 100;
     if (ability.steal && !this.stealableItem(target)) hitChance = 0;
     // Items always work, and do the same whoever uses them
-    if (ability.item) hitChance = 100;
+    if (ability.item || ability.revive) hitChance = 100;
 
     let baseDamage = 0;
     if (ability.item) {
@@ -311,9 +312,22 @@ export class CombatEngine {
     return true;
   }
 
-  /** True when the item's action can do something for this unit (revives need the fallen; the rest, the living). */
+  /**
+   * True when an item or a revive can do something for this unit: revives need the fallen (and
+   * never work on a boss, so a kill that ends a fight stays a kill); everything else, the living.
+   */
   public static itemCanTarget(ability: Ability, target: Unit): boolean {
-    return ability.revive ? target.isDead : !target.isDead;
+    return ability.revive ? target.isDead && !target.isBoss : !target.isDead;
+  }
+
+  /** Brings a fallen unit back: on its feet at a share of max HP, statuses gone, CT at zero. */
+  private static raise(target: Unit, share: number): AttackResult {
+    target.isDead = false;
+    target.statuses = [];
+    target.ct = 0;
+    JobSystem.recalculateDerivedStats(target);
+    target.currentHp = Math.max(1, Math.round(target.maxHp * share));
+    return { hit: true, damageDealt: target.currentHp, isCrit: false, isHeal: true, revived: true };
   }
 
   /**
@@ -325,14 +339,7 @@ export class CombatEngine {
     const none: AttackResult = { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
     if (!this.itemCanTarget(ability, target)) return none;
 
-    if (ability.revive) {
-      target.isDead = false;
-      target.statuses = [];
-      target.ct = 0;
-      JobSystem.recalculateDerivedStats(target);
-      target.currentHp = Math.max(1, Math.round(target.maxHp * ability.revive));
-      return { hit: true, damageDealt: target.currentHp, isCrit: false, isHeal: true, revived: true };
-    }
+    if (ability.revive) return this.raise(target, ability.revive);
 
     const cleansed = ability.cleanse ? this.cleanse(target) : undefined;
     let mpRestored: number | undefined;
@@ -353,6 +360,10 @@ export class CombatEngine {
   public static executeAttack(forecast: CombatForecast, rng: () => number = Math.random): AttackResult {
     const { attacker, target, ability } = forecast;
     if (ability.item) return this.useItem(forecast);
+    // A revive spell (Raise) is as certain as a Phoenix Feather: no roll, no reaction
+    if (ability.revive) {
+      return this.itemCanTarget(ability, target) ? this.raise(target, ability.revive) : { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
+    }
     const roll = rng() * 100;
     const hit = roll <= forecast.hitChance;
 

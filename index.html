@@ -85,6 +85,7 @@
       <button id="btn-toggle-sound" role="menuitem">Sound FX: On</button>
       <button id="btn-toggle-bgm" role="menuitem">Music: On</button>
       <button id="btn-graphics" role="menuitem" title="Auto picks Medium on phones and High elsewhere">Graphics: Auto</button>
+      <button id="btn-speed" role="menuitem" title="Fast halves the pauses between actions and doubles walking speed">Battle speed: Normal</button>
       <button id="btn-save-game" role="menuitem">Save game</button>
       <button id="btn-load-game" role="menuitem">Load game</button>
       <button id="btn-workshop" role="menuitem" title="Build your own battlefields and scenarios">Workshop: map &amp; scenario editor</button>
@@ -167,9 +168,20 @@
             </dl>
           </section>
         </div>
+        <p class="help-foot">New here? The game shows a short tip the first time each thing comes up.
+          <button id="btn-tips-reset" class="hud-btn-mini">Show tips again</button></p>
       </div>
     </div>
 
+    <!-- First-battle tips: one at a time, never blocking input -->
+    <aside id="tutor" class="hud-panel tutor hidden" role="status" aria-live="polite">
+      <div class="tutor-title">TIP</div>
+      <p class="tutor-text"></p>
+      <div class="tutor-actions">
+        <button id="tutor-ok">Got it</button>
+        <button id="tutor-skip" title="Turn the tips off (Controls can turn them back on)">Skip tips</button>
+      </div>
+    </aside>
 
     <!-- Active Unit Status Card (Bottom Left) -->
     <section id="unit-card" class="hud-panel" aria-label="Selected unit" aria-live="polite">

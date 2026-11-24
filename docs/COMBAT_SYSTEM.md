@@ -241,7 +241,7 @@ Rules that differ from abilities:
 * **Always hits.** No hit roll, no crit, no facing or height modifier, no Protect / Shell / Breach, no element boost. The amount is the same whoever uses it.
 * **No reactions.** Weapon Guard, Counter and the rest don't answer an item. A Blast Flask still **wakes** a sleeper and can trigger a boss's **enrage**.
 * **The whole blast is fixed:** unlike area spells, the ring takes the full 70.
-* **Revive** is the only action that can target the fallen. A raised unit keeps its position and facing and acts when its CT next fills.
+* **Revives** are the only actions that can target the fallen: the Phoenix Feather, and since 0.16 the White Mage's **Raise** (`revive: 0.33`, 18 MP, reach 3), which is an ordinary ability resolved the same way (no roll, no reaction) and earns JP and EXP like any spell. **A boss can't be raised** by either, and neither can a unit on a tile someone is standing on. A raised unit keeps its position and facing and acts when its CT next fills.
 * **No JP and no EXP for using an item**, so healing with potions doesn't train a job the way casting Cure does. A Blast Flask that fells a foe still earns the kill's EXP.
-* **The AI never uses items**, for either side: AUTO won't spend your supplies, and enemies carry none.
+* **The AI never uses items**, for either side: AUTO won't spend your supplies, and enemies carry none. It does cast Raise.
 

@@ -49,19 +49,22 @@ export function nextShopCap(progress: ShopProgress): number | null {
   return progress < 3 ? SHOP_PRICE_CAP[(progress + 1) as ShopProgress] : null;
 }
 
+/** What kind of battle is being fought. */
+export type BattleMode = 'campaign' | 'trials' | 'custom' | 'skirmish';
+
 /** Gil for defeating one enemy: 20 + 10 per level, tripled for a boss. */
 export function bountyFor(enemy: Unit): number {
   return (20 + enemy.level * 10) * (enemy.isBoss ? 3 : 1);
 }
 
 /** Bonus for winning the battle: 150 in the campaign, 100 + 20 per floor in the Trials. */
-export function clearBonus(mode: 'campaign' | 'trials' | 'custom', trialsFloor: number): number {
-  if (mode === 'custom') return 0;
+export function clearBonus(mode: BattleMode, trialsFloor: number): number {
+  if (mode === 'custom' || mode === 'skirmish') return 0; // side battles add their own bonus (Skirmish.skirmishBonus)
   return mode === 'trials' ? 100 + trialsFloor * 20 : 150;
 }
 
 /** Gil for winning a battle. Workshop battles pay nothing, so they can't be farmed. */
-export function victoryGil(enemies: Unit[], mode: 'campaign' | 'trials' | 'custom', trialsFloor: number): number {
+export function victoryGil(enemies: Unit[], mode: BattleMode, trialsFloor: number): number {
   if (mode === 'custom') return 0;
   return enemies.reduce((n, e) => n + (e.isDead ? bountyFor(e) : 0), 0) + clearBonus(mode, trialsFloor);
 }

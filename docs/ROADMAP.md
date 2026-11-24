@@ -33,6 +33,7 @@ timeline
         0.13.0 : Monk, Thief, Summoner, Oracle : 6 new statuses : Gear traits : Steal
         0.14.0 : Job levels and job tree : Paladin, Spellblade : Gil and shop : Status pips
         0.15.0 : Items in battle : World map between missions : Market, buy and sell : Haste effect fix
+        0.16.0 : Side battles : Job mastery : Raise : Undo move, battle speed, tips
 ```
 
 | Version | Theme | Highlights |
@@ -45,6 +46,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.16 | Room to grow | Three replayable side battles on the map, permanent job mastery bonuses at job level 5 and 8, the White Mage's Raise (used by the AI too), undo move, a Fast battle speed, first-battle tips |
 | 0.15 | A world between battles | The Item command and six supplies (a revive among them), a world map where the story branch is a march and defeat is a retreat, Larkmoor Market with buy and sell, the Haste effect back on the unit |
 | 0.14 | Progression | Job levels and an enforced job tree, Paladin and Spellblade (15 jobs, 86 abilities), gil and a shop that grows with the campaign, status pips over units, readable HP bars |
 | 0.13 | Bigger squad | Monk, Thief, Summoner and Oracle (13 jobs, 75 abilities), Shell / Regen / Blind / Silence / Sleep / Breach, 25 new items with traits, Steal, Rend Armor and Armor Mastery fixed |
@@ -58,26 +60,26 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.16)"]
+    subgraph NOW["Now (0.17)"]
         direction TB
-        N1["Job mastery rewards"]
+        N1["Campaign Chapters IV–VI"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Devlog + site post<br/>for the itch release"]
     end
-    subgraph NEXT["Next (0.17 – 0.19)"]
+    subgraph NEXT["Next (0.18 – 0.20)"]
         direction TB
         X1["Equipment rules:<br/>weapon types per job"]
-        X2["World map events:<br/>side battles, travellers"]
+        X2["World map events:<br/>travellers, camp scenes"]
         X3["Smarter AI:<br/>reactions, facing, 2-ply"]
-        X4["Undo move"]
+        X4["Difficulty settings"]
         X5["Multiple save slots"]
         X6["Installable PWA, offline"]
     end
     subgraph LATER["Later (1.0+)"]
         direction TB
-        L1["Chapter IV+ campaign arc"]
-        L2["More jobs: Bard, Dancer;<br/>a Revive spell"]
+        L1["Monsters with their<br/>own abilities"]
+        L2["More jobs: Bard, Dancer,<br/>Chemist"]
         L3["Workshop: community<br/>scenario gallery"]
         L4["Remappable controls"]
         L5["Localization"]
@@ -87,36 +89,37 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.16): finish and ship what exists
+### Now (0.17): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
-| **Job mastery rewards** | Job levels 4–8 unlock nothing yet | S | A small permanent bonus or a mastery ability per job at Master |
+| **Campaign Chapters IV–VI** | A playthrough is three battles; the map, market, items and mastery now have more depth than the story gives time to use | L | New maps, a third recruit, new places on the world map |
 | **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.15 (the site's project page is live) |
+| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.16 (the site's project page is live) |
 
-### Next (0.17 – 0.19): depth
+### Next (0.18 – 0.20): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
 | **Equipment rules**: weapon and armor types per job | Every job can wear everything; Armor Mastery (0.13) could become "wear plate as any job" once rules exist | M |
-| **World map events**: optional side battles, a travelling merchant with one rare item, a camp scene between chapters | The map has six places and nothing happens on the road | M |
+| **World map events**: a travelling merchant with one rare item, a camp scene between chapters, side battles with their own rewards | Side battles (0.16) all pay the same; nothing happens on the road | M |
+| **Difficulty settings** | The Final Chapter is near 0% on pure AUTO; an easier and a harder setting would widen who finishes | S |
+| **Recruiting at the market** | The squad is fixed plus one story recruit; hiring would give gil a second sink | M |
+| **Mastery abilities** | Mastery (0.16) is stat bonuses only; a signature ability per job at Master would give builds an identity | M |
 | **More supplies and a Chemist job**: an elixir, status-inflicting flasks, a job that doubles item effects and throws them further | Items are six plain supplies | M |
 | **AI: items** | Bosses could carry a potion; AUTO could use yours with a setting | S |
 | **AI: reactions and facing** | AI ignores Weapon Guard and leaves its back open ([details](ENEMY_AI.md#5-known-limits)) | M |
 | **AI: two-ply look-ahead** | Lets enemies set up combos and retreat to heal | L |
-| **Undo move** (before acting) | Standard tactics-game comfort | S |
 | **Multiple save slots** + export/import | One slot is fragile | S |
 | **PWA**: install, offline | Play on phones without a connection | S |
-| **Battle speed setting** | Fast mode exists for tests (`?fast`); expose it | S |
 
 ### Later (1.0+): breadth
 
 | Item | Size |
 | :--- | :---: |
-| Campaign Chapters IV–VI with new maps and a third recruit | L |
-| More jobs (Bard, Dancer) and a Revive spell for the White Mage (fallen units are targetable since 0.15) | L |
+| More jobs (Bard, Dancer) | L |
+| Monsters: enemies that aren't humans in player jobs, with their own abilities | L |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns) | M |
 | Remappable keyboard and controller bindings | M |
@@ -138,11 +141,11 @@ quadrantChart
     quadrant-2 "Quick wins"
     quadrant-3 "Fill-ins"
     quadrant-4 "Reconsider"
-    "Job mastery rewards": [0.2, 0.55]
+    "Difficulty settings": [0.2, 0.6]
     "Devlog + site post": [0.1, 0.55]
     "Device QA": [0.25, 0.75]
     "Play-tests in CI": [0.36, 0.65]
-    "Undo move": [0.1, 0.6]
+    "Recruiting": [0.45, 0.5]
     "Save slots": [0.22, 0.36]
     "PWA offline": [0.3, 0.52]
     "Equipment rules": [0.55, 0.53]
@@ -167,6 +170,8 @@ quadrantChart
 | QA | Browser play-tests not in CI | Medium | Now |
 | A11y | Font sizes are fixed px; no text-size setting | Low | Next |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
+| Balance | Enemy White Mages now raise their dead (0.16); the balance sim shows no clear shift, but it hasn't been played by hand against Chapter II-A's healer | Medium | Play it; cap AI raises per battle if it drags |
+| Tips | First-battle tips are remembered per device, not per save, and aren't translated into controller glyphs | Low | Fine for now |
 | Rules | Retrying a lost battle keeps the supplies spent in it, while loading a save restores them | Low | Decide on one rule; a retry could refund |
 | World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Open on the map once there is more than one thing to do there at the start |
 | Balance | `npm run balance` ignores reactions and gear, so its numbers are relative; the Final Chapter is near 0% on pure AUTO (as in 0.9) and needs re-geared or hands-on play | Low | Tune after real playtests |

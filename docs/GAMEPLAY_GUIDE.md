@@ -27,12 +27,16 @@ flowchart LR
 
 | Command | What it does | Tip |
 | :--- | :--- | :--- |
-| **MOVE** | Walk up to *Move* tiles; climb steps up to *Jump* height | Water and swamp cost 2 Move |
+| **MOVE** | Walk up to *Move* tiles; climb steps up to *Jump* height. Until the unit acts, the button reads **UNDO** and takes the move back | Water and swamp cost 2 Move |
 | **ACT** | Attack or use an ability; a **forecast** shows hit %, damage, facing and how many units an area spell catches | Spell *damage* ignores facing; physical hits from the back deal +30% |
 | **ITEM** | Use a supply instead of acting: heal, restore MP, cure ailments, raise a fallen ally, or throw a Blast Flask. Items never miss | A Potion heals the same in anyone's hands, so let your fighters carry the healing |
 | **WAIT** | End the turn and choose which way to face | Face the enemy: back attacks crit far more often |
 | **AUTO** | The AI plays this unit's turn | Great for grinding the Trials |
 | **STATUS** | Opens this unit's jobs and gear | |
+
+**New to this?** The first time each thing comes up, a short tip explains it. Tips never stop the game, and **Skip tips** turns them off (**Controls → Show tips again** brings them back). **Menu → Battle speed: Fast** halves the pauses once you know your way around.
+
+![A first-turn tip over the battlefield](images/tips.webp)
 
 **Turn order is by speed, not by team.** A turn where you only move *or* only act leaves CT at 20, and doing neither leaves it at 40, so you act again sooner. The turn-order strip shows the next 8 turns.
 
@@ -108,10 +112,20 @@ flowchart LR
 | ✓ green pin | Won |
 | 🔒 grey pin | Not open: the road you didn't take, or a place the story hasn't reached |
 | ◆ Larkmoor Market | The only place to buy and sell |
+| ⚑ orange pin | A **side battle**: optional, and it can be fought again |
 | ★ Gate of Trials | Sealed until the Final Chapter is won |
 
 * **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough.
-* **Team**, **Save** and **Menu** (sound, graphics, load, the Workshop, title screen) are in the top bar. Team works everywhere; buying and selling only at the market.
+* **Side battles** are for gil, EXP and JP, and for practice when the story gets hard. They never move the story on.
+
+  | Place | Opens | Enemies | Goal |
+  | :--- | :--- | :--- | :--- |
+  | Thornwood Ford | After Chapter I | Bandits: thieves, archers, brawlers | Defeat them all |
+  | Drowned Shrine | After Chapter II | Cultists: mages, oracles, summoners | Defeat them all |
+  | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja | Hold out for 6 rounds |
+
+  Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after.
+* **Team**, **Save** and **Menu** (sound, graphics, battle speed, load, the Workshop, title screen) are in the top bar. Team works everywhere; buying and selling only at the market.
 * **Continue** on the title screen puts you back on the map where you stood.
 * A brand-new game opens straight on Chapter I; the map appears once that battle is over.
 
@@ -126,6 +140,10 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
 * Every action earns **EXP** and **JP**; winning adds more on the **Spoils of War** screen.
 * 100 EXP is a level. JP is spent per job in **Team → Jobs → Learn abilities**.
+* **Master a job for a permanent bonus.** At job level 5 a unit earns a small bonus from that job and at level 8 (Master) a bigger one, and keeps it in every job: +25 HP from Squire, +2 ATK from Archer, +2 Speed from Time Weaver and so on ([full table](CONTENT_REFERENCE.md#job-mastery)). Bonuses from different jobs add up, so a well-travelled unit is stronger everywhere.
+
+  ![Team → Jobs: each job lists its two mastery bonuses, ticked once earned](images/mastery.webp)
+
 * **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Two advanced jobs, **Paladin** and **Spellblade**, each need two other jobs.
 * **Spend your gil at Larkmoor Market** on the world map. Enemies pay bounties and every win pays a bonus. Gear you buy, the whole squad can equip. New stock arrives each time you win a chapter. In battle, **Team → Shop** shows the shelves but the market is closed.
 
@@ -144,7 +162,8 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
   | Blast Flask | 110 G | 70 fire damage to a target and every foe beside it | 3 |
 
   You start with 3 Potions and a Phoenix Feather. Hi-Potions, Ethers and Blast Flasks are stocked after your first victory.
-* **A fallen ally isn't lost.** A ✝ marker with their name stays where they fell. Stand within 2 tiles, choose **ITEM → Phoenix Feather** and pick that tile. They rise with no statuses and wait for their next turn.
+* **A fallen ally isn't lost.** A ✝ marker with their name stays where they fell. Stand within 2 tiles, choose **ITEM → Phoenix Feather** and pick that tile. They rise with no statuses and wait for their next turn. A **White Mage** can learn **Raise**, which does the same from 3 tiles for 18 MP and brings them back with a third of their HP.
+* **Enemy White Mages raise their dead too.** Take them down first. Bosses can never be raised.
 * Mix jobs: equip another job's skillset as your **secondary action**, and any learned reaction, support or movement ability in the other slots (click the slot to cycle).
 * New gear appears in **Team → Equipment** as soon as you win it.
 * **Thieves steal.** Put a Thief next to an enemy and use *Steal*: the piece of gear it takes goes straight into your armory (best from the side or behind; bosses hold on tight). It's the fastest way to get gear early.
@@ -251,4 +270,5 @@ Workshop battles use your real squad, which keeps any EXP, JP and reward gear, b
 5. **Don't bunch up** against Black Mages: area spells hit everything within 1 tile.
 6. **Haste your best hitter.** An extra turn beats almost any single spell.
 7. **Use AUTO** to speed through easy Trial floors, then take over for Warden floors. AUTO never spends your supplies.
-8. **Pack for the fight.** Remedies for the Mire's poison, a Phoenix Feather for boss fights, and a Blast Flask to wake nothing by accident: it wakes sleeping enemies it hits.
+8. **Stuck? Train.** A side battle or two buys supplies and job levels, and a move you regret can be undone before you act.
+9. **Pack for the fight.** Remedies for the Mire's poison, a Phoenix Feather for boss fights, and a Blast Flask to wake nothing by accident: it wakes sleeping enemies it hits.

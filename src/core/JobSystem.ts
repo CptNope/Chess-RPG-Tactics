@@ -24,9 +24,39 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
 export const JOB_LEVEL_JP = [0, 100, 250, 450, 700, 1000, 1400, 1900];
 export const MAX_JOB_LEVEL = JOB_LEVEL_JP.length;
 
+/**
+ * Job mastery (0.16.0): a small permanent bonus for sticking with a job. A unit earns the first
+ * step at job level 5 (Veteran) and the full bonus at level 8 (Master), and keeps it in every
+ * job from then on. The amounts are totals, not steps: Master replaces Veteran.
+ */
+export type MasteryStat = 'hp' | 'mp' | 'attack' | 'magic' | 'speed' | 'evasion' | 'jump';
+export const VETERAN_JOB_LEVEL = 5;
+export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; master: number }> = {
+  squire: { stat: 'hp', veteran: 10, master: 25 },
+  knight: { stat: 'hp', veteran: 15, master: 35 },
+  archer: { stat: 'attack', veteran: 1, master: 2 },
+  black_mage: { stat: 'magic', veteran: 1, master: 2 },
+  white_mage: { stat: 'mp', veteran: 8, master: 20 },
+  dragoon: { stat: 'jump', veteran: 1, master: 2 },
+  ninja: { stat: 'evasion', veteran: 4, master: 8 },
+  geomancer: { stat: 'mp', veteran: 6, master: 15 },
+  time_mage: { stat: 'speed', veteran: 1, master: 2 },
+  monk: { stat: 'attack', veteran: 1, master: 2 },
+  thief: { stat: 'evasion', veteran: 3, master: 6 },
+  summoner: { stat: 'magic', veteran: 1, master: 2 },
+  oracle: { stat: 'mp', veteran: 8, master: 20 },
+  paladin: { stat: 'hp', veteran: 12, master: 30 },
+  spellblade: { stat: 'magic', veteran: 1, master: 2 }
+};
+const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
+/** "+10 HP", "+1 ATK"… */
+export const masteryLabel = (stat: MasteryStat, amount: number): string => `+${amount} ${MASTERY_NAMES[stat]}`;
+
 export interface JpGain {
   /** The job's new level, when this gain raised it. */
   leveledTo?: number;
+  /** The mastery bonus this gain earned ("+10 HP"), when it reached Veteran or Master. */
+  mastery?: string;
   /** Jobs this gain unlocked (their prerequisites are now met). */
   unlocked: string[];
 }
@@ -247,7 +277,33 @@ export class JobSystem {
     earned[jobId] = (earned[jobId] || 0) + amount;
     const after = this.jobLevel(unit, jobId);
     if (after === before) return { unlocked: [] };
-    return { leveledTo: after, unlocked: lockedBefore.filter((id) => this.canChangeJob(unit, id)) };
+    const gain: JpGain = { leveledTo: after, unlocked: lockedBefore.filter((id) => this.canChangeJob(unit, id)) };
+    const m = JOB_MASTERY[jobId];
+    const tierBefore = before >= MAX_JOB_LEVEL ? 2 : before >= VETERAN_JOB_LEVEL ? 1 : 0;
+    const tierAfter = this.masteryTier(unit, jobId);
+    if (m && tierAfter > tierBefore) {
+      gain.mastery = masteryLabel(m.stat, tierAfter === 2 ? m.master : m.veteran);
+      // The bonus counts at once. Max HP/MP grow; what the unit has right now is left alone
+      this.recalculateDerivedStats(unit);
+    }
+    return gain;
+  }
+
+  /** 0 = none yet, 1 = Veteran (job level 5), 2 = Master (job level 8). */
+  public static masteryTier(unit: Unit, jobId: string): 0 | 1 | 2 {
+    const lv = this.jobLevel(unit, jobId);
+    return lv >= MAX_JOB_LEVEL ? 2 : lv >= VETERAN_JOB_LEVEL ? 1 : 0;
+  }
+
+  /** Everything the unit's mastered jobs add, summed per stat. It applies in whatever job the unit holds. */
+  public static masteryBonus(unit: Unit): Record<MasteryStat, number> {
+    const total: Record<MasteryStat, number> = { hp: 0, mp: 0, attack: 0, magic: 0, speed: 0, evasion: 0, jump: 0 };
+    if (!unit.jobJpEarned) return total;
+    for (const [jobId, m] of Object.entries(JOB_MASTERY)) {
+      const tier = this.masteryTier(unit, jobId);
+      if (tier) total[m.stat] += tier === 2 ? m.master : m.veteran;
+    }
+    return total;
   }
 
   /**
@@ -281,12 +337,13 @@ export class JobSystem {
       }
     }
 
-    // Apply job multipliers + gear
-    unit.maxHp = Math.round(unit.baseStats.hp * job.statMultipliers.hp) + gearHp;
-    unit.maxMp = Math.round(unit.baseStats.mp * job.statMultipliers.mp) + gearMp;
+    // Apply job multipliers + gear + job mastery
+    const mastery = this.masteryBonus(unit);
+    unit.maxHp = Math.round(unit.baseStats.hp * job.statMultipliers.hp) + gearHp + mastery.hp;
+    unit.maxMp = Math.round(unit.baseStats.mp * job.statMultipliers.mp) + gearMp + mastery.mp;
 
     // Speed calculation
-    let spd = Math.round(unit.baseStats.speed * job.statMultipliers.speed) + gearSpd;
+    let spd = Math.round(unit.baseStats.speed * job.statMultipliers.speed) + gearSpd + mastery.speed;
     if (unit.statuses.some((s) => s.type === 'haste')) {
       spd = Math.round(spd * 1.5);
     }
@@ -297,7 +354,7 @@ export class JobSystem {
 
     // Movement & Jump
     let move = job.baseMove + gearMove;
-    let jump = job.baseJump + gearJump;
+    let jump = job.baseJump + gearJump + mastery.jump;
 
     if (unit.statuses.some((s) => s.type === 'immobilize')) {
       move = 0;
@@ -321,7 +378,7 @@ export class JobSystem {
 
     unit.move = Math.max(0, move);
     unit.jump = Math.max(1, jump);
-    unit.evasion = gearEva;
+    unit.evasion = gearEva + mastery.evasion;
   }
 
   public static equipItem(unit: Unit, item: Item): void {
@@ -375,7 +432,7 @@ export class JobSystem {
    */
   public static getAttackPower(unit: Unit): number {
     const job = JOBS[unit.jobId] || JOBS.squire;
-    let atk = unit.baseStats.attack * job.statMultipliers.attack + this.gearStat(unit, 'attack');
+    let atk = unit.baseStats.attack * job.statMultipliers.attack + this.gearStat(unit, 'attack') + this.masteryBonus(unit).attack;
     if (unit.statuses.some((s) => s.type === 'focus')) atk *= 1.25;
     if (unit.isEnraged) atk *= 1.2;
     return atk;
@@ -384,7 +441,7 @@ export class JobSystem {
   /** Effective magical power: base stat scaled by the current job, plus gear MAG. */
   public static getMagicPower(unit: Unit): number {
     const job = JOBS[unit.jobId] || JOBS.squire;
-    let mag = unit.baseStats.magic * job.statMultipliers.magic + this.gearStat(unit, 'magic');
+    let mag = unit.baseStats.magic * job.statMultipliers.magic + this.gearStat(unit, 'magic') + this.masteryBonus(unit).magic;
     if (unit.isEnraged) mag *= 1.2;
     return mag;
   }

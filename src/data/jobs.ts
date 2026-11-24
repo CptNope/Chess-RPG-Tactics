@@ -470,6 +470,21 @@ export const JOBS: Record<string, Job> = {
         appliesStatus: 'protect'
       },
       {
+        id: 'wm_raise',
+        name: 'Raise',
+        jobId: 'white_mage',
+        type: 'action',
+        description: 'Calls a fallen ally back to their feet with a third of their HP. Bosses cannot be raised.',
+        jpCost: 260,
+        mpCost: 18,
+        range: 3,
+        heightTolerance: 2.0,
+        aoe: 0,
+        power: 0,
+        element: 'holy',
+        revive: 0.33
+      },
+      {
         id: 'wm_auto_potion',
         name: 'Auto-Potion',
         jobId: 'white_mage',

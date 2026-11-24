@@ -23,6 +23,8 @@ export interface GameSaveData {
   onWorldMap?: boolean;
   /** The world-map location the party stands at (0.15.0). */
   worldLocation?: string;
+  /** Added in 0.16.0: wins at each side-battle place. */
+  skirmishWins?: Record<string, number>;
 }
 
 const BEST_FLOOR_KEY = 'chess_rpg_tactics_best_trial_v1';
@@ -37,11 +39,11 @@ export class SaveManager {
   public static saveGame(
     chapterId: string,
     playerUnits: Unit[],
-    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation'> = {}
+    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation' | 'skirmishWins'> = {}
   ): boolean {
     try {
       const saveData: GameSaveData = {
-        version: '0.15.0',
+        version: '0.16.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,

@@ -19,10 +19,11 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | | |
 | :--- | :--- |
 | **Tactics** | Speed-based turn order (CT), front / flank / back attacks, height advantage, terrain movement costs, area spells |
-| **Squad building** | 15 jobs on a job tree (jobs level up and unlock advanced jobs), 86 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
+| **Squad building** | 15 jobs on a job tree (jobs level up, unlock advanced jobs, and give permanent mastery bonuses), 87 abilities, five ability slots (primary, secondary, reaction, support, movement), EXP and per-job JP |
 | **Gear & gil** | 54 pieces of gear, some with traits; earn gil from battles; buy and sell at the market; steal gear off enemies |
 | **Items** | Potions, Ethers, Remedies, Phoenix Feathers and Blast Flasks, used in battle with the Item command |
-| **World map** | Between missions the squad walks a map of the realm: visit the market, pick which road the story takes, enter the Trials |
+| **World map** | Between missions the squad walks a map of the realm: visit the market, pick which road the story takes, fight optional side battles, enter the Trials |
+| **Easy to pick up** | Tips the first time each thing comes up, undo for a misplaced move, and a Fast battle speed |
 | **Campaign** | A branching campaign (four chapters, three per playthrough) on 16×16 battlefields, with a recruit, boss fights with enrage phases, and gear rewards |
 | **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters. **AUTO** lets it play your turn |
@@ -92,7 +93,7 @@ Press **H**, the **?** button, or **View/Back** on a controller for the in-game 
 | **Pen** | Tap (hover previews) | Eraser / barrel button | Drag | — | ⟲ ⟳ buttons |
 | **Controller** | D-pad + A | B | Right stick | LT / RT | LB / RB |
 
-Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` Item · `R` re-center · `J` Team · `L` Log · `H` Controls. Full matrix: **[Controls & Camera](docs/CONTROLS_AND_CAMERA.md)**.
+Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` Item · `1` again to undo a move · `R` re-center · `J` Team · `L` Log · `H` Controls. Full matrix: **[Controls & Camera](docs/CONTROLS_AND_CAMERA.md)**.
 
 ---
 
@@ -101,7 +102,7 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` I
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 119 rule tests
+npm test             # 134 rule tests
 npm run build        # type-check + production build
 npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
 npm run balance      # headless AUTO battles: win rate per chapter

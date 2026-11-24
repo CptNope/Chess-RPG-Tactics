@@ -41,6 +41,8 @@ export function unitsInBlast(caster: Unit, ability: Ability, cx: number, cz: num
   const supportive = CombatEngine.isSupportive(ability);
   return units.filter((u) => {
     if (u.isDead !== !!ability.revive) return false;
+    // The fallen can only be raised where nobody is standing, and never a boss
+    if (ability.revive && (u.isBoss || units.some((o) => !o.isDead && o.x === u.x && o.z === u.z))) return false;
     const dist = Math.abs(u.x - cx) + Math.abs(u.z - cz);
     if (dist > ability.aoe) return false;
     return supportive ? u.team === caster.team : u.team !== caster.team;
@@ -63,6 +65,12 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     const isSplash = ability.aoe > 0 && (v.x !== aim.x || v.z !== aim.z);
     const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash);
     const p = fc.hitChance / 100;
+
+    // Raising a fallen ally is worth about as much as a kill: it puts a whole unit back on the board
+    if (ability.revive) {
+      score += 110 + v.level * 2;
+      continue;
+    }
 
     // Cleansing is worth ~25 a removed ailment (sleep and silence more)
     if (ability.cleanse) {
@@ -149,7 +157,9 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid): AiPlan {
         const supportive = CombatEngine.isSupportive(ability);
 
         // Candidate aim points: every unit on the relevant side within reach
-        const aimUnits = ability.isSelfOnly ? [unit] : supportive ? alliesOf(unit, units) : foes;
+        const aimUnits = ability.isSelfOnly ? [unit]
+          : ability.revive ? units.filter((u) => u.isDead && u.team === unit.team) // a revive aims at the fallen
+          : supportive ? alliesOf(unit, units) : foes;
         for (const aim of aimUnits) {
           const ax = aim.id === unit.id ? tile.x : aim.x;
           const az = aim.id === unit.id ? tile.z : aim.z;
