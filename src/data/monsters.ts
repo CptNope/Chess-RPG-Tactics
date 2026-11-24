@@ -4,8 +4,8 @@
  * Each is a Job with `monster: true`, so the battle rules, the planner, the balance sim and the
  * Workshop treat it like any other enemy, but it never shows up in a player's job list, the
  * recruiting board or the job tree. Monsters wear no gear: their stats come from the job alone,
- * every action is theirs from level 1, and `innate` gives them the statuses and immunities gear
- * gives people. Their bodies are drawn in graphics/MonsterArt.ts.
+ * every action is theirs from level 1, and `innate` gives them what gear gives people: stats
+ * (fangs, hide, a ghostly glow; 0.27.0), statuses they start with and ailments they shrug off. Their bodies are drawn in graphics/MonsterArt.ts.
  */
 import { Ability, Job } from '../core/types';
 
@@ -26,6 +26,7 @@ export const MONSTERS: Record<string, Job> = {
     baseMove: 5,
     baseJump: 2,
     statMultipliers: { hp: 1.0, mp: 0.5, attack: 1.45, magic: 0.3, speed: 1.2 },
+    innate: { stats: { attack: 6, hp: 20, evasion: 14 } },
     abilities: [
       act({ id: 'mon_bite', name: 'Bite', description: 'Sinks its fangs in.', range: 1, power: 1.1, element: 'physical' }),
       act({ id: 'mon_lunge', name: 'Lunge', description: 'Leaps at a foe two tiles away.', range: 2, power: 0.9, element: 'physical' }),
@@ -40,7 +41,7 @@ export const MONSTERS: Record<string, Job> = {
     baseMove: 4,
     baseJump: 8,
     statMultipliers: { hp: 1.15, mp: 0.5, attack: 1.4, magic: 0.6, speed: 1.05 },
-    innate: { immune: ['immobilize'] },
+    innate: { immune: ['immobilize'], stats: { attack: 6, hp: 30, evasion: 8 } },
     abilities: [
       act({ id: 'mon_tail_sting', name: 'Tail Sting', description: 'A venomous sting: damage and Poison.', range: 1, power: 0.9, element: 'physical', appliesStatus: 'poison' }),
       act({ id: 'mon_swoop', name: 'Swoop', description: 'Dives on a foe up to 3 tiles away, from any height.', range: 3, heightTolerance: 8, power: 1.1, element: 'physical' }),
@@ -55,7 +56,7 @@ export const MONSTERS: Record<string, Job> = {
     baseMove: 3,
     baseJump: 1,
     statMultipliers: { hp: 1.45, mp: 0.4, attack: 1.15, magic: 0.5, speed: 0.8 },
-    innate: { startStatus: ['regen'], immune: ['poison', 'blind', 'sleep'] },
+    innate: { startStatus: ['regen'], immune: ['poison', 'blind', 'sleep'], stats: { attack: 6, hp: 30 } },
     abilities: [
       act({ id: 'mon_acid', name: 'Acid Touch', description: 'Burns through armor: damage and Breach.', range: 1, power: 0.85, element: 'physical', appliesStatus: 'breach' }),
       act({ id: 'mon_engulf', name: 'Engulf', description: 'Swallows a foe\'s legs: damage and Immobilize.', range: 1, power: 0.7, element: 'physical', appliesStatus: 'immobilize' }),
@@ -70,11 +71,11 @@ export const MONSTERS: Record<string, Job> = {
     baseMove: 4,
     baseJump: 8,
     statMultipliers: { hp: 1.05, mp: 1.4, attack: 0.85, magic: 1.3, speed: 1.15 },
-    innate: { immune: ['poison', 'sleep', 'immobilize'] },
+    innate: { immune: ['poison', 'sleep', 'immobilize'], stats: { magic: 18, mp: 20, evasion: 16 } },
     abilities: [
-      act({ id: 'mon_wisp_flame', name: 'Wisp Flame', description: 'Cold fire from up to 4 tiles away.', range: 4, heightTolerance: 3, power: 0.95, element: 'fire', mpCost: 4 }),
-      act({ id: 'mon_lure', name: 'Lure', description: 'A dancing light: Sleep on a foe up to 3 tiles away.', range: 3, heightTolerance: 3, power: 0, element: 'dark', appliesStatus: 'sleep', mpCost: 8 }),
-      act({ id: 'mon_drain_light', name: 'Drain Light', description: 'Feeds on a foe\'s life: damage, and the wisp heals half of it.', range: 3, heightTolerance: 3, power: 0.8, element: 'dark', drain: 0.5, mpCost: 10 })
+      act({ id: 'mon_wisp_flame', name: 'Wisp Flame', description: 'Cold fire from up to 4 tiles away.', range: 4, heightTolerance: 3, power: 1.25, element: 'fire', mpCost: 4 }),
+      act({ id: 'mon_lure', name: 'Lure', description: 'A dancing light that may lull a foe up to 2 tiles away to Sleep. Easy to resist.', range: 2, heightTolerance: 3, power: 0, element: 'dark', appliesStatus: 'sleep', accuracy: -30, mpCost: 14 }),
+      act({ id: 'mon_drain_light', name: 'Drain Light', description: 'Feeds on a foe\'s life: damage, and the wisp heals half of it.', range: 3, heightTolerance: 3, power: 1.0, element: 'dark', drain: 0.5, mpCost: 10 })
     ]
   }),
   brute: monster({
@@ -85,7 +86,7 @@ export const MONSTERS: Record<string, Job> = {
     baseMove: 3,
     baseJump: 1,
     statMultipliers: { hp: 1.45, mp: 0.3, attack: 1.4, magic: 0.3, speed: 0.75 },
-    innate: { startStatus: ['protect'], immune: ['poison'] },
+    innate: { startStatus: ['protect'], immune: ['poison'], stats: { attack: 6, hp: 40 } },
     abilities: [
       act({ id: 'mon_smash', name: 'Smash', description: 'A crushing blow.', range: 1, power: 1.2, element: 'physical' }),
       act({ id: 'mon_ground_pound', name: 'Ground Pound', description: 'Hits every foe next to it: damage and Immobilize.', range: 0, aoe: 1, power: 0.8, element: 'physical', centered: true, appliesStatus: 'immobilize' }),
