@@ -7,6 +7,7 @@ import { ITEMS } from '../src/data/items';
 import { JobSystem } from '../src/core/JobSystem';
 import { DIFFICULTIES, DIFFICULTY_ORDER, enemyLevel, sanitizeDifficulty, scaleBoss } from '../src/core/Difficulty';
 import { SaveManager, SAVE_SLOTS, MAX_IMPORT_BYTES, cleanName } from '../src/core/SaveManager';
+import { MAX_SQUAD } from '../src/core/Recruits';
 
 // A small in-memory localStorage (the tests run in Node)
 class MemoryStorage {
@@ -152,7 +153,7 @@ describe('importing a save', () => {
       ]
     };
     const d = SaveManager.parseImport(JSON.stringify(evil));
-    expect(d.units.length).toBe(8); // a squad, not an army
+    expect(d.units.length).toBe(MAX_SQUAD); // a squad (the barracks hold 10, 0.25.0), not an army
     expect(d.units[0].jobId).toBe('squire'); // a job id that would reach Object.prototype
     expect(d.units[0].equipment.weapon?.id).not.toBe('__proto__');
     const u = d.units[1];

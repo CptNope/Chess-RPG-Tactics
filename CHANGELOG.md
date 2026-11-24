@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.25.0] - 2026-11-24
+
+### Added — recruiting
+- **The market has a recruiting board.** Three hopefuls stand by it, each with a name, a job, a level (about one below your squad's) and a line about themselves. Hire one for 200 G plus 90 a level, a quarter more for a job that needs others first. A hire arrives in their job with its gear, its first ability and JP to spend on more.
+- **The board changes after every battle won**, like the travelling merchant, and more jobs appear on it as the story goes on: the basic eight at first, Dragoon, Geomancer, Ninja, Time Weaver, Oracle and Summoner after two chapters, and Paladin, Spellblade, Bard and Dancer after four.
+- **The squad can grow to ten** (the barracks).
+
+### Added — choosing the party
+- **Six fight at a time.** When the squad has more than six, **Choose your party** opens before a story battle, a side battle or the Trials: tap a unit to put it in the party or in reserve. The pick is remembered.
+- **Rowan leads and always goes.** A story recruit fights the battle they join and takes one of the six places; the screen says so.
+- **Barracks** at the market sets the party any time and lets you **dismiss** a hired unit (after a confirmation). Story characters can't be dismissed. Gear stays in the armory.
+- Units in reserve keep their levels, jobs and gear, but earn no EXP or JP while they sit out.
+
+### Changed
+- Save files carry up to ten squad members (was eight), the party pick, and who was hired from the current board.
+
+### Developer
+- `src/core/Recruits.ts`: `recruitBoard`, `recruitJobs`, `recruitLevel`, `recruitPrice`, `hireRecruit`, `isHired`, `chooseParty`, `sanitizeParty`, `sanitizeRecruitHires`; `MAX_SQUAD`, `PARTY_SIZE`, `LEADER_ID`.
+- The battle setup deploys `chooseParty(...)` rather than the whole squad, and the spoils go to whoever deployed.
+- 11 new tests (233 total) in `tests/recruits.test.ts`. [ADR 0033](docs/adr/0033-recruiting-and-the-party.md).
+
 ## [0.24.0] - 2026-11-24
 
 ### Added — summons you can see

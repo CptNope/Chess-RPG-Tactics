@@ -5,12 +5,14 @@ import { UIManager } from './ui/UIManager';
 import { TurnManager } from './core/TurnManager';
 import { JobSystem, JpGain, MAX_JOB_LEVEL } from './core/JobSystem';
 import { JOBS } from './data/jobs';
+import { drawSprite } from './graphics/CharacterArt';
 import { WorldMap } from './ui/WorldMap';
 import { DIFFICULTIES, DIFFICULTY_ORDER, Difficulty, enemyLevel, sanitizeDifficulty, scaleBoss } from './core/Difficulty';
 import { Tutorial, TipId, TIPS } from './ui/Tutorial';
 import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize } from './ui/TextSize';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, missingTrophies, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { MERCHANT_NAME, MerchantSales, merchantVisit, merchantVisitIndex, sanitizeMerchantSales } from './core/Merchant';
+import { LEADER_ID, MAX_SQUAD, PARTY_SIZE, RecruitHires, chooseParty, hireRecruit, isHired, recruitBoard, sanitizeParty, sanitizeRecruitHires } from './core/Recruits';
 import { CAMP_JP, pendingCamp, sanitizeCampSeen } from './data/camp';
 import { SIGNATURES } from './data/signatures';
 import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
@@ -97,6 +99,12 @@ class TacticsGame {
   private campSeen: string[] = [];
   /** Bought from the travelling merchant on her current visit (0.21.0). */
   private merchantSales: MerchantSales | undefined;
+  /** The party the player picked when the squad outgrew it (0.25.0), by unit id. */
+  private party: string[] | undefined;
+  /** Who fights the current battle: a subset of the squad (0.25.0). */
+  private deployed: string[] = [];
+  /** Who was hired from the market's current recruiting board (0.25.0). */
+  private recruitHires: RecruitHires | undefined;
   /** The campaign chapter to return to after Workshop battles (and to save). */
   private campaignChapterId = 'chapter_1';
   /** Campaign chapters won this run, in order. */
@@ -161,15 +169,19 @@ class TacticsGame {
         skirmishWins: this.skirmishWins,
         armory: this.armory,
         merchant: this.merchant(),
-        camp: pendingCamp(this.clearedChapters, this.campSeen)
+        camp: pendingCamp(this.clearedChapters, this.campSeen),
+        recruits: this.recruitBoard(),
+        squadSize: this.squad.length
       }),
-      skirmish: (id) => this.startSkirmish(id),
+      hire: (slot) => this.hire(slot),
+      barracks: () => this.openParty(null),
+      skirmish: (id) => this.withParty(() => this.startSkirmish(id)),
       buyFromMerchant: (id) => this.buyFromMerchant(id),
       makeCamp: () => this.makeCamp(),
       tip: () => (this.tutor.wants('worldMap') ? TIPS.worldMap : null),
       tipSeen: () => this.tutor.markSeen('worldMap'),
-      march: (m) => this.marchTo(m),
-      enterTrials: () => { this.world.close(); this.startTrial(Math.max(1, this.trialsFloor)); },
+      march: (m) => this.withParty(() => this.marchTo(m), CAMPAIGN_CHAPTERS[m.chapterId]?.recruit),
+      enterTrials: () => this.withParty(() => { this.world.close(); this.startTrial(Math.max(1, this.trialsFloor)); }),
       newGamePlus: () => this.startNewGamePlus(),
       openTeam: () => this.openTeamFor(null),
       openShop: () => {
@@ -282,13 +294,18 @@ class TacticsGame {
     this.scene.vfx.setWeatherTheme(this.grid.mapData.theme);
   }
 
-  /** Puts every squad member on a free, walkable deployment tile with full HP/MP. */
+  /** The squad members fighting this battle (0.25.0). */
+  private deployedUnits(): Unit[] {
+    return this.squad.filter((u) => this.deployed.includes(u.id));
+  }
+
+  /** Puts every deployed squad member on a free, walkable deployment tile with full HP/MP. */
   private deploySquad(): void {
     const taken = new Set<string>();
     for (const e of this.units.filter((u) => u.team === 'enemy')) taken.add(`${e.x},${e.z}`);
 
     const spawns = spawnsFor(this.grid.mapData);
-    this.squad.forEach((member, i) => {
+    this.deployedUnits().forEach((member, i) => {
       let spot = spawns[i % spawns.length];
       const ok = (x: number, z: number) => this.grid.isWalkable(x, z) && !taken.has(`${x},${z}`);
       if (!ok(spot.x, spot.z)) {
@@ -334,10 +351,13 @@ class TacticsGame {
       if (!this.armory.includes('gaia_staff')) this.armory.push('gaia_staff');
     }
 
+    // Who fights: everyone if the squad fits, else the party picked, with the leader and a story
+    // recruit joining in this battle always in it (0.25.0)
+    this.deployed = chooseParty(this.squad, this.party, chapter.recruit ? [chapter.recruit.id] : []);
     const enemies = this.spawnEnemies(chapter);
     this.units = [...enemies];
     this.deploySquad();
-    this.units = [...this.squad, ...enemies];
+    this.units = [...this.deployedUnits(), ...enemies];
     this.turnManager = new TurnManager(this.units);
     this.kills = {};
     this.enemyRaises = 0;
@@ -793,6 +813,8 @@ class TacticsGame {
       skirmishWins: this.skirmishWins,
       campSeen: this.campSeen,
       merchantSales: this.merchantSales,
+      party: this.party,
+      recruitHires: this.recruitHires,
       worldLocation: this.world.location,
       difficulty: this.difficulty
     }, this.saveSlot);
@@ -865,6 +887,8 @@ class TacticsGame {
     this.campaignChapterId = chapterId;
     this.campSeen = sanitizeCampSeen(data.campSeen, this.clearedChapters);
     this.merchantSales = sanitizeMerchantSales(data.merchantSales);
+    this.party = sanitizeParty(data.party);
+    this.recruitHires = sanitizeRecruitHires(data.recruitHires);
     this.world.close();
     if (data.onWorldMap) {
       // Saved between missions: back to the map, where the squad was standing
@@ -2056,7 +2080,7 @@ class TacticsGame {
   /** Awards end-of-battle EXP/JP/items and shows the spoils screen. */
   private showSpoils(): void {
     const rows: string[] = [];
-    for (const u of this.squad) {
+    for (const u of this.deployedUnits()) {
       const survived = !u.isDead;
       const exp = survived ? 40 : 15;
       const jp = survived ? 60 : 20;
@@ -2241,6 +2265,8 @@ class TacticsGame {
     this.skirmishWins = {};
     this.campSeen = [];
     this.merchantSales = undefined;
+    this.party = undefined;
+    this.recruitHires = undefined;
     this.trialsFloor = 0;
     this.world.close();
     this.world.location = 'ruins';
@@ -2253,6 +2279,106 @@ class TacticsGame {
   /** Where the travelling merchant is and what she sells, from progress alone (0.21.0). */
   private merchant() {
     return merchantVisit(this.clearedChapters, this.skirmishWins, this.shopLevel(), this.armory, this.merchantSales);
+  }
+
+  /** The market's recruiting board for the current visit (0.25.0). */
+  private recruitBoard() {
+    const visit = merchantVisitIndex(this.clearedChapters, this.skirmishWins);
+    return recruitBoard(visit, this.clearedChapters.length, this.squad, this.recruitHires);
+  }
+
+  /** Hires a hopeful: only on the map, at the market, with room and the gil (0.25.0). */
+  private hire(slot: number): boolean {
+    const offer = this.recruitBoard().find((r) => r.slot === slot);
+    if (!offer || offer.hired || !this.world.isOpen || this.world.location !== 'market' || this.squad.length >= MAX_SQUAD || this.gil < offer.price) return false;
+    this.gil -= offer.price;
+    const u = hireRecruit(offer, this.squad.map((x) => x.id));
+    this.squad.push(u);
+    // Their kit counts as owned, as it does for everyone in a loaded save
+    for (const it of Object.values(u.equipment)) if (it && !this.armory.includes(it.id)) this.armory.push(it.id);
+    if (this.recruitHires?.visit !== offer.visit) this.recruitHires = { visit: offer.visit, slots: [] };
+    this.recruitHires.slots.push(slot);
+    // A pick made before stays as it was; a new face joins it if there's room
+    if (this.party && this.party.length < PARTY_SIZE) this.party.push(u.id);
+    SoundFX.playTurnChime();
+    this.ui.showBanner(`${u.name.toUpperCase()} JOINS THE SQUAD`);
+    const benched = this.squad.length > PARTY_SIZE && !chooseParty(this.squad, this.party).includes(u.id);
+    this.ui.addLogEntry(`[RECRUIT] ${u.name} the ${JOBS[u.jobId].name} joins for ${offer.price} G.${benched ? ' Six fight at a time: choose the party in the Barracks.' : ''}`, 'system');
+    this.saveGame(false);
+    return true;
+  }
+
+  /**
+   * Runs `go` once the party is settled (0.25.0): straight away when the squad fits, else after the
+   * player picks who fights. `joining` is a story recruit who joins in that battle and takes a place.
+   */
+  private withParty(go: () => void, joining?: { id: string; name: string }): void {
+    const newcomer = joining && !this.squad.some((u) => u.id === joining.id) ? joining : undefined;
+    if (this.squad.length + (newcomer ? 1 : 0) <= PARTY_SIZE) return go();
+    this.openParty(go, newcomer);
+  }
+
+  /**
+   * The party screen (0.25.0). Before a battle (`go` set) it picks who fights; from the market's
+   * Barracks (`go` null) it also lets hired units be dismissed.
+   */
+  private openParty(go: (() => void) | null, newcomer?: { id: string; name: string }, pickIn?: string[]): void {
+    const seats = PARTY_SIZE - (newcomer ? 1 : 0);
+    let pick = (pickIn || chooseParty(this.squad, this.party)).filter((id) => this.squad.some((u) => u.id === id)).slice(0, seats);
+    if (!pick.includes(LEADER_ID) && this.squad.some((u) => u.id === LEADER_ID)) pick = [LEADER_ID, ...pick].slice(0, seats);
+    const render = () => {
+      const cards = this.squad.map((u) => {
+        const on = pick.includes(u.id);
+        const lead = u.id === LEADER_ID;
+        return `<div class="party-card${on ? ' in' : ''}" data-id="${esc(u.id)}">
+          <canvas width="48" height="48" aria-hidden="true"></canvas>
+          <div class="party-info"><b>${esc(u.name)}</b><small>${esc(JOBS[u.jobId]?.name || u.jobId)} Lv ${u.level} · HP ${u.maxHp} · MP ${u.maxMp}</small></div>
+          <div class="party-buttons">
+            ${lead ? '<span class="party-lock">LEADS</span>' : `<button data-act="toggle" class="${on ? 'primary' : ''}" aria-pressed="${on}">${on ? 'In party' : 'Reserve'}</button>`}
+            ${!go && isHired(u) ? '<button data-act="dismiss">Dismiss</button>' : ''}
+          </div>
+        </div>`;
+      }).join('');
+      const joinNote = newcomer ? `<p class="party-count">${esc(newcomer.name)} joins you in this battle and takes a place.</p>` : '';
+      this.ui.showResultModal({
+        title: go ? 'CHOOSE YOUR PARTY' : 'BARRACKS',
+        subtitle: `${PARTY_SIZE} fight at a time. Rowan leads and always goes. Units in reserve keep their levels, jobs and gear, but earn nothing while they sit out.`,
+        bodyHtml: `${joinNote}<p class="party-count">In the party: ${pick.length + (newcomer ? 1 : 0)} / ${PARTY_SIZE} · Barracks ${this.squad.length} / ${MAX_SQUAD}</p><div class="party-list">${cards}</div>`,
+        buttons: go
+          ? [{ label: `March with ${pick.length + (newcomer ? 1 : 0)}`, primary: true, onClick: () => { this.party = [...pick]; this.ui.hideResultModal(); go(); } },
+             { label: 'Back', onClick: () => { this.party = [...pick]; this.ui.hideResultModal(); this.world.refresh(); } }]
+          : [{ label: 'Done', primary: true, onClick: () => { this.party = [...pick]; this.ui.hideResultModal(); this.saveGame(false); this.world.refresh(); } }]
+      });
+      for (const card of document.querySelectorAll<HTMLElement>('#result-body .party-card')) {
+        const u = this.squad.find((x) => x.id === card.dataset.id);
+        if (!u) continue;
+        const pic = card.querySelector('canvas')!.getContext('2d')!;
+        pic.drawImage(drawSprite(u.jobId, 'S', false, 'idle0'), 0, 0);
+        const toggle = card.querySelector<HTMLButtonElement>('[data-act="toggle"]');
+        if (toggle && !pick.includes(u.id) && pick.length >= seats) {
+          toggle.disabled = true;
+          toggle.title = 'The party is full: put someone in reserve first';
+        }
+        toggle?.addEventListener('click', () => {
+          SoundFX.playMenuBlip();
+          pick = pick.includes(u.id) ? pick.filter((id) => id !== u.id) : pick.length < seats ? [...pick, u.id] : pick;
+          render();
+          this.ui.focusForNav(document.querySelector<HTMLElement>(`#result-body .party-card[data-id="${CSS.escape(u.id)}"] [data-act="toggle"]`));
+        });
+        card.querySelector('[data-act="dismiss"]')?.addEventListener('click', () => {
+          SoundFX.playMenuBlip();
+          this.confirm(`Dismiss ${u.name}?`, `${u.name} leaves the squad for good, with their levels and JP. Their gear stays in your armory.`, 'Dismiss', () => {
+            this.squad = this.squad.filter((x) => x.id !== u.id);
+            pick = pick.filter((id) => id !== u.id);
+            this.party = this.party?.filter((id) => id !== u.id);
+            this.ui.addLogEntry(`[RECRUIT] ${u.name} leaves the squad.`, 'system');
+            this.saveGame(false);
+            this.openParty(go, newcomer, pick);
+          }, () => this.openParty(go, newcomer, pick));
+        });
+      }
+    };
+    render();
   }
 
   /** Buys from the travelling merchant: only on the map, standing where she is. */

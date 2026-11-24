@@ -42,6 +42,7 @@ timeline
         0.22.0 : Bard and Dancer : Performances that play each turn : Encore and Resonance
         0.23.0 : Master signatures for all 18 jobs
         0.24.0 : Summons on screen : Grand summons that land next turn
+        0.25.0 : Recruiting board : Barracks of ten : Choose your party of six
 ```
 
 | Version | Theme | Highlights |
@@ -54,6 +55,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.25 | Recruits | A recruiting board at the market (three hopefuls, new after each win, more jobs as the story goes on); a barracks of ten; choose a party of six before each battle; dismiss hires |
 | 0.24 | Summons | Every summon's creature drawn over the battlefield (Salamander, Undine, Storm Roc, Sylph, Golem, Celestial Call); three grand summons (Cinderwing, Tidewyrm, Elder Wyrm) that mark their area and land on the caller's next turn; the Chapter V boss calls one |
 | 0.23 | Signatures | Mastering a job brings its signature: 18 once-a-battle actions, kept in every job |
 | 0.22 | Encore | The Bard and the Dancer (18 jobs, 105 abilities); songs and dances that play again each turn the performer holds its ground; two new reactions; job changes can't leave HP above the maximum |
@@ -74,21 +76,20 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.24.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.25.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.25): needs a person"]
+    subgraph NOW["Now (0.26): needs a person"]
         direction TB
         N1["Play the campaign by hand:<br/>Chapter III, Act II"]
         N2["Real-device QA:<br/>iOS Safari, Android, pads"]
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.25 – 0.27): depth"]
+    subgraph NEXT["Next (0.26 – 0.28): depth"]
         direction TB
         X1["AI: items and<br/>two-ply look-ahead"]
-        X3["Recruiting at the market"]
         X5["Play-tests in CI"]
         X7["Equipment rules"]
     end
@@ -104,7 +105,7 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.25): checks that need a person
+### Now (0.26): checks that need a person
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
@@ -113,11 +114,11 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.25 – 0.27): depth
+### Next (0.26 – 0.28): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **Recruiting at the market** | The squad is the opening four plus two story recruits; hiring (and choosing who deploys) would give gil a second sink | M |
+| **Reserve training** | Units in reserve earn nothing (0.25); if a big squad falls behind in hand play, a share of the spoils for the reserve | S |
 | **Play-test suite in CI** | Device matrix, input, campaign and feature bots exist but aren't committed | M |
 | **Equipment rules**: weapon and armor types per job | Every job can wear everything | M |
 | **AI: items and two-ply look-ahead** | Bosses could carry a potion; enemies could set up combos and retreat to heal. A one-turn threat term was tried in 0.20 and changed nothing ([details](ENEMY_AI.md#5-known-limits)) | L |

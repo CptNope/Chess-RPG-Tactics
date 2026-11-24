@@ -62,6 +62,7 @@ flowchart TB
 | **WorldMap** | `src/ui/WorldMap.ts` | Draws the map (a painted 320×180 canvas with real buttons over it), walks the party marker, shows what the current place offers. Talks to the game through a small `WorldHost` interface | World, CharacterArt |
 | **Skirmish** | `src/core/Skirmish.ts` | Side battles: the three places, when each opens, enemy level from the squad and past wins, the generated roster, the gil bonus | data, Trials (seeded RNG) |
 | **Tutorial** | `src/ui/Tutorial.ts` | First-time tips: which have been seen (per device), showing one at a time without taking focus | — |
+| **Recruits** | `src/core/Recruits.ts` | The market's recruiting board (seeded by battles won), hiring, who can be dismissed, and the party of six (0.25) | jobs data, JobSystem |
 | **Summons** | `src/core/Summons.ts` | Grand summons: starting a call, the call due at a turn's start, breaking it, its marked area, how many foes' calls land on a tile, Cinderwing's raise (0.24) | jobs data |
 | **Performances** | `src/core/Performance.ts` | Bard songs and Dancer dances: Encore turns, Resonance's reach, starting, ending and the encore due at a turn's start (0.22) | jobs data |
 | **Travelling merchant** | `src/core/Merchant.ts` | Where Wenna is and what she sells, worked out from progress the save already keeps (won chapters, side-battle wins, shelf, armory), plus the wares sold on this visit (0.21) | — |
@@ -449,6 +450,7 @@ src/
 │   ├── Merchant.ts         The travelling merchant: where she is, what she sells
 │   ├── Performance.ts      Songs and dances that play again each turn
 │   ├── Summons.ts          Grand summons that land on the caller's next turn
+│   ├── Recruits.ts         The recruiting board, hiring and the party of six
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
 ├── data/                   Content: jobs, items, consumables, maps, campaign, camp scenes, Master signatures
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
@@ -459,7 +461,7 @@ src/
 ├── ui/                     UIManager, Workshop, WorldMap, Tutorial, TextSize
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events, performers, signatures, summons (222 rule tests)
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events, performers, signatures, summons, recruits (233 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts, sw-plugin.ts (offline worker), package-itch.mjs
 public/                     manifest.webmanifest, icons/ (installable app)
 docs/                       This documentation + ADRs
