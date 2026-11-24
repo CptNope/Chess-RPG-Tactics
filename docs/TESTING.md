@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 156 tests"]
+        T2["Unit tests<br/>vitest · 166 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
     end
@@ -41,7 +41,7 @@ flowchart TB
 
 ## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`)
 
-All 156 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 166 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -60,6 +60,7 @@ All 156 tests import `src/core` and `src/data` directly in Node. No browser is n
 | **Act II (0.17)** | 4 | The story runs from the Summit through one road to a single finale; a squad that finished the first act finds Chapter IV open and nothing behind it reopened; on each new battlefield every enemy can be reached from the deployment tiles by a unit with Jump 2, nobody deploys on anybody else, and there are six deployment tiles; enemy levels rise chapter by chapter with one boss each |
 | **Difficulty and saves (0.18)** | 10 | Easy → Normal → Hard on every dial, Normal unchanged; enemy levels shift and never drop below 1; boss HP scales and nobody else's; slot 1 is the old save key; slots are independent, Continue finds the newest, New Game the first empty; bad slot numbers write nothing; an exported save imports back intact; non-saves and oversized files are refused with a readable message; a hostile file loses its HTML names, unknown jobs, abilities, items, prototype keys and out-of-range numbers |
 | **Chemist and supplies (0.19)** | 8 | The Chemist opens at Squire Lv 2 with four actions, a reaction and a support; Salve heals for free from 3 tiles; Purge cleanses; Acid Flask breaches; Smoke Bomb blinds foes only; Field Dressing fires only when a blow leaves the unit under half HP; Pharmacology multiplies Potion, Ether, Blast Flask and Phoenix Feather by 1.5; Chemists appear in the Trials; a Frost Flask damages and Slows foes only, and not the fallen; an Elixir fills HP and MP |
+| **Smarter foes and text size (0.20)** | 10 | Walking distance goes round a cliff, never onto it; water costs double unless the unit water-walks; a plan ends facing the closest foe; a unit with nothing in reach heads for the gap rather than hugging the cliff; a frontal blow on a Weapon Guard knight scores lower; healers and buffers are spotted (not knights with Bulwark, not when silenced or out of MP) and shot first given two identical targets; the Summit keeps one boss and no Haste caster; text size cycles and ignores junk; every UI font size in the stylesheet scales |
 | **Workshop scenarios** | 11 | Blank and remixed scenarios are playable; scenarios become chapters without sharing state; validation errors and warnings; hostile JSON (huge sizes, `__proto__` job ids, control characters, duplicate tiles, unknown items) is clamped or dropped; old editor maps import; share links round-trip under 4 KB and damaged links fail cleanly |
 
 Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `rng` so tests force hits, misses and crits.
@@ -80,6 +81,7 @@ These scripts ran during 0.7–0.8 development against `npm run preview` with `?
 | **Side battles and comfort** (0.16) | First-turn, move and undo tips appear in order; a move is undone with key 1 and the sprite returns; battle speed toggles and is stored; Raise is cast through the action menu and forecast; a mastery tier raises max HP and shows ticked in Team; after Chapter I only Thornwood Ford is open; a side battle is fought, won (bonus paid, win counted), fought again a level higher, lost and left for the map; a reload during it resumes on the map; the story march still works afterwards. Then tips, Menu, Team and the nine-place map at 390×844, 844×390 and 820×1180 with touch | No console errors; tips overlap no control; the Menu fits or scrolls; no place name leaves the map; the Fight button is on screen |
 | **Act II** (0.17) | From a finished first act: the map shows Emberwick Harbor open; marches to each new chapter in turn, checks the recruit joined and the road reward arrived, lets AUTO play real rounds on each new battlefield, wins, and reaches the epilogue with the Trials open; loads a 0.14 Trials save and finds Chapter IV waiting. Then the twelve-place map at 390×844, 844×390 and 820×1180 | No console errors; no overlapping or off-map place names |
 | **Difficulty and saves** (0.18) | New Game asks for a difficulty and writes slot 1 at once; Hard shifts enemy levels; two potions used then a defeat gives them back; Menu → Difficulty changes it; Save game to an empty slot, over another (confirm, cancel), export (text and a real download), delete (confirm); a bad import shows an error; an import carrying an HTML name loads as plain text and runs nothing; Continue and Load Game on the title; the Gate opens after Chapter III without New Game+; New Game with all slots full asks which to replace. Then the new-game, slot and export screens at 390×844 and 844×390 | No console errors; the modal scrolls on short screens; no button off screen or under 40px |
+| **Text size and smarter foes** (0.20) | Menu → Text size cycles Normal → Large → Larger → Normal, stores the choice and keeps it across a reload; at Larger the battle HUD, action list, Team, world map and market at 1280×720, 390×844 and 844×390, and the title screen, have no clipped labels; unit HP bars no longer show through open panels; then every earlier release script again (0.16 to 0.19) | No console errors; no label wider than its button |
 | **Chemist, supplies and offline** (0.19) | The Chemist appears in Team → Jobs, unlocked at Squire Lv 2 with its mastery line; a unit becomes one, its four actions show, Pharmacology gives a Potion reach 3 and +120 HP in the forecast and on use; a Frost Flask hits two foes for 68 and Slows both; an Elixir fills HP and MP; the market sells both new supplies after Chapter III. Offline: the production build served locally, the worker registered, the network cut, the page reloaded: the title screen loads with its fonts and a new game starts | No console errors |
 
 Committing these to the repo and running them in CI is on the [roadmap](ROADMAP.md).

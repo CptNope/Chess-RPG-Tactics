@@ -34,7 +34,7 @@ flowchart LR
 | **AUTO** | The AI plays this unit's turn | Great for grinding the Trials |
 | **STATUS** | Opens this unit's jobs and gear | |
 
-**New to this?** The first time each thing comes up, a short tip explains it. Tips never stop the game, and **Skip tips** turns them off (**Controls → Show tips again** brings them back). **Menu → Battle speed: Fast** halves the pauses once you know your way around.
+**New to this?** The first time each thing comes up, a short tip explains it. Tips never stop the game, and **Skip tips** turns them off (**Controls → Show tips again** brings them back). **Menu → Battle speed: Fast** halves the pauses once you know your way around, and **Menu → Text size** makes menus, panels and the log larger (Large or Larger).
 
 ![A first-turn tip over the battlefield](images/tips.webp)
 

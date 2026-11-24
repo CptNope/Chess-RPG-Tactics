@@ -571,7 +571,7 @@ flowchart LR
 | **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
 | **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 5 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
 | **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm, Mirror Shield | Aegis Barrier + Platinum Blade |
-| **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | 6 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
+| **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | 4 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
 | **CHAPTER IV**: Fire on the Water | Emberwick Harbor | 6 | Captain Varrow (Ninja L7) | Sable (Thief) | Oathkeeper | Warding Amulet |
 | **CHAPTER V**: The Greywatch Light | Greywatch Isle | 6 | Tidecaller Maelis (Summoner L7) | — | Runeblade | Templar Mail |
 | **FINAL CHAPTER**: The Drowned Regent | Stormbreak Cape | 7 | The Drowned Regent (Paladin L9) | — | Dawnbringer | — |
@@ -617,10 +617,8 @@ flowchart LR
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
 | Zodiac Champion | Dragoon | 5 | (7, 2) | ★ |
-| Zealot Medic | White Mage | 5 | (8, 0) |  |
-| Grand Chronomancer | Time Weaver | 5 | (5, 3) |  |
-| Black Archmage | Black Mage | 5 | (10, 3) |  |
-| Shadow Assassin | Ninja | 5 | (7, 6) |  |
+| Zealot Medic | White Mage | 4 | (8, 0) |  |
+| Black Archmage | Black Mage | 4 | (10, 3) |  |
 | Altar Sentinel | Knight | 4 | (9, 6) |  |
 
 </details>

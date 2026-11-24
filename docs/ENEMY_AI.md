@@ -25,7 +25,7 @@ flowchart TD
     K --> F
     C -->|done| L{"any scored plan?"}
     L -- yes --> M(["return best plan"])
-    L -- no --> N["Advance: move toward the closest,<br/>weakest foe; prefer high ground"]
+    L -- no --> N["Advance by walking distance toward<br/>the closest, weakest foe it can reach;<br/>prefer high ground"]
     N --> M
 ```
 
@@ -41,6 +41,8 @@ All values come from **forecasts** (expected values). The planner never rolls di
 | :--- | :--- | :--- |
 | Damage | `min(damage, HP left) / maxHP × 100 × hit%` | Value is the *share* of HP removed, so chip damage on a healthy unit never beats finishing a wounded one |
 | Likely KO (damage ≥ HP left) | `+120 × hit%` (+40 more on a boss) | Removing a unit is worth far more than damage |
+| The target is a healer or buffer (0.20) | damage × 1.3, KO +30 more | `isSupportCaster()`: a heal, a raise, or Haste / Protect / Shell / Regen for others that it can still pay for and isn't silenced. Drop the medic first |
+| Frontal physical blow on a Weapon Guard knight (0.20) | hit% × 0.7 | Weapon Guard parries 30% of frontal physical blows, so the side or back scores higher |
 | Dual Wield | damage × 1.9 | Second strike |
 | Damage that also inflicts a status | `+15 × hit%` if the target doesn't have it yet | |
 | Pure Sleep | `55 × hit%` | Takes a unit out of the fight until someone hits it |
@@ -66,6 +68,18 @@ Then each plan gets small adjustments:
 | High ground | `+0.5 × tile height` |
 | Ending next to 2+ foes | −6 |
 | MP spent | `−0.15 × MP cost` |
+| Self-only buff (Bulwark, Focus) (0.20) | `−0.6 × walking distance to the nearest foe`, so it is cast on the way in |
+
+Every plan ends **facing the closest foe** (0.20), the one most likely to strike next, so the unit doesn't leave its back open after moving. For a melee attack that foe is the target anyway.
+
+### Walking distance (0.20)
+
+`walkingDistances(grid, from, unit)` runs Dijkstra outward from a foe over walkable tiles, with steps no higher than the unit's Jump and water or swamp costing 2 (unless it has Water Walk). Units are ignored, since they move. The planner uses it twice:
+
+- **When nothing is in reach,** it picks the foe it can actually walk to (closest by path, then lowest HP) and moves to the reachable tile with the shortest path left, preferring high ground on ties. Before 0.20 this used straight-line distance, which walked units into the foot of cliffs.
+- **For self-buffs,** as above.
+
+A foe that can't be reached at all (on a cliff top) falls back to straight-line distance plus 100, so it is only chosen when nothing else is reachable.
 
 
 ---
@@ -78,6 +92,11 @@ Then each plan gets small adjustments:
 | Finishes a wounded unit before chipping a healthy one | `prefers finishing a wounded foe` |
 | Never buffs the player's units; heals wounded allies | `never casts buffs on the player team and heals wounded allies` |
 | Never picks an ability it can't afford | `does not use abilities it cannot afford` |
+| Walks around a cliff; water costs double; Water Walk ignores it | `tests/ai.test.ts`: `walking distance` |
+| Ends its turn facing the closest foe | `tests/ai.test.ts`: `ends its turn facing the closest foe` |
+| Heads for the gap instead of hugging a cliff | `tests/ai.test.ts`: `approaches along the path` |
+| Values a frontal blow on a parrying knight less | `tests/ai.test.ts` |
+| Shoots the unit that can still heal, given two identical targets | `tests/ai.test.ts` |
 
 ---
 
@@ -96,11 +115,12 @@ Then each plan gets small adjustments:
 | Limit | Effect | Idea |
 | :--- | :--- | :--- |
 | One-turn horizon | Doesn't set up combos or retreat to heal | Two-ply search on the best N plans |
-| Ignores enemy reactions except Counter Tackle | Will hit a Weapon Guard knight from the front | Add expected-parry and counter terms |
+| Knows only Counter Tackle and Weapon Guard (0.20) | Other reactions (Field Dressing, Auto-Potion) don't change its choices | Add terms as they matter |
 | One raise per battle for the enemy side (0.17) | The first healer to act takes it, whoever fell | Let the planner hold it for the most valuable unit |
 | Raises the fallen whenever it can (0.16) | A revive scores 110 + 2 × the fallen unit's level, about the same as a likely kill, so a healer with MP nearly always does it | Weigh the fallen unit's job and how exposed the tile is |
 | Never uses items (0.15) | Enemies carry no supplies, and AUTO won't spend yours | Give bosses a potion or two and a rule for when to drink |
-| Doesn't value facing after moving | Can leave its back open | Score exposed backs against foes that can reach |
+| Faces the closest foe, not the most dangerous one (0.20) | An archer two tiles further away may still get the back | Weigh each foe's damage, not just distance |
+| Doesn't avoid danger | A wounded unit will still walk into the enemy line to land a blow. A threat term was tried for 0.20 and made no difference in the simulation, so it was left out | Retreat-to-heal as part of two-ply search |
 | AUTO uses the same weights | Plays aggressively for the player | Optional "careful" profile for AUTO |
 
 These are tracked on the [roadmap](ROADMAP.md).

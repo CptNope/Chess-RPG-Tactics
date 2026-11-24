@@ -142,6 +142,8 @@ export class TacticsScene {
   // Floating Combat Text & Overlays (reusable screen vector)
   private floatingTexts: FloatingText[] = [];
   private floatingTextContainer: HTMLElement;
+  /** Unit HP bars and fallen markers: under the HUD panels, so they never show through a menu (0.20.0). */
+  private unitTagContainer: HTMLElement;
   private lastRenderTime: number = performance.now();
   private tempScreenPos: THREE.Vector3 = new THREE.Vector3();
 
@@ -171,6 +173,9 @@ export class TacticsScene {
     this.floatingTextContainer = document.createElement('div');
     this.floatingTextContainer.className = 'floating-combat-overlay';
     document.getElementById('game-container')?.appendChild(this.floatingTextContainer);
+    this.unitTagContainer = document.createElement('div');
+    this.unitTagContainer.className = 'floating-combat-overlay unit-tags-overlay';
+    document.getElementById('game-container')?.appendChild(this.unitTagContainer);
 
     // Initialize Shared Geometries & Materials
     this.sharedHighlightGeom.rotateX(-Math.PI / 2);
@@ -858,7 +863,7 @@ export class TacticsScene {
           <div class="overhead-hp-fill" style="width: 100%;"></div>
           <div class="overhead-ct-fill" style="width: 0%;"></div>
         `;
-        this.floatingTextContainer.appendChild(barEl);
+        this.unitTagContainer.appendChild(barEl);
         this.overheadHpElements.set(unit.id, barEl);
       }
 
@@ -900,7 +905,7 @@ export class TacticsScene {
         el = document.createElement('div');
         el.className = 'unit-fallen-marker';
         el.textContent = `✝ ${unit.name}`;
-        this.floatingTextContainer.appendChild(el);
+        this.unitTagContainer.appendChild(el);
         this.fallenMarkers.set(unit.id, el);
       }
       this.tempScreenPos.set(unit.x, this.grid.getHeight(unit.x, unit.z) + 0.45, unit.z);

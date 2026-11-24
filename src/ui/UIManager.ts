@@ -883,9 +883,9 @@ export class UIManager {
       jobItem.setAttribute('aria-disabled', String(locked));
       const need = missing.map((m) => `${JOBS[m.jobId].name} Lv ${m.level} (now Lv ${m.have})`).join(' and ');
       jobItem.innerHTML = `
-        <div style="font-family: var(--font-pixel); font-size: 10px; color: var(--gold);">${locked ? '🔒 ' : ''}${job.name}
+        <div style="font-family: var(--font-pixel); font-size: calc(10px * var(--ts)); color: var(--gold);">${locked ? '🔒 ' : ''}${job.name}
           <span class="job-lv ${master ? 'master' : ''}">${master ? '★ MASTER' : `Lv ${prog.level}`}</span></div>
-        <div style="font-size: 13px; color: var(--text-muted);">${job.role} | Move: ${job.baseMove} Jump: ${job.baseJump}</div>
+        <div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${job.role} | Move: ${job.baseMove} Jump: ${job.baseJump}</div>
         ${locked ? `<div class="job-req">Needs ${need}</div>` : ''}
         ${mastery ? `<div class="job-mastery" title="Mastery bonuses stay with the unit in every job"><span class="${tier >= 1 ? 'got' : ''}">${tier >= 1 ? '✓ ' : ''}Lv ${VETERAN_JOB_LEVEL}: ${masteryLabel(mastery.stat, mastery.veteran)}</span> · <span class="${tier >= 2 ? 'got' : ''}">${tier >= 2 ? '✓ ' : ''}Master: ${masteryLabel(mastery.stat, mastery.master)}</span></div>` : ''}
         ${!locked && !master ? `<div class="job-bar" title="${prog.into} / ${prog.need} JP to Lv ${prog.level + 1}"><span style="width:${Math.round((prog.into / prog.need) * 100)}%"></span></div>` : ''}
@@ -969,13 +969,13 @@ export class UIManager {
       const item = document.createElement('div');
       item.className = 'learn-item';
       item.innerHTML = `
-        <div style="display:flex; justify-content:space-between; font-family: var(--font-pixel); font-size: 9px;">
+        <div style="display:flex; justify-content:space-between; font-family: var(--font-pixel); font-size: calc(9px * var(--ts));">
           <span>${ability.name} (${ability.type.toUpperCase()})</span>
           <span style="color: ${isLearned ? 'var(--hp-green)' : canAfford ? 'var(--gold)' : 'var(--text-muted)'};">
             ${isLearned ? 'MASTERED' : `${ability.jpCost} JP`}
           </span>
         </div>
-        <div style="font-size: 13px; color: var(--text-muted);">${ability.description}</div>
+        <div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${ability.description}</div>
       `;
 
       if (!isLearned && canAfford) {
@@ -1034,7 +1034,7 @@ export class UIManager {
     const unequipBtn = document.createElement('div');
     unequipBtn.className = 'learn-item';
     unequipBtn.innerHTML = `
-      <div style="font-family: var(--font-pixel); font-size: 9px; color: var(--text-muted);">(Unequip / Empty Slot)</div>
+      <div style="font-family: var(--font-pixel); font-size: calc(9px * var(--ts)); color: var(--text-muted);">(Unequip / Empty Slot)</div>
     `;
     unequipBtn.onclick = () => {
       SoundFX.playMenuBlip();
@@ -1053,11 +1053,11 @@ export class UIManager {
         .join(', ');
 
       el.innerHTML = `
-        <div style="display:flex; justify-content:space-between; font-family: var(--font-pixel); font-size: 9px;">
+        <div style="display:flex; justify-content:space-between; font-family: var(--font-pixel); font-size: calc(9px * var(--ts));">
           <span>${item.name}</span>
           <span style="color: ${isEquipped ? 'var(--gold)' : 'var(--hp-green)'};">${isEquipped ? 'EQUIPPED' : statsDesc}</span>
         </div>
-        <div style="font-size: 13px; color: var(--text-muted);">${item.description}</div>
+        <div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${item.description}</div>
       `;
 
       el.onclick = () => {
