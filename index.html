@@ -4,8 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0c10" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Chess RPG Tactics</title>
-  <meta name="description" content="A free isometric tactics RPG for the browser: fifteen jobs, facing and height, a branching campaign, endless Trials, and a map and scenario editor. Mouse, keyboard, touch, pen or controller." />
+  <meta name="description" content="A free isometric tactics RPG for the browser: sixteen jobs, facing and height, a branching campaign, endless Trials, and a map and scenario editor. Mouse, keyboard, touch, pen or controller." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%224%22 fill=%22%230b1220%22/%3E%3Cpath d=%22M16 5l3 7h-6zM11 13h10l-2 9h-6zM8 24h16v3H8z%22 fill=%22%23f4c430%22/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
@@ -40,7 +45,7 @@
     <section id="title-screen" aria-label="Chess RPG Tactics">
       <div class="title-card">
         <h1 class="title-logo"><span class="title-logo-top">CHESS RPG</span><span class="title-logo-main">TACTICS</span></h1>
-        <p class="title-tagline">Fifteen jobs. High ground. No second chances.</p>
+        <p class="title-tagline">Sixteen jobs. High ground. No second chances.</p>
         <div class="title-menu" role="menu" aria-label="Main menu">
           <button id="title-continue" class="title-btn hidden" role="menuitem" disabled>Continue</button>
           <button id="title-new" class="title-btn primary" role="menuitem" disabled>Loading…</button>
@@ -94,6 +99,7 @@
       <button id="btn-save-game" role="menuitem">Save game</button>
       <button id="btn-load-game" role="menuitem">Load game</button>
       <button id="btn-workshop" role="menuitem" title="Build your own battlefields and scenarios">Workshop: map &amp; scenario editor</button>
+      <button id="btn-install" role="menuitem" class="hidden" title="Add the game to your home screen or apps; it then plays offline">Install app</button>
       <button id="btn-fullscreen" role="menuitem" class="hidden" title="Fullscreen (F)">Fullscreen</button>
       <button id="btn-title" role="menuitem" title="Leave this battle for the title screen (your last save is kept)">Quit to title</button>
       <a id="btn-support" class="menu-link" role="menuitem" href="#" target="_blank" rel="noopener">Support the game ♥</a>

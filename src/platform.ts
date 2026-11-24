@@ -78,3 +78,29 @@ export function guardPageScroll(): void {
   // Clicking into the game gives it keyboard focus inside an iframe
   window.addEventListener('pointerdown', () => window.focus(), { passive: true });
 }
+
+/**
+ * Installable app (0.19.0). On the web version (not inside itch.io or another page) a service
+ * worker caches the build so the game plays offline after one visit, and browsers that support
+ * it offer "Install app". Returns a function that shows the browser's install prompt, or null.
+ */
+export function setupInstall(onInstallable: (prompt: () => void) => void, onInstalled: () => void): void {
+  // https only, so the local dev server (http) never caches a stale build
+  if (ON_ITCH || EMBEDDED || location.protocol !== 'https:' || !('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('./sw.js').catch(() => undefined);
+  type BeforeInstall = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    const ev = e as BeforeInstall;
+    onInstallable(() => {
+      ev.prompt().catch(() => undefined);
+      ev.userChoice.then((c) => { if (c.outcome === 'accepted') onInstalled(); }).catch(() => undefined);
+    });
+  });
+  window.addEventListener('appinstalled', onInstalled);
+}
+
+/** True when running as an installed app rather than in a browser tab. */
+export function isInstalledApp(): boolean {
+  return window.matchMedia?.('(display-mode: fullscreen), (display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+}

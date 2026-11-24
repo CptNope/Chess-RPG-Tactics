@@ -21,7 +21,7 @@ What's on [cptnope.itch.io/chess-rpg-tactics](https://cptnope.itch.io/chess-rpg-
 | :--- | :--- |
 | Title | Chess RPG Tactics |
 | URL | `chess-rpg-tactics` |
-| Short description | Free isometric tactics RPG: fifteen jobs, high ground, bosses and a map editor. |
+| Short description | Free isometric tactics RPG: sixteen jobs, high ground, bosses and a map editor. |
 | Classification · status | Games · Released |
 | Pricing | No payments required, donations welcome ($0 or donate, suggested $3) |
 | Genre | Strategy |
@@ -51,16 +51,17 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 
 > Paste into the itch.io description editor. Headings and lists keep their formatting.
 
-**Chess RPG Tactics** is a free turn-based tactics RPG that runs right in your browser: isometric 3D battlefields with height, facing-based combat, fifteen mix-and-match jobs, a branching campaign with boss fights, an endless post-game, and a Workshop to build and share your own battles.
+**Chess RPG Tactics** is a free turn-based tactics RPG that runs right in your browser: isometric 3D battlefields with height, facing-based combat, sixteen mix-and-match jobs, a two-act campaign with boss fights, an endless post-game, and a Workshop to build and share your own battles.
 
 ### Features
 - **Real tactics.** Speed decides who moves next, not teams. Hit from behind for big damage, take the high ground for range, mind water and swamp.
-- **Fifteen jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin and Spellblade as your units level their jobs. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
+- **Sixteen jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Chemist, Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin and Spellblade as your units level their jobs. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
 - **Steal their gear.** Thieves lift weapons and trinkets straight off enemies into your armory. Over 50 pieces of gear, some with traits: start battles with Regen, boost an element, or ward off Sleep and Silence.
 - **A world map between battles.** Walk the realm, choose which road the story takes, take on optional side battles, and fall back to regroup after a defeat.
 - **A market that grows with the story.** Bounties and wins pay gil. Buy gear that outfits the whole squad, sell what you don't need, and stock up on supplies.
 - **Master your jobs.** Jobs level up, unlock advanced jobs, and pay permanent bonuses a unit keeps in every job.
 - **Easy to pick up.** Easy, Normal and Hard; tips the first time each thing comes up; undo for a misplaced move; a Fast battle speed.
+- **Install it.** On the web version, add the game to your home screen or apps; it then plays offline.
 - **Items in battle.** Potions, Ethers, Remedies, Blast Flasks, and Phoenix Feathers to raise fallen allies.
 - **A two-act campaign** across seven 16×16 battlefields (a harbor fought along its piers, a lighthouse rock, a cliff-top altar…), with a branch, two recruits, and bosses that enrage at half health.
 - **Trials of the Zodiac:** endless seeded floors with rare gear and a Warden boss every fifth floor, plus New Game+.

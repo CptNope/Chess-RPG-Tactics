@@ -21,12 +21,12 @@ export function seededRng(seed: number): () => number {
 }
 
 export const TRIAL_MAP_ROTATION = ['river_ruins', 'gloomy_swamp', 'night_fortress', 'zodiac_summit'];
-const TRIAL_JOBS = ['knight', 'archer', 'black_mage', 'white_mage', 'dragoon', 'ninja', 'time_mage', 'geomancer', 'squire', 'monk', 'thief', 'summoner', 'oracle', 'paladin', 'spellblade'];
+const TRIAL_JOBS = ['knight', 'archer', 'black_mage', 'white_mage', 'dragoon', 'ninja', 'time_mage', 'geomancer', 'squire', 'monk', 'thief', 'summoner', 'oracle', 'paladin', 'spellblade', 'chemist'];
 const ZODIAC_SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
 const TITLES: Record<string, string> = {
   knight: 'Sentinel', archer: 'Stalker', black_mage: 'Hexer', white_mage: 'Acolyte', dragoon: 'Lancer',
   ninja: 'Shade', time_mage: 'Seer', geomancer: 'Warden', squire: 'Recruit',
-  monk: 'Fist', thief: 'Cutpurse', summoner: 'Caller', oracle: 'Augur', paladin: 'Templar', spellblade: 'Duelist'
+  monk: 'Fist', thief: 'Cutpurse', summoner: 'Caller', oracle: 'Augur', paladin: 'Templar', spellblade: 'Duelist', chemist: 'Alchemist'
 };
 
 /** Bosses appear every fifth floor. */

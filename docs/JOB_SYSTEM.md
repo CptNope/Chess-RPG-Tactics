@@ -79,6 +79,7 @@ quadrantChart
 | **Summoner** *(0.13)* | Radius-2 spells | Salamander, Undine, Storm Roc, Sylph (heal + Regen), Golem (area Protect), Mana Spring, Conserve |
 | **Paladin** *(0.14, advanced)* | Holy front-liner | Holy Blade, Lay on Hands, Rebuke (Silence), Aegis (area Shell), Divine Grace, Zeal |
 | **Spellblade** *(0.14, advanced)* | Elemental duelist | Flame Edge, Frost Edge (Slow), Thunder Lunge (reach 2), Runic, Arcane Edge |
+| **Chemist** *(0.19)* | Field medic, bomb-maker | Salve (free heal from ATK, reach 3), Purge (cleanse), Acid Flask (Breach), Smoke Bomb (area Blind), Field Dressing (heals 15% when a blow leaves you under half HP), **Pharmacology** (items +50% and +1 reach) |
 | **Oracle** *(0.13)* | Ailments | Dim Sight (Blind), Hush (Silence), Lullaby (area Sleep), Soul Drain, Hex Ward, Hex Mastery |
 
 Older jobs gained an action each in 0.13: Squire *Rally*, Knight *Bulwark*, Archer *Arrow Rain*, Black Mage *Firestorm*, White Mage *Shell*, *Purify* and *Healing Circle*, Ninja *Smoke Bomb*, Time Weaver *Regen*. The Knight's support is now **Armor Mastery** (+50% HP from armor, helms and shields).
@@ -105,6 +106,7 @@ flowchart LR
     WhiteMage --> |Lv 2| Paladin
     Knight --> |Lv 2| Spellblade
     BlackMage --> |Lv 2| Spellblade
+    Squire --> |Lv 2| Chemist
     Geomancer
 ```
 

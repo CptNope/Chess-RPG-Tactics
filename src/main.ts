@@ -28,7 +28,7 @@ import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
 import { Workshop } from './ui/Workshop';
 import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
-import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll } from './platform';
+import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
 
@@ -1023,7 +1023,9 @@ class TacticsGame {
     if (!active || active.hasActed || active.team !== 'player' || this.currentMode === 'busy') return;
     if (active.currentMp < raw.mpCost) return;
 
-    const ability = resolveTerrainAbility(raw, this.grid.getTile(active.x, active.z)?.terrain);
+    let ability = resolveTerrainAbility(raw, this.grid.getTile(active.x, active.z)?.terrain);
+    // Pharmacology: items reach a tile further in a Chemist-trained hand
+    if (ability.item && JobSystem.itemPotency(active) > 1) ability = { ...ability, range: ability.range + 1 };
     this.selectedAbility = ability;
 
     if (ability.isSelfOnly) {
@@ -1586,6 +1588,16 @@ class TacticsGame {
     for (const [id, url] of [['title-support', ITCH_URL], ['btn-support', ITCH_URL], ['title-source', SOURCE_URL], ['title-author', AUTHOR_URL]]) {
       (document.getElementById(id) as HTMLAnchorElement).href = url;
     }
+
+    // Installable app: the Menu offers it once the browser says it can
+    const installBtn = document.getElementById('btn-install');
+    setupInstall(
+      (prompt) => {
+        installBtn?.classList.remove('hidden');
+        installBtn?.addEventListener('click', () => { SoundFX.playMenuBlip(); prompt(); }, { once: true });
+      },
+      () => { installBtn?.classList.add('hidden'); this.ui.showBanner('INSTALLED: THE GAME NOW PLAYS OFFLINE'); }
+    );
 
     on('title-new', () => this.fromTitle(() => this.newGameFlow()));
     on('title-continue', () => this.fromTitle(() => this.loadGame(SaveManager.latestSlot() || 1)));

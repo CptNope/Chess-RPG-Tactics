@@ -226,6 +226,10 @@ The **ITEM** command spends one supply from the squad's shared inventory as the 
 | Remedy | `cleanse` | Removes every ailment | 2 | A living ally |
 | Phoenix Feather | `revive: 0.25` | Raises at 25% max HP, statuses cleared, CT 0 | 2 | A **fallen** ally, on a tile nobody else stands on |
 | Blast Flask | `fixedDamage: 70`, area 1 | 70 fire damage to each foe in the blast | 3 | Foes; never allies |
+| Frost Flask (0.19) | `fixedDamage: 45`, `appliesStatus: 'slow'`, area 1 | 45 ice damage and Slow (unless gear wards it off) to each foe still standing | 3 | Foes; never allies |
+| Elixir (0.19) | `fixedHeal: 9999`, `fixedMp: 999` | Full HP and MP | 2 | A living ally |
+
+**Pharmacology** (Chemist support, 0.19): items used by a unit with it equipped work ×1.5 (heal, MP, damage and the revive share, capped at 100%) and reach one tile further. `JobSystem.itemPotency(unit)` is the one place that says so; the forecast shows the boosted number.
 
 ```mermaid
 flowchart TD

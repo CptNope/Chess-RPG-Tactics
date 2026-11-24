@@ -178,7 +178,7 @@ export class CombatEngine {
     let baseDamage = 0;
     if (ability.item) {
       // Fixed amounts: negative = healing, like spells
-      baseDamage = ability.fixedDamage || -(ability.fixedHeal || 0);
+      baseDamage = Math.round((ability.fixedDamage || -(ability.fixedHeal || 0)) * JobSystem.itemPotency(attacker));
     } else if (ability.id === 'tm_gravity') {
       // Gravity shears 25% of current HP; bosses resist it (12%).
       baseDamage = Math.max(1, Math.round(target.currentHp * (target.isBoss ? 0.12 : 0.25)));
@@ -339,20 +339,24 @@ export class CombatEngine {
     const none: AttackResult = { hit: false, damageDealt: 0, isCrit: false, isHeal: false };
     if (!this.itemCanTarget(ability, target)) return none;
 
-    if (ability.revive) return this.raise(target, ability.revive);
+    const potency = JobSystem.itemPotency(forecast.attacker);
+    if (ability.revive) return this.raise(target, Math.min(1, ability.revive * potency));
 
     const cleansed = ability.cleanse ? this.cleanse(target) : undefined;
     let mpRestored: number | undefined;
     if (ability.fixedMp) {
-      mpRestored = Math.min(ability.fixedMp, target.maxMp - target.currentMp);
+      mpRestored = Math.min(Math.round(ability.fixedMp * potency), target.maxMp - target.currentMp);
       target.currentMp += mpRestored;
     }
     if (ability.fixedDamage) {
-      const dealt = Math.min(target.currentHp, ability.fixedDamage);
-      const woke = this.damage(target, ability.fixedDamage);
-      return { hit: true, damageDealt: dealt, isCrit: false, isHeal: false, woke, bossEnraged: this.checkBossEnrage(target) };
+      const amount = Math.round(ability.fixedDamage * potency);
+      const dealt = Math.min(target.currentHp, amount);
+      const woke = this.damage(target, amount);
+      // A flask that carries an ailment (Frost Flask: Slow) puts it on whoever is still standing
+      const appliedStatus = ability.appliesStatus && !target.isDead && this.applyStatus(target, ability.appliesStatus) ? ability.appliesStatus.toUpperCase() : undefined;
+      return { hit: true, damageDealt: dealt, isCrit: false, isHeal: false, woke, appliedStatus, bossEnraged: this.checkBossEnrage(target) };
     }
-    const heal = ability.fixedHeal ? Math.min(ability.fixedHeal, target.maxHp - target.currentHp) : 0;
+    const heal = ability.fixedHeal ? Math.min(Math.round(ability.fixedHeal * potency), target.maxHp - target.currentHp) : 0;
     target.currentHp += heal;
     return { hit: true, damageDealt: heal, isCrit: false, isHeal: heal > 0 || !!ability.fixedHeal, cleansed, mpRestored };
   }
@@ -509,6 +513,18 @@ export class CombatEngine {
           target,
           heal: healAmt,
           description: `${target.name} drank an Auto-Potion, recovering +${healAmt} HP!`
+        };
+      }
+      case 'ch_field_dressing': {
+        if (target.currentHp >= target.maxHp / 2) return undefined;
+        const healAmt = Math.max(1, Math.round(target.maxHp * 0.15));
+        target.currentHp = Math.min(target.maxHp, target.currentHp + healAmt);
+        return {
+          name: 'Field Dressing',
+          type: 'auto_potion',
+          target,
+          heal: healAmt,
+          description: `${target.name} bound the wound with a Field Dressing, recovering +${healAmt} HP!`
         };
       }
       case 'ar_speed_save': {

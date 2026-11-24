@@ -4,7 +4,7 @@
  * Unlike gear (a shared armory of unique pieces), consumables are counted: the squad carries a
  * stock of each, every use spends one, and they can be bought and sold at the market.
  */
-import { Ability, Element } from '../core/types';
+import { Ability, Element, StatusEffectType } from '../core/types';
 import { ShopProgress } from '../core/Economy';
 
 export interface Consumable {
@@ -26,6 +26,8 @@ export interface Consumable {
   revive?: number;
   /** Fixed damage dealt to foes. */
   damage?: number;
+  /** An ailment it puts on the foes it hits (0.19.0). Gear that wards it off still works. */
+  inflicts?: StatusEffectType;
   element?: Element;
   /** The market stocks it from this point in the campaign. */
   stockedFrom: ShopProgress;
@@ -55,6 +57,14 @@ export const CONSUMABLES: Record<string, Consumable> = {
   blast_flask: {
     id: 'blast_flask', name: 'Blast Flask', price: 110, range: 3, aoe: 1, damage: 70, element: 'fire', stockedFrom: 1,
     description: 'Bursts for 70 fire damage on the target and every foe beside it.'
+  },
+  frost_flask: {
+    id: 'frost_flask', name: 'Frost Flask', price: 160, range: 3, aoe: 1, damage: 45, element: 'ice', inflicts: 'slow', stockedFrom: 2,
+    description: 'Shatters into freezing mist: 45 ice damage and Slow on the target and every foe beside it.'
+  },
+  elixir: {
+    id: 'elixir', name: 'Elixir', price: 600, range: 2, heal: 9999, mp: 999, stockedFrom: 3,
+    description: 'Restores every point of HP and MP.'
   }
 };
 
@@ -89,7 +99,8 @@ export function consumableAbility(c: Consumable): Ability {
     ...(c.mp ? { fixedMp: c.mp } : {}),
     ...(c.cleanse ? { cleanse: true } : {}),
     ...(c.revive ? { revive: c.revive } : {}),
-    ...(c.damage ? { fixedDamage: c.damage } : {})
+    ...(c.damage ? { fixedDamage: c.damage } : {}),
+    ...(c.inflicts ? { appliesStatus: c.inflicts } : {})
   };
 }
 
