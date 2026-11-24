@@ -6,9 +6,11 @@ import { TurnManager } from './core/TurnManager';
 import { JobSystem, JpGain, MAX_JOB_LEVEL } from './core/JobSystem';
 import { JOBS } from './data/jobs';
 import { WorldMap } from './ui/WorldMap';
+import { Tutorial, TipId, TIPS } from './ui/Tutorial';
+import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
 import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
-import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue, gearSaleBlock } from './core/Economy';
+import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue, gearSaleBlock , BattleMode } from './core/Economy';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
@@ -32,7 +34,14 @@ import '@fontsource/vt323/latin-400.css';
 type InputMode = 'idle' | 'moving' | 'targeting' | 'facing' | 'dialogue' | 'editor' | 'menu' | 'busy';
 
 /** ?fast speeds every animation delay up (used by the automated play-test). */
-const SPEED = new URLSearchParams(location.search).has('fast') ? 0.12 : 1;
+const TEST_FAST = new URLSearchParams(location.search).has('fast');
+/** Multiplier on every scripted pause: 1 on Normal, 0.5 on the Fast battle speed. */
+let SPEED = TEST_FAST ? 0.12 : 1;
+type BattleSpeed = 'normal' | 'fast';
+const SPEED_KEY = 'chess_rpg_tactics_speed_v1';
+function savedBattleSpeed(): BattleSpeed {
+  try { return localStorage.getItem(SPEED_KEY) === 'fast' ? 'fast' : 'normal'; } catch { return 'normal'; }
+}
 const later = (fn: () => void, ms: number) => setTimeout(fn, ms * SPEED);
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms * SPEED));
 
@@ -61,13 +70,20 @@ class TacticsGame {
   /** Job level-ups and unlocks this battle, per unit (shown on the spoils screen). */
   private jobNews: Record<string, string[]> = {};
 
-  private mode: 'campaign' | 'trials' | 'custom' = 'campaign';
+  private mode: BattleMode = 'campaign';
+  /** The side battle being fought (mode 'skirmish'), and wins so far at each place. */
+  private currentSkirmish: string | null = null;
+  private skirmishWins: Record<string, number> = {};
   /** The campaign chapter to return to after Workshop battles (and to save). */
   private campaignChapterId = 'chapter_1';
   /** Campaign chapters won this run, in order. */
   private clearedChapters: string[] = [];
   /** The world map shown between missions. */
   private world!: WorldMap;
+  /** First-battle tips. */
+  private tutor = new Tutorial();
+  /** Where the active unit stood before this turn's move, while the move can still be taken back. */
+  private moveUndo: { unitId: string; x: number; z: number; facing: Unit['facing']; hp: number; mp: number } | null = null;
   /** True while the Workshop is open over the world map. */
   private mapParked = false;
 
@@ -78,7 +94,7 @@ class TacticsGame {
   /** The battle that was in progress when the Workshop opened, restored when it closes. */
   private suspended: {
     grid: BattleGrid; units: Unit[]; turnManager: TurnManager; chapter: CampaignChapter;
-    mode: 'campaign' | 'trials' | 'custom'; inputMode: InputMode; kills: Record<string, number>;
+    mode: BattleMode; inputMode: InputMode; kills: Record<string, number>;
     round: number; roundActed: Set<string>;
   } | null = null;
 
@@ -114,8 +130,13 @@ class TacticsGame {
         trialsFloor: Math.max(1, this.trialsFloor),
         bestTrial: SaveManager.getBestTrialFloor(),
         gil: this.gil,
-        leaderJob: this.squad[0]?.jobId || 'squire'
+        leaderJob: this.squad[0]?.jobId || 'squire',
+        squadLevels: this.squad.map((u) => u.level),
+        skirmishWins: this.skirmishWins
       }),
+      skirmish: (id) => this.startSkirmish(id),
+      tip: () => (this.tutor.wants('worldMap') ? TIPS.worldMap : null),
+      tipSeen: () => this.tutor.markSeen('worldMap'),
       march: (m) => this.marchTo(m),
       enterTrials: () => { this.world.close(); this.startTrial(Math.max(1, this.trialsFloor)); },
       newGamePlus: () => this.startNewGamePlus(),
@@ -132,6 +153,15 @@ class TacticsGame {
       blip: () => SoundFX.playMenuBlip()
     });
     this.ui.onJobModalClosed = () => this.world.refresh();
+    this.ui.canUndoMove = (u) => this.canUndoMove(u);
+    document.getElementById('btn-action-act')!.addEventListener('click', () => this.tip('actMenu'));
+    document.getElementById('btn-action-item')!.addEventListener('click', () => this.tip('item'));
+    document.getElementById('btn-tips-reset')!.addEventListener('click', () => {
+      this.tutor.reset();
+      this.ui.toggleHelp(false);
+      this.ui.showBanner('TIPS ARE BACK ON');
+      this.world.refresh();
+    });
     this.ui.armory = this.armory;
     this.ui.inventory = () => this.inventory;
     this.ui.shop = {
@@ -302,6 +332,18 @@ class TacticsGame {
     this.playChapterIntro();
   }
 
+  /** An optional side battle from the world map. It never moves the story on. */
+  private startSkirmish(id: string): void {
+    if (!SKIRMISHES[id]) return;
+    this.world.close();
+    this.mode = 'skirmish';
+    this.currentSkirmish = id;
+    this.customScenario = null;
+    this.setupBattle(buildSkirmish(id, this.squad.map((u) => u.level), this.skirmishWins[id] || 0));
+    this.playChapterIntro();
+    this.saveGame(false); // a save made here resumes on the map, at this place
+  }
+
   private startTrial(floor: number): void {
     this.mode = 'trials';
     this.trialsFloor = floor;
@@ -413,6 +455,24 @@ class TacticsGame {
       this.ui.addLogEntry('[SYSTEM] Controller connected. Press View/Back for the controls.', 'system');
     };
     this.pad.onDisconnect = () => this.ui.showBanner('CONTROLLER DISCONNECTED');
+
+    // Battle speed: Normal ↔ Fast (pauses halved, walking doubled). Saved on this device.
+    const speedBtn = document.getElementById('btn-speed');
+    const applySpeed = (v: BattleSpeed) => {
+      if (!TEST_FAST) SPEED = v === 'fast' ? 0.5 : 1;
+      this.scene.walkSpeed = v === 'fast' ? 2 : 1;
+      if (speedBtn) speedBtn.textContent = `Battle speed: ${v === 'fast' ? 'Fast' : 'Normal'}`;
+    };
+    applySpeed(savedBattleSpeed());
+    speedBtn?.addEventListener('click', () => {
+      const next: BattleSpeed = savedBattleSpeed() === 'fast' ? 'normal' : 'fast';
+      try {
+        if (next === 'fast') localStorage.setItem(SPEED_KEY, next);
+        else localStorage.removeItem(SPEED_KEY);
+      } catch { /* private browsing: the choice lasts for this visit */ }
+      applySpeed(next);
+      this.ui.showBanner(`BATTLE SPEED: ${next.toUpperCase()}`);
+    });
 
     // Graphics quality: Auto → High → Medium → Low
     const gfxBtn = document.getElementById('btn-graphics');
@@ -662,13 +722,15 @@ class TacticsGame {
     const inStoryBattle = this.mode === 'campaign' && !this.world.isOpen;
     const ok = SaveManager.saveGame(inStoryBattle ? this.currentChapter.id : this.campaignChapterId, this.squad, {
       armory: this.armory,
-      mode: this.mode === 'custom' ? 'campaign' : this.mode,
+      mode: this.mode === 'trials' ? 'trials' : 'campaign',
       trialsFloor: this.trialsFloor,
       campaignCleared: this.campaignCleared,
       gil: this.gil,
       inventory: this.inventory,
       clearedChapters: this.clearedChapters,
-      onWorldMap: this.world.isOpen,
+      // A side battle isn't resumed: loading puts the squad back on the map beside it
+      onWorldMap: this.world.isOpen || this.mode === 'skirmish',
+      skirmishWins: this.skirmishWins,
       worldLocation: this.world.location
     });
     if (ok && announce) {
@@ -722,6 +784,7 @@ class TacticsGame {
     this.campaignCleared = !!data.campaignCleared;
     this.gil = typeof data.gil === 'number' && data.gil >= 0 ? Math.floor(data.gil) : STARTING_GIL;
     this.inventory = sanitizeInventory(data.inventory);
+    this.skirmishWins = sanitizeSkirmishWins(data.skirmishWins);
     const chapterId = CAMPAIGN_CHAPTERS[data.currentChapterId] ? data.currentChapterId : 'chapter_1';
     this.clearedChapters = sanitizeCleared(data.clearedChapters, chapterId);
     // A Trials save from before 0.15.0 has no list of won chapters, but the story is certainly over
@@ -785,6 +848,11 @@ class TacticsGame {
     const news = (this.jobNews[u.id] ||= []);
     news.push(`${job} ${lv}`);
     this.ui.addLogEntry(`[JOB] ${u.name}'s ${job} reached ${lv === 'MASTER' ? 'Master' : lv}!`, 'system');
+    if (gain.mastery) {
+      news.push(`MASTERY: ${gain.mastery}`);
+      this.ui.addLogEntry(`[JOB] ${u.name} earns ${job} mastery: ${gain.mastery}, kept in every job.`, 'system');
+      if (!u.isDead) this.scene.updateUnits(this.units);
+    }
     for (const id of gain.unlocked) {
       news.push(`NEW JOB: ${JOBS[id].name}`);
       this.ui.addLogEntry(`[JOB] ${u.name} can now become a ${JOBS[id].name} (Team → Jobs).`, 'system');
@@ -857,6 +925,7 @@ class TacticsGame {
 
     if (activeUnit.team === 'player') {
       SoundFX.playTurnChime();
+      this.tip('firstTurn');
     } else {
       this.currentMode = 'busy';
       later(() => this.runAiTurn(activeUnit), 800);
@@ -865,12 +934,56 @@ class TacticsGame {
 
   private handleMoveCommand(): void {
     const active = this.turnManager.activeUnit;
-    if (!active || active.hasMoved || active.team !== 'player' || active.move === 0 || this.currentMode === 'busy') return;
+    if (!active || active.team !== 'player' || this.currentMode === 'busy') return;
+    if (active.hasMoved) {
+      if (this.canUndoMove(active)) this.undoMove(active);
+      return;
+    }
+    if (active.move === 0) return;
 
     this.currentMode = 'moving';
+    this.tip('moveMode');
     (document.activeElement as HTMLElement | null)?.blur();
     this.scene.setHighlights(this.grid.getReachableTiles(active, this.units), 0x3b82f6);
     this.scene.setCursor(active.x, active.z);
+  }
+
+  /** Shows a first-time tip, in story battles only (the Trials and the Workshop are for players who know). */
+  private tip(id: TipId): void {
+    if (this.battleOver || this.mode === 'trials' || this.mode === 'custom' || this.workshop?.isOpen) return;
+    if (this.turnManager?.activeUnit?.team !== 'player' && id !== 'fallen') return;
+    this.tutor.show(id);
+  }
+
+  private canUndoMove(unit: Unit): boolean {
+    return !!this.moveUndo && this.moveUndo.unitId === unit.id && unit.hasMoved && !unit.hasActed && !this.battleOver;
+  }
+
+  /** Puts the active unit back where it stood before this turn's move, as if it had not moved. */
+  private undoMove(active: Unit): void {
+    const u = this.moveUndo;
+    if (!u || !this.canUndoMove(active)) return;
+    this.moveUndo = null;
+    this.cancelTargeting();
+    document.getElementById('facing-selector')!.classList.add('hidden');
+    this.scene.cancelWalk(active.id);
+    active.x = u.x;
+    active.z = u.z;
+    active.facing = u.facing;
+    active.currentHp = u.hp; // anything gained on the way (Lifefont) goes back too
+    active.currentMp = u.mp;
+    active.hasMoved = false;
+    this.currentMode = 'idle';
+    SoundFX.playMenuBlip();
+    this.scene.clearHighlights();
+    this.scene.updateUnits(this.units);
+    const h = this.grid.getHeight(active.x, active.z);
+    this.scene.setCursor(active.x, active.z);
+    this.scene.focusOn(active.x, h, active.z);
+    this.ui.updateUnitCard(active, h);
+    this.ui.populateActionSubMenu(active, this.grid.getTile(active.x, active.z)?.terrain);
+    this.ui.showBanner('MOVE TAKEN BACK');
+    this.ui.focusForNav(document.getElementById('btn-action-move'));
   }
 
   private handleAbilityCommand(raw: Ability): void {
@@ -900,6 +1013,7 @@ class TacticsGame {
       }
     }
     this.currentMode = 'targeting';
+    this.tip('targeting');
     (document.activeElement as HTMLElement | null)?.blur();
     this.scene.setHighlights(tiles, supportive ? 0x22c55e : 0xdc2626);
   }
@@ -909,6 +1023,7 @@ class TacticsGame {
     if (!active || active.team !== 'player') return;
 
     this.currentMode = 'facing';
+    this.tip('facing');
     this.scene.clearHighlights();
     this.ui.showFacingSelector(active.facing);
   }
@@ -918,6 +1033,8 @@ class TacticsGame {
     if (!active) return;
 
     active.facing = facing;
+    this.moveUndo = null;
+    this.tutor.hide();
     this.scene.updateUnits(this.units);
     this.turnManager.endTurn(active);
     this.updateTimeline();
@@ -953,11 +1070,14 @@ class TacticsGame {
       if (!dest) return;
 
       SoundFX.playMoveStep();
+      // Until the unit acts, the move can be taken back (UNDO): remember where it stood and what it had
+      this.moveUndo = active.hasActed ? null : { unitId: active.id, x: active.x, z: active.z, facing: active.facing, hp: active.currentHp, mp: active.currentMp };
       this.scene.walkPath(active.id, this.grid.findPath(active, this.units, tile.x, tile.z));
       active.x = tile.x;
       active.z = tile.z;
       active.hasMoved = true;
       this.applyRegenWalk(active, dest.cost);
+      if (this.moveUndo) this.tip('moved');
       this.scene.updateUnits(this.units);
       this.scene.clearHighlights();
       this.currentMode = 'idle';
@@ -987,6 +1107,7 @@ class TacticsGame {
       this.currentForecast = this.forecastFor(active, primary, ability, { x: tile.x, z: tile.z });
       this.targetTile = { x: tile.x, z: tile.z };
       this.ui.showCombatForecast(this.currentForecast, victims.length - 1);
+      this.tip('forecast');
     }
   }
 
@@ -1087,6 +1208,7 @@ class TacticsGame {
     const victims = this.victimsFor(caster, ability, tx, tz);
     caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
     caster.hasActed = true;
+    this.moveUndo = null; // acting commits the move
     if (ability.item) this.inventory[ability.item] = Math.max(0, (this.inventory[ability.item] || 0) - 1);
 
     if (!ability.isSelfOnly) {
@@ -1106,6 +1228,7 @@ class TacticsGame {
       const forecast = this.forecastFor(caster, target, ability, { x: tx, z: tz });
       const result = CombatEngine.executeAttack(forecast);
       this.presentResult(target, forecast, result);
+      if (target.isDead && target.team === 'player') this.tip('fallen');
       if (target.isDead) {
         anyKill = true;
         if (caster.team === 'player') this.kills[caster.id] = (this.kills[caster.id] || 0) + 1;
@@ -1337,6 +1460,7 @@ class TacticsGame {
     const active = this.turnManager.activeUnit;
     if (!active || active.team !== 'player' || this.currentMode === 'busy' || this.battleOver) return;
     this.cancelTargeting();
+    this.moveUndo = null;
     this.currentMode = 'busy';
     this.ui.toggleSubMenu(false);
     void this.runAiTurn(active);
@@ -1621,6 +1745,8 @@ class TacticsGame {
       this.battleOver = true;
       this.currentMode = 'menu';
       this.ui.toggleSubMenu(false);
+      this.tutor.hide();
+      this.moveUndo = null;
       Music.stop();
       this.ui.showBanner('DEFEAT... ALL ALLIES FALLEN');
       this.ui.addLogEntry('=== DEFEAT! All allies have fallen. ===', 'defeat');
@@ -1631,6 +1757,8 @@ class TacticsGame {
       this.battleOver = true;
       this.currentMode = 'menu';
       this.ui.toggleSubMenu(false);
+      this.tutor.hide();
+      this.moveUndo = null;
       Music.playTrack('victory');
       SoundFX.playVictoryFanfare();
       this.ui.showBanner(winText);
@@ -1645,6 +1773,7 @@ class TacticsGame {
     if (this.mode === 'custom') return this.showCustomEnd(false);
     const retry = () => {
       if (this.mode === 'trials') this.startTrial(this.trialsFloor);
+      else if (this.mode === 'skirmish' && this.currentSkirmish) this.startSkirmish(this.currentSkirmish);
       else {
         this.setupBattle(this.currentChapter);
         this.startBattle();
@@ -1685,12 +1814,15 @@ class TacticsGame {
       for (const id of this.currentChapter.rewardItemIds || []) {
         if (!this.armory.includes(id)) newItems.push(id);
       }
-    } else {
+    } else if (this.mode === 'trials') {
       const drop = rollTrialDrop(this.trialsFloor, this.armory);
       if (drop) newItems.push(drop);
     }
     this.armory.push(...newItems);
-    const earned = victoryGil(this.units.filter((u) => u.team === 'enemy'), this.mode, this.trialsFloor);
+    const sideId = this.mode === 'skirmish' ? this.currentSkirmish : null;
+    const sideWins = sideId ? this.skirmishWins[sideId] || 0 : 0;
+    const earned = victoryGil(this.units.filter((u) => u.team === 'enemy'), this.mode, this.trialsFloor) + (sideId ? skirmishBonus(sideWins) : 0);
+    if (sideId) this.skirmishWins[sideId] = sideWins + 1;
     this.gil += earned;
     if (earned > 0 || this.fencedThisBattle > 0) {
       const fenced = this.fencedThisBattle > 0 ? ` · +${this.fencedThisBattle} from fenced loot` : '';
@@ -1717,6 +1849,20 @@ class TacticsGame {
         buttons: [
           { label: `Next Trial (${this.trialsFloor + 1})`, primary: true, onClick: () => { this.trialsFloor++; this.saveGame(false); this.startTrial(this.trialsFloor); } },
           { label: 'World Map', onClick: () => { this.trialsFloor++; this.openWorldMap('trials'); } }
+        ]
+      });
+      return;
+    }
+
+    if (sideId) {
+      const again = sideWins + 1 < SKIRMISH_MAX_HEAT ? 'They will be back, and stronger.' : 'They will be back.';
+      this.ui.showResultModal({
+        title: 'SIDE BATTLE WON',
+        subtitle: `${subtitle} · ${again}`,
+        bodyHtml: rows.join(''),
+        buttons: [
+          { label: 'World Map', primary: true, onClick: () => this.openWorldMap(sideId) },
+          { label: 'Fight again', onClick: () => this.startSkirmish(sideId) }
         ]
       });
       return;
@@ -1756,7 +1902,7 @@ class TacticsGame {
 
   /** Shows the world map (and autosaves there): the squad's home between missions. */
   private openWorldMap(location?: string): void {
-    if (this.mode === 'custom') { this.mode = 'campaign'; this.customScenario = null; }
+    if (this.mode === 'custom' || this.mode === 'skirmish') { this.mode = 'campaign'; this.customScenario = null; this.currentSkirmish = null; }
     this.currentMode = 'menu';
     this.battleOver = true;
     this.scene.clearHighlights();
@@ -1804,6 +1950,7 @@ class TacticsGame {
     this.inventory = { ...STARTING_INVENTORY };
     this.campaignCleared = false;
     this.clearedChapters = [];
+    this.skirmishWins = {};
     this.trialsFloor = 0;
     this.world.close();
     this.world.location = 'ruins';

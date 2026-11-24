@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.16.0] - 2026-11-23
+
+### Added — side battles
+- **Three optional battles on the world map**, marked ⚑: **Thornwood Ford** (bandits, opens after Chapter I), **Drowned Shrine** (cultists) and **Watchfire Ridge** (hold out for 6 rounds); the last two open after Chapter II, whichever road you took.
+- **They can be fought again and again.** Each pays enemy bounties, a gil bonus (160 the first time, 80 after), and the usual EXP and JP, so there is somewhere to train when a story battle is too hard.
+- **Enemies match your squad's level** and come back one level stronger after each win, up to two levels. From the third visit there are five of them instead of four.
+- Winning offers **World Map** or **Fight again**. They never move the story on, and they stay open after it ends.
+
+### Added — job mastery
+- **Job levels 5 and 8 now give a permanent bonus.** At job level 5 (Veteran) a unit earns a small stat bonus from that job, and at level 8 (Master) a larger one that replaces it. The unit keeps it in every job.
+- Each job gives one stat: Squire, Knight and Paladin HP; Archer and Monk ATK; Black Mage, Summoner and Spellblade MAG; White Mage, Geomancer and Oracle MP; Ninja and Thief Evasion; Dragoon Jump; Time Weaver Speed. Bonuses from different jobs add up.
+- **Team → Jobs** shows each job's two bonuses and ticks the ones earned. Earning one is announced in battle and on the spoils screen.
+
+### Added — Raise
+- **White Mages learn Raise** (260 JP, 18 MP, reach 3): a fallen ally stands up with a third of their HP. Like a Phoenix Feather it always works; unlike one it costs MP, not gil.
+- **AUTO and enemy healers use it too**, so a White Mage is now worth taking down first.
+- **Bosses can't be raised**, by spell or by feather.
+
+### Added — comfort
+- **Undo move.** After a unit moves and before it acts, the MOVE button reads **UNDO** (key 1) and puts it back where it stood.
+- **Battle speed** in the Menu: Normal or Fast. Fast halves the pauses between actions and doubles walking speed. The choice is remembered on the device.
+- **First-battle tips.** A short tip appears the first time each thing comes up: your first turn, moving, the action menu, targeting, the forecast, facing, items, a fallen ally, and the world map. Tips never block input, go away on their own, and can be turned off with **Skip tips**. **Controls → Show tips again** brings them back. They don't appear in the Trials or the Workshop.
+
+### Changed
+- The Gate of Trials moved slightly on the world map to make room, and place names no longer run off the map's edge on phones in landscape.
+- The Menu scrolls when it is taller than the screen (phones in landscape).
+- 87 abilities (was 86).
+
+### Developer
+- `src/core/Skirmish.ts` (`SKIRMISHES`, `buildSkirmish`, `skirmishLevel`, `skirmishBonus`, `skirmishOpen`): a side battle is generated like a Trials floor and played in a new battle mode, `skirmish`. Saves gained `skirmishWins`; a save made during a side battle resumes on the map beside it.
+- `JobSystem.JOB_MASTERY`, `masteryTier`, `masteryBonus`; `gainJp` reports `mastery` when a tier is reached. Mastery is derived from lifetime JP, so old saves get what they have already earned.
+- Any ability with `revive` is resolved by `CombatEngine` without a roll; `unitsInBlast` and the planner aim revives at the fallen.
+- `src/ui/Tutorial.ts`; `TacticsScene.walkSpeed` and `cancelWalk`.
+- The generated content reference gained job mastery and side-battle tables.
+- 15 new tests (134 total) in `tests/side-mastery.test.ts`. [ADR 0024](docs/adr/0024-side-battles-mastery-and-onboarding.md).
+
 ## [0.15.0] - 2026-11-23
 
 ### Added — items in battle

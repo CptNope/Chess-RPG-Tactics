@@ -15,7 +15,8 @@ import { TERRAIN_SPELLS } from '../src/core/Geomancy';
 import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
 import { buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
-import { JOB_LEVEL_JP } from '../src/core/JobSystem';
+import { JOB_LEVEL_JP, JOB_MASTERY, VETERAN_JOB_LEVEL, MAX_JOB_LEVEL, masteryLabel } from '../src/core/JobSystem';
+import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus } from '../src/core/Skirmish';
 import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress, resaleValue } from '../src/core/Economy';
 import { CONSUMABLES, MAX_STACK, STARTING_INVENTORY, consumableStock } from '../src/data/consumables';
 import { WORLD_NODES, WORLD_ROADS, worldNode } from '../src/core/World';
@@ -49,7 +50,7 @@ w('> **Generated file — do not edit by hand.** Run `npm run docs:gen` after ch
 w();
 w('Every number here is read straight from the game data, so it always matches what ships.');
 w();
-w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
+w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
 w();
 
 // ---------------------------------------------------------------- Jobs
@@ -91,6 +92,19 @@ w('| :--- | :--- |');
 for (const j of jobs) w(`| **${j.name}** | ${(j.prerequisites || []).map((p) => `${jobName(p.jobId)} Lv ${p.level}`).join(' + ') || '— (open to everyone)'} |`);
 w();
 w('Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.');
+w();
+
+// ---------------------------------------------------------------- Job mastery
+w('## Job mastery');
+w();
+w(`A permanent bonus for sticking with a job. A unit earns the first amount at job level ${VETERAN_JOB_LEVEL} (${JOB_LEVEL_JP[VETERAN_JOB_LEVEL - 1]} lifetime JP) and the second, which replaces it, at level ${MAX_JOB_LEVEL} (Master, ${JOB_LEVEL_JP[MAX_JOB_LEVEL - 1]} JP). It keeps the bonus in every job, and bonuses from different jobs add up.`);
+w();
+w(`| Job | Lv ${VETERAN_JOB_LEVEL} (Veteran) | Lv ${MAX_JOB_LEVEL} (Master) |`);
+w('| :--- | :--- | :--- |');
+for (const j of jobs) {
+  const m = JOB_MASTERY[j.id];
+  if (m) w(`| **${j.name}** | ${masteryLabel(m.stat, m.veteran)} | ${masteryLabel(m.stat, m.master)} |`);
+}
 w();
 
 // ---------------------------------------------------------------- Abilities
@@ -226,7 +240,7 @@ w('Where the squad stands between missions. Roads join the places; the squad wal
 w();
 w('```mermaid');
 w('flowchart LR');
-for (const n of WORLD_NODES) w(`  ${n.id}["${n.name}${n.chapterId ? `<br/><i>${CAMPAIGN_CHAPTERS[n.chapterId].title}</i>` : n.kind === 'market' ? '<br/><i>buy and sell</i>' : '<br/><i>post-game</i>'}"]`);
+for (const n of WORLD_NODES) w(`  ${n.id}["${n.name}${n.chapterId ? `<br/><i>${CAMPAIGN_CHAPTERS[n.chapterId].title}</i>` : n.kind === 'market' ? '<br/><i>buy and sell</i>' : n.kind === 'skirmish' ? '<br/><i>side battle</i>' : '<br/><i>post-game</i>'}"]`);
 for (const [a, b] of WORLD_ROADS) w(`  ${a} --- ${b}`);
 w('```');
 w();
@@ -234,8 +248,21 @@ w('| Place | Kind | What happens there | Roads to |');
 w('| :--- | :--- | :--- | :--- |');
 for (const n of WORLD_NODES) {
   const roads = WORLD_ROADS.filter(([a, b]) => a === n.id || b === n.id).map(([a, b]) => worldNode(a === n.id ? b : a)!.name).join(', ');
-  const what = n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
+  const what = n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : n.kind === 'skirmish' ? `Side battle: ${SKIRMISHES[n.skirmishId!].foe}` : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
   w(`| **${n.name}** | ${n.kind} | ${what} | ${roads} |`);
+}
+w();
+
+// ---------------------------------------------------------------- Side battles
+w('## Side battles');
+w();
+w(`Optional battles at places on the world map (⚑). They can be fought any number of times and never move the story on. Enemies are the squad's average level (rounded down), one level higher for each earlier win there up to +${SKIRMISH_MAX_HEAT}, with a leader one level above the rest; four of them, five once the place is at full strength. A win pays the usual bounties plus ${skirmishBonus(0)} gil the first time and ${skirmishBonus(1)} after.`);
+w();
+w('| Place | Battlefield | Enemies | Drawn from | Goal | Opens after |');
+w('| :--- | :--- | :--- | :--- | :--- | :--- |');
+for (const d of Object.values(SKIRMISHES)) {
+  const goal = d.objective?.type === 'survive' ? `Survive ${d.objective.rounds} rounds` : 'Defeat every enemy';
+  w(`| **${d.name}** | ${MAPS[d.mapId]().name} | ${d.foe} | ${d.jobs.map(([job, title]) => `${title} (${jobName(job)})`).join(', ')} | ${goal} | ${d.opensAfter.map((c) => CAMPAIGN_CHAPTERS[c].title).join(' or ')} |`);
 }
 w();
 

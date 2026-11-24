@@ -108,6 +108,27 @@ flowchart LR
     Geomancer
 ```
 
+### Job mastery (0.16)
+
+Job levels 5 and 8 pay a permanent bonus. It is derived from the same lifetime JP as the job level, so nothing extra is stored and old saves get what they have already earned.
+
+| Tier | Job level | Lifetime JP | Bonus |
+| :--- | :---: | :---: | :--- |
+| Veteran | 5 | 700 | The job's smaller amount |
+| Master | 8 | 1900 | The job's full amount (it replaces Veteran's, it doesn't add to it) |
+
+| Stat | Jobs (Veteran / Master) |
+| :--- | :--- |
+| HP | Squire +10 / +25 · Knight +15 / +35 · Paladin +12 / +30 |
+| MP | White Mage +8 / +20 · Oracle +8 / +20 · Geomancer +6 / +15 |
+| ATK | Archer +1 / +2 · Monk +1 / +2 |
+| MAG | Black Mage +1 / +2 · Summoner +1 / +2 · Spellblade +1 / +2 |
+| Evasion | Ninja +4 / +8 · Thief +3 / +6 |
+| Jump | Dragoon +1 / +2 |
+| Speed | Time Weaver +1 / +2 |
+
+`JobSystem.masteryBonus(unit)` sums every tier the unit holds; `recalculateDerivedStats`, `getAttackPower` and `getMagicPower` add it after the current job's multipliers, so the bonus is the same whatever job the unit is in. `gainJp` returns `mastery: "+15 HP"` on the gain that reaches a tier. Enemies are created with job levels of 3 at most, so they have none.
+
 `JobSystem.canChangeJob` is the single check; `gainJp` reports level-ups and the jobs they unlock, and `grantPrerequisites` gives units created in an advanced job the levels it needs.
 
 ---

@@ -8,6 +8,7 @@
 import { CAMPAIGN_CHAPTERS } from '../data/campaign';
 import { drawSprite } from '../graphics/CharacterArt';
 import { Mission, WORLD_NODES, WORLD_ROADS, WorldNode, nodeState, openMissions, route, worldNode } from '../core/World';
+import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus, skirmishLevel } from '../core/Skirmish';
 
 export interface WorldState {
   /** The chapter the campaign is at. */
@@ -19,12 +20,18 @@ export interface WorldState {
   bestTrial: number;
   gil: number;
   leaderJob: string;
+  /** Levels of the squad, for side-battle difficulty. */
+  squadLevels: number[];
+  /** Wins so far at each side-battle place. */
+  skirmishWins: Record<string, number>;
 }
 
 export interface WorldHost {
   state(): WorldState;
   march(mission: Mission): void;
   enterTrials(): void;
+  /** Starts the side battle at a place. */
+  skirmish(id: string): void;
   newGamePlus(): void;
   openTeam(): void;
   openShop(): void;
@@ -33,6 +40,9 @@ export interface WorldHost {
   menu(): void;
   /** Moves keyboard / controller focus (no-op for mouse and touch). */
   focus(el: HTMLElement | null): void;
+  /** The first-visit tip for the map, or null once it has been seen. */
+  tip(): { title: string; text: string } | null;
+  tipSeen(): void;
   blip(): void;
 }
 
@@ -73,7 +83,7 @@ export class WorldMap {
     document.body.classList.add('world-open');
     this.refresh();
     this.placeParty(false);
-    this.host.focus(this.panelEl.querySelector<HTMLElement>('button') || this.nodesEl.querySelector<HTMLElement>(`[data-node="${this.location}"]`));
+    this.host.focus(this.panelEl.querySelector<HTMLElement>('.wm-action') || this.nodesEl.querySelector<HTMLElement>(`[data-node="${this.location}"]`));
   }
 
   public close(): void {
@@ -89,7 +99,7 @@ export class WorldMap {
     // The pins and the panel are rebuilt below: remember where focus was so it isn't dropped
     const focused = document.activeElement as HTMLElement | null;
     const hadNode = focused && this.nodesEl.contains(focused) ? focused.dataset.node : undefined;
-    const hadAction = focused && this.panelEl.contains(focused) ? [...this.panelEl.querySelectorAll('button')].indexOf(focused as HTMLButtonElement) : -1;
+    const hadAction = focused && this.panelEl.contains(focused) ? [...this.panelEl.querySelectorAll('.wm-action')].indexOf(focused) : -1;
     this.gilEl.textContent = `${st.gil.toLocaleString('en-US')} G`;
 
     if (st.leaderJob !== this.partyJob) {
@@ -106,8 +116,8 @@ export class WorldMap {
       btn.dataset.node = node.id;
       btn.style.left = `${node.x * 100}%`;
       btn.style.top = `${node.y * 100}%`;
-      const mark = node.kind === 'market' ? '◆' : state === 'cleared' ? '✓' : state === 'locked' ? '🔒' : node.kind === 'trials' ? '★' : '⚔';
-      const what = node.kind === 'market' ? 'market' : state === 'cleared' ? 'cleared' : state === 'locked' ? 'locked' : node.kind === 'trials' ? 'the Trials' : 'battle';
+      const mark = node.kind === 'market' ? '◆' : state === 'cleared' ? '✓' : state === 'locked' ? '🔒' : node.kind === 'trials' ? '★' : node.kind === 'skirmish' ? '⚑' : '⚔';
+      const what = node.kind === 'market' ? 'market' : state === 'cleared' ? 'cleared' : state === 'locked' ? 'locked' : node.kind === 'trials' ? 'the Trials' : node.kind === 'skirmish' ? 'side battle' : 'battle';
       btn.setAttribute('aria-label', `${node.name}: ${what}${node.id === this.location ? ', you are here' : ''}`);
       btn.innerHTML = `<span class="wm-pin" aria-hidden="true">${mark}</span><span class="wm-label">${node.name}</span>`;
       btn.addEventListener('click', () => void this.travel(node.id));
@@ -115,7 +125,7 @@ export class WorldMap {
     }
     this.renderPanel(st);
     if (hadNode) this.nodesEl.querySelector<HTMLElement>(`[data-node="${hadNode}"]`)?.focus({ preventScroll: true });
-    else if (hadAction >= 0) (this.panelEl.querySelectorAll<HTMLElement>('button')[hadAction] || this.panelEl.querySelector<HTMLElement>('button'))?.focus({ preventScroll: true });
+    else if (focused && hadAction >= 0) (this.panelEl.querySelectorAll<HTMLElement>('.wm-action')[hadAction] || this.panelEl.querySelector<HTMLElement>('.wm-action'))?.focus({ preventScroll: true });
   }
 
   /** Walks the party along the roads to a location, then shows what can be done there. */
@@ -134,7 +144,7 @@ export class WorldMap {
       this.walking = false;
     }
     this.refresh();
-    this.host.focus(this.panelEl.querySelector<HTMLElement>('button') || this.nodesEl.querySelector<HTMLElement>(`[data-node="${this.location}"]`));
+    this.host.focus(this.panelEl.querySelector<HTMLElement>('.wm-action') || this.nodesEl.querySelector<HTMLElement>(`[data-node="${this.location}"]`));
   }
 
   private placeParty(animate: boolean): void {
@@ -163,6 +173,17 @@ export class WorldMap {
       return b;
     };
 
+    const tip = this.host.tip();
+    if (tip) {
+      const box = add('div', 'wm-tip', '');
+      const t = document.createElement('p');
+      t.textContent = `${tip.title}: ${tip.text}`;
+      const ok = document.createElement('button');
+      ok.textContent = 'Got it';
+      ok.addEventListener('click', () => { this.host.blip(); this.host.tipSeen(); this.refresh(); });
+      box.append(t, ok);
+    }
+
     add('h3', 'wm-place', node.name);
     add('p', 'wm-blurb', node.blurb);
 
@@ -176,6 +197,19 @@ export class WorldMap {
         add('p', 'wm-status', `Next: floor ${st.trialsFloor}${st.bestTrial > 0 ? ` · Best: floor ${st.bestTrial}` : ''}`);
         action(`★ Enter floor ${st.trialsFloor}`, () => this.host.enterTrials(), true);
         action('New Game+ (replay the story with this squad)', () => this.host.newGamePlus());
+      }
+    } else if (node.kind === 'skirmish') {
+      const def = SKIRMISHES[node.skirmishId!];
+      const wins = st.skirmishWins[def.id] || 0;
+      add('p', 'wm-chapter', `SIDE BATTLE: ${def.foe}`);
+      if (state === 'locked') {
+        add('p', 'wm-status locked', 'Nothing stirs here yet. Win more of the story first.');
+      } else {
+        const goal = def.objective?.type === 'survive' ? `Hold out for ${def.objective.rounds || 6} rounds.` : 'Defeat every enemy.';
+        add('p', 'wm-orders', `${def.intro} ${goal}`);
+        add('p', 'wm-status', `Enemies around Lv ${skirmishLevel(st.squadLevels, wins)}. ${wins > 0 ? `Won ${wins} time${wins > 1 ? 's' : ''}${wins < SKIRMISH_MAX_HEAT ? '; they come back stronger' : ''}.` : 'Not fought yet.'}`);
+        add('p', 'wm-reward', `Optional and repeatable: bounties, +${skirmishBonus(wins)} G, EXP and JP.`);
+        action('⚑ Fight', () => this.host.skirmish(def.id), true);
       }
     } else {
       const chapter = CAMPAIGN_CHAPTERS[node.chapterId!];
@@ -336,5 +370,12 @@ export function paintWorld(canvas: HTMLCanvasElement): void {
       r(x - 3, y - 7, 6, 11, '#3b1d6e'); r(x - 2, y - 5, 4, 8, '#7c3aed'); r(x - 1, y - 3, 2, 4, '#c4b5fd');
     }
   };
-  for (const n of WORLD_NODES) icon[n.id]?.(n.x * W, n.y * H - 4);
+  // Side battles: a camp with a pennant
+  const camp = (x: number, y: number) => {
+    for (let k = 0; k < 5; k++) r(x - 6 + (4 - k), y - 4 + k, k * 2 + 1, 1, k % 2 ? '#b08a4a' : '#c9a25c');
+    r(x - 2, y - 1, 1, 2, '#3b2a17');
+    r(x + 4, y - 9, 1, 10, '#3b2a17'); r(x + 5, y - 9, 4, 3, '#d97706'); r(x + 5, y - 8, 3, 1, '#fbbf24');
+    r(x + 1, y + 1, 2, 1, '#f97316'); r(x + 1, y, 1, 1, '#fde68a');
+  };
+  for (const n of WORLD_NODES) (icon[n.id] || (n.kind === 'skirmish' ? camp : undefined))?.(n.x * W, n.y * H - 4);
 }

@@ -13,7 +13,7 @@ Every action is reachable from **mouse, keyboard, touch, pen and controller**. A
 | Select tile / unit | Click | Arrows + `Enter`/`Space` | Tap | Tap | D-pad / left stick + **A** |
 | Preview tile | Hover | Arrows | Tap | Hover | D-pad / left stick |
 | Cancel / back | `CANCEL` / × buttons | `Esc` | Two-finger tap | Eraser or barrel button + tap | **B** |
-| Command menu | Click | `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` Item | Tap | Tap | **X**, then d-pad + **A** |
+| Command menu | Click | `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` Item · `1` again = Undo move | Tap | Tap | **X**, then d-pad + **A** |
 | Move between menu buttons | — | Arrows, `Tab` | — | — | D-pad / left stick |
 | Pan camera | Left-drag, right/middle-drag | `W` `A` `S` `D` | One-finger drag | Drag | Right stick |
 | Zoom | Wheel, trackpad pinch | `+` / `-` | Pinch | — | **LT** out / **RT** in |
@@ -21,7 +21,7 @@ Every action is reachable from **mouse, keyboard, touch, pen and controller**. A
 | Re-center on active unit | Center button | `R` / `Home` | Center button | Center button | Click right stick (**R3**) |
 | Team (jobs & gear) | Team button / STATUS | `J` | Team button | Team button | **Y** |
 | Battle log | Log button | `L` | Log button | Log button | via Menu |
-| Menu (map, sound, save, load, Workshop) | Menu button | — | Menu button | Menu button | **Start** |
+| Menu (map, sound, graphics, battle speed, save, load, Workshop) | Menu button | — | Menu button | Menu button | **Start** |
 | Controls help | ? button | `H` / `?` | ? button | ? button | **View / Back** |
 | World map: go to a place | Click it | Arrows to it, `Enter` | Tap it | Tap it | D-pad to it, **A** |
 | World map: act there (march, shop, enter) | Panel button | `Enter` (focus lands on it after the walk) | Panel button | Panel button | **A** |

@@ -72,6 +72,8 @@ export class TacticsScene {
   /** Walk animation between tiles: last tile each unit stood on, and the walk in progress. */
   private lastTiles: Map<string, { x: number; z: number; h: number }> = new Map();
   private walks: Map<string, Walk> = new Map();
+  /** How many animation frames a walk advances per rendered frame (2 on the Fast battle speed). */
+  public walkSpeed = 1;
   /** Paths queued by the game just before it moves a unit (consumed when the tile change is seen). */
   private queuedPaths: Map<string, { x: number; z: number }[]> = new Map();
   private overheadHpElements: Map<string, HTMLElement> = new Map();
@@ -947,7 +949,7 @@ export class TacticsScene {
       let walkFacing: FacingDirection | null = null;
       if (walk) {
         let a = walk.pts[walk.seg], b = walk.pts[walk.seg + 1];
-        walk.t++;
+        walk.t += this.walkSpeed;
         if (walk.t > segFrames(a, b) && walk.seg < walk.pts.length - 2) {
           walk.seg++;
           walk.t = 1;
@@ -1098,7 +1100,14 @@ export class TacticsScene {
     for (let i = 1; i < path.length; i++) {
       frames += segFrames({ h: this.grid.getHeight(path[i - 1].x, path[i - 1].z) }, { h: this.grid.getHeight(path[i].x, path[i].z) });
     }
-    return (frames / 60) * 1000;
+    return ((frames / 60) * 1000) / this.walkSpeed;
+  }
+
+  /** Stops a unit's walk where it stands (the next updateUnits snaps it to its tile). Used when a move is undone. */
+  public cancelWalk(unitId: string): void {
+    this.queuedPaths.delete(unitId);
+    this.walks.delete(unitId);
+    this.lastTiles.delete(unitId);
   }
 
   /** Adds highlighted tiles without clearing the existing ones (Workshop markers). */

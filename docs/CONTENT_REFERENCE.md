@@ -4,7 +4,7 @@
 
 Every number here is read straight from the game data, so it always matches what ships.
 
-**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
+**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
 
 ## Jobs
 
@@ -16,7 +16,7 @@ Every number here is read straight from the game data, so it always matches what
 | **Knight** `knight` | Vanguard | 3 | 2 | 1.30× | 0.70× | 1.25× | 0.70× | 0.95× | 5 |
 | **Archer** `archer` | Marksman | 3 | 3 | 0.95× | 0.80× | 1.10× | 0.80× | 1.05× | 5 |
 | **Black Mage** `black_mage` | Mage | 3 | 2 | 0.80× | 1.40× | 0.70× | 1.35× | 0.95× | 7 |
-| **White Mage** `white_mage` | Healer | 3 | 2 | 0.85× | 1.30× | 0.70× | 1.25× | 1.00× | 7 |
+| **White Mage** `white_mage` | Healer | 3 | 2 | 0.85× | 1.30× | 0.70× | 1.25× | 1.00× | 8 |
 | **Dragoon** `dragoon` | Lancer | 3 | 4 | 1.20× | 0.80× | 1.30× | 0.80× | 1.00× | 4 |
 | **Ninja** `ninja` | Skirmisher | 4 | 3 | 0.90× | 0.70× | 1.20× | 0.90× | 1.25× | 5 |
 | **Geomancer** `geomancer` | Terramancer | 4 | 3 | 1.05× | 1.00× | 1.05× | 1.15× | 1.00× | 5 |
@@ -67,13 +67,35 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 
 Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
 
+## Job mastery
+
+A permanent bonus for sticking with a job. A unit earns the first amount at job level 5 (700 lifetime JP) and the second, which replaces it, at level 8 (Master, 1900 JP). It keeps the bonus in every job, and bonuses from different jobs add up.
+
+| Job | Lv 5 (Veteran) | Lv 8 (Master) |
+| :--- | :--- | :--- |
+| **Squire** | +10 HP | +25 HP |
+| **Knight** | +15 HP | +35 HP |
+| **Archer** | +1 ATK | +2 ATK |
+| **Black Mage** | +1 MAG | +2 MAG |
+| **White Mage** | +8 MP | +20 MP |
+| **Dragoon** | +1 Jump | +2 Jump |
+| **Ninja** | +4 Evasion | +8 Evasion |
+| **Geomancer** | +6 MP | +15 MP |
+| **Time Weaver** | +1 Speed | +2 Speed |
+| **Monk** | +1 ATK | +2 ATK |
+| **Thief** | +3 Evasion | +6 Evasion |
+| **Summoner** | +1 MAG | +2 MAG |
+| **Oracle** | +8 MP | +20 MP |
+| **Paladin** | +12 HP | +30 HP |
+| **Spellblade** | +1 MAG | +2 MAG |
+
 ## Abilities
 
-86 learnable abilities: 51 actions, 15 reactions, 11 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+87 learnable abilities: 52 actions, 15 reactions, 11 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 51
+  "Action" : 52
   "Reaction" : 15
   "Support" : 11
   "Movement" : 9
@@ -138,6 +160,7 @@ pie showData title Abilities by slot type
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Cure** `wm_cure` | Action | 70 | 8 | 4 | 2 | — | Heal 1.4 | holy | — | Restores health to an injured ally with warm holy light. |
 | **Protect** `wm_protect` | Action | 120 | 12 | 3 | 2 | — | — | holy | inflicts **protect** | Erects an arcane barrier, softening physical blows by 30% for 3 turns. |
+| **Raise** `wm_raise` | Action | 260 | 18 | 3 | 2 | — | — | holy | — | Calls a fallen ally back to their feet with a third of their HP. Bosses cannot be raised. |
 | **Auto-Potion** `wm_auto_potion` | Reaction | 200 | — | — | — | — | — | — | — | Instantly drinks a restorative potion when taking direct damage. |
 | **Regen Walk** `wm_regen_move` | Movement | 220 | — | — | — | — | — | — | — | Restores 10% of maximum HP on every tile movement step. |
 | **Shell** `wm_shell` | Action | 120 | 8 | 4 | 2 | — | — | holy | inflicts **shell** | A ward against spells: Shell (-30% magic damage taken) for 3 turns. |
@@ -426,6 +449,9 @@ flowchart LR
   battlement["Night Battlement<br/><i>CHAPTER II-B</i>"]
   summit["Zodiac Summit<br/><i>FINAL CHAPTER</i>"]
   trials["Gate of Trials<br/><i>post-game</i>"]
+  thornwood["Thornwood Ford<br/><i>side battle</i>"]
+  shrine["Drowned Shrine<br/><i>side battle</i>"]
+  ridge["Watchfire Ridge<br/><i>side battle</i>"]
   market --- ruins
   market --- battlement
   ruins --- mire
@@ -433,16 +459,33 @@ flowchart LR
   mire --- summit
   battlement --- summit
   summit --- trials
+  market --- thornwood
+  thornwood --- battlement
+  mire --- shrine
+  summit --- ridge
 ```
 
 | Place | Kind | What happens there | Roads to |
 | :--- | :--- | :--- | :--- |
-| **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement |
+| **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement, Thornwood Ford |
 | **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement |
-| **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit |
-| **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit |
-| **Zodiac Summit** | mission | FINAL CHAPTER: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials |
+| **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit, Drowned Shrine |
+| **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit, Thornwood Ford |
+| **Zodiac Summit** | mission | FINAL CHAPTER: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials, Watchfire Ridge |
 | **Gate of Trials** | trials | Enter the Trials of the Zodiac (after the story) | Zodiac Summit |
+| **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement |
+| **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
+| **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
+
+## Side battles
+
+Optional battles at places on the world map (⚑). They can be fought any number of times and never move the story on. Enemies are the squad's average level (rounded down), one level higher for each earlier win there up to +2, with a leader one level above the rest; four of them, five once the place is at full strength. A win pays the usual bounties plus 160 gil the first time and 80 after.
+
+| Place | Battlefield | Enemies | Drawn from | Goal | Opens after |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Thornwood Ford** | Riverside Ruins | Thornwood Bandits | Cutpurse (Thief), Poacher (Archer), Footpad (Squire), Bruiser (Monk), Deserter (Knight) | Defeat every enemy | CHAPTER I |
+| **Drowned Shrine** | Gloomy Mire | Mire Cultists | Hexer (Black Mage), Augur (Oracle), Caller (Summoner), Seer (Time Weaver), Acolyte (White Mage), Shade (Ninja) | Defeat every enemy | CHAPTER II-A or CHAPTER II-B |
+| **Watchfire Ridge** | Night Battlement | Night Raiders | Raider (Knight), Lancer (Dragoon), Marksman (Archer), Shade (Ninja), Duelist (Spellblade), Warden (Geomancer) | Survive 6 rounds | CHAPTER II-A or CHAPTER II-B |
 
 ## Armory & drops
 

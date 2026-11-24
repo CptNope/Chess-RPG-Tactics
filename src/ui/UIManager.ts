@@ -1,6 +1,6 @@
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, TerrainType, EquipmentSlot, StoryChoice, Item } from '../core/types';
 import { JOBS } from '../data/jobs';
-import { JobSystem, MAX_JOB_LEVEL } from '../core/JobSystem';
+import { JobSystem, MAX_JOB_LEVEL , JOB_MASTERY, VETERAN_JOB_LEVEL, masteryLabel } from '../core/JobSystem';
 import { CONSUMABLES, MAX_STACK, Consumable, consumableAbility } from '../data/consumables';
 import { ITEMS } from '../data/items';
 import { getItemsForSlot } from '../data/items';
@@ -158,6 +158,8 @@ export class UIManager {
   public onAbilitySelected?: (ability: Ability) => void;
   /** Called when the Team screen closes (the world map refreshes its purse). */
   public onJobModalClosed?: () => void;
+  /** True when this unit's move this turn can still be taken back. */
+  public canUndoMove: (unit: Unit) => boolean = () => false;
   public onWaitClicked?: () => void;
   public onAutoClicked?: () => void;
   public onFacingConfirmed?: (facing: FacingDirection) => void;
@@ -665,7 +667,12 @@ export class UIManager {
     this.unitSpdValEl.textContent = unit.speed.toString();
     this.unitHtValEl.textContent = `${currentHeight.toFixed(1)}h`;
 
-    this.btnMove.disabled = unit.hasMoved || unit.team !== 'player' || unit.move === 0;
+    // A move can be taken back until the unit acts: the MOVE button turns into UNDO
+    const undo = unit.team === 'player' && unit.hasMoved && this.canUndoMove(unit);
+    this.btnMove.disabled = !undo && (unit.hasMoved || unit.team !== 'player' || unit.move === 0);
+    this.btnMove.classList.toggle('undo', undo);
+    this.btnMove.title = undo ? 'Take the move back (1)' : 'Move (1)';
+    if (this.btnMove.lastChild) this.btnMove.lastChild.textContent = undo ? 'UNDO' : 'MOVE';
     this.btnAct.disabled = unit.hasActed || unit.team !== 'player';
     this.btnItem.disabled = this.btnAct.disabled;
     this.btnWait.disabled = unit.team !== 'player';
@@ -814,13 +821,14 @@ export class UIManager {
     if (facingLabel) facingLabel.textContent = 'Facing: ';
     if (amountLabel) amountLabel.textContent = 'DMG: ';
     const bonus = forecast.facingType === 'back' ? 30 : forecast.facingType === 'flank' ? 15 : 0;
-    this.fcFacingBadge.textContent = `${forecast.facingType.toUpperCase()} (+${bonus}%)`;
-    this.fcFacingBadge.className = `badge-${forecast.facingType}`;
+    // Facing means nothing to a revive
+    this.fcFacingBadge.textContent = ab.revive ? '—' : `${forecast.facingType.toUpperCase()} (+${bonus}%)`;
+    this.fcFacingBadge.className = ab.revive ? 'badge-front' : `badge-${forecast.facingType}`;
 
     this.fcHitRate.textContent = `${forecast.hitChance}%`;
     const isHeal = forecast.ability.power < 0;
     const dualText = forecast.willDualWield ? ' (×2 Dual)' : '';
-    this.fcDamage.textContent = forecast.expectedDamage === 0
+    this.fcDamage.textContent = ab.revive ? `REVIVE ${Math.round(ab.revive * 100)}% HP` : forecast.expectedDamage === 0
       ? (forecast.ability.appliesStatus ? forecast.ability.appliesStatus.toUpperCase() : '—')
       : `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP${dualText}`;
 
@@ -862,6 +870,8 @@ export class UIManager {
       const locked = !JobSystem.canChangeJob(unit, jobId);
       const prog = JobSystem.jobLevelProgress(unit, jobId);
       const master = prog.level >= MAX_JOB_LEVEL;
+      const mastery = JOB_MASTERY[jobId];
+      const tier = JobSystem.masteryTier(unit, jobId);
       const jobItem = document.createElement('div');
       jobItem.className = `job-item ${unit.jobId === jobId ? 'active' : ''} ${locked ? 'locked' : ''}`;
       jobItem.setAttribute('role', 'button');
@@ -872,6 +882,7 @@ export class UIManager {
           <span class="job-lv ${master ? 'master' : ''}">${master ? '★ MASTER' : `Lv ${prog.level}`}</span></div>
         <div style="font-size: 13px; color: var(--text-muted);">${job.role} | Move: ${job.baseMove} Jump: ${job.baseJump}</div>
         ${locked ? `<div class="job-req">Needs ${need}</div>` : ''}
+        ${mastery ? `<div class="job-mastery" title="Mastery bonuses stay with the unit in every job"><span class="${tier >= 1 ? 'got' : ''}">${tier >= 1 ? '✓ ' : ''}Lv ${VETERAN_JOB_LEVEL}: ${masteryLabel(mastery.stat, mastery.veteran)}</span> · <span class="${tier >= 2 ? 'got' : ''}">${tier >= 2 ? '✓ ' : ''}Master: ${masteryLabel(mastery.stat, mastery.master)}</span></div>` : ''}
         ${!locked && !master ? `<div class="job-bar" title="${prog.into} / ${prog.need} JP to Lv ${prog.level + 1}"><span style="width:${Math.round((prog.into / prog.need) * 100)}%"></span></div>` : ''}
       `;
       jobItem.addEventListener('click', () => {
