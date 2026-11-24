@@ -62,20 +62,22 @@ flowchart TB
 | **WorldMap** | `src/ui/WorldMap.ts` | Draws the map (a painted 320×180 canvas with real buttons over it), walks the party marker, shows what the current place offers. Talks to the game through a small `WorldHost` interface | World, CharacterArt |
 | **Skirmish** | `src/core/Skirmish.ts` | Side battles: the three places, when each opens, enemy level from the squad and past wins, the generated roster, the gil bonus | data, Trials (seeded RNG) |
 | **Tutorial** | `src/ui/Tutorial.ts` | First-time tips: which have been seen (per device), showing one at a time without taking focus | — |
+| **Summons** | `src/core/Summons.ts` | Grand summons: starting a call, the call due at a turn's start, breaking it, its marked area, how many foes' calls land on a tile, Cinderwing's raise (0.24) | jobs data |
 | **Performances** | `src/core/Performance.ts` | Bard songs and Dancer dances: Encore turns, Resonance's reach, starting, ending and the encore due at a turn's start (0.22) | jobs data |
 | **Travelling merchant** | `src/core/Merchant.ts` | Where Wenna is and what she sells, worked out from progress the save already keeps (won chapters, side-battle wins, shelf, armory), plus the wares sold on this visit (0.21) | — |
 | **Camp scenes** | `src/data/camp.ts` | A short scene after each story battle, which one is waiting, and the seen list for old saves (0.21) | — |
 | **Text size** | `src/ui/TextSize.ts` | Normal / Large / Larger, saved per device; sets `data-text-size` on `<html>`, which picks the `--ts` multiplier every UI font size uses (0.20) | — |
 | **consumables** | `src/data/consumables.ts` | The eight supplies; turns one into an `Ability` for the engine; clamps saved inventories | types |
 | **Scenario** | `src/core/Scenario.ts` | Workshop scenario format: create, copy, sanitise untrusted input, validate, turn into a chapter, share-link encoding, library | data |
-| **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor | Grid, VFX, PixelTextures |
+| **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor; the summon dim, call markers and summon camera (0.24) | Grid, VFX, PixelTextures |
 | **Atmosphere** | `src/renderer/Atmosphere.ts` | Per-map presets: sky gradient, fog, hemisphere/sun/rim lights, exposure, bloom, torch colour | — |
 | **TileShading** | `src/renderer/TileShading.ts` | Terrain materials with injected shader tweaks (bevels, cliff AO, water, swamp); merged terrain meshes | — |
 | **Decorations** | `src/renderer/Decorations.ts` | Instanced grass, reeds and pebbles with wind sway | TileShading |
 | **GraphicsQuality** | `src/renderer/GraphicsQuality.ts` | High / Medium / Low profiles, device detection, saved setting | — |
 | **VFXManager** | `src/renderer/VFXManager.ts` | Weather particles and screen shake (reduced-motion aware) | — |
 | **PixelEffects** | `src/renderer/PixelEffects.ts` | Plays pixelfx effects as camera-facing billboards at sprite pixel density (back/front layers, colour + additive light); builds effect actors from unit sprites | vendor/pixelfx |
-| **BattleFx** | `src/renderer/BattleFx.ts` | The cue table: which effect plays for each hit, element, geomancy spell, status, heal, enrage and level-up, where it stands and how far to skip its wind-up | PixelEffects |
+| **BattleFx** | `src/renderer/BattleFx.ts` | The cue table: which effect plays for each hit, element, geomancy spell, status, heal, enrage and level-up, where it stands and how far to skip its wind-up; a summon's creature and when it lands (0.24) | PixelEffects |
+| **Summon effects** | `src/renderer/fx/summons/` | Nine creature effects written against pixelfx, drawn over the board (`overlay`), each with its `impact` time; `_lib.js` holds the summoning circle, shaded bodies, light pillars and shock rings (0.24) | vendor/pixelfx |
 | **pixelfx** (vendored) | `src/vendor/pixelfx/` | Third-party MIT library: effect drawing core + the 21 effects the game uses, unchanged; `registry.js` is ours | — |
 | **CharacterArt** | `src/graphics/CharacterArt.ts` | Pixel painter + outline pass: 48×48 unit sprites (3 views × 6 frames) and 64×64 portraits | — |
 | **PixelTextures** | `src/graphics/PixelTextures.ts` | Procedural tile textures; wraps CharacterArt sprites as cached textures | CharacterArt |
@@ -446,16 +448,18 @@ src/
 │   ├── Skirmish.ts         Side battles: generated, replayable, scaled to the squad
 │   ├── Merchant.ts         The travelling merchant: where she is, what she sells
 │   ├── Performance.ts      Songs and dances that play again each turn
+│   ├── Summons.ts          Grand summons that land on the caller's next turn
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
 ├── data/                   Content: jobs, items, consumables, maps, campaign, camp scenes, Master signatures
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
-│                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality
+│                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality,
+│                           fx/ (our own effects: Haste, and the nine summon creatures)
 ├── vendor/pixelfx/         Third-party pixel effects (MIT), unchanged + our registry
 ├── graphics/               PixelTextures, CharacterArt (sprites + portraits)
 ├── ui/                     UIManager, Workshop, WorldMap, Tutorial, TextSize
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events, performers, signatures (208 rule tests)
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events, performers, signatures, summons (222 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts, sw-plugin.ts (offline worker), package-itch.mjs
 public/                     manifest.webmanifest, icons/ (installable app)
 docs/                       This documentation + ADRs

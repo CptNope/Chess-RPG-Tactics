@@ -210,7 +210,8 @@ export const SIGNATURES: Record<string, Ability> = {
     aoe: 2,
     power: 1.8,
     element: 'holy',
-    signature: true
+    signature: true,
+    summon: 'celestial'
   },
   oracle: {
     id: 'sig_doomsay',

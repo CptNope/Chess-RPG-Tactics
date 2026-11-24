@@ -24,8 +24,9 @@ import { SoundFX } from './audio/SoundEffects';
 import { Music } from './audio/MusicSynthesizer';
 import { SaveManager, GameSaveData, SAVE_SLOTS, MAX_IMPORT_BYTES } from './core/SaveManager';
 import { resolveTerrainAbility } from './core/Geomancy';
-import { encoreDue, endPerformance, isCentered, performedBy, startPerformance } from './core/Performance';
-import { planTurn, unitsInBlast, faceTowards, ENEMY_RAISE_CAP } from './core/EnemyAI';
+import { encoreDue, endPerformance, isCentered, noFalloff, performedBy, startPerformance } from './core/Performance';
+import { planTurn, unitsInBlast, summonVictims, faceTowards, ENEMY_RAISE_CAP } from './core/EnemyAI';
+import { breakCall, callArea, callDue, callHolds, startCall } from './core/Summons';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
 import { getQualitySetting, setQualitySetting, resolveQuality, QualitySetting, PROFILES } from './renderer/GraphicsQuality';
@@ -84,6 +85,8 @@ class TacticsGame {
   private currentSkirmish: string | null = null;
   /** Fallen enemies raised by the enemy side this battle (capped). */
   private enemyRaises = 0;
+  /** Units whose grand summon is marked on the board (0.24.0), to tell when a call is broken. */
+  private callsShown = new Set<string>();
   /** The save slot this game writes to (1–3), and its difficulty. */
   private saveSlot = 1;
   private difficulty: Difficulty = 'normal';
@@ -338,6 +341,10 @@ class TacticsGame {
     this.turnManager = new TurnManager(this.units);
     this.kills = {};
     this.enemyRaises = 0;
+    this.callsShown.clear();
+    // (the scene is built after the first battle is set up; a new map clears these anyway)
+    this.scene?.setCallMarkers([]);
+    this.scene?.dim(0);
     this.stolenThisBattle = [];
     this.fencedThisBattle = 0;
     this.jobNews = {};
@@ -992,6 +999,31 @@ class TacticsGame {
       this.scene.updateUnits(this.units);
     }
 
+    // A grand summon called last turn lands before the unit acts (0.24.0)
+    const call = callDue(activeUnit);
+    this.callsShown.delete(activeUnit.id);
+    if (call && call !== 'broken') {
+      this.currentMode = 'busy';
+      this.ui.addLogEntry(`[SUMMON] ${activeUnit.name}'s ${call.ability.name} arrives!`, 'spell');
+      void this.performAction(activeUnit, call.ability, call.x, call.z, { called: true }).then(() => {
+        if (this.battleOver || this.checkBattleStatus()) return;
+        if (activeUnit.isDead) {
+          this.turnManager.endTurn(activeUnit);
+          later(() => this.advanceTurn(), 600);
+          return;
+        }
+        this.updateTimeline();
+        this.continueTurnStart(activeUnit, height);
+      });
+      return;
+    }
+    if (call === 'broken') this.ui.addLogEntry(`[SUMMON] ${activeUnit.name}'s call fades: nothing comes.`, 'system');
+    this.refreshCallMarkers();
+    this.continueTurnStart(activeUnit, height);
+  }
+
+  /** The rest of a turn's start: a song or dance plays again, then the unit gets control. */
+  private continueTurnStart(activeUnit: Unit, height: number): void {
     // A song or dance still playing goes again before the unit acts (0.22.0)
     const encore = encoreDue(activeUnit);
     if (encore) {
@@ -1048,7 +1080,7 @@ class TacticsGame {
   /** Shows a first-time tip, in story battles only (the Trials and the Workshop are for players who know). */
   private tip(id: TipId): void {
     if (this.battleOver || this.mode === 'trials' || this.mode === 'custom' || this.workshop?.isOpen) return;
-    if (this.turnManager?.activeUnit?.team !== 'player' && id !== 'fallen') return;
+    if (this.turnManager?.activeUnit?.team !== 'player' && id !== 'fallen' && id !== 'enemyCall') return;
     this.tutor.show(id);
   }
 
@@ -1304,7 +1336,7 @@ class TacticsGame {
   private victimsFor(caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
     if (ability.isSelfOnly) return [caster];
     if (isCentered(ability)) return unitsInBlast(caster, ability, caster.x, caster.z, this.units);
-    if (ability.aoe > 0) return unitsInBlast(caster, ability, tx, tz, this.units);
+    if (ability.aoe > 0) return summonVictims(caster, ability, tx, tz, this.units).map((v) => v.unit);
     const living = this.units.find((v) => !v.isDead && v.x === tx && v.z === tz);
     if (ability.revive) {
       // A fallen ally lying on the tile, unless someone is standing over them
@@ -1315,7 +1347,7 @@ class TacticsGame {
   }
 
   private forecastFor(attacker: Unit, target: Unit, ability: Ability, aim?: { x: number; z: number }): CombatForecast {
-    const isSplash = !!aim && ability.aoe > 0 && !isCentered(ability) && (target.x !== aim.x || target.z !== aim.z);
+    const isSplash = !!aim && ability.aoe > 0 && !noFalloff(ability) && (target.x !== aim.x || target.z !== aim.z);
     return CombatEngine.getForecast(
       attacker,
       target,
@@ -1331,10 +1363,16 @@ class TacticsGame {
    * Resolves an ability: spends MP once, then rolls it against every unit it touches,
    * plays effects, handles reactions, boss enrage, and awards EXP/JP to player units.
    */
-  private async performAction(caster: Unit, ability: Ability, tx: number, tz: number, opts: { encore?: boolean } = {}): Promise<void> {
+  private async performAction(caster: Unit, ability: Ability, tx: number, tz: number, opts: { encore?: boolean; called?: boolean } = {}): Promise<void> {
     const victims = this.victimsFor(caster, ability, tx, tz);
+    // Each victim with the ability as it applies to them (Cinderwing heals the living, raises the fallen)
+    const raise = ability.rebirth ? summonVictims(caster, ability, tx, tz, this.units) : null;
+    const asFor = (u: Unit): Ability => raise?.find((v) => v.unit === u)?.ability ?? ability;
     const encore = !!opts.encore;
-    if (!encore) {
+    const called = !!opts.called;
+    // A grand summon: the call begins now, the creature arrives at the start of the next turn (0.24.0)
+    const calling = !encore && !called && !!ability.charge;
+    if (!encore && !called) {
       caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
       caster.hasActed = true;
       this.moveUndo = null; // acting commits the move
@@ -1347,25 +1385,59 @@ class TacticsGame {
 
     if (!ability.isSelfOnly && !isCentered(ability)) {
       caster.facing = faceTowards(caster.x, caster.z, tx, tz);
-      this.scene.triggerUnitLunge(caster.id, tx, tz);
+      if (!called) this.scene.triggerUnitLunge(caster.id, tx, tz);
     }
     this.scene.updateUnits(this.units);
 
+    if (calling) {
+      startCall(caster, ability, tx, tz);
+      SoundFX.playMagicCast();
+      this.fx.status(caster, 'calling');
+      this.scene.spawnFloatingDamage(caster.x, this.grid.getHeight(caster.x, caster.z) + 0.5, caster.z, `✦ ${ability.name.toUpperCase()}`, 'heal');
+      this.ui.addLogEntry(`[SUMMON] ${caster.name} begins calling ${ability.name}. It lands on the marked tiles at the start of ${caster.name}'s next turn.`, 'spell');
+      this.ui.showBanner(caster.team === 'enemy' ? `${caster.name} calls ${ability.name}! Get clear!` : `CALLING ${ability.name.toUpperCase()}…`);
+      this.refreshCallMarkers();
+      if (caster.team === 'enemy') this.tip('enemyCall');
+    }
+
     const verb = caster.team === 'player' ? 'executes' : 'uses';
     const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || (isCentered(ability) ? 'nobody in reach' : 'empty ground');
-    if (encore) {
+    if (calling) {
+      // logged above
+    } else if (called) {
+      this.ui.addLogEntry(`[SUMMON] ${ability.name} falls on ${targetText}.`, 'spell');
+    } else if (encore) {
       this.ui.addLogEntry(`[ENCORE] ${caster.name}'s ${ability.name} plays on (${targetText}).`, 'spell');
       this.scene.spawnFloatingDamage(caster.x, this.grid.getHeight(caster.x, caster.z) + 0.5, caster.z, `♪ ${ability.name.toUpperCase()}`, 'heal');
     } else {
       this.ui.addLogEntry(`[ACTION] ${caster.name} ${verb} ${ability.name} on ${targetText}.`, 'attack');
       if (ability.performance) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} will keep it up while holding this spot.`, 'system');
     }
-    if (caster.team === 'enemy' && !encore) this.ui.showBanner(`${caster.name}: ${ability.name}!`);
+    const summoning = !!ability.summon && !encore && !calling;
+    // (a summon's name floats over its caster instead of a banner that would hide the creature)
+    if (caster.team === 'enemy' && !encore && !calling && !summoning) this.ui.showBanner(`${caster.name}: ${ability.name}!`);
+
+    // The summoned creature appears over the area: the camera comes in, the board darkens, and
+    // the blows land with it (0.24.0)
+    if (summoning) {
+      const at = isCentered(ability) ? caster : { x: tx, z: tz };
+      this.scene.spawnFloatingDamage(caster.x, this.grid.getHeight(caster.x, caster.z) + 0.6, caster.z, `✦ ${ability.name.toUpperCase()}`, 'crit');
+      this.scene.summonView(at.x, this.grid.getHeight(at.x, at.z), at.z, 4.4 + ability.aoe * 0.6);
+      this.scene.dim(ability.charge ? 0.62 : 0.5);
+      await wait(320);
+      SoundFX.playMagicCast();
+      const lands = this.fx.summon(ability, at, 1 / SPEED);
+      await new Promise((r) => setTimeout(r, lands * 1000));
+      this.scene.vfx.triggerScreenShake(ability.charge ? 0.75 : 0.45);
+      this.pad.rumble(ability.charge ? 0.7 : 0.4, 220);
+      later(() => this.scene.dim(0), 700);
+    }
 
     let anyKill = false;
-    for (const target of victims) {
-      if (target.isDead && !ability.revive) continue;
-      const forecast = this.forecastFor(caster, target, ability, { x: tx, z: tz });
+    for (const target of calling ? [] : victims) {
+      const a = asFor(target);
+      if (target.isDead && !a.revive) continue;
+      const forecast = this.forecastFor(caster, target, a, { x: tx, z: tz });
       const result = CombatEngine.executeAttack(forecast);
       this.presentResult(target, forecast, result);
       if (target.isDead && target.team === 'player') this.tip('fallen');
@@ -1383,7 +1455,12 @@ class TacticsGame {
 
     // Player progression: JP for the current job, EXP for acting and for kills (not for an
     // encore: it plays by itself)
-    if (caster.team === 'player' && !caster.isDead && !encore) {
+    if (caster.team === 'player' && !caster.isDead && called && anyKill) {
+      // A grand summon that lands pays out for its kills (the JP came when it was called)
+      const levels = JobSystem.grantExp(caster, 20);
+      if (levels > 0) this.ui.addLogEntry(`[LEVEL] ${caster.name} reached level ${caster.level}!`, 'system');
+    }
+    if (caster.team === 'player' && !caster.isDead && !encore && !called) {
       // Using a supply isn't practising a job: no JP and no EXP for the act, only for a kill it makes
       const jpGain = ability.item ? 0 : Math.round(24 * (caster.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1));
       if (jpGain > 0) this.announceJobGain(caster, JobSystem.gainJp(caster, jpGain));
@@ -1398,7 +1475,33 @@ class TacticsGame {
     }
 
     this.scene.updateUnits(this.units);
+    this.refreshCallMarkers();
+    if (summoning) {
+      // let the creature finish before the camera pulls back
+      await wait(700);
+      this.scene.restoreView();
+    }
     await wait(250);
+  }
+
+  /**
+   * Shows every grand summon still on its way, and logs any call that was broken since the last
+   * look (its caster fell, fell asleep or was silenced) (0.24.0).
+   */
+  private refreshCallMarkers(): void {
+    const live = this.units.filter((u) => callHolds(u));
+    for (const id of this.callsShown) {
+      const u = this.units.find((x) => x.id === id);
+      if (u && live.includes(u)) continue;
+      if (u) {
+        breakCall(u);
+        this.ui.addLogEntry(`[SUMMON] ${u.name}'s call is broken!`, 'reaction');
+        this.ui.showBanner('THE CALL IS BROKEN!');
+      }
+    }
+    this.callsShown = new Set(live.map((u) => u.id));
+    const { width, depth } = this.grid.mapData;
+    this.scene.setCallMarkers(live.map((u) => ({ tiles: callArea(u, width, depth), color: u.team === 'player' ? 0xa855f7 : 0xf97316 })));
   }
 
   private presentResult(target: Unit, forecast: CombatForecast, result: AttackResult): void {
@@ -1410,7 +1513,7 @@ class TacticsGame {
       this.scene.updateUnits(this.units);
       this.fx.heal(target);
       this.scene.spawnFloatingDamage(target.x, h, target.z, 'REVIVED', 'heal');
-      this.ui.addLogEntry(`[ITEM] ${target.name} is back on their feet with ${result.damageDealt} HP!`, 'heal');
+      this.ui.addLogEntry(`[${ability.item ? 'ITEM' : 'RAISE'}] ${target.name} is back on their feet with ${result.damageDealt} HP!`, 'heal');
       this.updateTimeline();
       return;
     }
@@ -1611,7 +1714,7 @@ class TacticsGame {
     if (this.battleOver) return;
     // Enemies may raise only so many of their fallen per battle; AUTO for your own units is not limited
     const plan = planTurn(enemy, this.units, this.grid, { noRevive: enemy.team === 'enemy' && this.enemyRaises >= (this.mode === 'custom' ? ENEMY_RAISE_CAP : DIFFICULTIES[this.difficulty].raiseCap) });
-    if (plan.ability?.revive && enemy.team === 'enemy') this.enemyRaises++;
+    if ((plan.ability?.revive || plan.ability?.rebirth) && enemy.team === 'enemy') this.enemyRaises++;
 
     if (plan.moveTo.x !== enemy.x || plan.moveTo.z !== enemy.z) {
       const walkMs = this.scene.walkPath(enemy.id, this.grid.findPath(enemy, this.units, plan.moveTo.x, plan.moveTo.z));

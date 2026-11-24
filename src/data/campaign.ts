@@ -199,7 +199,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     introDialogue: [
       { speaker: 'Tidecaller Maelis', portrait: 'foe_summoner', portraitClass: '🌊', side: 'right', text: 'You are late, little knights. The light has shown me where the Drowned Regent sleeps. Stay, and watch the tide come in.' },
       { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'She holds the high ground the whole way up. Every terrace we take makes the next one easier.' },
-      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The shallows on either side are slow going, but nobody watches them. Her healer stands by the tower door: get to him, or we will kill the same cultists twice.' }
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The shallows on either side are slow going, but nobody watches them. Her healer stands by the tower door: get to him, or we will kill the same cultists twice.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'And watch the ground. When she starts calling and the stones round you begin to glow, move. That is the sea she is calling up, and it does not miss.' }
     ],
     victoryDialogue: [
       { speaker: 'Tidecaller Maelis', portrait: 'foe_summoner', portraitClass: '🌊', side: 'right', text: 'It makes no difference. The door is open. He is already walking up out of the sea at Stormbreak...' },

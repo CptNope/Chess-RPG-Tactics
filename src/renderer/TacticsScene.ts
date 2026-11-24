@@ -82,6 +82,12 @@ export class TacticsScene {
 
   // Highlight overlays (pooled)
   private highlightGroup: THREE.Group = new THREE.Group();
+  /** Tiles a grand summon will land on (0.24.0): pulsing, in the caster's team colour. */
+  private callGroup: THREE.Group = new THREE.Group();
+  private callMats: THREE.ShaderMaterial[] = [];
+  /** A full-screen shade drawn over the board (not the units or effects) while a summon plays. */
+  private dimQuad!: THREE.Mesh;
+  private dimTarget = 0;
   private cursorMesh: THREE.Group;
   private sharedHighlightGeom = new THREE.PlaneGeometry(0.95, 0.95);
 
@@ -196,6 +202,21 @@ export class TacticsScene {
     this.buildMap();
 
     this.scene.add(this.highlightGroup);
+    this.scene.add(this.callGroup);
+    this.dimQuad = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.ShaderMaterial({
+        uniforms: { amount: { value: 0 } },
+        vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
+        fragmentShader: 'uniform float amount; void main() { gl_FragColor = vec4(0.02, 0.01, 0.06, amount); }',
+        transparent: true, depthTest: false, depthWrite: false
+      })
+    );
+    this.dimQuad.renderOrder = 8;
+    this.dimQuad.frustumCulled = false;
+    this.dimQuad.visible = false;
+    this.dimQuad.userData.noPick = true;
+    this.scene.add(this.dimQuad);
     this.cursorMesh = this.buildCursor();
     this.scene.add(this.cursorMesh);
 
@@ -426,6 +447,8 @@ export class TacticsScene {
     this.walks.clear();
     this.queuedPaths.clear();
     this.pfx.clear();
+    this.setCallMarkers([]);
+    this.dim(0);
     this.buildMap();
     const md = newGrid.mapData;
     this.targetCameraTarget.set((md.width - 1) / 2, 1, (md.depth - 1) / 2);
@@ -1075,6 +1098,73 @@ export class TacticsScene {
     return mat;
   }
 
+  private savedView: { zoom: number; target: THREE.Vector3 } | null = null;
+
+  /**
+   * Brings the camera in on a summon (0.24.0): centred a little above the tile so the creature
+   * fits, and never further out than it already was. restoreView() puts it back.
+   */
+  public summonView(x: number, height: number, z: number, zoom: number): void {
+    if (!this.savedView) this.savedView = { zoom: this.targetZoomLevel, target: this.targetCameraTarget.clone() };
+    this.targetCameraTarget.set(x, height + 1.8, z);
+    this.targetZoomLevel = Math.max(this.minZoomLevel, Math.min(this.targetZoomLevel, zoom));
+  }
+
+  public restoreView(): void {
+    if (!this.savedView) return;
+    this.targetZoomLevel = this.savedView.zoom;
+    this.targetCameraTarget.copy(this.savedView.target);
+    this.savedView = null;
+  }
+
+  /** Darkens the board behind the units and effects (amount 0..1), easing in and out. */
+  public dim(amount: number): void {
+    this.dimTarget = amount;
+  }
+
+  /**
+   * Marks the tiles each grand summon will land on (0.24.0). Pass every call still on its way;
+   * an empty list clears them.
+   */
+  public setCallMarkers(calls: { tiles: { x: number; z: number }[]; color: number }[]): void {
+    while (this.callGroup.children.length) this.callGroup.remove(this.callGroup.children[0]);
+    for (const m of this.callMats) m.dispose();
+    this.callMats = [];
+    for (const call of calls) {
+      // A bright rim and stripes sliding across: unlike a move or target highlight at a glance
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: new THREE.Color(call.color) }, uTime: sharedTime },
+        vertexShader: 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `uniform vec3 uColor; uniform float uTime; varying vec2 vUv; varying vec3 vW;
+          void main(){
+            float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+            float rim = 1.0 - smoothstep(0.0, 0.1, e);
+            float stripe = step(0.5, fract((vW.x + vW.z) * 2.5 - uTime * 0.8));
+            float pulse = 0.5 + 0.5 * sin(uTime * 5.0);
+            float a = 0.18 + stripe * (0.2 + 0.15 * pulse) + rim * 0.75;
+            gl_FragColor = vec4(uColor * (1.0 + rim * 0.8 + stripe * 0.3), a);
+          }`,
+        transparent: true,
+        depthWrite: false
+      });
+      this.callMats.push(mat);
+      for (const t of call.tiles) {
+        if (!this.grid.getTile(t.x, t.z)) continue;
+        const mesh = new THREE.Mesh(this.sharedHighlightGeom, mat);
+        mesh.position.set(t.x, this.grid.getHeight(t.x, t.z) + 0.03, t.z);
+        mesh.renderOrder = 8.5; // above the summon dim, so the danger stays readable
+        mesh.userData.noPick = true;
+        this.callGroup.add(mesh);
+      }
+    }
+  }
+
+  private updateSummonLayers(delta: number): void {
+    const u = (this.dimQuad.material as THREE.ShaderMaterial).uniforms.amount;
+    u.value += (this.dimTarget - u.value) * Math.min(1, delta * 6);
+    this.dimQuad.visible = u.value > 0.01;
+  }
+
   public setHighlights(tiles: { x: number; z: number }[], color: number = 0x3b82f6): void {
     this.clearHighlights();
     const mat = this.highlightMaterial(color === 0xdc2626 ? 0xef4444 : color);
@@ -1288,6 +1378,7 @@ export class TacticsScene {
     this.vfx.update(delta);
     this.pfx.facing = this.currentRotationAngle;
     this.pfx.update(delta);
+    this.updateSummonLayers(delta);
 
     // Shared clock for water, swamp, grass sway and highlights
     sharedTime.value = now / 1000;

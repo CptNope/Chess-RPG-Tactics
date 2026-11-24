@@ -20,6 +20,14 @@ export function isCentered(ability: Ability): boolean {
   return !!(ability.performance || ability.centered);
 }
 
+/**
+ * True when everyone in the area takes the full effect: centred areas, and grand summons
+ * (0.24.0), whose aimed tile may well be empty by the time the creature arrives.
+ */
+export function noFalloff(ability: Ability): boolean {
+  return isCentered(ability) || !!ability.charge;
+}
+
 /** Turns a performance plays again after the one it was started on. */
 export const ENCORE_TURNS = 3;
 /** Extra turns with the Dancer's support ability. */

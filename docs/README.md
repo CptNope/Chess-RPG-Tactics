@@ -74,6 +74,7 @@ timeline
     0.21.0 : 0029 Merchant, camp scenes, trophies
     0.22.0 : 0030 Bard, Dancer, performances
     0.23.0 : 0031 Master signatures
+    0.24.0 : 0032 Summons and grand summons
 ```
 
 | # | Decision | Release |
@@ -104,6 +105,7 @@ timeline
 | [0029](adr/0029-world-map-events.md) | A merchant derived from progress rather than saved, with only her current visit's sales kept; camp scenes in the ordinary dialogue box over an inert map; trophies as relics, back-filled for old saves | 0.21.0 |
 | [0030](adr/0030-bard-dancer-performances.md) | Performances as an area around the performer that replays at turn start through the normal action path; Encore as a status; ending rules in one module | 0.22.0 |
 | [0031](adr/0031-master-signatures.md) | A signature per job earned at Master, kept in every job, once per battle; derived from lifetime JP so saves need nothing new | 0.23.0 |
+| [0032](adr/0032-summons.md) | Each summon's creature drawn as an effect over the board; grand summons mark the area and land on the caller's next turn | 0.24.0 |
 | [0026](adr/0026-difficulty-and-save-slots.md) | Difficulty as three dials on enemies only; three slots with slot 1 on the old key; imports treated as untrusted; refunds on defeat; the Gate after Act I | 0.18.0 |
 | [0025](adr/0025-act-two.md) | A second act as data on the existing chapter graph; finished saves continue; one enemy raise per battle; how Act II was balanced | 0.17.0 |
 | [0024](adr/0024-side-battles-mastery-and-onboarding.md) | Generated, replayable side battles as a fourth battle mode; mastery derived from lifetime JP; revive as an ability flag the AI can use; non-blocking tips, undo and battle speed | 0.16.0 |

@@ -43,7 +43,9 @@ function abilityRow(a: Ability): string {
     a.cleanse ? 'cleanses ailments' : '',
     a.drain ? `drains ${Math.round(a.drain * 100)}%` : '',
     a.steal ? 'steals gear' : '',
-    a.scalesWith === 'attack' ? 'scales with ATK' : ''
+    a.scalesWith === 'attack' ? 'scales with ATK' : '',
+    a.charge ? '**lands next turn**, full force over the area, +30 hit' : '',
+    a.rebirth ? `raises the fallen at ${Math.round(a.rebirth * 100)}% HP` : ''
   ].filter(Boolean).join(', ');
   return `| **${a.name}** \`${a.id}\` | ${kind} | ${a.jpCost} | ${isAction ? a.mpCost : '—'} | ${isAction ? a.range : '—'} | ${isAction ? a.heightTolerance : '—'} | ${isAction && a.aoe ? a.aoe : '—'} | ${isAction ? power : '—'} | ${isAction ? a.element : '—'} | ${extras || '—'} | ${a.description.replace(/\|/g, '/')} |`;
 }

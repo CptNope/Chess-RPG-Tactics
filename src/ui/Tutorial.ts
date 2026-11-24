@@ -7,7 +7,7 @@
  * playthrough isn't taught again. "Show tips again" in Controls resets it.
  */
 export type TipId =
-  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap';
+  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap' | 'enemyCall';
 
 export const TIPS: Record<TipId, { title: string; text: string }> = {
   firstTurn: {
@@ -45,6 +45,10 @@ export const TIPS: Record<TipId, { title: string; text: string }> = {
   fallen: {
     title: 'AN ALLY HAS FALLEN',
     text: 'The ✝ marker shows where. Use a Phoenix Feather (ITEM) or a White Mage\'s Raise from nearby to bring them back.'
+  },
+  enemyCall: {
+    title: 'A GRAND SUMMON IS COMING',
+    text: 'The pulsing tiles mark where it lands, at the start of the caller\'s next turn. Move out of them, or put the caller to sleep, silence them or knock them out to break the call.'
   },
   worldMap: {
     title: 'THE WORLD MAP',

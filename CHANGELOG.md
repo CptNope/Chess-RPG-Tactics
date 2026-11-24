@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.24.0] - 2026-11-24
+
+### Added — summons you can see
+- **Every Summoner call now brings its creature onto the battlefield**, drawn in pixel art at the same scale as the units. The camera comes in, the board darkens, a summoning circle the size of the spell's area opens, and the damage lands with the creature's attack:
+  - **Salamander**: a fire lizard rears out of a column of flame and breathes a burning ring over the area.
+  - **Undine**: a water spirit rises from a pool and brings a wave down; frost is left where it broke.
+  - **Storm Roc**: a thunderbird swoops in under storm clouds and calls down a rain of lightning.
+  - **Sylph**: a wind fairy twirls down into a whirl of leaves and lets a healing rain fall.
+  - **Golem**: a stone giant heaves up out of the ground, slams its fists and raises a shield of light.
+  - **Celestial Call** (the Summoner's Master signature): a six-winged being descends in a shaft of light, and lances of light fall.
+
+### Added — grand summons
+- **Three new Summoner calls that take a turn to arrive** (✦ in the ACT menu, "Lands next turn"):
+  - **Cinderwing** (450 JP, 36 MP): a firebird of rebirth dives into the circle. It heals allies in the area and **raises the fallen** there with a third of their HP.
+  - **Tidewyrm** (520 JP, 40 MP): a sea serpent brings a wall of water down over a **radius-3** area and Slows whoever it hits.
+  - **Elder Wyrm** (640 JP, 48 MP, range 5): an ancient dragon lowers its head out of a starry sky and breathes starfire into the circle.
+- **How a call works:** using one spends the MP and the action and marks the area with pulsing striped tiles (violet for yours, orange for the enemy's). At the start of the caller's next turn the creature arrives and hits **whoever is standing there then**, at full force across the whole area and at +30 hit. The unit card shows **✦ CALLING**.
+- **A call can be broken:** knock the caller out, put them to sleep or silence them, and nothing comes. The log says so.
+- Enemy Summoners of level 6 and up call grand summons too, and enemies step out of the area of yours. A first-time tip explains the marked tiles. **Tidecaller Maelis**, Chapter V's boss, now calls the Tidewyrm, and Bria warns you about it before the fight.
+
+### Changed
+- A summon's name floats over its caster instead of a banner that would hide the creature.
+- A unit raised by a spell is logged as **[RAISE]**, not [ITEM].
+
+### Developer
+- `src/core/Summons.ts`: `startCall`, `callDue`, `breakCall`, `callHolds`, `callArea`, `callsLandingOn`, `rebirthOf`, `ENEMY_GRAND_SUMMON_LEVEL`. `Ability.summon`, `charge`, `rebirth`; `Unit.calling`; the `calling` status. `noFalloff()` covers centred areas and grand summons; `summonVictims()` in the planner handles Cinderwing's heal-and-raise.
+- `src/renderer/fx/summons/`: nine pixelfx effects and a shared helper library; each declares its `impact` time. `PixelEffects` gains an `overlay` mode (drawn over the board). `TacticsScene` gains `dim()`, `setCallMarkers()` and `summonView()` / `restoreView()`.
+- The planner steers away from tiles a foe's grand summon will land on, values a grand summon at 70% (its targets can move), and won't use Cinderwing past the enemy raise cap. The balance sim charges and resolves grand summons like the game.
+- Grand summon power is held under the same-level one-shot rule (Tidewyrm 1.25, Elder Wyrm 1.35).
+- 14 new tests (222 total) in `tests/summons.test.ts`, including a draw-through of every effect. [ADR 0032](docs/adr/0032-summons.md).
+
 ## [0.23.0] - 2026-11-24
 
 ### Added — Master signatures

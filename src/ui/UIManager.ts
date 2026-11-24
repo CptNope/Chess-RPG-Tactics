@@ -655,8 +655,10 @@ export class UIManager {
       const badge = document.createElement('span');
       badge.className = `status-badge status-${status.type}`;
       badge.textContent = status.type === 'encore' ? `♪ ${Math.max(0, status.duration - 1)}` // performance: encores left
+        : status.type === 'calling' ? '✦ CALLING' // a grand summon on its way (0.24.0)
         : status.duration > 50 ? status.type.substring(0, 4) : `${status.type.substring(0, 4)} ${status.duration}t`;
       if (status.type === 'encore') badge.title = 'Performing: plays again at the start of each turn while this unit holds its ground';
+      if (status.type === 'calling') badge.title = 'Calling a grand summon: it lands on the marked tiles at the start of this unit\'s next turn. KO, Sleep or Silence break the call';
       this.unitStatusesEl.appendChild(badge);
     });
 
@@ -756,10 +758,10 @@ export class UIManager {
       if (ability.signature) btn.classList.add('signature');
       btn.innerHTML = `
         <div class="action-name-row">
-          <span>${ability.signature ? '★ ' : ''}${ability.name}</span>
+          <span>${ability.signature ? '★ ' : ability.charge ? '✦ ' : ''}${ability.name}</span>
           <span class="action-mp">${mpText}</span>
         </div>
-        <div class="action-desc">${ability.signature ? `Master · once per battle · ${ability.centered ? `Around you · Area ${ability.aoe}` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`}` : ability.centered ? `Around you · Area ${ability.aoe}` : ability.performance ? `${unit.performing === ability.id ? '♪ Playing · ' : ''}Around you · Area ${ability.aoe} · repeats ${encoreTurns(unit)} turns` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`} | ${ability.description}</div>
+        <div class="action-desc">${ability.signature ? `Master · once per battle · ${ability.centered ? `Around you · Area ${ability.aoe}` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`}` : ability.centered ? `Around you · Area ${ability.aoe}` : ability.performance ? `${unit.performing === ability.id ? '♪ Playing · ' : ''}Around you · Area ${ability.aoe} · repeats ${encoreTurns(unit)} turns` : `${ability.charge ? 'Lands next turn · ' : ''}Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`} | ${ability.description}</div>
       `;
 
       btn.disabled = unit.currentMp < ability.mpCost;
@@ -842,6 +844,11 @@ export class UIManager {
     this.fcDamage.textContent = ab.revive ? `REVIVE ${Math.round(ab.revive * 100)}% HP` : forecast.expectedDamage === 0
       ? (forecast.ability.appliesStatus ? forecast.ability.appliesStatus.toUpperCase() : '—')
       : `${isHeal ? '+' : '-'}${Math.abs(forecast.expectedDamage)} HP${dualText}`;
+    // A grand summon lands next turn (0.24.0): say so, and that it's on whoever stands there then
+    if (ab.charge) {
+      this.fcDamage.textContent += ab.rebirth ? ' + RAISE' : '';
+      this.fcTargetName.textContent += ' · LANDS NEXT TURN';
+    }
 
     this.forecastEl.classList.remove('hidden');
     this.focusForNav(this.btnForecastConfirm as HTMLElement);

@@ -24,7 +24,7 @@ Every number here is read straight from the game data, so it always matches what
 | **Chemist** `chemist` | Alchemist | 4 | 3 | 1.00× | 0.90× | 0.95× | 0.80× | 1.00× | 6 |
 | **Monk** `monk` | Brawler | 4 | 3 | 1.20× | 0.60× | 1.20× | 0.60× | 1.05× | 6 |
 | **Thief** `thief` | Rogue | 5 | 3 | 0.90× | 0.70× | 1.00× | 0.70× | 1.25× | 6 |
-| **Summoner** `summoner` | Summoner | 3 | 2 | 0.80× | 1.50× | 0.60× | 1.30× | 0.90× | 7 |
+| **Summoner** `summoner` | Summoner | 3 | 2 | 0.80× | 1.50× | 0.60× | 1.30× | 0.90× | 10 |
 | **Oracle** `oracle` | Hexer | 3 | 2 | 0.90× | 1.20× | 0.70× | 1.20× | 1.00× | 6 |
 | **Paladin** `paladin` | Templar | 3 | 2 | 1.25× | 0.90× | 1.15× | 0.95× | 0.95× | 6 |
 | **Spellblade** `spellblade` | Battlemage | 4 | 3 | 1.05× | 1.10× | 1.10× | 1.10× | 1.00× | 5 |
@@ -100,11 +100,11 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 
 ## Abilities
 
-105 learnable abilities: 64 actions, 18 reactions, 14 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+108 learnable abilities: 67 actions, 18 reactions, 14 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 64
+  "Action" : 67
   "Reaction" : 18
   "Support" : 14
   "Movement" : 9
@@ -274,6 +274,9 @@ pie showData title Abilities by slot type
 | **Storm Roc** `su_storm_roc` | Action | 220 | 28 | 4 | 3 | 2 | 1.1 | lightning | — | Calls a great thunderbird over a wide area (radius 2). |
 | **Sylph** `su_sylph` | Action | 200 | 26 | 4 | 3 | 2 | Heal 0.7 | holy | inflicts **regen** | Calls a wind spirit that heals allies in a wide area and leaves them with Regen. |
 | **Golem** `su_golem` | Action | 260 | 22 | 3 | 3 | 2 | — | physical | inflicts **protect** | Calls a stone guardian: Protect on every ally in a wide area. |
+| **Cinderwing** `su_cinderwing` | Action | 450 | 36 | 4 | 3 | 2 | Heal 1 | holy | **lands next turn**, full force over the area, +30 hit, raises the fallen at 34% HP | Calls the firebird of rebirth. Arrives at the start of your next turn: heals allies in a wide area (radius 2) and raises the fallen there with a third of their HP. |
+| **Tidewyrm** `su_tidewyrm` | Action | 520 | 40 | 4 | 3 | 3 | 1.25 | ice | inflicts **slow**, **lands next turn**, full force over the area, +30 hit | Calls a sea serpent. Arrives at the start of your next turn: a great wave over a very wide area (radius 3) that Slows whoever it hits. |
+| **Elder Wyrm** `su_elder_wyrm` | Action | 640 | 48 | 5 | 3 | 2 | 1.35 | dark | **lands next turn**, full force over the area, +30 hit | Calls the oldest dragon under the mountains. Arrives at the start of your next turn: a starfire blast that hits every foe in a wide area (radius 2) at full force, up to 5 tiles away. |
 | **Mana Spring** `su_mana_spring` | Reaction | 180 | — | — | — | — | — | — | — | When struck, recover 15% of max MP. |
 | **Conserve** `su_conserve` | Support | 300 | — | — | — | — | — | — | — | Every MP cost is halved (rounded up). |
 
@@ -354,6 +357,7 @@ pie showData title Abilities by slot type
 | **shell** | Buff | 3 | Spell damage taken ×0.7 |
 | **regen** | Buff | 4 | Recover 8% max HP at the start of each turn (Regen from gear lasts the whole battle) |
 | **encore** | Buff | 4 |  |
+| **calling** | Buff | 2 |  |
 | **blind** | Ailment | 3 | Physical accuracy −40 |
 | **silence** | Ailment | 3 | Abilities that cost MP are sealed |
 | **sleep** | Ailment | 2 | Turns pass without acting; any damage wakes the unit, and sleepers cannot dodge (100% hit) |

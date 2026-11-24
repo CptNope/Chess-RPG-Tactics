@@ -63,6 +63,7 @@ flowchart TB
 
 * **Bows and spells** need line-of-height: each ability has a height tolerance.
 * **Area spells** (Fire, Blizzard, Thunder, Dragon Breath, Earth Slash) hit every foe within 1 tile; the edges take 60%. They never hit your own units.
+* **Grand summons** (0.24) land a turn late: the area pulses with stripes (orange for an enemy's call) until the caller's next turn. Step out, or knock out, sleep or silence the caller to break it. Yours do the same to them.
 * **Geomancers** change spell with the ground: stand on swamp for poison, on wood for fire, on grass to root a target in place. [Full table](CONTENT_REFERENCE.md#geomancy-terrain-spells).
 
 ---
@@ -319,3 +320,4 @@ Workshop battles use your real squad, which keeps any EXP, JP and reward gear, b
 7. **Use AUTO** to speed through easy Trial floors, then take over for Warden floors. AUTO never spends your supplies.
 8. **Stuck? Train.** A side battle or two buys supplies and job levels, and a move you regret can be undone before you act.
 9. **Pack for the fight.** Remedies for the Mire's poison, a Phoenix Feather for boss fights, and a Blast Flask to wake nothing by accident: it wakes sleeping enemies it hits.
+10. **Read the stripes.** Pulsing striped tiles mean a grand summon is coming: get clear before the caller's next turn, or silence them.

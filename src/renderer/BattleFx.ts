@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import type { Ability, Unit } from '../core/types';
 import type { TacticsScene } from './TacticsScene';
-import type { PlayOptions } from './PixelEffects';
+import { effectImpact, type PlayOptions } from './PixelEffects';
 
 interface Cue extends PlayOptions {
   id: string;
@@ -50,7 +50,8 @@ const STATUS: Record<string, Cue> = {
   silence: { id: 'status/cursed', wrap: true, holdFor: 1.4 },
   sleep: { id: 'status/sleep', wrap: true, holdFor: 1.8 },
   breach: { id: 'shadow/hex-sigil', speed: 2.2, startAt: 0.6 },
-  encore: { id: 'arcane/rune-circle', holdFor: 1.1, speed: 1.6 }
+  encore: { id: 'arcane/rune-circle', holdFor: 1.1, speed: 1.6 },
+  calling: { id: 'arcane/rune-circle', holdFor: 1.4, speed: 1.2 }
 };
 
 /** Abilities with a look of their own, beyond their element. */
@@ -85,9 +86,23 @@ export class BattleFx {
     this.scene.pfx.play(id, this.ground(at), { ...opts, ...extra, ...(actor ? { actor } : {}) });
   }
 
+  /**
+   * A summon's creature over the whole area (0.24.0), drawn in front of the board. Returns the
+   * seconds until it lands, so the damage numbers can wait for it. `speed` > 1 plays it faster.
+   */
+  public summon(ability: Ability, at: { x: number; z: number }, speed = 1): number {
+    const id = `summon/${ability.summon}`;
+    const impact = effectImpact(id);
+    if (!impact) return 0;
+    this.scene.pfx.play(id, this.ground(at), { overlay: true, speed, options: { radius: ability.aoe } });
+    return impact / speed;
+  }
+
   /** A damaging hit: weapon arc and spark for physical blows, the element's spell otherwise. */
   public hit(caster: Unit, target: Unit, ability: Ability, crit: boolean): void {
     const flip = this.leftward(caster, target);
+    // The summon's creature already showed the blow: just a spark where it lands
+    if (ability.summon) return this.play({ id: crit ? 'impacts/crit-hit' : 'impacts/hit-spark', scale: crit ? 0.85 : 1 }, target, { flip });
     const geo = ability.name.split(': ')[1];
     if (geo && GEOMANCY[geo]) return this.play(GEOMANCY[geo], target, { flip });
     if (ABILITY[ability.id]) {

@@ -1,4 +1,5 @@
 import { endPerformance } from './Performance';
+import { breakCall } from './Summons';
 import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainType, Item, EquipmentSlot } from './types';
 import { JobSystem } from './JobSystem';
 
@@ -47,7 +48,7 @@ export interface AttackResult {
 }
 
 /** Statuses that help the unit carrying them (cast on allies, never on foes). */
-export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus', 'shell', 'regen', 'encore'];
+export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus', 'shell', 'regen', 'encore', 'calling'];
 
 /** Ailments: what cleansing removes and what gear can guard against. */
 export const HARMFUL_STATUSES: StatusEffectType[] = ['slow', 'immobilize', 'poison', 'blind', 'silence', 'sleep', 'breach'];
@@ -63,6 +64,7 @@ export const STATUS_DURATION: Record<StatusEffectType, number> = {
   shell: 3,
   regen: 4,
   encore: 4,
+  calling: 2,
   blind: 3,
   silence: 3,
   sleep: 2,
@@ -171,6 +173,8 @@ export class CombatEngine {
     if (ability.steal) hitChance -= target.isBoss ? 45 : 25;
     // A Master signature is a once-a-battle blow: it rarely misses (0.23.0)
     if (ability.signature) hitChance += 30;
+    // ... and a grand summon, waited a whole turn for, lands just as surely (0.24.0)
+    if (ability.charge) hitChance += 30;
 
     hitChance = Math.min(100, Math.max(10, hitChance));
     // A sleeper can't dodge
@@ -280,7 +284,11 @@ export class CombatEngine {
       unit.statuses.push(status);
     }
     // A performer put to sleep or silenced stops performing (0.22.0)
-    if (type === 'sleep' || type === 'silence') endPerformance(unit);
+    // ... and a Summoner's grand summon is lost (0.24.0)
+    if (type === 'sleep' || type === 'silence') {
+      endPerformance(unit);
+      breakCall(unit);
+    }
     JobSystem.recalculateDerivedStats(unit);
     return true;
   }
@@ -331,6 +339,7 @@ export class CombatEngine {
     target.isDead = false;
     target.statuses = [];
     target.performing = undefined;
+    target.calling = undefined;
     target.ct = 0;
     JobSystem.recalculateDerivedStats(target);
     target.currentHp = Math.max(1, Math.round(target.maxHp * share));

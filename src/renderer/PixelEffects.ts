@@ -13,9 +13,16 @@
 import * as THREE from 'three';
 import { EFFECTS, createFrame, clearFrame, createFx, FxFrame, FxInstance, FxModule } from '../vendor/pixelfx/registry.js';
 import * as quicken from './fx/quicken.js';
+import { SUMMON_EFFECTS } from './fx/summons/index.js';
 
-/** The game's own effects, alongside the vendored library. */
-const LOCAL_EFFECTS: Record<string, FxModule> = { 'local/quicken': quicken };
+/** The game's own effects, alongside the vendored library: Haste, and the summons (0.24.0). */
+const LOCAL_EFFECTS: Record<string, FxModule> = { 'local/quicken': quicken, ...(SUMMON_EFFECTS as Record<string, FxModule>) };
+
+/** Seconds into an effect at which it lands (summons say so in their meta), at speed 1. */
+export function effectImpact(id: string): number {
+  const mod = EFFECTS[id] ?? LOCAL_EFFECTS[id];
+  return (mod?.meta as { impact?: number } | undefined)?.impact ?? 0;
+}
 
 /** World units per effect pixel (matches the 48px unit sprites drawn on 1.35-unit planes). */
 export const FX_PIXEL = 1.35 / 48;
@@ -104,6 +111,8 @@ export interface PlayOptions {
   actor?: FxActor;
   /** Any of the effect's own options. */
   options?: Record<string, unknown>;
+  /** Draw over the whole board, ignoring depth (summons, 0.24.0). */
+  overlay?: boolean;
 }
 
 interface Layer {
@@ -194,14 +203,16 @@ export class PixelEffects {
       group.visible = false;
       groups.push(group);
       this.scene.add(group);
-      const order = side === 'back' ? 9 : 11;
+      const order = o.overlay ? 20 + i : side === 'back' ? 9 : 11;
 
       const colorMat = new THREE.MeshBasicMaterial({
-        map: layer.color, transparent: true, depthWrite: false, toneMapped: false, side: THREE.DoubleSide, alphaTest: 0.02
+        map: layer.color, transparent: true, depthWrite: false, toneMapped: false, side: THREE.DoubleSide, alphaTest: 0.02,
+        depthTest: !o.overlay
       });
       const lightMat = new THREE.MeshBasicMaterial({
         map: layer.light, transparent: true, depthWrite: false, toneMapped: false, side: THREE.DoubleSide,
-        blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendEquation: THREE.AddEquation
+        blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendEquation: THREE.AddEquation,
+        depthTest: !o.overlay
       });
       for (const [mat, extra] of [[colorMat, 0], [lightMat, 1]] as const) {
         const mesh = new THREE.Mesh(geom, mat);

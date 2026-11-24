@@ -71,6 +71,8 @@ Then each plan gets small adjustments:
 | Self-only buff (Bulwark, Focus) (0.20) | `−0.6 × walking distance to the nearest foe`, so it is cast on the way in |
 | A performance (song or dance) (0.22) | ×1.4: it plays again on the next turns. Aimed at the performer's own tile, never range-checked |
 | A Master signature (0.23) | −30: once a battle, so it waits for a group or a target that matters (only player units have them, so this shapes AUTO) |
+| A grand summon (0.24) | ×0.7: it lands next turn and its targets can move. Cinderwing scores its heal and its raises together, and counts against the enemy raise cap |
+| Standing where a foe's grand summon will land (0.24) | −30 per call (−50 on the fallback walk), so units get clear of the marked area |
 | Still performing (0.22): moving, or any other action | −12 each, so a song isn't dropped for a small gain; with nothing worth doing, the performer stays put instead of advancing |
 
 Every plan ends **facing the closest foe** (0.20), the one most likely to strike next, so the unit doesn't leave its back open after moving. For a melee attack that foe is the target anyway.
@@ -102,6 +104,7 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | Shoots the unit that can still heal, given two identical targets | `tests/ai.test.ts` |
 | AUTO doesn't spend a signature on a foe an ordinary blow finishes, but uses Meteor on a group | `tests/signatures.test.ts` |
 | A Bard beside wounded allies sings, centred on itself; a performer still playing holds its ground, but breaks off for a clearly better blow | `tests/performers.test.ts` |
+| Walks out of the area a foe's grand summon is about to land on; a veteran Summoner calls a grand summon on a crowd; never raises past the cap | `tests/summons.test.ts` |
 
 ---
 
@@ -111,7 +114,7 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | :--- | :--- |
 | Job, level, position | Chapter `enemyRoster` (`src/data/campaign.ts`) or `buildTrialFloor()` |
 | Boss | `isBoss` → `JobSystem.makeBoss()`: +60% HP, +15% ATK/MAG, enrage at 50% HP |
-| Veteran kit (level ≥ 4) | Every action in their job, plus a job reaction/support (Knight parry, White Mage auto-potion, Black Mage Arcane Strength, Ninja Dual Wield, Dragoon Dragonheart, Geomancer Earthen Ward) |
+| Veteran kit (level ≥ 4) | Every action in their job (grand summons from level 6, 0.24), plus a job reaction/support (Knight parry, White Mage auto-potion, Black Mage Arcane Strength, Ninja Dual Wield, Dragoon Dragonheart, Geomancer Earthen Ward) |
 
 ---
 
