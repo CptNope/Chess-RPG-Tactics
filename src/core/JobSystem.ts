@@ -1,6 +1,7 @@
 import { Unit, Team, FacingDirection, EquippedAbilities, EquippedGear, Item, EquipmentSlot, Ability, StatusEffectType } from './types';
 import { JOBS, BASIC_ATTACK } from '../data/jobs';
 import { ITEMS } from '../data/items';
+import { SIGNATURES } from '../data/signatures';
 
 import { STATUS_DURATION } from './CombatEngine';
 
@@ -522,6 +523,7 @@ export class JobSystem {
     unit.usedDragonheart = false;
     unit.usedIronWill = false;
     unit.performing = undefined;
+    unit.usedSignatures = [];
     unit.ct = 0;
     unit.hasMoved = false;
     unit.hasActed = false;
@@ -619,7 +621,18 @@ export class JobSystem {
       const a = job.abilities.find((ab) => ab.id === abilityId);
       if (a) return a;
     }
-    return null;
+    return Object.values(SIGNATURES).find((a) => a.id === abilityId) || null;
+  }
+
+  /** Master signatures the unit has earned: one for every job it has mastered (0.23.0). */
+  public static signaturesOf(unit: Unit): Ability[] {
+    return Object.entries(SIGNATURES).filter(([jobId]) => this.masteryTier(unit, jobId) === 2).map(([, a]) => a);
+  }
+
+  /** Marks a signature as spent for this battle. */
+  public static useSignature(unit: Unit, ability: Ability): void {
+    if (!ability.signature) return;
+    unit.usedSignatures = [...(unit.usedSignatures || []).filter((id) => id !== ability.id), ability.id];
   }
 
   public static getCombatActionAbilities(unit: Unit) {
@@ -654,6 +667,11 @@ export class JobSystem {
           }
         }
       }
+    }
+
+    // Master signatures, in any job, once per battle each (0.23.0)
+    for (const sig of this.signaturesOf(unit)) {
+      if (!(unit.usedSignatures || []).includes(sig.id)) actions.push(sig);
     }
 
     // Silence seals every ability that costs MP

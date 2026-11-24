@@ -11,6 +11,15 @@
 import { Ability, Unit } from './types';
 import { JOBS } from '../data/jobs';
 
+/**
+ * True for an area around the caster rather than at a target: songs, dances and centred
+ * signatures. Aimed at the caster's own tile, never range-checked, and with no splash falloff
+ * (nobody stands at the aimed tile but the caster).
+ */
+export function isCentered(ability: Ability): boolean {
+  return !!(ability.performance || ability.centered);
+}
+
 /** Turns a performance plays again after the one it was started on. */
 export const ENCORE_TURNS = 3;
 /** Extra turns with the Dancer's support ability. */

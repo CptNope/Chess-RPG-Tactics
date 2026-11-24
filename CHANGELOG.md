@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.23.0] - 2026-11-24
+
+### Added — Master signatures
+- **Mastering a job (job level 8) now brings its signature:** one action of the job's own, kept in every job like the mastery bonus. It shows in the ACT menu with a ★ and **ONCE**: free, usable once per battle, at +30 hit, and still usable under Silence. A unit that has mastered several jobs carries all their signatures.
+- One for every job (18). A few of them:
+  - **Valiant Charge** (Squire): a ×2.0 blow plus Breach.
+  - **Shield Wall** (Knight): Protect for you and allies within 2 tiles.
+  - **Meteor** (Black Mage): heavy fire over an area.
+  - **Benediction** (White Mage): an area heal that also cleanses.
+  - **Earthquake** (Geomancer): hits every foe within 3 tiles of you.
+  - **Chrono Surge** (Time Weaver): Haste for every ally within 3 tiles.
+  - **Final Fist** (Monk): a ×2.8 blow.
+  - **Life Theft** (Thief): a heavy blow that heals you for half the damage.
+  - **Doomsay** (Oracle): damage and Sleep over an area.
+  - **Grand Finale** (Bard): heal and Haste for every ally within 3 tiles.
+  - **Last Dance** (Dancer): damage and Slow to every foe within 2 tiles.
+  The full table is in the job guide and the content reference.
+- Team → Jobs names each job's signature next to its mastery bonus. The battle log announces it when a job is mastered.
+- AUTO keeps a signature for a group or a target that matters, rather than spending it on a foe an ordinary blow would finish.
+
+### Developer
+- `src/data/signatures.ts`, `Ability.signature`, `Unit.usedSignatures` (cleared by `resetForBattle`). `JobSystem.signaturesOf`, `useSignature`; `findAbility` finds signatures.
+- `Ability.centered` (an area around the caster that doesn't repeat) and `isCentered()`, which performances now share.
+- 10 new tests (208 total) in `tests/signatures.test.ts`. [ADR 0031](docs/adr/0031-master-signatures.md).
+
 ## [0.22.0] - 2026-11-23
 
 ### Added — two performers (18 jobs, 105 abilities)

@@ -10,6 +10,7 @@ import path from 'node:path';
 import { JOBS, BASIC_ATTACK } from '../src/data/jobs';
 import { ITEMS, STARTING_ARMORY, RARE_DROP_POOL, MERCHANT_ITEMS } from '../src/data/items';
 import { CAMP_JP, CAMP_SCENES } from '../src/data/camp';
+import { SIGNATURES } from '../src/data/signatures';
 import { EARLY_MARKUP, MERCHANT_NAME } from '../src/core/Merchant';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
@@ -100,13 +101,15 @@ w();
 // ---------------------------------------------------------------- Job mastery
 w('## Job mastery');
 w();
-w(`A permanent bonus for sticking with a job. A unit earns the first amount at job level ${VETERAN_JOB_LEVEL} (${JOB_LEVEL_JP[VETERAN_JOB_LEVEL - 1]} lifetime JP) and the second, which replaces it, at level ${MAX_JOB_LEVEL} (Master, ${JOB_LEVEL_JP[MAX_JOB_LEVEL - 1]} JP). It keeps the bonus in every job, and bonuses from different jobs add up.`);
+w(`A permanent bonus for sticking with a job. A unit earns the first amount at job level ${VETERAN_JOB_LEVEL} (${JOB_LEVEL_JP[VETERAN_JOB_LEVEL - 1]} lifetime JP) and the second, which replaces it, at level ${MAX_JOB_LEVEL} (Master, ${JOB_LEVEL_JP[MAX_JOB_LEVEL - 1]} JP). It keeps the bonus in every job, and bonuses from different jobs add up. Master also brings the job's **signature**: an action usable in any job, once per battle, for no MP, at +30 hit.`);
 w();
-w(`| Job | Lv ${VETERAN_JOB_LEVEL} (Veteran) | Lv ${MAX_JOB_LEVEL} (Master) |`);
-w('| :--- | :--- | :--- |');
+w(`| Job | Lv ${VETERAN_JOB_LEVEL} (Veteran) | Lv ${MAX_JOB_LEVEL} (Master) | Signature | What it does | Reach |`);
+w('| :--- | :--- | :--- | :--- | :--- | :--- |');
 for (const j of jobs) {
   const m = JOB_MASTERY[j.id];
-  if (m) w(`| **${j.name}** | ${masteryLabel(m.stat, m.veteran)} | ${masteryLabel(m.stat, m.master)} |`);
+  const sg = SIGNATURES[j.id];
+  const reach = !sg ? '' : sg.centered ? `around the user, area ${sg.aoe}` : `range ${sg.range}${sg.aoe ? `, area ${sg.aoe}` : ''}`;
+  if (m) w(`| **${j.name}** | ${masteryLabel(m.stat, m.veteran)} | ${masteryLabel(m.stat, m.master)} | ${sg ? `**${sg.name}** \`${sg.id}\`` : '—'} | ${sg?.description || ''} | ${reach} |`);
 }
 w();
 

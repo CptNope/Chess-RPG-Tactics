@@ -148,6 +148,33 @@ Job levels 5 and 8 pay a permanent bonus. It is derived from the same lifetime J
 | Jump | Dragoon +1 / +2 |
 | Speed | Time Weaver +1 / +2 · Dancer +1 / +2 |
 
+#### Master signatures (0.23)
+
+Mastering a job (level 8) also brings its **signature**: one action of the job's own, kept in every job like the stat bonus. It appears in the ACT menu with a ★ and costs no MP, but each can be used **once per battle**. Signatures are never learned with JP, still work under Silence, and get +30 hit (a once-a-battle blow shouldn't whiff). A unit that has mastered several jobs carries all their signatures.
+
+| Job | Signature | Effect |
+| :--- | :--- | :--- |
+| Squire | Valiant Charge | Heavy blow to an adjacent foe (×2.0) + Breach |
+| Knight | Shield Wall | Protect for you and allies within 2 |
+| Archer | Heartseeker | Very heavy shot (×2.2), range 6 |
+| Black Mage | Meteor | Heavy fire, area 2, range 4 |
+| White Mage | Benediction | Big heal and cleanse, area 2, range 4 |
+| Dragoon | Skyfall | Heavy damage, area 1, range 3, height 6 |
+| Ninja | Thousand Cuts | Very heavy blow (×2.6) |
+| Geomancer | Earthquake | Damage to every foe within 3 of you |
+| Time Weaver | Chrono Surge | Haste for you and allies within 3 |
+| Chemist | Panacea | Heal (from ATK) and cleanse you and allies within 2 |
+| Monk | Final Fist | Crushing blow (×2.8) |
+| Thief | Life Theft | Heavy blow (×1.7), heals you for half |
+| Summoner | Celestial Call | Heavy holy damage, area 2, range 5 |
+| Oracle | Doomsay | Dark damage and Sleep, area 1, range 4 |
+| Paladin | Sanctuary | Heal and Regen for you and allies within 2 |
+| Spellblade | Runic Tempest | Heavy lightning (ATK), area 1, range 2 |
+| Bard | Grand Finale | Heal and Haste for you and allies within 3 (plays once; not a performance) |
+| Dancer | Last Dance | Damage (ATK) and Slow on every foe within 2 of you |
+
+They live in `src/data/signatures.ts`; `JobSystem.signaturesOf(unit)` lists the earned ones and `getCombatActionAbilities` adds those not yet used this battle (`Unit.usedSignatures`, cleared by `resetForBattle`). Centred signatures use the same "area around the caster" rule as performances (`isCentered`).
+
 `JobSystem.masteryBonus(unit)` sums every tier the unit holds; `recalculateDerivedStats`, `getAttackPower` and `getMagicPower` add it after the current job's multipliers, so the bonus is the same whatever job the unit is in. `gainJp` returns `mastery: "+15 HP"` on the gain that reaches a tier. Enemies are created with job levels of 3 at most, so they have none.
 
 `JobSystem.canChangeJob` is the single check; `gainJp` reports level-ups and the jobs they unlock, and `grantPrerequisites` gives units created in an advanced job the levels it needs.

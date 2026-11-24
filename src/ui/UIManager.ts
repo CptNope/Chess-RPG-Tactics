@@ -7,6 +7,7 @@ import { getItemsForSlot } from '../data/items';
 import { resolveTerrainAbility } from '../core/Geomancy';
 import { itemStatText } from '../core/Economy';
 import { encoreTurns, performedBy } from '../core/Performance';
+import { SIGNATURES } from '../data/signatures';
 import { portraitCanvas, portraitDataUrl, portraitForSpeaker } from '../graphics/CharacterArt';
 import { ensureFocusable, focusablesIn, focusVisible } from '../input/FocusNav';
 import { SoundFX } from '../audio/SoundEffects';
@@ -751,13 +752,14 @@ export class UIManager {
       const btn = document.createElement('button');
       btn.className = 'action-item-btn';
 
-      const mpText = ability.mpCost > 0 ? `${ability.mpCost} MP` : 'FREE';
+      const mpText = ability.mpCost > 0 ? `${ability.mpCost} MP` : ability.signature ? 'ONCE' : 'FREE';
+      if (ability.signature) btn.classList.add('signature');
       btn.innerHTML = `
         <div class="action-name-row">
-          <span>${ability.name}</span>
+          <span>${ability.signature ? '★ ' : ''}${ability.name}</span>
           <span class="action-mp">${mpText}</span>
         </div>
-        <div class="action-desc">${ability.performance ? `${unit.performing === ability.id ? '♪ Playing · ' : ''}Around you · Area ${ability.aoe} · repeats ${encoreTurns(unit)} turns` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`} | ${ability.description}</div>
+        <div class="action-desc">${ability.signature ? `Master · once per battle · ${ability.centered ? `Around you · Area ${ability.aoe}` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`}` : ability.centered ? `Around you · Area ${ability.aoe}` : ability.performance ? `${unit.performing === ability.id ? '♪ Playing · ' : ''}Around you · Area ${ability.aoe} · repeats ${encoreTurns(unit)} turns` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`} | ${ability.description}</div>
       `;
 
       btn.disabled = unit.currentMp < ability.mpCost;
@@ -891,7 +893,7 @@ export class UIManager {
           <span class="job-lv ${master ? 'master' : ''}">${master ? '★ MASTER' : `Lv ${prog.level}`}</span></div>
         <div style="font-size: calc(13px * var(--ts)); color: var(--text-muted);">${job.role} | Move: ${job.baseMove} Jump: ${job.baseJump}</div>
         ${locked ? `<div class="job-req">Needs ${need}</div>` : ''}
-        ${mastery ? `<div class="job-mastery" title="Mastery bonuses stay with the unit in every job"><span class="${tier >= 1 ? 'got' : ''}">${tier >= 1 ? '✓ ' : ''}Lv ${VETERAN_JOB_LEVEL}: ${masteryLabel(mastery.stat, mastery.veteran)}</span> · <span class="${tier >= 2 ? 'got' : ''}">${tier >= 2 ? '✓ ' : ''}Master: ${masteryLabel(mastery.stat, mastery.master)}</span></div>` : ''}
+        ${mastery ? `<div class="job-mastery" title="Mastery bonuses stay with the unit in every job"><span class="${tier >= 1 ? 'got' : ''}">${tier >= 1 ? '✓ ' : ''}Lv ${VETERAN_JOB_LEVEL}: ${masteryLabel(mastery.stat, mastery.veteran)}</span> · <span class="${tier >= 2 ? 'got' : ''}">${tier >= 2 ? '✓ ' : ''}Master: ${masteryLabel(mastery.stat, mastery.master)}${SIGNATURES[job.id] ? ` + ★ ${SIGNATURES[job.id].name}` : ''}</span></div>` : ''}
         ${!locked && !master ? `<div class="job-bar" title="${prog.into} / ${prog.need} JP to Lv ${prog.level + 1}"><span style="width:${Math.round((prog.into / prog.need) * 100)}%"></span></div>` : ''}
       `;
       jobItem.addEventListener('click', () => {

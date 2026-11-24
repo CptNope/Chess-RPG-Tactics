@@ -3,7 +3,7 @@ import { BattleGrid } from './Grid';
 import { CombatEngine, HARMFUL_STATUSES, guardsAgainst } from './CombatEngine';
 import { JobSystem } from './JobSystem';
 import { resolveTerrainAbility } from './Geomancy';
-import { performedBy } from './Performance';
+import { isCentered, performedBy } from './Performance';
 
 export interface AiPlan {
   /** Tile to move to before acting (may equal the current tile). */
@@ -110,7 +110,7 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
   for (const v of victims) {
     const vH = grid.getHeight(v.x, v.z);
     // A performance has no centre target: everyone in it takes the full effect
-    const isSplash = ability.aoe > 0 && !ability.performance && (v.x !== aim.x || v.z !== aim.z);
+    const isSplash = ability.aoe > 0 && !isCentered(ability) && (v.x !== aim.x || v.z !== aim.z);
     const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash);
     let p = fc.hitChance / 100;
     // A knight with Weapon Guard parries 30% of frontal physical blows: hit them from the side
@@ -225,13 +225,13 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
 
         // Candidate aim points: every unit on the relevant side within reach
         // A performance is centred on the performer, wherever it stands
-        const aimUnits = ability.isSelfOnly || ability.performance ? [unit]
+        const aimUnits = ability.isSelfOnly || isCentered(ability) ? [unit]
           : ability.revive ? units.filter((u) => u.isDead && u.team === unit.team) // a revive aims at the fallen
           : supportive ? alliesOf(unit, units) : foes;
         for (const aim of aimUnits) {
           const ax = aim.id === unit.id ? tile.x : aim.x;
           const az = aim.id === unit.id ? tile.z : aim.z;
-          if (!ability.isSelfOnly && !ability.performance && !grid.canTarget(tile.x, tile.z, ax, az, ability.range, ability.heightTolerance, supportive)) continue;
+          if (!ability.isSelfOnly && !isCentered(ability) && !grid.canTarget(tile.x, tile.z, ax, az, ability.range, ability.heightTolerance, supportive)) continue;
 
           const victims = ability.isSelfOnly ? [unit] : unitsInBlast(unit, ability, ax, az, units);
           if (victims.length === 0) continue;
@@ -240,6 +240,8 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: { no
           if (score <= 0) continue;
           // A performance plays again on the next turns if the performer stays put
           if (ability.performance) score *= 1.4;
+          // A Master signature can be used once a battle: keep it for a moment that matters
+          if (ability.signature) score -= 30;
           if (holding && ability.id !== unit.performing) score -= 12;
           score += posScore;
           // A self-buff (Bulwark, Focus) can be cast anywhere, so cast it on the way in rather

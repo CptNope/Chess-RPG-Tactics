@@ -447,7 +447,7 @@ src/
 │   ├── Merchant.ts         The travelling merchant: where she is, what she sells
 │   ├── Performance.ts      Songs and dances that play again each turn
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
-├── data/                   Content: jobs, items, consumables, maps, campaign, camp scenes
+├── data/                   Content: jobs, items, consumables, maps, campaign, camp scenes, Master signatures
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
 │                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality
 ├── vendor/pixelfx/         Third-party pixel effects (MIT), unchanged + our registry
@@ -455,7 +455,7 @@ src/
 ├── ui/                     UIManager, Workshop, WorldMap, Tutorial, TextSize
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events, performers (198 rule tests)
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty, chemist, ai, world-events, performers, signatures (208 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts, sw-plugin.ts (offline worker), package-itch.mjs
 public/                     manifest.webmanifest, icons/ (installable app)
 docs/                       This documentation + ADRs
