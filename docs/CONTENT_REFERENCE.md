@@ -75,28 +75,28 @@ Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, 
 
 ## Job mastery
 
-A permanent bonus for sticking with a job. A unit earns the first amount at job level 5 (700 lifetime JP) and the second, which replaces it, at level 8 (Master, 1900 JP). It keeps the bonus in every job, and bonuses from different jobs add up.
+A permanent bonus for sticking with a job. A unit earns the first amount at job level 5 (700 lifetime JP) and the second, which replaces it, at level 8 (Master, 1900 JP). It keeps the bonus in every job, and bonuses from different jobs add up. Master also brings the job's **signature**: an action usable in any job, once per battle, for no MP, at +30 hit.
 
-| Job | Lv 5 (Veteran) | Lv 8 (Master) |
-| :--- | :--- | :--- |
-| **Squire** | +10 HP | +25 HP |
-| **Knight** | +15 HP | +35 HP |
-| **Archer** | +1 ATK | +2 ATK |
-| **Black Mage** | +1 MAG | +2 MAG |
-| **White Mage** | +8 MP | +20 MP |
-| **Dragoon** | +1 Jump | +2 Jump |
-| **Ninja** | +4 Evasion | +8 Evasion |
-| **Geomancer** | +6 MP | +15 MP |
-| **Time Weaver** | +1 Speed | +2 Speed |
-| **Chemist** | +8 HP | +20 HP |
-| **Monk** | +1 ATK | +2 ATK |
-| **Thief** | +3 Evasion | +6 Evasion |
-| **Summoner** | +1 MAG | +2 MAG |
-| **Oracle** | +8 MP | +20 MP |
-| **Paladin** | +12 HP | +30 HP |
-| **Spellblade** | +1 MAG | +2 MAG |
-| **Bard** | +8 MP | +20 MP |
-| **Dancer** | +1 Speed | +2 Speed |
+| Job | Lv 5 (Veteran) | Lv 8 (Master) | Signature | What it does | Reach |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Squire** | +10 HP | +25 HP | **Valiant Charge** `sig_valiant_charge` | Everything a squire learns, in one blow: heavy damage to an adjacent foe, and Breach. | range 1 |
+| **Knight** | +15 HP | +35 HP | **Shield Wall** `sig_shield_wall` | Plants the shield and calls the line in: you and every ally within 2 tiles gain Protect. | around the user, area 2 |
+| **Archer** | +1 ATK | +2 ATK | **Heartseeker** `sig_heartseeker` | A single arrow loosed with perfect stillness: very heavy damage up to 6 tiles away. | range 6 |
+| **Black Mage** | +1 MAG | +2 MAG | **Meteor** `sig_meteor` | Calls down a burning star: heavy fire damage to every foe within 2 tiles of the target, up to 4 away. | range 4, area 2 |
+| **White Mage** | +8 MP | +20 MP | **Benediction** `sig_benediction` | A blessing on the whole line: heals and cleanses every ally within 2 tiles of the target, up to 4 away. | range 4, area 2 |
+| **Dragoon** | +1 Jump | +2 Jump | **Skyfall** `sig_skyfall` | A leap so high it lands like a falling tower: heavy damage to the target and every foe beside it, up to 3 away. | range 3, area 1 |
+| **Ninja** | +4 Evasion | +8 Evasion | **Thousand Cuts** `sig_thousand_cuts` | Too fast to follow: very heavy damage to an adjacent foe. | range 1 |
+| **Geomancer** | +6 MP | +15 MP | **Earthquake** `sig_earthquake` | The ground itself rises up: damage to every foe within 3 tiles of you. | around the user, area 3 |
+| **Time Weaver** | +1 Speed | +2 Speed | **Chrono Surge** `sig_chrono_surge` | Speeds the whole battle line: you and every ally within 3 tiles gain Haste. | around the user, area 3 |
+| **Chemist** | +8 HP | +20 HP | **Panacea** `sig_panacea` | Every vial at once: heals (from ATK) and cleanses you and every ally within 2 tiles. | around the user, area 2 |
+| **Monk** | +1 ATK | +2 ATK | **Final Fist** `sig_final_fist` | Every ounce of ki in one strike: crushing damage to an adjacent foe. | range 1 |
+| **Thief** | +3 Evasion | +6 Evasion | **Life Theft** `sig_life_theft` | Steals the one thing that can't be fenced: heavy damage to an adjacent foe, and you heal half of it. | range 1 |
+| **Summoner** | +1 MAG | +2 MAG | **Celestial Call** `sig_celestial` | Summons a creature of pure light: heavy holy damage to every foe within 2 tiles of the target, up to 5 away. | range 5, area 2 |
+| **Oracle** | +8 MP | +20 MP | **Doomsay** `sig_doomsay` | Speaks the end aloud: dark damage and Sleep on every foe within 1 tile of the target, up to 4 away. | range 4, area 1 |
+| **Paladin** | +12 HP | +30 HP | **Sanctuary** `sig_sanctuary` | Hallows the ground: heals you and every ally within 2 tiles, and gives them Regen. | around the user, area 2 |
+| **Spellblade** | +1 MAG | +2 MAG | **Runic Tempest** `sig_runic_tempest` | Every rune on the blade at once: heavy lightning damage (ATK) to the target and every foe beside it, up to 2 away. | range 2, area 1 |
+| **Bard** | +8 MP | +20 MP | **Grand Finale** `sig_finale` | The last song of the night, sung once: heals you and every ally within 3 tiles, and gives them Haste. | around the user, area 3 |
+| **Dancer** | +1 Speed | +2 Speed | **Last Dance** `sig_last_dance` | One dance nobody forgets: damage (ATK) and Slow to every foe within 2 tiles of you. | around the user, area 2 |
 
 ## Abilities
 

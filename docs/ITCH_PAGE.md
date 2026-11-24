@@ -59,7 +59,7 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 - **Steal their gear.** Thieves lift weapons and trinkets straight off enemies into your armory. Over 50 pieces of gear, some with traits: start battles with Regen, boost an element, or ward off Sleep and Silence.
 - **A world map between battles.** Walk the realm, choose which road the story takes, take on optional side battles, and fall back to regroup after a defeat.
 - **A market that grows with the story.** Bounties and wins pay gil. Buy gear that outfits the whole squad, sell what you don't need, and stock up on supplies.
-- **Master your jobs.** Jobs level up, unlock advanced jobs, and pay permanent bonuses a unit keeps in every job.
+- **Master your jobs.** Jobs level up, unlock advanced jobs, and pay permanent bonuses a unit keeps in every job. A mastered job also brings its signature move, usable once a battle in any job.
 - **Easy to pick up.** Easy, Normal and Hard; tips the first time each thing comes up; undo for a misplaced move; a Fast battle speed.
 - **Install it.** On the web version, add the game to your home screen or apps; it then plays offline.
 - **Items in battle.** Potions, Ethers, Remedies, Blast Flasks, and Phoenix Feathers to raise fallen allies.

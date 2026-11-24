@@ -169,6 +169,8 @@ export class CombatEngine {
     }
     // Steal is harder than a blow, and a boss keeps a firm grip on its gear
     if (ability.steal) hitChance -= target.isBoss ? 45 : 25;
+    // A Master signature is a once-a-battle blow: it rarely misses (0.23.0)
+    if (ability.signature) hitChance += 30;
 
     hitChance = Math.min(100, Math.max(10, hitChance));
     // A sleeper can't dodge

@@ -74,7 +74,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
       const victims = ab.isSelfOnly ? [u] : ab.aoe > 0 || ab.revive ? unitsInBlast(u, ab, tx, tz, units) : units.filter((v) => !v.isDead && v.x === tx && v.z === tz);
       for (const t of victims) {
         if (t.isDead && !ab.revive) continue;
-        const isSplash = ab.aoe > 0 && !ab.performance && (t.x !== tx || t.z !== tz);
+        const isSplash = ab.aoe > 0 && !ab.performance && !ab.centered && (t.x !== tx || t.z !== tz);
         const f = CombatEngine.getForecast(u, t, ab, grid.getHeight(u.x, u.z), grid.getHeight(t.x, t.z), grid.getTile(t.x, t.z)?.terrain, isSplash);
         CombatEngine.executeAttack(f);
         if (u.isDead) break;

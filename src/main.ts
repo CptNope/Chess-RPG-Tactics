@@ -12,6 +12,7 @@ import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize }
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, missingTrophies, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { MERCHANT_NAME, MerchantSales, merchantVisit, merchantVisitIndex, sanitizeMerchantSales } from './core/Merchant';
 import { CAMP_JP, pendingCamp, sanitizeCampSeen } from './data/camp';
+import { SIGNATURES } from './data/signatures';
 import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
 import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
 import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue, gearSaleBlock , BattleMode } from './core/Economy';
@@ -23,7 +24,7 @@ import { SoundFX } from './audio/SoundEffects';
 import { Music } from './audio/MusicSynthesizer';
 import { SaveManager, GameSaveData, SAVE_SLOTS, MAX_IMPORT_BYTES } from './core/SaveManager';
 import { resolveTerrainAbility } from './core/Geomancy';
-import { encoreDue, endPerformance, performedBy, startPerformance } from './core/Performance';
+import { encoreDue, endPerformance, isCentered, performedBy, startPerformance } from './core/Performance';
 import { planTurn, unitsInBlast, faceTowards, ENEMY_RAISE_CAP } from './core/EnemyAI';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
@@ -919,6 +920,11 @@ class TacticsGame {
     if (gain.mastery) {
       news.push(`MASTERY: ${gain.mastery}`);
       this.ui.addLogEntry(`[JOB] ${u.name} earns ${job} mastery: ${gain.mastery}, kept in every job.`, 'system');
+      const sig = gain.leveledTo >= MAX_JOB_LEVEL ? SIGNATURES[u.jobId] : undefined;
+      if (sig) {
+        news.push(`★ ${sig.name}`);
+        this.ui.addLogEntry(`[JOB] ${u.name} masters the ${job}: ★ ${sig.name} can now be used once per battle, in any job.`, 'system');
+      }
       if (!u.isDead) this.scene.updateUnits(this.units);
     }
     for (const id of gain.unlocked) {
@@ -1097,7 +1103,7 @@ class TacticsGame {
       return;
     }
 
-    if (ability.performance) {
+    if (isCentered(ability)) {
       // A song or dance fills the area around the performer: show it, and any tile in it confirms
       const area = this.grid.mapData.tiles.filter((t) => t.walkable && Math.abs(t.x - active.x) + Math.abs(t.z - active.z) <= ability.aoe);
       this.currentMode = 'targeting';
@@ -1203,7 +1209,7 @@ class TacticsGame {
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
       const ability = this.selectedAbility;
       const supportive = CombatEngine.isSupportive(ability);
-      if (ability.performance) {
+      if (isCentered(ability)) {
         // Any tile of the area confirms: the performance is centred on the performer
         if (Math.abs(tile.x - active.x) + Math.abs(tile.z - active.z) > ability.aoe) {
           this.ui.showBanner('OUTSIDE THE AREA');
@@ -1297,7 +1303,7 @@ class TacticsGame {
   /** Units an ability aimed at (tx, tz) will affect. Single-target abilities hit whoever is on the tile. */
   private victimsFor(caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
     if (ability.isSelfOnly) return [caster];
-    if (ability.performance) return unitsInBlast(caster, ability, caster.x, caster.z, this.units);
+    if (isCentered(ability)) return unitsInBlast(caster, ability, caster.x, caster.z, this.units);
     if (ability.aoe > 0) return unitsInBlast(caster, ability, tx, tz, this.units);
     const living = this.units.find((v) => !v.isDead && v.x === tx && v.z === tz);
     if (ability.revive) {
@@ -1309,7 +1315,7 @@ class TacticsGame {
   }
 
   private forecastFor(attacker: Unit, target: Unit, ability: Ability, aim?: { x: number; z: number }): CombatForecast {
-    const isSplash = !!aim && ability.aoe > 0 && !ability.performance && (target.x !== aim.x || target.z !== aim.z);
+    const isSplash = !!aim && ability.aoe > 0 && !isCentered(ability) && (target.x !== aim.x || target.z !== aim.z);
     return CombatEngine.getForecast(
       attacker,
       target,
@@ -1333,19 +1339,20 @@ class TacticsGame {
       caster.hasActed = true;
       this.moveUndo = null; // acting commits the move
       if (ability.item) this.inventory[ability.item] = Math.max(0, (this.inventory[ability.item] || 0) - 1);
+      JobSystem.useSignature(caster, ability); // once per battle (0.23.0)
       // Any other action ends a song or dance; using one starts (or restarts) it (0.22.0)
       if (ability.performance) startPerformance(caster, ability);
       else if (endPerformance(caster)) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} stops performing.`, 'system');
     }
 
-    if (!ability.isSelfOnly && !ability.performance) {
+    if (!ability.isSelfOnly && !isCentered(ability)) {
       caster.facing = faceTowards(caster.x, caster.z, tx, tz);
       this.scene.triggerUnitLunge(caster.id, tx, tz);
     }
     this.scene.updateUnits(this.units);
 
     const verb = caster.team === 'player' ? 'executes' : 'uses';
-    const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || (ability.performance ? 'nobody in reach' : 'empty ground');
+    const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || (isCentered(ability) ? 'nobody in reach' : 'empty ground');
     if (encore) {
       this.ui.addLogEntry(`[ENCORE] ${caster.name}'s ${ability.name} plays on (${targetText}).`, 'spell');
       this.scene.spawnFloatingDamage(caster.x, this.grid.getHeight(caster.x, caster.z) + 0.5, caster.z, `♪ ${ability.name.toUpperCase()}`, 'heal');

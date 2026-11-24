@@ -134,6 +134,7 @@ $$\text{Base Damage} = \text{MAG} \times |\text{Power}| \times 3$$
 | **Brawler** (`mo_brawler`) | Attack with knuckles or bare hands | ×1.30 |
 | **Backstab** (`th_backstab`) | Physical flank / back | a further ×1.15 / ×1.30 |
 | **Hex Mastery** (`or_hex_mastery`) | Abilities that inflict an ailment | +20 hit |
+| Master **signature** (0.23) | That signature | +30 hit (before the 10–100 clamp) |
 | `scalesWith: 'attack'` | Chakra and Lay on Hands (heals); Holy Blade, Rebuke and the Spellblade's edges (damage) | uses ATK instead of MAG. Heals keep the ×3 scale; damage uses the weapon scale (×5). Being elemental, these strikes ignore Protect, facing and height, and are cut by Shell |
 | **Zeal** (`pa_zeal`) | Holy damage and healing | ×1.20 |
 | **Arcane Edge** (`sb_arcane_edge`) | Attack | + MAG × 1.5 |

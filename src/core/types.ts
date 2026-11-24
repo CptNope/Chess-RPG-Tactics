@@ -105,6 +105,10 @@ export interface Ability {
    * turns while they hold their ground (see core/Performance.ts).
    */
   performance?: boolean;
+  /** An area centred on the caster (range 0, radius `aoe`) that doesn't repeat (0.23.0). */
+  centered?: boolean;
+  /** A Master signature (0.23.0): earned by mastering its job, usable in any job once per battle. */
+  signature?: boolean;
 }
 
 export interface Job {
@@ -195,6 +199,8 @@ export interface Unit {
   usedDragonheart?: boolean;
   /** The performance (ability id) the unit is holding, while it has the Encore status (0.22.0). */
   performing?: string;
+  /** Master signatures already used this battle (0.23.0). */
+  usedSignatures?: string[];
   /** Iron Will can fire only once per battle. */
   usedIronWill?: boolean;
 }
