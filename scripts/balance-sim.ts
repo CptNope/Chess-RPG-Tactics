@@ -13,7 +13,11 @@ import { BattleGrid } from '../src/core/Grid';
 import { TurnManager } from '../src/core/TurnManager';
 import { JobSystem } from '../src/core/JobSystem';
 import { CombatEngine } from '../src/core/CombatEngine';
-import { planTurn, unitsInBlast , ENEMY_RAISE_CAP } from '../src/core/EnemyAI';
+import { planTurn, unitsInBlast } from '../src/core/EnemyAI';
+import { DIFFICULTIES, enemyLevel, sanitizeDifficulty, scaleBoss } from '../src/core/Difficulty';
+
+/** DIFFICULTY=easy|normal|hard npm run balance */
+const DIFF = sanitizeDifficulty(process.env.DIFFICULTY);
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import type { Unit } from '../src/core/types';
@@ -43,8 +47,8 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
   const map = MAPS[ch.mapId]();
   const grid = new BattleGrid(map);
   const enemies = ch.enemyRoster.map((e, i) => {
-    const u = JobSystem.createUnit(`e${i}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', e.level);
-    if (e.isBoss) JobSystem.makeBoss(u);
+    const u = JobSystem.createUnit(`e${i}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', enemyLevel(e.level, DIFF));
+    if (e.isBoss) { JobSystem.makeBoss(u); scaleBoss(u, DIFF); }
     passives(u);
     return u;
   });
@@ -61,7 +65,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     if (!r) return 'timeout';
     const u = r.activeUnit;
     if (u.isDead) { tm.endTurn(u); continue; }
-    const plan = planTurn(u, units, grid, { noRevive: u.team === 'enemy' && enemyRaises >= ENEMY_RAISE_CAP });
+    const plan = planTurn(u, units, grid, { noRevive: u.team === 'enemy' && enemyRaises >= DIFFICULTIES[DIFF].raiseCap });
     if (plan.ability?.revive && u.team === 'enemy') enemyRaises++;
     u.x = plan.moveTo.x; u.z = plan.moveTo.z; u.hasMoved = true;
     if (plan.ability && plan.targetTile) {
@@ -90,6 +94,7 @@ const chapters = (process.argv[3] || 'chapter_1,chapter_2a,chapter_2b,chapter_3,
 const levels = (process.argv[4] || '3,4,5').split(',').map(Number);
 // Act II is met at higher levels: shift the default levels up by the chapter's enemy level
 const ACT_TWO_SHIFT: Record<string, number> = { chapter_4: 3, chapter_5: 4, chapter_6: 5 };
+console.log(`Difficulty: ${DIFFICULTIES[DIFF].label}`);
 for (const ch of chapters) {
   const row: string[] = [];
   for (const lv of process.argv[4] ? levels : levels.map((l) => l + (ACT_TWO_SHIFT[ch] || 0))) {

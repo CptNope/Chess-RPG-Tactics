@@ -4,7 +4,7 @@
 
 Every number here is read straight from the game data, so it always matches what ships.
 
-**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
+**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
 
 ## Jobs
 
@@ -486,6 +486,16 @@ flowchart LR
 | **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement, Stormbreak Cape |
 | **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
+
+## Difficulty
+
+Chosen at New Game and changeable from the Menu. Applies to every battle but Workshop scenarios.
+
+| Difficulty | Enemy levels | Boss HP | Enemy raises per battle |
+| :--- | :---: | :---: | :---: |
+| **Easy** | -1 | ×0.7 | 0 |
+| **Normal** | 0 | ×1 | 1 |
+| **Hard** | +1 | ×1.15 | 2 |
 
 ## Side battles
 

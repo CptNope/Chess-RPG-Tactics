@@ -131,6 +131,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'The stone is sealed. The realm is saved! Honor and victory to our companions!' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The songs will remember this day. Well fought, Rowan!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The stone is quiet, but not empty. Something answered it from the sea. A second seal, far to the north... and it is waking.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'And the Gate beneath the mountain has opened. Twelve more seals, each a battle, for anyone who wants to test themselves.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then we are not done. A rider just came in from the coast: black sails off Emberwick, and the harbor is burning.' }
     ],
     choices: [

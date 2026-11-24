@@ -2334,3 +2334,21 @@ body.world-open .tutor { display: none; } /* the map shows its tip in its own pa
   .tutor-actions button, .wm-tip button { min-height: 40px; }
 }
 @media (prefers-reduced-motion: reduce) { .tutor { animation: none; } }
+
+/* ---- Save slots (0.18.0) ---- */
+.slot-list { display: flex; flex-direction: column; gap: 8px; }
+.slot-card { border: 1px solid var(--panel-border); border-radius: 4px; padding: 8px 10px; background: rgba(15, 23, 42, 0.6); display: flex; flex-direction: column; gap: 4px; }
+.slot-card.current { border-color: var(--gold); }
+.slot-head { display: flex; align-items: center; gap: 8px; }
+.slot-tag { font-family: var(--font-pixel); font-size: 8px; color: #0b1220; background: var(--gold); padding: 2px 5px; border-radius: 2px; }
+.slot-info { font-size: 15px; color: var(--text-muted); line-height: 1.35; }
+.slot-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.slot-actions button { font-family: var(--font-pixel); font-size: 9px; min-height: 36px; padding: 4px 12px; border: 1px solid var(--panel-border); border-radius: 3px; background: var(--btn-bg); color: var(--text-light); cursor: pointer; }
+.slot-actions button.primary { border-color: var(--gold); color: var(--gold-glow); }
+.slot-actions button:hover, .slot-actions button:focus-visible { background: var(--btn-bg-hover); }
+.slot-actions button[data-act="delete"] { color: #fca5a5; }
+.save-text { width: 100%; box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 12px; background: #0b1220; color: var(--text-light); border: 1px solid var(--panel-border); border-radius: 3px; padding: 6px; resize: vertical; }
+.save-file { margin-top: 8px; color: var(--text-muted); font-size: 14px; max-width: 100%; }
+.save-error { margin: 6px 0 0; color: #fca5a5; min-height: 1em; font-size: 14px; }
+@media (pointer: coarse) { .slot-actions button { min-height: 44px; } }
+body.result-open #dialogue-box { visibility: hidden; }

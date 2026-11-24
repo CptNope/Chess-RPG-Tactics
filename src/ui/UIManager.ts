@@ -572,6 +572,7 @@ export class UIManager {
       if (b.primary && !focusTarget) focusTarget = btn;
     }
     this.resultModalEl.classList.remove('hidden');
+    document.body.classList.add('result-open'); // the dialogue box sits above modals; hide it while one is up
     (focusTarget || (this.resultActionsEl.firstElementChild as HTMLButtonElement | null))?.focus();
   }
 
@@ -582,6 +583,7 @@ export class UIManager {
 
   public hideResultModal(): void {
     this.resultModalEl.classList.add('hidden');
+    document.body.classList.remove('result-open');
   }
 
   public get isResultModalOpen(): boolean {

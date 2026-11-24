@@ -16,6 +16,7 @@ import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
 import { buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
 import { JOB_LEVEL_JP, JOB_MASTERY, VETERAN_JOB_LEVEL, MAX_JOB_LEVEL, masteryLabel } from '../src/core/JobSystem';
+import { DIFFICULTIES, DIFFICULTY_ORDER } from '../src/core/Difficulty';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus } from '../src/core/Skirmish';
 import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress, resaleValue } from '../src/core/Economy';
 import { CONSUMABLES, MAX_STACK, STARTING_INVENTORY, consumableStock } from '../src/data/consumables';
@@ -50,7 +51,7 @@ w('> **Generated file — do not edit by hand.** Run `npm run docs:gen` after ch
 w();
 w('Every number here is read straight from the game data, so it always matches what ships.');
 w();
-w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
+w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
 w();
 
 // ---------------------------------------------------------------- Jobs
@@ -251,6 +252,16 @@ for (const n of WORLD_NODES) {
   const what = n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : n.kind === 'skirmish' ? `Side battle: ${SKIRMISHES[n.skirmishId!].foe}` : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
   w(`| **${n.name}** | ${n.kind} | ${what} | ${roads} |`);
 }
+w();
+
+// ---------------------------------------------------------------- Difficulty
+w('## Difficulty');
+w();
+w('Chosen at New Game and changeable from the Menu. Applies to every battle but Workshop scenarios.');
+w();
+w('| Difficulty | Enemy levels | Boss HP | Enemy raises per battle |');
+w('| :--- | :---: | :---: | :---: |');
+for (const d of DIFFICULTY_ORDER) { const r = DIFFICULTIES[d]; w(`| **${r.label}** | ${r.levelShift > 0 ? '+' : ''}${r.levelShift} | ×${r.bossHp} | ${r.raiseCap} |`); }
 w();
 
 // ---------------------------------------------------------------- Side battles

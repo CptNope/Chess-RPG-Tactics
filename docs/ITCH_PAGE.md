@@ -60,7 +60,7 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 - **A world map between battles.** Walk the realm, choose which road the story takes, take on optional side battles, and fall back to regroup after a defeat.
 - **A market that grows with the story.** Bounties and wins pay gil. Buy gear that outfits the whole squad, sell what you don't need, and stock up on supplies.
 - **Master your jobs.** Jobs level up, unlock advanced jobs, and pay permanent bonuses a unit keeps in every job.
-- **Easy to pick up.** Tips the first time each thing comes up, undo for a misplaced move, and a Fast battle speed.
+- **Easy to pick up.** Easy, Normal and Hard; tips the first time each thing comes up; undo for a misplaced move; a Fast battle speed.
 - **Items in battle.** Potions, Ethers, Remedies, Blast Flasks, and Phoenix Feathers to raise fallen allies.
 - **A two-act campaign** across seven 16×16 battlefields (a harbor fought along its piers, a lighthouse rock, a cliff-top altar…), with a branch, two recruits, and bosses that enrage at half health.
 - **Trials of the Zodiac:** endless seeded floors with rare gear and a Warden boss every fifth floor, plus New Game+.
@@ -80,7 +80,7 @@ Phone, tablet or desktop, in portrait or landscape. Mouse, keyboard, touch, pen 
 | Fullscreen | F | | Fullscreen button |
 
 ### Saves
-Progress saves in your browser (Menu → Save, plus an autosave at each chapter and whenever you reach the world map). It survives game updates on this page. Private or incognito windows don't keep it.
+Progress saves in your browser, in three slots (Menu → Save, plus an autosave at each chapter and whenever you reach the world map). It survives game updates on this page. Private or incognito windows don't keep it. To move a save to another browser or device, export it from the save screen and import it there.
 
 ### Free and open
 The game is free, and the code is open source under the MIT licence on [GitHub](https://github.com/CptNope/Chess-RPG-Tactics). If you enjoy it, a donation helps more games get made.

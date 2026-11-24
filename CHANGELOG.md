@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.18.0] - 2026-11-23
+
+### Added — difficulty
+- **Easy, Normal and Hard.** New Game now asks which; the Menu's **Difficulty** button changes it at any time, from the next battle. It's stored with each save.
+  - **Easy:** enemies a level lower, bosses with 30% less HP, and no enemy ever raises a fallen ally.
+  - **Normal:** the game as tuned (one enemy raise per battle).
+  - **Hard:** enemies a level higher, bosses with 15% more HP, and up to two enemy raises per battle.
+- It applies to story battles, side battles and the Trials. Workshop scenarios keep the levels their author chose.
+
+### Added — save slots
+- **Three save slots.** Menu → **Save game** and **Load game** open a slot screen showing where each save stands (chapter, squad levels, gil, difficulty, date). Saving over a different save and deleting a slot both ask first.
+- **Continue** on the title screen loads the most recent save; **Load Game** appears once there is more than one.
+- **New Game** uses the first empty slot, or asks which one to replace if all three are full. It no longer overwrites your only save at the first autosave.
+- **Export and import.** Any slot can be exported as text (Copy) or a `.json` file (Download), and imported again from Load game → *Import a save…*, by pasting or choosing the file. Use it to back up a save or move it to another browser or device.
+- **Your existing save is slot 1.** Nothing to do.
+
+### Changed
+- **A lost battle gives back the supplies used in it**, whether you retry or fall back to the map. (Before, a retry kept them spent and loading a save restored them.) EXP and JP earned are still kept.
+- **The Gate of Trials opens once Chapter III is won**, instead of after the whole story. New Game+ still waits for the end.
+- Result screens (defeat, spoils, saves) now hide the dialogue box behind them, which could cover their buttons when opened during a conversation.
+
+### Developer
+- `src/core/Difficulty.ts` (`DIFFICULTIES`, `enemyLevel`, `scaleBoss`). The enemy raise cap now comes from the difficulty (`ENEMY_RAISE_CAP` is Normal's, used by Workshop battles).
+- `SaveManager`: every call takes a slot (1–3; slot 1 keeps the old storage key), plus `slotsInUse`, `latestSlot`, `firstEmptySlot`, `exportSave`, `writeSlot` and `parseImport`. An import is treated as untrusted: units are rebuilt from scratch with known jobs, abilities and items only, names are reduced to plain text, numbers are clamped, prototype keys are refused, and files over 512 KB are rejected.
+- `DIFFICULTY=easy|normal|hard npm run balance`.
+- 10 new tests (148 total) in `tests/slots-difficulty.test.ts`. [ADR 0026](docs/adr/0026-difficulty-and-save-slots.md).
+
 ## [0.17.0] - 2026-11-23
 
 ### Added — Act II: three new chapters

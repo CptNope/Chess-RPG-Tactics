@@ -6,6 +6,7 @@ import { TurnManager } from './core/TurnManager';
 import { JobSystem, JpGain, MAX_JOB_LEVEL } from './core/JobSystem';
 import { JOBS } from './data/jobs';
 import { WorldMap } from './ui/WorldMap';
+import { DIFFICULTIES, DIFFICULTY_ORDER, Difficulty, enemyLevel, sanitizeDifficulty, scaleBoss } from './core/Difficulty';
 import { Tutorial, TipId, TIPS } from './ui/Tutorial';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
@@ -17,7 +18,7 @@ import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { ITEMS, STARTING_ARMORY } from './data/items';
 import { SoundFX } from './audio/SoundEffects';
 import { Music } from './audio/MusicSynthesizer';
-import { SaveManager, GameSaveData } from './core/SaveManager';
+import { SaveManager, GameSaveData, SAVE_SLOTS, MAX_IMPORT_BYTES } from './core/SaveManager';
 import { resolveTerrainAbility } from './core/Geomancy';
 import { planTurn, unitsInBlast, faceTowards, ENEMY_RAISE_CAP } from './core/EnemyAI';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
@@ -75,6 +76,11 @@ class TacticsGame {
   private currentSkirmish: string | null = null;
   /** Fallen enemies raised by the enemy side this battle (capped). */
   private enemyRaises = 0;
+  /** The save slot this game writes to (1–3), and its difficulty. */
+  private saveSlot = 1;
+  private difficulty: Difficulty = 'normal';
+  /** Supplies as the battle began: a lost battle gives back what was used in it. */
+  private battleStartInventory: Record<string, number> | null = null;
   private skirmishWins: Record<string, number> = {};
   /** The campaign chapter to return to after Workshop battles (and to save). */
   private campaignChapterId = 'chapter_1';
@@ -128,7 +134,9 @@ class TacticsGame {
       state: () => ({
         current: this.campaignChapterId,
         cleared: this.clearedChapters,
-        trialsOpen: this.campaignCleared || this.mode === 'trials',
+        // The Gate opens once the first act is won (0.18.0); New Game+ waits for the very end
+        trialsOpen: this.campaignCleared || this.mode === 'trials' || this.clearedChapters.includes(FIRST_ACT_FINALE),
+        newGamePlus: this.campaignCleared,
         trialsFloor: Math.max(1, this.trialsFloor),
         bestTrial: SaveManager.getBestTrialFloor(),
         gil: this.gil,
@@ -276,8 +284,11 @@ class TacticsGame {
 
   private spawnEnemies(chapter: CampaignChapter): Unit[] {
     return chapter.enemyRoster.map((e, idx) => {
-      const u = JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', e.level);
+      // Difficulty shifts enemy levels everywhere but the Workshop, where the author set them
+      const level = this.mode === 'custom' ? e.level : enemyLevel(e.level, this.difficulty);
+      const u = JobSystem.createUnit(`e${idx + 1}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', level);
       if (e.isBoss) JobSystem.makeBoss(u);
+      if (e.isBoss && this.mode !== 'custom') scaleBoss(u, this.difficulty);
       // Enemy casters get their job's reaction/support so they fight like the player's units
       this.equipEnemyPassives(u);
       return u;
@@ -427,8 +438,16 @@ class TacticsGame {
       this.ui.addLogEntry(`[SYSTEM] BGM ${isMuted ? 'muted' : 'enabled'}.`, 'system');
     };
 
-    this.ui.onSaveGame = () => this.saveGame(true);
-    this.ui.onLoadGame = () => this.loadGame();
+    this.ui.onSaveGame = () => this.openSlots('save');
+    this.ui.onLoadGame = () => this.openSlots('load');
+    document.getElementById('btn-difficulty')!.addEventListener('click', () => {
+      const next = DIFFICULTY_ORDER[(DIFFICULTY_ORDER.indexOf(this.difficulty) + 1) % DIFFICULTY_ORDER.length];
+      this.difficulty = next;
+      this.labelDifficulty();
+      this.ui.showBanner(`DIFFICULTY: ${DIFFICULTIES[next].label.toUpperCase()} (FROM THE NEXT BATTLE)`);
+      this.ui.addLogEntry(`[SYSTEM] Difficulty set to ${DIFFICULTIES[next].label}: ${DIFFICULTIES[next].blurb}`, 'system');
+      if (this.world.isOpen) this.saveGame(false);
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -734,23 +753,26 @@ class TacticsGame {
       // A side battle isn't resumed: loading puts the squad back on the map beside it
       onWorldMap: this.world.isOpen || this.mode === 'skirmish',
       skirmishWins: this.skirmishWins,
-      worldLocation: this.world.location
-    });
+      worldLocation: this.world.location,
+      difficulty: this.difficulty
+    }, this.saveSlot);
     if (ok && announce) {
       SoundFX.playTurnChime();
       this.ui.showBanner('GAME SAVED!');
-      this.ui.addLogEntry('[SYSTEM] Squad, armory and progress saved to this browser.', 'system');
+      this.ui.addLogEntry(`[SYSTEM] Squad, armory and progress saved to slot ${this.saveSlot} on this browser.`, 'system');
     } else if (!ok && announce) {
       this.ui.showBanner('SAVE FAILED: BROWSER STORAGE UNAVAILABLE');
     }
   }
 
-  private loadGame(): void {
-    const data = SaveManager.loadGame();
+  /** Loads a slot (default: the one being played; from the title, the newest). */
+  private loadGame(slot = this.saveSlot): void {
+    const data = SaveManager.loadGame(slot);
     if (!data || !data.units || data.units.length === 0) {
       this.ui.showBanner('NO SAVED GAME FOUND');
       return;
     }
+    this.saveSlot = slot;
     this.restoreFromSave(data);
   }
 
@@ -785,6 +807,8 @@ class TacticsGame {
     this.armory.push(...owned);
 
     this.campaignCleared = !!data.campaignCleared;
+    this.difficulty = sanitizeDifficulty(data.difficulty);
+    this.labelDifficulty();
     this.gil = typeof data.gil === 'number' && data.gil >= 0 ? Math.floor(data.gil) : STARTING_GIL;
     this.inventory = sanitizeInventory(data.inventory);
     this.skirmishWins = sanitizeSkirmishWins(data.skirmishWins);
@@ -830,6 +854,7 @@ class TacticsGame {
   // ---------------------------------------------------------------------------
 
   private startBattle(): void {
+    this.battleStartInventory = { ...this.inventory };
     Music.playTrack('battle');
     SoundFX.playTurnChime();
     this.battleOver = false;
@@ -1476,7 +1501,7 @@ class TacticsGame {
   private async runAiTurn(enemy: Unit): Promise<void> {
     if (this.battleOver) return;
     // Enemies may raise only so many of their fallen per battle; AUTO for your own units is not limited
-    const plan = planTurn(enemy, this.units, this.grid, { noRevive: enemy.team === 'enemy' && this.enemyRaises >= ENEMY_RAISE_CAP });
+    const plan = planTurn(enemy, this.units, this.grid, { noRevive: enemy.team === 'enemy' && this.enemyRaises >= (this.mode === 'custom' ? ENEMY_RAISE_CAP : DIFFICULTIES[this.difficulty].raiseCap) });
     if (plan.ability?.revive && enemy.team === 'enemy') this.enemyRaises++;
 
     if (plan.moveTo.x !== enemy.x || plan.moveTo.z !== enemy.z) {
@@ -1531,6 +1556,8 @@ class TacticsGame {
     Music.stop();
     const cont = document.getElementById('title-continue') as HTMLButtonElement;
     cont.classList.toggle('hidden', !SaveManager.hasSave());
+    // Load Game appears once there is more than one save to choose from
+    document.getElementById('title-load')!.classList.toggle('hidden', SaveManager.slotsInUse().length < 2);
     this.titleEl.classList.remove('hidden');
     document.body.classList.add('title-open');
     const first = (SaveManager.hasSave() ? cont : document.getElementById('title-new')) as HTMLElement;
@@ -1551,7 +1578,7 @@ class TacticsGame {
 
   private bindPlatform(): void {
     const on = (id: string, fn: () => void) => document.getElementById(id)?.addEventListener('click', fn);
-    for (const id of ['title-continue', 'title-new', 'title-workshop', 'title-controls', 'title-fullscreen']) {
+    for (const id of ['title-continue', 'title-new', 'title-load', 'title-workshop', 'title-controls', 'title-fullscreen']) {
       (document.getElementById(id) as HTMLButtonElement).disabled = false;
     }
     document.getElementById('title-new')!.textContent = 'New Game';
@@ -1560,8 +1587,9 @@ class TacticsGame {
       (document.getElementById(id) as HTMLAnchorElement).href = url;
     }
 
-    on('title-new', () => this.fromTitle(() => this.startNewGame()));
-    on('title-continue', () => this.fromTitle(() => this.loadGame()));
+    on('title-new', () => this.fromTitle(() => this.newGameFlow()));
+    on('title-continue', () => this.fromTitle(() => this.loadGame(SaveManager.latestSlot() || 1)));
+    on('title-load', () => this.fromTitle(() => this.openSlots('load', undefined, () => this.showTitle())));
     on('title-workshop', () => this.fromTitle(() => {
       // Start the campaign underneath, so closing the Workshop lands in Chapter I
       this.playChapterIntro();
@@ -1792,10 +1820,12 @@ class TacticsGame {
       { label: 'Retry Battle', primary: true, onClick: retry }
     ];
     buttons.push({ label: 'World Map', onClick: () => this.openWorldMap(this.mode === 'trials' ? 'trials' : undefined) });
-    if (SaveManager.hasSave()) buttons.push({ label: 'Load Save', onClick: () => this.loadGame() });
+    if (SaveManager.hasSave(this.saveSlot)) buttons.push({ label: 'Load Save', onClick: () => this.loadGame() });
+    // Supplies used in a lost battle come back, whatever you do next (EXP and JP are kept too)
+    const refunded = this.refundSupplies();
     this.ui.showResultModal({
       title: 'DEFEAT',
-      subtitle: 'Your squad keeps the EXP and JP it earned. Retry with a new formation, or fall back to the world map to restock at the market.',
+      subtitle: `Your squad keeps the EXP and JP it earned${refunded ? `, and the supplies used in this battle are returned (${refunded})` : ''}. Retry with a new formation, or fall back to the world map to restock at the market.`,
       buttons
     });
   }
@@ -1951,7 +1981,30 @@ class TacticsGame {
   }
 
   /** A fresh campaign: new squad, starting armory and purse. (The save stays until you save over it.) */
-  private startNewGame(): void {
+  /** New Game from the title: pick a difficulty, then a slot (the first empty one, or ask). */
+  private newGameFlow(): void {
+    const rows = DIFFICULTY_ORDER.map((d) => `<div class="result-row"><span class="result-name">${DIFFICULTIES[d].label.toUpperCase()}</span><span class="result-detail">${esc(DIFFICULTIES[d].blurb)}</span></div>`).join('');
+    this.ui.showResultModal({
+      title: 'NEW GAME',
+      subtitle: 'Choose a difficulty. You can change it any time from the Menu.',
+      bodyHtml: rows,
+      buttons: [
+        ...DIFFICULTY_ORDER.map((d) => ({ label: DIFFICULTIES[d].label, primary: d === 'normal', onClick: () => this.pickSlotForNewGame(d) })),
+        { label: 'Back', onClick: () => this.showTitle() }
+      ]
+    });
+  }
+
+  private pickSlotForNewGame(d: Difficulty): void {
+    const empty = SaveManager.firstEmptySlot();
+    if (empty) return this.startNewGame(d, empty);
+    this.openSlots('new', (slot) => this.startNewGame(d, slot), () => this.newGameFlow());
+  }
+
+  private startNewGame(difficulty: Difficulty = this.difficulty, slot = this.saveSlot): void {
+    this.difficulty = difficulty;
+    this.saveSlot = slot;
+    this.labelDifficulty();
     this.squad = this.createStartingSquad();
     this.armory.length = 0;
     this.armory.push(...STARTING_ARMORY);
@@ -1966,6 +2019,7 @@ class TacticsGame {
     this.mode = 'campaign';
     this.customScenario = null;
     this.loadChapter('chapter_1');
+    this.saveGame(false); // the new game owns its slot from the start
   }
 
   /** The market trades only while the party stands at it on the world map. */
@@ -2016,6 +2070,189 @@ class TacticsGame {
   }
 
   /** Replays the campaign from Chapter I keeping squad levels, jobs, abilities and armory. */
+  private labelDifficulty(): void {
+    const b = document.getElementById('btn-difficulty');
+    if (b) b.textContent = `Difficulty: ${DIFFICULTIES[this.difficulty].label}`;
+  }
+
+  /** One line about a save: where it stands, the squad, the purse, the difficulty, when. */
+  private describeSave(d: GameSaveData): string {
+    const ch = CAMPAIGN_CHAPTERS[d.currentChapterId];
+    const where = d.mode === 'trials' && !d.onWorldMap ? `Trials, floor ${d.trialsFloor || 1}` : ch ? `${ch.title}: ${ch.subtitle}` : 'Campaign';
+    const levels = (d.units || []).filter((u) => u && u.team === 'player').map((u) => Number(u.level) || 1);
+    const lv = levels.length ? (Math.min(...levels) === Math.max(...levels) ? `Lv ${Math.min(...levels)}` : `Lv ${Math.min(...levels)}–${Math.max(...levels)}`) : '';
+    const parts = [where + (d.onWorldMap ? ' (world map)' : ''), `${levels.length} units ${lv}`.trim(), `${(Number(d.gil) || 0).toLocaleString('en-US')} G`, DIFFICULTIES[sanitizeDifficulty(d.difficulty)].label, new Date(d.timestamp || 0).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })];
+    return parts.join(' · ');
+  }
+
+  /**
+   * The save-slot screen. purpose: save (write the current game), load, new (choose a slot for a
+   * new game) or import (choose where an imported save goes). Every slot can be exported or deleted.
+   */
+  private openSlots(purpose: 'save' | 'load' | 'new' | 'import', onPick?: (slot: number) => void, onClose?: () => void, imported?: GameSaveData): void {
+    const titles = { save: 'SAVE GAME', load: 'LOAD GAME', new: 'CHOOSE A SLOT', import: 'IMPORT INTO…' };
+    const intro = {
+      save: `Saves go to your browser. You are playing in slot ${this.saveSlot}; the game also saves itself there at the start of each chapter and on the world map.`,
+      load: 'Loading replaces the game in progress with the saved one.',
+      new: 'Every slot is in use. Choose one for the new game: the save in it will be replaced.',
+      import: 'Choose a slot for the imported save.'
+    }[purpose];
+    const action = { save: 'Save here', load: 'Load', new: 'Use this slot', import: 'Put it here' }[purpose];
+    let body = '';
+    for (let s = 1; s <= SAVE_SLOTS; s++) {
+      const d = SaveManager.loadGame(s);
+      const playing = s === this.saveSlot && !!this.squad.length && purpose !== 'new';
+      const canAct = purpose === 'load' ? !!d : true;
+      body += `<div class="slot-card${playing ? ' current' : ''}" data-slot="${s}">
+        <div class="slot-head"><span class="result-name">SLOT ${s}</span>${playing ? '<span class="slot-tag">PLAYING</span>' : ''}</div>
+        <div class="slot-info">${d ? esc(this.describeSave(d)) : '<i>Empty</i>'}</div>
+        <div class="slot-actions">
+          ${canAct ? `<button data-act="pick" class="primary">${action}</button>` : ''}
+          ${d ? '<button data-act="export">Export</button><button data-act="delete">Delete</button>' : ''}
+        </div>
+      </div>`;
+    }
+    const close = () => (onClose ? onClose() : undefined);
+    const buttons: { label: string; primary?: boolean; onClick: () => void }[] = [];
+    if (purpose === 'save' || purpose === 'load') buttons.push({ label: 'Import a save…', onClick: () => this.openImport(() => this.openSlots(purpose, onPick, onClose)) });
+    buttons.push({ label: purpose === 'import' ? 'Cancel' : purpose === 'new' ? 'Back' : 'Close', onClick: close });
+    this.ui.showResultModal({ title: titles[purpose], subtitle: intro, bodyHtml: `<div class="slot-list">${body}</div>`, buttons });
+    const reopen = () => this.openSlots(purpose, onPick, onClose, imported);
+
+    for (const card of document.querySelectorAll<HTMLElement>('#result-body .slot-card')) {
+      const slot = Number(card.dataset.slot);
+      const has = SaveManager.hasSave(slot);
+      card.querySelector('[data-act="pick"]')?.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
+        const go = () => {
+          this.ui.hideResultModal();
+          if (purpose === 'save') { this.saveSlot = slot; this.saveGame(true); close(); }
+          else if (purpose === 'load') this.loadGame(slot);
+          else if (purpose === 'import' && imported) {
+            if (SaveManager.writeSlot(slot, imported)) this.ui.showBanner(`SAVE IMPORTED INTO SLOT ${slot}`);
+            else this.ui.showBanner('IMPORT FAILED: BROWSER STORAGE UNAVAILABLE');
+            this.openSlots('load', undefined, onClose);
+          } else onPick?.(slot);
+        };
+        // Writing over a different save asks first
+        const overwrites = has && (purpose === 'new' || purpose === 'import' || (purpose === 'save' && slot !== this.saveSlot));
+        if (!overwrites) return go();
+        this.confirm(`Replace slot ${slot}?`, `This save will be overwritten: ${this.describeSave(SaveManager.loadGame(slot)!)}`, 'Replace', go, reopen);
+      });
+      card.querySelector('[data-act="export"]')?.addEventListener('click', () => { SoundFX.playMenuBlip(); this.openExport(slot, reopen); });
+      card.querySelector('[data-act="delete"]')?.addEventListener('click', () => {
+        SoundFX.playMenuBlip();
+        this.confirm(`Delete slot ${slot}?`, `This can't be undone. ${this.describeSave(SaveManager.loadGame(slot)!)}`, 'Delete', () => {
+          SaveManager.clearSave(slot);
+          this.ui.showBanner(`SLOT ${slot} DELETED`);
+          reopen();
+        }, reopen);
+      });
+    }
+  }
+
+  private confirm(title: string, text: string, yes: string, onYes: () => void, onNo: () => void): void {
+    this.ui.showResultModal({ title: title.toUpperCase(), subtitle: text, buttons: [{ label: 'Cancel', primary: true, onClick: onNo }, { label: yes, onClick: onYes }] });
+  }
+
+  /** Shows a slot as text to copy, with a download button. */
+  private openExport(slot: number, back: () => void): void {
+    const text = SaveManager.exportSave(slot);
+    if (!text) return back();
+    this.ui.showResultModal({
+      title: `EXPORT SLOT ${slot}`,
+      subtitle: 'Keep this file to back the save up, or to carry it to another browser or device (Import a save… there).',
+      bodyHtml: `<textarea class="save-text" readonly aria-label="Save data" rows="6">${esc(text)}</textarea>`,
+      buttons: [
+        {
+          label: 'Download file', primary: true, onClick: () => {
+            try {
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+              a.download = `chess-rpg-tactics-slot${slot}-${new Date().toISOString().slice(0, 10)}.json`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+              this.ui.showBanner('SAVE FILE DOWNLOADED');
+            } catch {
+              this.ui.showBanner('DOWNLOAD BLOCKED HERE: USE COPY INSTEAD');
+            }
+            this.openExport(slot, back);
+          }
+        },
+        {
+          label: 'Copy', onClick: () => {
+            navigator.clipboard?.writeText(text).then(() => this.ui.showBanner('SAVE COPIED'), () => this.ui.showBanner('COPY BLOCKED HERE: SELECT THE TEXT AND COPY IT'));
+            this.openExport(slot, back);
+          }
+        },
+        { label: 'Back', onClick: back }
+      ]
+    });
+    document.querySelector<HTMLTextAreaElement>('#result-body .save-text')?.addEventListener('focus', (e) => (e.target as HTMLTextAreaElement).select());
+  }
+
+  /** Paste a save or pick a file; it is checked, then placed in a slot of your choice. */
+  private openImport(back: () => void): void {
+    this.ui.showResultModal({
+      title: 'IMPORT A SAVE',
+      subtitle: 'Paste an exported save, or choose a .json file. Only what the game understands is kept.',
+      bodyHtml: `<textarea class="save-text" aria-label="Paste a save here" rows="6" placeholder="Paste the save here"></textarea>
+        <input type="file" class="save-file" accept=".json,application/json" aria-label="Choose a save file">
+        <p class="save-error" role="alert"></p>`,
+      buttons: [
+        {
+          label: 'Import', primary: true, onClick: () => {
+            const text = (document.querySelector<HTMLTextAreaElement>('#result-body .save-text')?.value) ?? pendingText;
+            tryImport(text);
+          }
+        },
+        { label: 'Back', onClick: back }
+      ]
+    });
+    let pendingText = '';
+    const tryImport = (text: string) => {
+      try {
+        const data = SaveManager.parseImport(text);
+        this.openSlots('import', undefined, back, data);
+      } catch (e) {
+        this.openImport(back);
+        const err = document.querySelector('#result-body .save-error');
+        if (err) err.textContent = (e as Error).message;
+      }
+    };
+    const file = document.querySelector<HTMLInputElement>('#result-body .save-file');
+    file?.addEventListener('change', () => {
+      const f = file.files?.[0];
+      if (!f) return;
+      if (f.size > MAX_IMPORT_BYTES) {
+        const err = document.querySelector('#result-body .save-error');
+        if (err) err.textContent = 'That file is too large to be a save.';
+        return;
+      }
+      f.text().then((t) => {
+        pendingText = t;
+        const ta = document.querySelector<HTMLTextAreaElement>('#result-body .save-text');
+        if (ta) ta.value = t;
+      });
+    });
+  }
+
+  /** Gives back what a lost battle used; returns a short list of what came back, or ''. */
+  private refundSupplies(): string {
+    const start = this.battleStartInventory;
+    if (!start) return '';
+    const back: string[] = [];
+    for (const [id, n] of Object.entries(start)) {
+      const used = n - (this.inventory[id] || 0);
+      if (used > 0 && CONSUMABLES[id]) back.push(`${used} × ${CONSUMABLES[id].name}`);
+    }
+    this.inventory = { ...start };
+    if (back.length) this.ui.addLogEntry(`[ITEMS] Returned after the defeat: ${back.join(', ')}.`, 'system');
+    return back.join(', ');
+  }
+
   private startNewGamePlus(): void {
     this.ui.addLogEntry('[SYSTEM] New Game+ : your squad keeps its levels, jobs and gear.', 'system');
     this.clearedChapters = [];

@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 138 tests"]
+        T2["Unit tests<br/>vitest · 148 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
     end
@@ -39,9 +39,9 @@ flowchart TB
 
 ---
 
-## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`)
+## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`)
 
-All 138 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 148 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -58,6 +58,7 @@ All 138 tests import `src/core` and `src/data` directly in Node. No browser is n
 | **Items, market and world map (0.15)** | 24 | Supplies are well formed and never clash with ability ids; items always land, do fixed amounts, draw no reaction; Ether, Remedy, Phoenix Feather (only the fallen, clean slate, quarter HP) and Blast Flask (wakes sleepers, spares allies); saved inventories are clamped; worn gear and relics can't be sold; every chapter has a place on the map and every place a road; one battle open on a new game, two after Chapter I, the other road closes once you march, nothing open after the finale; old saves get a sensible cleared list; the next shelf opens when a chapter is won |
 | **Side battles, mastery and Raise (0.16)** | 15 | Every side-battle place has a map, jobs, a spot on the world map and a road, and no two places sit on top of each other; they open with the story and never show as cleared; enemy level follows the squad and stops rising at the cap; the generated fight is repeatable, on walkable unshared tiles, with no boss; payouts don't beat the story's; saved win counts are clamped. Every job has a mastery bonus; tiers are earned once, at job level 5 and 8; bonuses follow the unit across jobs and add up; enemies have none. Raise always works on the fallen, never on the living, a boss, or a tile someone stands on; the planner casts it when it can pay |
 | **Act II (0.17)** | 4 | The story runs from the Summit through one road to a single finale; a squad that finished the first act finds Chapter IV open and nothing behind it reopened; on each new battlefield every enemy can be reached from the deployment tiles by a unit with Jump 2, nobody deploys on anybody else, and there are six deployment tiles; enemy levels rise chapter by chapter with one boss each |
+| **Difficulty and saves (0.18)** | 10 | Easy → Normal → Hard on every dial, Normal unchanged; enemy levels shift and never drop below 1; boss HP scales and nobody else's; slot 1 is the old save key; slots are independent, Continue finds the newest, New Game the first empty; bad slot numbers write nothing; an exported save imports back intact; non-saves and oversized files are refused with a readable message; a hostile file loses its HTML names, unknown jobs, abilities, items, prototype keys and out-of-range numbers |
 | **Workshop scenarios** | 11 | Blank and remixed scenarios are playable; scenarios become chapters without sharing state; validation errors and warnings; hostile JSON (huge sizes, `__proto__` job ids, control characters, duplicate tiles, unknown items) is clamped or dropped; old editor maps import; share links round-trip under 4 KB and damaged links fail cleanly |
 
 Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `rng` so tests force hits, misses and crits.
@@ -77,6 +78,7 @@ These scripts ran during 0.7–0.8 development against `npm run preview` with `?
 | **Items and world map** (0.15) | Uses every item through the Item menu and forecast; raises a fallen ally; wins Chapter I and lands on the map; buys and sells at the market (and is refused away from it and in battle); saves on the map and continues onto it; marches by keyboard; loses and falls back to the map; finishes the story, enters the Trials from the gate and steps back out; opens the Workshop from the map and returns; loads a 0.14 save. Then the map, Item menu and both shop counters at 390×844, 844×390 and 820×1180 with touch | No console errors; nothing off screen; no touch target under 40px; the road not taken stays closed after a reload |
 | **Side battles and comfort** (0.16) | First-turn, move and undo tips appear in order; a move is undone with key 1 and the sprite returns; battle speed toggles and is stored; Raise is cast through the action menu and forecast; a mastery tier raises max HP and shows ticked in Team; after Chapter I only Thornwood Ford is open; a side battle is fought, won (bonus paid, win counted), fought again a level higher, lost and left for the map; a reload during it resumes on the map; the story march still works afterwards. Then tips, Menu, Team and the nine-place map at 390×844, 844×390 and 820×1180 with touch | No console errors; tips overlap no control; the Menu fits or scrolls; no place name leaves the map; the Fight button is on screen |
 | **Act II** (0.17) | From a finished first act: the map shows Emberwick Harbor open; marches to each new chapter in turn, checks the recruit joined and the road reward arrived, lets AUTO play real rounds on each new battlefield, wins, and reaches the epilogue with the Trials open; loads a 0.14 Trials save and finds Chapter IV waiting. Then the twelve-place map at 390×844, 844×390 and 820×1180 | No console errors; no overlapping or off-map place names |
+| **Difficulty and saves** (0.18) | New Game asks for a difficulty and writes slot 1 at once; Hard shifts enemy levels; two potions used then a defeat gives them back; Menu → Difficulty changes it; Save game to an empty slot, over another (confirm, cancel), export (text and a real download), delete (confirm); a bad import shows an error; an import carrying an HTML name loads as plain text and runs nothing; Continue and Load Game on the title; the Gate opens after Chapter III without New Game+; New Game with all slots full asks which to replace. Then the new-game, slot and export screens at 390×844 and 844×390 | No console errors; the modal scrolls on short screens; no button off screen or under 40px |
 
 Committing these to the repo and running them in CI is on the [roadmap](ROADMAP.md).
 
@@ -118,6 +120,8 @@ The Final Chapter is near 0% on pure AUTO in 0.9 as well; the campaign bot clear
 | ☐ | `prefers-reduced-motion`: shake is subtle, the banner fades instead of sliding |
 | ☐ | Save, reload the page, load: squad, armory and chapter restored |
 | ☐ | Save on the world map, reload, Continue: back on the map at the same place with the same purse and supplies |
+| ☐ | Export a slot on one device, import it on another (phone ↔ desktop), load it |
+| ☐ | Download a save file from inside the itch.io page (the embed may block downloads; Copy should still work) |
 | ☐ | World map on a phone in both orientations: every place can be tapped, the March button is on screen |
 | ☐ | Use each item once in battle; raise a fallen ally with a Phoenix Feather |
 | ☐ | New browser profile: the tips appear once each during Chapter I and never cover a button you need |
