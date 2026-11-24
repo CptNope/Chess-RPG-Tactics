@@ -2,7 +2,7 @@
  * 0.25.0: recruiting at the market, a barracks of ten, and choosing the party of six.
  */
 import { describe, it, expect } from 'vitest';
-import { JOBS } from '../src/data/jobs';
+import { JOBS, PLAYER_JOB_IDS } from '../src/data/jobs';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { JobSystem } from '../src/core/JobSystem';
 import { SaveManager } from '../src/core/SaveManager';
@@ -39,9 +39,9 @@ describe('the recruiting board', () => {
   it('opens more jobs as the story goes on', () => {
     expect(recruitJobs(0)).toEqual(RECRUIT_JOBS[0].jobs);
     expect(recruitJobs(2).length).toBe(RECRUIT_JOBS[0].jobs.length + RECRUIT_JOBS[1].jobs.length);
-    expect(recruitJobs(9).length).toBe(Object.keys(JOBS).length);
+    expect(recruitJobs(9).length).toBe(PLAYER_JOB_IDS.length);
     for (let visit = 0; visit < 40; visit++) for (const r of recruitBoard(visit, 0, squadOf(4))) expect(RECRUIT_JOBS[0].jobs).toContain(r.jobId);
-    for (const id of Object.keys(JOBS)) expect(RECRUIT_PITCH[id], id).toBeTruthy();
+    for (const id of PLAYER_JOB_IDS) expect(RECRUIT_PITCH[id], id).toBeTruthy();
   });
 
   it('hopefuls come a level below the squad, priced by level and job', () => {
@@ -89,7 +89,7 @@ describe('hiring', () => {
     expect(isHired(u)).toBe(true);
     expect(isHired(squadOf(1)[0])).toBe(false);
     // Every job on any board can be hired: prerequisites come with it
-    for (const jobId of Object.keys(JOBS)) {
+    for (const jobId of PLAYER_JOB_IDS) {
       const h = hireRecruit({ ...offer, jobId });
       expect(JobSystem.canChangeJob(h, jobId), jobId).toBe(true);
     }

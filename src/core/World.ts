@@ -34,7 +34,8 @@ export const WORLD_NODES: WorldNode[] = [
   { id: 'cape', name: 'Stormbreak Cape', kind: 'mission', chapterId: 'chapter_6', x: 0.6, y: 0.1, blurb: 'The northern point, where the old kingdom built an altar to the sea.' },
   { id: 'thornwood', name: SKIRMISHES.thornwood.name, kind: 'skirmish', skirmishId: 'thornwood', x: 0.37, y: 0.21, blurb: 'A river crossing in the northern woods, held by bandits.' },
   { id: 'shrine', name: SKIRMISHES.shrine.name, kind: 'skirmish', skirmishId: 'shrine', x: 0.66, y: 0.68, blurb: 'A flooded chapel at the edge of the mire, where a cult gathers.' },
-  { id: 'ridge', name: SKIRMISHES.ridge.name, kind: 'skirmish', skirmishId: 'ridge', x: 0.88, y: 0.78, blurb: 'An old watch-fort on the cliffs below the summit, its signal fire still kept.' }
+  { id: 'ridge', name: SKIRMISHES.ridge.name, kind: 'skirmish', skirmishId: 'ridge', x: 0.88, y: 0.78, blurb: 'An old watch-fort on the cliffs below the summit, its signal fire still kept.' },
+  { id: 'hollow', name: SKIRMISHES.hollow.name, kind: 'skirmish', skirmishId: 'hollow', x: 0.7, y: 0.38, blurb: 'A wooded hollow under the high pass, where the howling carries for miles.' }
 ];
 
 /** Roads the party walks between locations. */
@@ -53,7 +54,8 @@ export const WORLD_ROADS: [string, string][] = [
   ['ruins', 'harbor'],
   ['market', 'harbor'],
   ['market', 'isle'],
-  ['thornwood', 'cape']
+  ['thornwood', 'cape'],
+  ['battlement', 'hollow']
 ];
 
 export const worldNode = (id: string): WorldNode | undefined => WORLD_NODES.find((n) => n.id === id);

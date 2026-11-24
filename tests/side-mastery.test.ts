@@ -2,7 +2,7 @@
  * 0.16.0: side battles on the world map, job mastery bonuses, and the White Mage's Raise.
  */
 import { describe, it, expect } from 'vitest';
-import { JOBS } from '../src/data/jobs';
+import { JOBS, PLAYER_JOB_IDS } from '../src/data/jobs';
 import { MAPS, MapData } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { CONSUMABLES, consumableAbility } from '../src/data/consumables';
@@ -121,7 +121,7 @@ describe('side battles', () => {
 
 describe('job mastery', () => {
   it('every job has a bonus that grows from Veteran to Master', () => {
-    expect(Object.keys(JOB_MASTERY).sort()).toEqual(Object.keys(JOBS).sort());
+    expect(Object.keys(JOB_MASTERY).sort()).toEqual([...PLAYER_JOB_IDS].sort());
     for (const [job, m] of Object.entries(JOB_MASTERY)) {
       expect(m.veteran, job).toBeGreaterThan(0);
       expect(m.master, job).toBeGreaterThan(m.veteran);

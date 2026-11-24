@@ -27,8 +27,12 @@ const TITLES: Record<string, string> = {
   knight: 'Sentinel', archer: 'Stalker', black_mage: 'Hexer', white_mage: 'Acolyte', dragoon: 'Lancer',
   ninja: 'Shade', time_mage: 'Seer', geomancer: 'Warden', squire: 'Recruit',
   monk: 'Fist', thief: 'Cutpurse', summoner: 'Caller', oracle: 'Augur', paladin: 'Templar', spellblade: 'Duelist', chemist: 'Alchemist',
-  bard: 'Minstrel', dancer: 'Bladedancer'
+  bard: 'Minstrel', dancer: 'Bladedancer',
+  wolf: 'Hound', wyvern: 'Drake', ooze: 'Ooze', wisp: 'Wisp', brute: 'Brute'
 };
+/** Monsters on the Trials' floors (0.26.0), from this floor up. */
+const TRIAL_MONSTERS = ['wolf', 'wyvern', 'ooze', 'wisp', 'brute'];
+export const TRIAL_MONSTERS_FROM = 3;
 
 /** Bosses appear every fifth floor. */
 export function isBossFloor(floor: number): boolean {
@@ -62,10 +66,14 @@ export function buildTrialFloor(floor: number): CampaignChapter {
 
   const roster: EnemySpawn[] = [];
   const boss = isBossFloor(floor);
+  // From floor 3, about one enemy in three is a monster (0.26.0). Its own seed, so the rest of a
+  // floor is the same fight it always was
+  const beasts = seededRng(floor * 31337 + 5);
   for (let i = 0; i < count; i++) {
-    const jobId = TRIAL_JOBS[Math.floor(rng() * TRIAL_JOBS.length)];
+    let jobId = TRIAL_JOBS[Math.floor(rng() * TRIAL_JOBS.length)];
     const t = pickTile();
     const isLeader = boss && i === 0;
+    if (!isLeader && floor >= TRIAL_MONSTERS_FROM && beasts() < 0.3) jobId = TRIAL_MONSTERS[Math.floor(beasts() * TRIAL_MONSTERS.length)];
     roster.push({
       name: isLeader ? `${sign} Warden` : `${sign} ${TITLES[jobId]}`,
       jobId: isLeader ? 'dragoon' : jobId,

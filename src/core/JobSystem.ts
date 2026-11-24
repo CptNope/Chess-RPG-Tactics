@@ -1,5 +1,5 @@
 import { Unit, Team, FacingDirection, EquippedAbilities, EquippedGear, Item, EquipmentSlot, Ability, StatusEffectType } from './types';
-import { JOBS, BASIC_ATTACK } from '../data/jobs';
+import { JOBS, BASIC_ATTACK, PLAYER_JOB_IDS } from '../data/jobs';
 import { ITEMS } from '../data/items';
 import { SIGNATURES } from '../data/signatures';
 
@@ -184,7 +184,7 @@ export class JobSystem {
 
     // A small starting bank in every job, so a new job's first abilities are within reach
     const jobPoints: Record<string, number> = {};
-    for (const id of Object.keys(JOBS)) jobPoints[id] = id === 'squire' ? 250 : 200;
+    for (const id of PLAYER_JOB_IDS) jobPoints[id] = id === 'squire' ? 250 : 200;
 
     const unlockedAbilities: Record<string, boolean> = {
       basic_attack: true
@@ -193,6 +193,8 @@ export class JobSystem {
     if (job.abilities.length > 0) {
       unlockedAbilities[job.abilities[0].id] = true;
     }
+    // A monster knows everything it does from the start (0.26.0)
+    if (job.monster) for (const a of job.abilities) unlockedAbilities[a.id] = true;
 
     const unit: Unit = {
       id,
@@ -267,6 +269,8 @@ export class JobSystem {
   /** True when the unit may switch to the job: its prerequisites are met, or it already holds it. */
   public static canChangeJob(unit: Unit, jobId: string): boolean {
     if (!JOBS[jobId]) return false;
+    // A monster's job is its own; nobody changes into one (0.26.0)
+    if (JOBS[jobId].monster) return unit.jobId === jobId;
     return unit.jobId === jobId || this.missingPrerequisites(unit, jobId).length === 0;
   }
 
@@ -545,6 +549,7 @@ export class JobSystem {
   public static applyGearStatuses(unit: Unit): void {
     const start = new Set<StatusEffectType>();
     for (const it of Object.values(unit.equipment)) for (const s of it?.traits?.startStatus || []) start.add(s);
+    for (const s of JOBS[unit.jobId]?.innate?.startStatus || []) start.add(s); // a monster's own (0.26.0)
     for (const type of start) {
       const duration = type === 'regen' ? 99 : STATUS_DURATION[type];
       const cur = unit.statuses.find((s) => s.type === type);
@@ -582,12 +587,12 @@ export class JobSystem {
    *   the play already done, and never locks the job or secondary skillset it's using.
    */
   public static ensureJobPoints(unit: Unit): void {
-    for (const id of Object.keys(JOBS)) {
+    for (const id of PLAYER_JOB_IDS) {
       if (unit.jobPoints[id] === undefined) unit.jobPoints[id] = 200;
     }
     if (!unit.jobJpEarned) {
       const earned: Record<string, number> = {};
-      for (const job of Object.values(JOBS)) {
+      for (const job of PLAYER_JOB_IDS.map((id) => JOBS[id])) {
         const spent = job.abilities.reduce((n, a) => n + (unit.unlockedAbilities[a.id] ? a.jpCost : 0), 0);
         const start = job.id === 'squire' ? 250 : 200;
         earned[job.id] = Math.max(0, (unit.jobPoints[job.id] || 0) + spent - start);

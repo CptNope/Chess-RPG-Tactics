@@ -16,7 +16,7 @@ import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { TERRAIN_SPELLS } from '../src/core/Geomancy';
 import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
-import { buildTrialFloor, isBossFloor } from '../src/core/Trials';
+import { TRIAL_MONSTERS_FROM, buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
 import { JOB_LEVEL_JP, JOB_MASTERY, VETERAN_JOB_LEVEL, MAX_JOB_LEVEL, masteryLabel } from '../src/core/JobSystem';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../src/core/Difficulty';
@@ -56,11 +56,12 @@ w('> **Generated file — do not edit by hand.** Run `npm run docs:gen` after ch
 w();
 w('Every number here is read straight from the game data, so it always matches what ships.');
 w();
-w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
+w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Monsters](#monsters) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
 w();
 
 // ---------------------------------------------------------------- Jobs
-const jobs = Object.values(JOBS);
+const jobs = Object.values(JOBS).filter((j) => !j.monster);
+const monsters = Object.values(JOBS).filter((j) => j.monster);
 w('## Jobs');
 w();
 w(`${jobs.length} jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).`);
@@ -128,6 +129,29 @@ for (const t of ['action', 'reaction', 'support', 'movement']) w(`  "${t[0].toUp
 w('```');
 w();
 for (const j of jobs) {
+  w(`### ${j.name}`);
+  w();
+  w(`*${j.description}*`);
+  w();
+  w('| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |');
+  w('| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |');
+  for (const a of j.abilities) w(abilityRow(a));
+  w();
+}
+
+// ---------------------------------------------------------------- Monsters (0.26.0)
+w('## Monsters');
+w();
+w(`${monsters.length} monsters: enemies only, never a squad member's job. They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from ${TRIAL_MONSTERS_FROM} up, and in Workshop scenarios.`);
+w();
+w('| Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to |');
+w('| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |');
+for (const j of monsters) {
+  const m = j.statMultipliers;
+  w(`| **${j.name}** \`${j.id}\` | ${j.role} | ${j.baseMove} | ${j.baseJump} | ${x(m.hp)} | ${x(m.mp)} | ${x(m.attack)} | ${x(m.magic)} | ${x(m.speed)} | ${(j.innate?.startStatus || []).join(', ') || '—'} | ${(j.innate?.immune || []).join(', ') || '—'} |`);
+}
+w();
+for (const j of monsters) {
   w(`### ${j.name}`);
   w();
   w(`*${j.description}*`);
