@@ -119,7 +119,7 @@ flowchart LR
     R --- B
     G --- Z["Zodiac Summit<br/>Final Chapter"]
     B --- Z
-    Z --- T["★ Gate of Trials<br/>opens after the story"]
+    Z --- T["★ Gate of Trials<br/>opens after Chapter III"]
     R --- H["Emberwick Harbor<br/>Chapter IV"]
     M --- H
     M --- I["Greywatch Isle<br/>Chapter V"]
@@ -136,7 +136,7 @@ flowchart LR
 | 🔒 grey pin | Not open: the road you didn't take, or a place the story hasn't reached |
 | ◆ Larkmoor Market | The only place to buy and sell |
 | ⚑ orange pin | A **side battle**: optional, and it can be fought again |
-| ★ Gate of Trials | Sealed until the Final Chapter is won |
+| ★ Gate of Trials | Sealed until Chapter III is won |
 
 * **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough.
 * **Side battles** are for gil, EXP and JP, and for practice when the story gets hard. They never move the story on.
@@ -197,17 +197,33 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
 ---
 
-## 5. Losing
+## 5. Difficulty and saves
+
+**Difficulty** is chosen when you start a new game, and can be changed any time from **Menu → Difficulty** (it applies from the next battle).
+
+| | Enemy levels | Bosses | Enemy raises per battle |
+| :--- | :---: | :---: | :---: |
+| **Easy** | one lower | 30% less HP | none |
+| **Normal** | as designed | as designed | one |
+| **Hard** | one higher | 15% more HP | two |
+
+It covers story battles, side battles and the Trials; Workshop scenarios keep their author's levels.
+
+![The save screen: three slots, each with where it stands, and Save here / Export / Delete](images/save-slots.webp)
+
+**Saves** live in your browser, in three slots. The game saves itself to the slot you're playing at the start of each chapter and whenever you reach the world map; **Menu → Save game** saves now, to any slot. **Continue** on the title screen opens your most recent save, and **Load Game** lets you pick. To back a save up or move it to another browser or device, open **Save game** or **Load game**, choose **Export** on a slot (download the file, or copy the text), then on the other device use **Load game → Import a save…** and paste it or choose the file.
+
+## 6. Losing
 
 ![Defeat screen](images/defeat.webp)
 
-You keep the EXP and JP earned during a lost battle. **Retry Battle** restarts it with your current squad, **World Map** falls back to the map (buy supplies, change jobs and gear, then march again: the battle waits), and **Load Save** goes back to your last save. Supplies used in a lost battle stay spent when you retry.
+You keep the EXP and JP earned during a lost battle, and **the supplies you used in it are given back**. **Retry Battle** restarts it with your current squad, **World Map** falls back to the map (buy supplies, change jobs and gear, then march again: the battle waits), and **Load Save** goes back to your last save. Still stuck? Try a side battle or two, or set **Menu → Difficulty** to Easy.
 
 ---
 
-## 6. Trials of the Zodiac
+## 7. Trials of the Zodiac
 
-Unlocked after the Final Chapter. Enter at the **Gate of Trials** on the world map; after each floor choose **Next Trial** or step back out to the **World Map** to restock.
+Unlocked once Chapter III is won. Enter at the **Gate of Trials** on the world map; after each floor choose **Next Trial** or step back out to the **World Map** to restock. New Game+ is offered at the Gate once the whole story is won.
 
 | Rule | Value |
 | :--- | :--- |
@@ -220,7 +236,7 @@ Unlocked after the Final Chapter. Enter at the **Gate of Trials** on the world m
 
 ---
 
-## 7. Playing on any device
+## 8. Playing on any device
 
 | Device | How |
 | :--- | :--- |
@@ -243,7 +259,7 @@ Press **H**, the **?** button, or **View/Back** on a controller in-game for the 
 
 ---
 
-## 8. The Workshop: build your own battles
+## 9. The Workshop: build your own battles
 
 Menu → **Workshop**. Everything saves in this browser as you work.
 
@@ -284,7 +300,7 @@ Workshop battles use your real squad, which keeps any EXP, JP and reward gear, b
 
 ---
 
-## 9. Tips
+## 10. Tips
 
 1. **Face your enemies when you WAIT.** Back attacks are +30% damage with a 30% crit chance.
 2. **Take the high ground** with archers and mages.

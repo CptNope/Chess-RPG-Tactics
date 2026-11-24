@@ -56,6 +56,7 @@ flowchart TB
 | **Geomancy** | `src/core/Geomancy.ts` | Terrain → spell mapping | types |
 | **Trials** | `src/core/Trials.ts` | Seeded floor generator, drops | data |
 | **SaveManager** | `src/core/SaveManager.ts` | Save/load, best Trial floor | — |
+| **Difficulty** | `src/core/Difficulty.ts` | Easy / Normal / Hard: enemy level shift, boss HP, enemy raise cap | JobSystem |
 | **Economy** | `src/core/Economy.ts` | Bounties, shop tiers, resale value, what can't be sold | data |
 | **World** | `src/core/World.ts` | The world map's places and roads; which battles are open, cleared or locked; routes; cleared-chapter lists for old saves | data |
 | **WorldMap** | `src/ui/WorldMap.ts` | Draws the map (a painted 320×180 canvas with real buttons over it), walks the party marker, shows what the current place offers. Talks to the game through a small `WorldHost` interface | World, CharacterArt |
@@ -324,7 +325,8 @@ classDiagram
 ```mermaid
 flowchart LR
     Save["Save button · chapter start · reaching the world map"] --> SM["SaveManager.saveGame()"]
-    SM --> LS[("localStorage<br/>chess_rpg_tactics_save_v1")]
+    SM --> LS[("localStorage<br/>slot 1: chess_rpg_tactics_save_v1<br/>slots 2–3: …_slot2, …_slot3")]
+    Imp["Import a save…<br/>(paste or .json file)"] --> PI["SaveManager.parseImport()<br/>rebuild units, clamp, drop unknowns"] --> LS
     LS --> Load["Load button / Defeat → Load Save"]
     Load --> Hydrate["Re-hydrate gear from ITEMS<br/>rebuild armory for 0.6 saves"]
     Hydrate --> OnMap{"onWorldMap?"}
@@ -336,7 +338,9 @@ flowchart LR
 
 | Key | Contents |
 | :--- | :--- |
-| `chess_rpg_tactics_save_v1` | `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared, gil, inventory, clearedChapters, onWorldMap, worldLocation, skirmishWins }`. Every field after `units` is optional and filled in on load, so saves from any earlier version still open |
+| `chess_rpg_tactics_save_v1`, `…_slot2`, `…_slot3` | Save slots 1–3 (slot 1 is the key every earlier version used): `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared, gil, inventory, clearedChapters, onWorldMap, worldLocation, skirmishWins, difficulty }`. Every field after `units` is optional and filled in on load, so saves from any earlier version still open |
+| `chess_rpg_tactics_tips_v1` | First-battle tips seen, and whether tips are off (per device) |
+| `chess_rpg_tactics_speed_v1` | `fast` when the Fast battle speed is on (per device) |
 | `chess_rpg_tactics_best_trial_v1` | Highest Trial floor cleared |
 | `chess_rpg_tactics_workshop_v1` | Workshop library: up to 50 scenarios, newest first, each re-sanitised on load |
 | `chess_rpg_tactics_graphics_v1` | Graphics setting (auto / high / medium / low) |
@@ -418,6 +422,7 @@ src/
 │   ├── Trials.ts           Seeded post-game floors
 │   ├── SaveManager.ts      localStorage
 │   ├── Economy.ts          Gil, shop tiers, resale
+│   ├── Difficulty.ts       Easy / Normal / Hard
 │   ├── World.ts            World map rules: places, roads, open battles
 │   ├── Skirmish.ts         Side battles: generated, replayable, scaled to the squad
 │   └── Scenario.ts         Workshop format, sanitising, share links, library
@@ -429,7 +434,7 @@ src/
 ├── ui/                     UIManager, Workshop, WorldMap, Tutorial
 ├── input/                  GamepadInput, FocusNav
 └── audio/                  SoundEffects, MusicSynthesizer
-tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery (138 rule tests)
+tests/                      core, scenario, jobs-gear, progression, items-world, side-mastery, slots-difficulty (148 rule tests)
 scripts/                    check-dist.mjs, gen-docs.ts, balance-sim.ts
 docs/                       This documentation + ADRs
 ```

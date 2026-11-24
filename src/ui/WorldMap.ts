@@ -15,6 +15,8 @@ export interface WorldState {
   current: string;
   cleared: string[];
   trialsOpen: boolean;
+  /** New Game+ is offered at the Gate only once the whole story is won. */
+  newGamePlus: boolean;
   /** The Trials floor the party would enter next. */
   trialsFloor: number;
   bestTrial: number;
@@ -192,11 +194,11 @@ export class WorldMap {
       action('◆ Buy & sell', () => this.host.openShop(), true);
     } else if (node.kind === 'trials') {
       if (state === 'locked') {
-        add('p', 'wm-status locked', 'Sealed. The gate opens when the realm is at peace.');
+        add('p', 'wm-status locked', 'Sealed. The gate opens once the Zodiac Seal on the Summit is won.');
       } else {
         add('p', 'wm-status', `Next: floor ${st.trialsFloor}${st.bestTrial > 0 ? ` · Best: floor ${st.bestTrial}` : ''}`);
         action(`★ Enter floor ${st.trialsFloor}`, () => this.host.enterTrials(), true);
-        action('New Game+ (replay the story with this squad)', () => this.host.newGamePlus());
+        if (st.newGamePlus) action('New Game+ (replay the story with this squad)', () => this.host.newGamePlus());
       }
     } else if (node.kind === 'skirmish') {
       const def = SKIRMISHES[node.skirmishId!];

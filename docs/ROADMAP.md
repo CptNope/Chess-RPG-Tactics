@@ -35,6 +35,7 @@ timeline
         0.15.0 : Items in battle : World map between missions : Market, buy and sell : Haste effect fix
         0.16.0 : Side battles : Job mastery : Raise : Undo move, battle speed, tips
         0.17.0 : Act II, Chapters IV to VI : Three battlefields : Sable joins : Enemy raise cap
+        0.18.0 : Easy, Normal, Hard : Three save slots, export and import : Supplies refunded on defeat : Trials after Chapter III
 ```
 
 | Version | Theme | Highlights |
@@ -47,6 +48,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.18 | Choices for the player | Easy / Normal / Hard, three save slots with export and import, a lost battle returns its supplies, the Trials open after Chapter III |
 | 0.17 | A second act | Chapters IV to VI on three new battlefields (harbor piers, a lighthouse rock, a cliff altar), a third recruit, six battles per playthrough; finished saves continue; enemies raise once per battle |
 | 0.16 | Room to grow | Three replayable side battles on the map, permanent job mastery bonuses at job level 5 and 8, the White Mage's Raise (used by the AI too), undo move, a Fast battle speed, first-battle tips |
 | 0.15 | A world between battles | The Item command and six supplies (a revive among them), a world map where the story branch is a march and defeat is a retreat, Larkmoor Market with buy and sell, the Haste effect back on the unit |
@@ -62,9 +64,9 @@ timeline
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.18)"]
+    subgraph NOW["Now (0.19)"]
         direction TB
-        N1["Difficulty settings"]
+        N1["Play Act II by hand"]
         N2["Real-device QA:<br/>iOS Safari, Android, real pads"]
         N3["Commit the Playwright<br/>play-test suite to CI"]
         N4["Devlog + site post<br/>for the itch release"]
@@ -75,7 +77,7 @@ flowchart LR
         X2["World map events:<br/>travellers, camp scenes"]
         X3["Smarter AI:<br/>reactions, facing, 2-ply"]
         X4["Mastery abilities"]
-        X5["Multiple save slots"]
+        X5["Play-tests in CI"]
         X6["Installable PWA, offline"]
     end
     subgraph LATER["Later (1.0+)"]
@@ -91,15 +93,14 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.18): finish and ship what exists
+### Now (0.19): finish and ship what exists
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
-| **Difficulty settings** | Act II was tuned with an AI-versus-AI sim and a starter-geared squad, not by hand; an easier and a harder setting would cover the spread | S | Scale enemy levels by ±1 and bounties to match |
 | **Play Act II by hand** | The sim says Chapter V is the hardest of the three | S | Tune rosters after real playthroughs |
 | **Real-device QA** | 0.8.0 input was verified in Chromium with synthesized events only | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Play-test suite in CI** | Device matrix, input and campaign bots exist but aren't committed | M | Add Playwright as a dev dependency; run headless in Actions |
-| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.17 (the site's project page is live) |
+| **Devlog** | Tell people what's new | S | itch devlog for 0.13 to 0.18 (the site's project page is live) |
 
 ### Next (0.19 – 0.21): depth
 
@@ -113,7 +114,6 @@ flowchart LR
 | **AI: items** | Bosses could carry a potion; AUTO could use yours with a setting | S |
 | **AI: reactions and facing** | AI ignores Weapon Guard and leaves its back open ([details](ENEMY_AI.md#5-known-limits)) | M |
 | **AI: two-ply look-ahead** | Lets enemies set up combos and retreat to heal | L |
-| **Multiple save slots** + export/import | One slot is fragile | S |
 | **PWA**: install, offline | Play on phones without a connection | S |
 
 ### Later (1.0+): breadth
@@ -143,12 +143,11 @@ quadrantChart
     quadrant-2 "Quick wins"
     quadrant-3 "Fill-ins"
     quadrant-4 "Reconsider"
-    "Difficulty settings": [0.2, 0.6]
+    "Play Act II by hand": [0.2, 0.7]
     "Devlog + site post": [0.1, 0.55]
     "Device QA": [0.25, 0.75]
     "Play-tests in CI": [0.36, 0.65]
     "Recruiting": [0.45, 0.5]
-    "Save slots": [0.22, 0.36]
     "PWA offline": [0.3, 0.52]
     "Equipment rules": [0.55, 0.53]
     "World map events": [0.55, 0.66]
@@ -173,9 +172,9 @@ quadrantChart
 | A11y | Font sizes are fixed px; no text-size setting | Low | Next |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
 | Balance | Act II (0.17) is tuned by simulation only: a starter-geared squad wins Chapter IV about half the time at level 7, Chapter V about 7% at level 8, the finale about 17% at level 9. A geared squad with a healer and items should do far better, but nobody has played it through | Medium | Now (play it by hand) |
-| Story | New Game+ and the Trials still unlock at the very end; a player who stops after Act I never sees them | Low | Consider opening the Gate after Chapter III |
+| Balance | Chapter III sits near 0% in the simulation on every difficulty (as it has since 0.9): the planner attacks uphill badly and the sim squad has starter gear and no healer. Easy helps every other chapter clearly | Medium | Now (play it by hand) |
+| Saves | Export downloads may be blocked inside the itch.io embed; Copy works there | Low | Fine for now |
 | Tips | First-battle tips are remembered per device, not per save, and aren't translated into controller glyphs | Low | Fine for now |
-| Rules | Retrying a lost battle keeps the supplies spent in it, while loading a save restores them | Low | Decide on one rule; a retry could refund |
 | World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Open on the map once there is more than one thing to do there at the start |
 | Balance | `npm run balance` ignores reactions and gear, so its numbers are relative; the Final Chapter is near 0% on pure AUTO (as in 0.9) and needs re-geared or hands-on play | Low | Tune after real playtests |
 
