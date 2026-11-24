@@ -53,6 +53,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'The fog is thick with venom... Tread carefully on the wooden boardwalks!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'You will drown out here without a guide, knight. I am Bria. This mire is my home, and that warlock has poisoned it. I fight with you.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'A Geomancer! Your earth-magic changes with the ground you stand on, yes? Then this bog is your weapon. Welcome, Bria.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Then hear this first. The lights in the fog are wisps: they lull you to sleep and feed on you. And the mud moves on its own here. Do not let it get hold of your legs.' },
       { speaker: 'Rogue Warlock', portrait: 'foe_time_mage', portraitClass: '⚡', side: 'right', text: 'You foolhardy whelps! You walked straight into my temporal web!' },
       { speaker: 'Shadow Shinobi', portrait: 'foe_ninja', portraitClass: '🗡', side: 'right', text: 'No knight leaves this bog alive. Disperse into the mist!' }
     ],
@@ -74,7 +75,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Bog Poisoner', jobId: 'black_mage', level: 4, x: 3, z: 1 },
       { name: 'Swamp Shinobi', jobId: 'ninja', level: 4, x: 7, z: 4 },
       { name: 'Mire Skirmisher', jobId: 'ninja', level: 4, x: 12, z: 2 },
-      { name: 'Reed Stalker', jobId: 'archer', level: 3, x: 6, z: 7 }
+      { name: 'Bog Ooze', jobId: 'ooze', level: 4, x: 9, z: 2 },
+      { name: 'Marsh Wisp', jobId: 'wisp', level: 3, x: 6, z: 7 }
     ]
   },
 
@@ -89,6 +91,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'We arrived in time! The fortress drawbridge has been breached, but the ramparts hold!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The garrison sent for anyone who could hold a staff. I am Bria, a Geomancer. Stone walls answer to me. Point me at the enemy.' },
       { speaker: 'Dragoon Commander', portrait: 'foe_dragoon', portraitClass: '🐉', side: 'right', text: 'Knights of the realm! Test your steel against the spears of the sky!' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'He brought a wyvern. It will come over the walls, not through the gate. Keep a spear pointed at the sky, and Remedies for its sting.' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Take the parapets! Drive them from the towers!' }
     ],
     victoryDialogue: [
@@ -110,7 +113,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Rampart Sniper', jobId: 'archer', level: 3, x: 4, z: 8 },
       { name: 'Tower Sniper', jobId: 'archer', level: 3, x: 10, z: 8 },
       { name: 'Iron Vanguard', jobId: 'knight', level: 3, x: 7, z: 7 },
-      { name: 'Gate Brawler', jobId: 'monk', level: 3, x: 8, z: 7 }
+      { name: 'War Wyvern', jobId: 'wyvern', level: 3, x: 8, z: 7 }
     ]
   },
 
@@ -124,7 +127,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'This ends now! Surrender the Zodiac Seal, rebels!' },
       { speaker: 'Zodiac Champion', portrait: 'foe_dragoon', portraitClass: '👑', side: 'right', text: 'Puny mortals! The power of the ancient zodiac hums in our veins! Behold true divine majesty!' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Shields up! For the realm and for justice!' },
-      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Mind the altar. When the Champion is wounded, the Zodiac Seal will drive him into a frenzy. Strike from behind and finish it fast.' }
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Mind the altar. When the Champion is wounded, the Zodiac Seal will drive him into a frenzy. Strike from behind and finish it fast.' },
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'And the thing of stone by the altar? It woke when the Seal did. Do not crowd it: it shakes the ground around it. Bows and spells, from range.' }
     ],
     victoryDialogue: [
       { speaker: 'Zodiac Champion', portrait: 'foe_dragoon', portraitClass: '👑', side: 'right', text: 'How could... mortal hands... break the celestial ward?! NOOOO!' },
@@ -150,7 +154,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Zodiac Champion', jobId: 'dragoon', level: 5, x: 7, z: 2, isBoss: true },
       { name: 'Zealot Medic', jobId: 'white_mage', level: 4, x: 8, z: 0 },
       { name: 'Black Archmage', jobId: 'black_mage', level: 4, x: 10, z: 3 },
-      { name: 'Altar Sentinel', jobId: 'knight', level: 4, x: 9, z: 6 }
+      { name: 'Altar Guardian', jobId: 'brute', level: 3, x: 9, z: 6 }
     ]
   },
 
@@ -165,7 +169,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Captain Varrow', portrait: 'foe_ninja', portraitClass: '☠', side: 'right', text: 'Load the last of it! The Tidecaller pays in gold for every chart of these waters, and she pays double for speed.' },
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'Knights! Over here. I know that ship, I used to crew her. Get me aboard and I will show you where Varrow keeps the charts.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then you fight with us. The sea is too deep to wade: we take the piers. Watch the cross-pier, they will try to get behind us.' },
-      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Three piers, one ship. Split them up and meet on the deck.' }
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Three piers, one ship. Split them up and meet on the deck.' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'One more thing. Varrow feeds something in the bilge. It eats through armor, and it is out on the piers tonight.' }
     ],
     victoryDialogue: [
       { speaker: 'Captain Varrow', portrait: 'foe_ninja', portraitClass: '☠', side: 'right', text: 'Keep the ship... The charts are already gone. She sailed for Greywatch on the morning tide.' },
@@ -184,7 +189,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Captain Varrow', jobId: 'ninja', level: 7, x: 7, z: 1, isBoss: true },
       { name: 'Corsair Mate', jobId: 'spellblade', level: 6, x: 9, z: 1 },
       { name: 'Deck Gunner', jobId: 'archer', level: 6, x: 11, z: 0 },
-      { name: 'Corsair Cutthroat', jobId: 'thief', level: 6, x: 3, z: 4 },
+      { name: 'Bilge Ooze', jobId: 'ooze', level: 6, x: 3, z: 4 },
       { name: 'Corsair Brawler', jobId: 'monk', level: 6, x: 12, z: 5 },
       { name: 'Ship Chanter', jobId: 'white_mage', level: 5, x: 5, z: 1 }
     ]
@@ -198,7 +203,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     rewardItemIds: ['runeblade'],
     introDialogue: [
       { speaker: 'Tidecaller Maelis', portrait: 'foe_summoner', portraitClass: '🌊', side: 'right', text: 'You are late, little knights. The light has shown me where the Drowned Regent sleeps. Stay, and watch the tide come in.' },
-      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'She holds the high ground the whole way up. Every terrace we take makes the next one easier.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'She holds the high ground the whole way up. Every terrace we take makes the next one easier. Except for that wyvern nesting on the light: walls mean nothing to it.' },
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The shallows on either side are slow going, but nobody watches them. Her healer stands by the tower door: get to him, or we will kill the same cultists twice.' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'And watch the ground. When she starts calling and the stones round you begin to glow, move. That is the sea she is calling up, and it does not miss.' }
     ],
@@ -220,7 +225,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Tower Acolyte', jobId: 'white_mage', level: 6, x: 9, z: 1 },
       { name: 'Tide Augur', jobId: 'oracle', level: 6, x: 5, z: 3 },
       { name: 'Greywatch Sentinel', jobId: 'knight', level: 6, x: 7, z: 5 },
-      { name: 'Greywatch Lancer', jobId: 'dragoon', level: 6, x: 10, z: 4 },
+      { name: 'Storm Wyvern', jobId: 'wyvern', level: 6, x: 10, z: 4 },
       { name: 'Storm Hexer', jobId: 'black_mage', level: 6, x: 6, z: 1 }
     ]
   },
@@ -235,7 +240,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'The Drowned Regent', portrait: 'foe_paladin', portraitClass: '👑', side: 'right', text: 'Three hundred years beneath the tide, and still they send children with swords. Kneel. Your kingdom was mine before it had a name.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'It stopped being yours when they sealed you under the sea. Squad, with me!' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The chasm splits the climb. Pick a side and go together, or cross the rope bridge and take his guard in the flank.' },
-      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'He is still half drowned. Wound him and the old seal will drag at him... but it will make him furious first.' }
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'He is still half drowned. Wound him and the old seal will drag at him... but it will make him furious first.' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'He did not come up alone. Barrow-stone that walks, and dead lights off the water. Watch the lights: they will put you to sleep if you let them.' }
     ],
     victoryDialogue: [
       { speaker: 'The Drowned Regent', portrait: 'foe_paladin', portraitClass: '👑', side: 'right', text: 'The sea... takes me back. Remember who it was... that stood here...' },
@@ -246,8 +252,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     enemyRoster: [
       { name: 'The Drowned Regent', jobId: 'paladin', level: 9, x: 7, z: 1, isBoss: true },
       { name: 'Drowned Chaplain', jobId: 'white_mage', level: 8, x: 9, z: 1 },
-      { name: 'Drowned Magus', jobId: 'black_mage', level: 8, x: 5, z: 1 },
-      { name: 'Tomb Knight', jobId: 'knight', level: 8, x: 7, z: 4 },
+      { name: 'Drowned Wisp', jobId: 'wisp', level: 7, x: 5, z: 1 },
+      { name: 'Barrow Brute', jobId: 'brute', level: 8, x: 7, z: 4 },
       { name: 'Wraith Duelist', jobId: 'spellblade', level: 8, x: 3, z: 7 },
       { name: 'Wraith Lancer', jobId: 'dragoon', level: 8, x: 12, z: 7 },
       { name: 'Hourglass Seer', jobId: 'time_mage', level: 8, x: 12, z: 3 }

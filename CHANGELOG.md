@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.27.0] - 2026-11-24
+
+### Added — monsters in the story
+- **From Chapter II on, every story battle has monsters**, and someone in the squad warns you about them before the fight:
+  - **II-A Gloomy Mire**: a Marsh Wisp (in place of the archer) and a Bog Ooze in the swamp.
+  - **II-B Night Battlement**: the Dragoon Commander's War Wyvern (in place of the Gate Brawler).
+  - **III Zodiac Summit**: the Altar Guardian, a Stonehide Brute woken with the Seal (in place of the Altar Sentinel).
+  - **IV Emberwick Harbor**: Varrow's Bilge Ooze, out on the piers (in place of a Corsair Cutthroat).
+  - **V Greywatch Isle**: a Storm Wyvern nesting on the light (in place of the Greywatch Lancer).
+  - **VI Stormbreak Cape**: a Barrow Brute and a Drowned Wisp come up with the Regent (in place of the Tomb Knight and the Drowned Magus).
+- Chapter I stays as it was.
+
+### Changed
+- **Monsters are stronger.** Monsters wear no gear, so they were weaker than people of the same level. Each now has natural stats in place of gear: the Wolf's fangs and speed (ATK +6, HP +20, Evasion +14), the Wyvern's hide (ATK +6, HP +30, Evasion +8), the Ooze's bulk (ATK +6, HP +30), the Wisp's glow (MAG +18, MP +20, Evasion +16) and the Brute's stone (ATK +6, HP +40). This applies at the Howling Hollow and in the Trials too.
+- **Wisp Flame** hits harder (×1.25, was ×0.95) and **Drain Light** too (×1.0, was ×0.8).
+- **Lure** is easier to resist (−30 to hit) and reaches 2 tiles (was 3), for 14 MP (was 8). A wisp that put someone to sleep every turn was the strongest thing in any battle it was in.
+
+### Balance
+- Each chapter was checked with the balance sim before and after (100 battles per level): the monsters replace units of a similar strength, so each chapter plays about as hard as it did. Where a swap made a fight much easier or harder (a monster in place of a support caster, or of the hardest hitter), it was moved to another unit or its level adjusted. Stormbreak Cape came out a little harder at the top levels.
+
+### Developer
+- `Job.innate.stats`: a monster's natural gear, counted by `recalculateDerivedStats` and `gearStat`. `Ability.accuracy`: added to the chance to hit.
+- 2 new tests (241 total) in `tests/monsters.test.ts`. [ADR 0035](docs/adr/0035-monsters-in-the-story.md).
+
 ## [0.26.0] - 2026-11-24
 
 ### Added — monsters

@@ -177,6 +177,7 @@ export class CombatEngine {
     if (ability.signature) hitChance += 30;
     // ... and a grand summon, waited a whole turn for, lands just as surely (0.24.0)
     if (ability.charge) hitChance += 30;
+    if (ability.accuracy) hitChance += ability.accuracy;
 
     hitChance = Math.min(100, Math.max(10, hitChance));
     // A sleeper can't dodge

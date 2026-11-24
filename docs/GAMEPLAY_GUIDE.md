@@ -162,7 +162,7 @@ flowchart LR
   | Marsh Wisp | Frail at range but sends you to Sleep (Lure) and drains life | Rush it; it can't be poisoned or slept |
   | Stonehide Brute | Slow, starts behind Protect; Ground Pound hits everyone next to it | Don't crowd it; fight it from range |
 
-  They live at the Howling Hollow and turn up on Trials floors from 3 on.
+  They live at the Howling Hollow, turn up on Trials floors from 3 on, and from Chapter II every story battle has one or two (the squad warns you about them before the fight).
 * **Wenna the Pedlar** follows the squad around the realm. Once the first battle is won she sets up beside a won battlefield or a side-battle camp, and moves on after every win. She sells two things: a piece the market won't stock until after the next chapter (early, for a quarter more), and one of her own goods that nobody else sells. Walk to her pin to buy.
 * **Camp.** After each story battle the squad makes camp, and the panel offers **Sit by the fire**: a short talk between the squad, once per playthrough, worth 30 JP to everyone.
 * **Team**, **Save** and **Menu** (sound, graphics, battle speed, load, the Workshop, title screen) are in the top bar. Team works everywhere; buying and selling only at the market.

@@ -121,6 +121,8 @@ export interface Ability {
   charge?: boolean;
   /** Also raises fallen allies in the area, with this share of their max HP (0.24.0). */
   rebirth?: number;
+  /** Added to the chance to hit (0.27.0): the Wisp's Lure is easy to resist. */
+  accuracy?: number;
 }
 
 export interface Job {
@@ -146,7 +148,7 @@ export interface Job {
   /** A monster (0.26.0): an enemy only, never a player's job; see data/monsters.ts. */
   monster?: boolean;
   /** What a monster has instead of gear traits: statuses it starts each battle with, ailments it can't get. */
-  innate?: { startStatus?: StatusEffectType[]; immune?: StatusEffectType[] };
+  innate?: { startStatus?: StatusEffectType[]; immune?: StatusEffectType[]; stats?: Item['stats'] };
 }
 
 export interface EquippedAbilities {

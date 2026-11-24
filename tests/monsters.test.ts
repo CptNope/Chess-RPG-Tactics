@@ -15,6 +15,7 @@ import { WORLD_NODES, WORLD_ROADS } from '../src/core/World';
 import { UNIQUE_ITEMS } from '../src/core/Economy';
 import { TRIAL_MONSTERS_FROM, buildTrialFloor } from '../src/core/Trials';
 import { recruitJobs } from '../src/core/Recruits';
+import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { Unit } from '../src/core/types';
 
 const IDS = ['wolf', 'wyvern', 'ooze', 'wisp', 'brute'];
@@ -98,6 +99,32 @@ describe('monsters', () => {
 });
 
 describe('where monsters are met', () => {
+  it('the story: from Chapter II every battle has a monster, and someone warns you about it', () => {
+    expect(CAMPAIGN_CHAPTERS.chapter_1.enemyRoster.some((e) => isMonsterJob(e.jobId))).toBe(false); // the tutorial stays human
+    for (const id of ['chapter_2a', 'chapter_2b', 'chapter_3', 'chapter_4', 'chapter_5', 'chapter_6']) {
+      const ch = CAMPAIGN_CHAPTERS[id];
+      const beasts = ch.enemyRoster.filter((e) => isMonsterJob(e.jobId));
+      expect(beasts.length, id).toBeGreaterThan(0);
+      expect(beasts.some((e) => e.isBoss), id).toBe(false);
+      const talk = ch.introDialogue.map((l) => l.text.toLowerCase()).join(' ');
+      expect(/wisp|mud|wyvern|stone|bilge|lights/.test(talk), id).toBe(true);
+      // never two enemies on one tile
+      expect(new Set(ch.enemyRoster.map((e) => `${e.x},${e.z}`)).size, id).toBe(ch.enemyRoster.length);
+    }
+  });
+
+  it('a monster stands up to a geared enemy of its level: natural stats in place of gear', () => {
+    const wisp = make('wisp', 'enemy', 0, 0, 6), mage = make('black_mage', 'enemy', 0, 0, 6);
+    expect(JobSystem.getMagicPower(wisp)).toBeGreaterThan(JobSystem.getMagicPower(mage) * 0.85);
+    expect(make('wolf', 'enemy').evasion).toBeGreaterThan(10);
+    expect(make('brute', 'enemy').maxHp).toBeGreaterThan(make('knight', 'enemy').maxHp);
+    const lure = JobSystem.findAbility('mon_lure')!;
+    expect(lure.accuracy).toBeLessThan(0);
+    const target = make('knight', 'player', 0, 2);
+    const plain = CombatEngine.getForecast(wisp, target, { ...lure, accuracy: undefined }, 1, 1);
+    expect(CombatEngine.getForecast(wisp, target, lure, 1, 1).hitChance).toBe(Math.max(10, plain.hitChance + lure.accuracy!));
+  });
+
   it('the Howling Hollow: a side battle of beasts after Chapter I, with a trophy of its own', () => {
     const def = SKIRMISHES.hollow;
     expect(def.jobs.every(([j]) => isMonsterJob(j))).toBe(true);

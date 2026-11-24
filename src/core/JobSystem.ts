@@ -367,6 +367,12 @@ export class JobSystem {
         if (item.stats.evasion) gearEva += item.stats.evasion;
       }
     }
+    // A monster's fangs, hide and glow count as its gear (0.27.0)
+    const natural = job.innate?.stats;
+    if (natural) {
+      gearHp += natural.hp || 0; gearMp += natural.mp || 0; gearAtk += natural.attack || 0; gearMag += natural.magic || 0;
+      gearSpd += natural.speed || 0; gearMove += natural.move || 0; gearJump += natural.jump || 0; gearEva += natural.evasion || 0;
+    }
 
     // Apply job multipliers + gear + job mastery
     const mastery = this.masteryBonus(unit);
@@ -457,7 +463,7 @@ export class JobSystem {
     for (const item of Object.values(unit.equipment)) {
       if (item && item.stats && item.stats[stat]) total += item.stats[stat]!;
     }
-    return total;
+    return total + (JOBS[unit.jobId]?.innate?.stats?.[stat] || 0); // a monster's natural gear (0.27.0)
   }
 
   /**

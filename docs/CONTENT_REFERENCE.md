@@ -392,9 +392,9 @@ pie showData title Abilities by slot type
 
 | Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
-| **Wisp Flame** `mon_wisp_flame` | Action | 0 | 4 | 4 | 3 | — | 0.95 | fire | — | Cold fire from up to 4 tiles away. |
-| **Lure** `mon_lure` | Action | 0 | 8 | 3 | 3 | — | — | dark | inflicts **sleep** | A dancing light: Sleep on a foe up to 3 tiles away. |
-| **Drain Light** `mon_drain_light` | Action | 0 | 10 | 3 | 3 | — | 0.8 | dark | drains 50% | Feeds on a foe's life: damage, and the wisp heals half of it. |
+| **Wisp Flame** `mon_wisp_flame` | Action | 0 | 4 | 4 | 3 | — | 1.25 | fire | — | Cold fire from up to 4 tiles away. |
+| **Lure** `mon_lure` | Action | 0 | 14 | 2 | 3 | — | — | dark | inflicts **sleep** | A dancing light that may lull a foe up to 2 tiles away to Sleep. Easy to resist. |
+| **Drain Light** `mon_drain_light` | Action | 0 | 10 | 3 | 3 | — | 1 | dark | drains 50% | Feeds on a foe's life: damage, and the wisp heals half of it. |
 
 ### Stonehide Brute
 
@@ -701,7 +701,7 @@ flowchart LR
 | Chapter | Map | Enemies | Boss | Recruit | Win reward | Branch rewards |
 | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
 | **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
-| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 5 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
+| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | 6 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
 | **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm, Mirror Shield | Aegis Barrier + Platinum Blade |
 | **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | 4 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
 | **CHAPTER IV**: Fire on the Water | Emberwick Harbor | 6 | Captain Varrow (Ninja L7) | Sable (Thief) | Oathkeeper | Warding Amulet |
@@ -728,7 +728,8 @@ flowchart LR
 | Bog Poisoner | Black Mage | 4 | (3, 1) |  |
 | Swamp Shinobi | Ninja | 4 | (7, 4) |  |
 | Mire Skirmisher | Ninja | 4 | (12, 2) |  |
-| Reed Stalker | Archer | 3 | (6, 7) |  |
+| Bog Ooze | Bog Ooze | 4 | (9, 2) |  |
+| Marsh Wisp | Marsh Wisp | 3 | (6, 7) |  |
 
 </details>
 
@@ -740,7 +741,7 @@ flowchart LR
 | Rampart Sniper | Archer | 3 | (4, 8) |  |
 | Tower Sniper | Archer | 3 | (10, 8) |  |
 | Iron Vanguard | Knight | 3 | (7, 7) |  |
-| Gate Brawler | Monk | 3 | (8, 7) |  |
+| War Wyvern | Wyvern | 3 | (8, 7) |  |
 
 </details>
 
@@ -751,7 +752,7 @@ flowchart LR
 | Zodiac Champion | Dragoon | 5 | (7, 2) | ★ |
 | Zealot Medic | White Mage | 4 | (8, 0) |  |
 | Black Archmage | Black Mage | 4 | (10, 3) |  |
-| Altar Sentinel | Knight | 4 | (9, 6) |  |
+| Altar Guardian | Stonehide Brute | 3 | (9, 6) |  |
 
 </details>
 
@@ -762,7 +763,7 @@ flowchart LR
 | Captain Varrow | Ninja | 7 | (7, 1) | ★ |
 | Corsair Mate | Spellblade | 6 | (9, 1) |  |
 | Deck Gunner | Archer | 6 | (11, 0) |  |
-| Corsair Cutthroat | Thief | 6 | (3, 4) |  |
+| Bilge Ooze | Bog Ooze | 6 | (3, 4) |  |
 | Corsair Brawler | Monk | 6 | (12, 5) |  |
 | Ship Chanter | White Mage | 5 | (5, 1) |  |
 
@@ -776,7 +777,7 @@ flowchart LR
 | Tower Acolyte | White Mage | 6 | (9, 1) |  |
 | Tide Augur | Oracle | 6 | (5, 3) |  |
 | Greywatch Sentinel | Knight | 6 | (7, 5) |  |
-| Greywatch Lancer | Dragoon | 6 | (10, 4) |  |
+| Storm Wyvern | Wyvern | 6 | (10, 4) |  |
 | Storm Hexer | Black Mage | 6 | (6, 1) |  |
 
 </details>
@@ -787,8 +788,8 @@ flowchart LR
 | :--- | :--- | :---: | :---: | :---: |
 | The Drowned Regent | Paladin | 9 | (7, 1) | ★ |
 | Drowned Chaplain | White Mage | 8 | (9, 1) |  |
-| Drowned Magus | Black Mage | 8 | (5, 1) |  |
-| Tomb Knight | Knight | 8 | (7, 4) |  |
+| Drowned Wisp | Marsh Wisp | 7 | (5, 1) |  |
+| Barrow Brute | Stonehide Brute | 8 | (7, 4) |  |
 | Wraith Duelist | Spellblade | 8 | (3, 7) |  |
 | Wraith Lancer | Dragoon | 8 | (12, 7) |  |
 | Hourglass Seer | Time Weaver | 8 | (12, 3) |  |
