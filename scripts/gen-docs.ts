@@ -8,7 +8,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { JOBS, BASIC_ATTACK } from '../src/data/jobs';
-import { ITEMS, STARTING_ARMORY, RARE_DROP_POOL } from '../src/data/items';
+import { ITEMS, STARTING_ARMORY, RARE_DROP_POOL, MERCHANT_ITEMS } from '../src/data/items';
+import { CAMP_JP, CAMP_SCENES } from '../src/data/camp';
+import { EARLY_MARKUP, MERCHANT_NAME } from '../src/core/Merchant';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { TERRAIN_SPELLS } from '../src/core/Geomancy';
@@ -185,6 +187,9 @@ const source = (id: string) => {
   if (ch) parts.push(`Win ${ch.title}`);
   if (choice) parts.push(`Choose "${choice.o.text}"`);
   if (RARE_DROP_POOL.includes(id)) parts.push('Trials drop');
+  if (MERCHANT_ITEMS.includes(id)) parts.push(`${MERCHANT_NAME} only`);
+  const trophy = Object.values(SKIRMISHES).find((d) => d.trophy === id);
+  if (trophy) parts.push(`First win at ${trophy.name}`);
   return parts.join(' · ') || 'Starting gear of a job';
 };
 const items = Object.values(ITEMS);
@@ -231,7 +236,9 @@ stages.forEach((name, i) => w(`| ${name} | ${Number.isFinite(SHOP_PRICE_CAP[i as
 w();
 w(`Never sold (won only): ${UNIQUE_ITEMS.map(itemName).join(', ')}.`);
 w();
-w('Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the three relics above can\'t be sold.');
+w('Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the relics and trophies above can\'t be sold.');
+w();
+w(`**${MERCHANT_NAME}**, a travelling merchant, sets up at a won battlefield or an open side-battle camp once the first battle is won, and moves to another after every win (story or side battle). She sells two things: one piece from the market's next shelf, early, at ×${EARLY_MARKUP} its price (until every shelf is open), and one of her own goods, which nobody else sells: ${MERCHANT_ITEMS.map(itemName).join(', ')}. A ware bought stays on her blanket as sold until she moves on.`);
 w();
 
 // ---------------------------------------------------------------- World map
@@ -254,6 +261,15 @@ for (const n of WORLD_NODES) {
 }
 w();
 
+w('### Camp scenes');
+w();
+w(`After each story battle but the last, the squad makes camp on the world map. Sitting by the fire plays a short scene, once per playthrough, and every squad member gains ${CAMP_JP} JP in their current job.`);
+w();
+w('| After | Scene | Speakers |');
+w('| :--- | :--- | :--- |');
+for (const sc of Object.values(CAMP_SCENES)) w(`| ${CAMPAIGN_CHAPTERS[sc.chapterId].title} | ${sc.title} | ${[...new Set(sc.lines.map((l) => l.speaker))].join(', ')} |`);
+w();
+
 // ---------------------------------------------------------------- Difficulty
 w('## Difficulty');
 w();
@@ -268,6 +284,10 @@ w();
 w('## Side battles');
 w();
 w(`Optional battles at places on the world map (⚑). They can be fought any number of times and never move the story on. Enemies are the squad's average level (rounded down), one level higher for each earlier win there up to +${SKIRMISH_MAX_HEAT}, with a leader one level above the rest; four of them, five once the place is at full strength. A win pays the usual bounties plus ${skirmishBonus(0)} gil the first time and ${skirmishBonus(1)} after.`);
+w();
+w('| Place | Trophy (first win) |');
+w('| :--- | :--- |');
+for (const d of Object.values(SKIRMISHES)) w(`| **${d.name}** | ${itemName(d.trophy)} |`);
 w();
 w('| Place | Battlefield | Enemies | Drawn from | Goal | Opens after |');
 w('| :--- | :--- | :--- | :--- | :--- | :--- |');

@@ -9,7 +9,9 @@ import { WorldMap } from './ui/WorldMap';
 import { DIFFICULTIES, DIFFICULTY_ORDER, Difficulty, enemyLevel, sanitizeDifficulty, scaleBoss } from './core/Difficulty';
 import { Tutorial, TipId, TIPS } from './ui/Tutorial';
 import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize } from './ui/TextSize';
-import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
+import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, missingTrophies, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
+import { MERCHANT_NAME, MerchantSales, merchantVisit, merchantVisitIndex, sanitizeMerchantSales } from './core/Merchant';
+import { CAMP_JP, pendingCamp, sanitizeCampSeen } from './data/camp';
 import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
 import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
 import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue, gearSaleBlock , BattleMode } from './core/Economy';
@@ -86,6 +88,10 @@ class TacticsGame {
   /** Supplies as the battle began: a lost battle gives back what was used in it. */
   private battleStartInventory: Record<string, number> | null = null;
   private skirmishWins: Record<string, number> = {};
+  /** Camp scenes already played this playthrough (0.21.0). */
+  private campSeen: string[] = [];
+  /** Bought from the travelling merchant on her current visit (0.21.0). */
+  private merchantSales: MerchantSales | undefined;
   /** The campaign chapter to return to after Workshop battles (and to save). */
   private campaignChapterId = 'chapter_1';
   /** Campaign chapters won this run, in order. */
@@ -146,9 +152,14 @@ class TacticsGame {
         gil: this.gil,
         leaderJob: this.squad[0]?.jobId || 'squire',
         squadLevels: this.squad.map((u) => u.level),
-        skirmishWins: this.skirmishWins
+        skirmishWins: this.skirmishWins,
+        armory: this.armory,
+        merchant: this.merchant(),
+        camp: pendingCamp(this.clearedChapters, this.campSeen)
       }),
       skirmish: (id) => this.startSkirmish(id),
+      buyFromMerchant: (id) => this.buyFromMerchant(id),
+      makeCamp: () => this.makeCamp(),
       tip: () => (this.tutor.wants('worldMap') ? TIPS.worldMap : null),
       tipSeen: () => this.tutor.markSeen('worldMap'),
       march: (m) => this.marchTo(m),
@@ -637,6 +648,8 @@ class TacticsGame {
   }
 
   private handleConfirm(): void {
+    // A camp scene plays over the world map: Enter / A advances it rather than pressing the map
+    if (this.currentMode === 'dialogue' && this.world.isOpen) return this.confirmOnBattlefield();
     const layer = this.ui.activeLayer();
     const focused = document.activeElement as HTMLElement | null;
     if (layer) {
@@ -768,6 +781,8 @@ class TacticsGame {
       // A side battle isn't resumed: loading puts the squad back on the map beside it
       onWorldMap: this.world.isOpen || this.mode === 'skirmish',
       skirmishWins: this.skirmishWins,
+      campSeen: this.campSeen,
+      merchantSales: this.merchantSales,
       worldLocation: this.world.location,
       difficulty: this.difficulty
     }, this.saveSlot);
@@ -827,6 +842,8 @@ class TacticsGame {
     this.gil = typeof data.gil === 'number' && data.gil >= 0 ? Math.floor(data.gil) : STARTING_GIL;
     this.inventory = sanitizeInventory(data.inventory);
     this.skirmishWins = sanitizeSkirmishWins(data.skirmishWins);
+    // Side battles won before 0.21.0 pay their trophy now
+    for (const id of missingTrophies(this.skirmishWins, this.armory)) this.armory.push(id);
     let chapterId = CAMPAIGN_CHAPTERS[data.currentChapterId] ? data.currentChapterId : 'chapter_1';
     this.clearedChapters = sanitizeCleared(data.clearedChapters, chapterId);
     // A Trials save from before 0.15.0 has no list of won chapters, but the first act is certainly
@@ -836,6 +853,8 @@ class TacticsGame {
       chapterId = FIRST_ACT_FINALE;
     }
     this.campaignChapterId = chapterId;
+    this.campSeen = sanitizeCampSeen(data.campSeen, this.clearedChapters);
+    this.merchantSales = sanitizeMerchantSales(data.merchantSales);
     this.world.close();
     if (data.onWorldMap) {
       // Saved between missions: back to the map, where the squad was standing
@@ -1887,6 +1906,9 @@ class TacticsGame {
     this.armory.push(...newItems);
     const sideId = this.mode === 'skirmish' ? this.currentSkirmish : null;
     const sideWins = sideId ? this.skirmishWins[sideId] || 0 : 0;
+    // The first win at a side-battle place brings its trophy (0.21.0)
+    const trophy = sideId ? SKIRMISHES[sideId]?.trophy : undefined;
+    if (trophy && ITEMS[trophy] && !this.armory.includes(trophy)) { this.armory.push(trophy); newItems.push(trophy); }
     const earned = victoryGil(this.units.filter((u) => u.team === 'enemy'), this.mode, this.trialsFloor) + (sideId ? skirmishBonus(sideWins) : 0);
     if (sideId) this.skirmishWins[sideId] = sideWins + 1;
     this.gil += earned;
@@ -2040,6 +2062,8 @@ class TacticsGame {
     this.campaignCleared = false;
     this.clearedChapters = [];
     this.skirmishWins = {};
+    this.campSeen = [];
+    this.merchantSales = undefined;
     this.trialsFloor = 0;
     this.world.close();
     this.world.location = 'ruins';
@@ -2047,6 +2071,55 @@ class TacticsGame {
     this.customScenario = null;
     this.loadChapter('chapter_1');
     this.saveGame(false); // the new game owns its slot from the start
+  }
+
+  /** Where the travelling merchant is and what she sells, from progress alone (0.21.0). */
+  private merchant() {
+    return merchantVisit(this.clearedChapters, this.skirmishWins, this.shopLevel(), this.armory, this.merchantSales);
+  }
+
+  /** Buys from the travelling merchant: only on the map, standing where she is. */
+  private buyFromMerchant(id: string): boolean {
+    const m = this.merchant();
+    const ware = m?.wares.find((w) => w.id === id);
+    if (!m || !ware || ware.sold || !this.world.isOpen || this.world.location !== m.nodeId || this.armory.includes(id) || this.gil < ware.price) return false;
+    this.gil -= ware.price;
+    this.armory.push(id);
+    const visit = merchantVisitIndex(this.clearedChapters, this.skirmishWins);
+    if (this.merchantSales?.visit !== visit) this.merchantSales = { visit, ids: [] };
+    this.merchantSales.ids.push(id);
+    SoundFX.playTurnChime();
+    this.ui.showBanner(`BOUGHT ${ITEMS[id].name.toUpperCase()}`);
+    this.ui.addLogEntry(`[MERCHANT] ${MERCHANT_NAME} sells you ${ITEMS[id].name} for ${ware.price} G. Equip it from ★ Team → Equipment.`, 'system');
+    this.saveGame(false);
+    return true;
+  }
+
+  /** Plays the waiting camp scene over the world map, then pays its JP (0.21.0). */
+  private makeCamp(): void {
+    const scene = pendingCamp(this.clearedChapters, this.campSeen);
+    if (!scene || !this.world.isOpen || this.currentMode === 'dialogue') return;
+    const mapEl = document.getElementById('world-map')!;
+    mapEl.inert = true; // the map stays visible behind the fire, but nothing on it can be pressed
+    (document.activeElement as HTMLElement | null)?.blur();
+    const lines = scene.lines.filter((l) => l.speaker === 'Rowan' || this.squad.some((u) => u.name === l.speaker));
+    this.playDialogueSequence(lines.length ? lines : scene.lines, () => {
+      mapEl.inert = false;
+      this.currentMode = 'menu';
+      this.campSeen.push(scene.chapterId);
+      const ups: string[] = [];
+      for (const u of this.squad) {
+        const gain = JobSystem.gainJp(u, CAMP_JP);
+        this.announceJobGain(u, gain, false);
+        if (gain.leveledTo) ups.push(u.name);
+      }
+      this.jobNews = {};
+      this.ui.showBanner(`AROUND THE FIRE: +${CAMP_JP} JP EACH`);
+      this.ui.addLogEntry(`[CAMP] ${scene.title}. Everyone gains ${CAMP_JP} JP${ups.length ? ` (${ups.join(', ')} gained a job level)` : ''}.`, 'system');
+      this.saveGame(false);
+      this.world.refresh();
+      this.world.focusDefault();
+    });
   }
 
   /** The market trades only while the party stands at it on the world map. */
@@ -2283,6 +2356,7 @@ class TacticsGame {
   private startNewGamePlus(): void {
     this.ui.addLogEntry('[SYSTEM] New Game+ : your squad keeps its levels, jobs and gear.', 'system');
     this.clearedChapters = [];
+    this.campSeen = []; // the story is told again, and so are its evenings
     this.world.close();
     this.world.location = 'ruins';
     this.ui.hideResultModal();

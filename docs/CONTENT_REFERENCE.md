@@ -344,9 +344,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-54 items across five gear slots.
+60 items across five gear slots.
 
-### Weapon (21)
+### Weapon (23)
 
 | Item | Type | Range | Stats | Traits | Price | How to get |
 | :--- | :--- | :---: | :--- | :--- | ---: | :--- |
@@ -371,6 +371,8 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop |
 | **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop |
 | **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop |
+| **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only |
+| **Fordwarden's Bow** `fordwarden_bow` | bow | 5 | ATTACK +8, SPEED +1, EVASION +5 | — | 520 | First win at Thornwood Ford |
 
 ### Shield (5)
 
@@ -382,7 +384,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Mirror Shield** `mirror_shield` | EVASION +18, MP +10 | starts with shell | 420 | Win CHAPTER II-B · Trials drop |
 | **Oathkeeper** `oath_shield` | EVASION +20, HP +20 | guards sleep, blind | 500 | Win CHAPTER IV · Trials drop |
 
-### Head (8)
+### Head (9)
 
 | Item | Stats | Traits | Price | How to get |
 | :--- | :--- | :--- | ---: | :--- |
@@ -394,6 +396,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Barbute** `barbute` | HP +45, ATTACK +2 | — | 340 | Trials drop |
 | **Sage's Circlet** `sage_circlet` | HP +10, MP +15, MAGIC +5 | — | 360 | Trials drop |
 | **Circlet of Clarity** `clarity_circlet` | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop |
+| **Watchfire Helm** `watchfire_helm` | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge |
 
 ### Body (9)
 
@@ -409,7 +412,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Summoner's Robe** `summoner_robe` | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop |
 | **Templar Mail** `templar_mail` | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop |
 
-### Accessory (11)
+### Accessory (14)
 
 | Item | Stats | Traits | Price | How to get |
 | :--- | :--- | :--- | ---: | :--- |
@@ -424,6 +427,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Purity Bangle** `purity_bangle` | HP +10 | guards poison, slow, immobilize, breach | 420 | Trials drop |
 | **Sprinter's Anklet** `sprinter_anklet` | MOVE +1, JUMP +1 | — | 620 | Trials drop |
 | **Berserker Band** `berserker_band` | ATTACK +7, EVASION -5 | — | 460 | Trials drop |
+| **Lucky Coin** `lucky_coin` | HP +10, EVASION +10 | guards blind | 380 | Wenna the Pedlar only |
+| **Wayfarer Boots** `wayfarer_boots` | MOVE +1, SPEED +1 | — | 760 | Wenna the Pedlar only |
+| **Chanting Censer** `chanting_censer` | MAGIC +4, MP +20 | guards silence | 540 | First win at Drowned Shrine |
 
 ## Supplies
 
@@ -451,9 +457,11 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 | Chapter II won | 580 | 48 |
 | Campaign cleared / Trials | none | 51 |
 
-Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail.
+Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm.
 
-Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the three relics above can't be sold.
+Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the relics and trophies above can't be sold.
+
+**Wenna the Pedlar**, a travelling merchant, sets up at a won battlefield or an open side-battle camp once the first battle is won, and moves to another after every win (story or side battle). She sells two things: one piece from the market's next shelf, early, at ×1.25 its price (until every shelf is open), and one of her own goods, which nobody else sells: Lucky Coin, Wayfarer Boots, Starsteel Pike. A ware bought stays on her blanket as sold until she moves on.
 
 ## World map
 
@@ -505,6 +513,19 @@ flowchart LR
 | **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
 
+### Camp scenes
+
+After each story battle but the last, the squad makes camp on the world map. Sitting by the fire plays a short scene, once per playthrough, and every squad member gains 30 JP in their current job.
+
+| After | Scene | Speakers |
+| :--- | :--- | :--- |
+| CHAPTER I | Smoke on the River | Tobin, Corvin, Maren, Rowan |
+| CHAPTER II-A | Bog Lights | Bria, Tobin, Corvin, Rowan |
+| CHAPTER II-B | On the Ramparts | Maren, Bria, Tobin, Rowan |
+| CHAPTER III | After the Seal | Rowan, Bria, Corvin, Maren |
+| CHAPTER IV | The Charts | Sable, Rowan, Tobin, Maren |
+| CHAPTER V | The Night Before the Cape | Bria, Corvin, Tobin, Sable, Rowan |
+
 ## Difficulty
 
 Chosen at New Game and changeable from the Menu. Applies to every battle but Workshop scenarios.
@@ -518,6 +539,12 @@ Chosen at New Game and changeable from the Menu. Applies to every battle but Wor
 ## Side battles
 
 Optional battles at places on the world map (⚑). They can be fought any number of times and never move the story on. Enemies are the squad's average level (rounded down), one level higher for each earlier win there up to +2, with a leader one level above the rest; four of them, five once the place is at full strength. A win pays the usual bounties plus 160 gil the first time and 80 after.
+
+| Place | Trophy (first win) |
+| :--- | :--- |
+| **Thornwood Ford** | Fordwarden's Bow |
+| **Drowned Shrine** | Chanting Censer |
+| **Watchfire Ridge** | Watchfire Helm |
 
 | Place | Battlefield | Enemies | Drawn from | Goal | Opens after |
 | :--- | :--- | :--- | :--- | :--- | :--- |

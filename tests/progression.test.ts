@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { JOBS } from '../src/data/jobs';
-import { ITEMS, STARTING_ARMORY } from '../src/data/items';
+import { ITEMS, MERCHANT_ITEMS, STARTING_ARMORY } from '../src/data/items';
 import { JobSystem, JOB_LEVEL_JP, MAX_JOB_LEVEL } from '../src/core/JobSystem';
 import { CombatEngine } from '../src/core/CombatEngine';
 import {
@@ -140,7 +140,8 @@ describe('gil and the shop', () => {
       const slots = stock.map((i) => i.slot);
       expect(slots.indexOf('accessory')).toBeGreaterThan(slots.lastIndexOf('weapon'));
     }
-    expect(shopStock(3).length).toBe(Object.keys(ITEMS).length - UNIQUE_ITEMS.length);
+    // Everything but relics and trophies, and the travelling merchant's own goods (0.21.0)
+    expect(shopStock(3).length).toBe(Object.keys(ITEMS).length - UNIQUE_ITEMS.length - MERCHANT_ITEMS.length);
     for (const id of UNIQUE_ITEMS) expect(ITEMS[id], id).toBeTruthy();
     expect(nextShopCap(0)).toBe(SHOP_PRICE_CAP[1]);
     expect(nextShopCap(3)).toBeNull();

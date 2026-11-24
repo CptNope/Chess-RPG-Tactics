@@ -38,6 +38,7 @@ timeline
         0.18.0 : Easy, Normal, Hard : Three save slots, export and import : Supplies refunded on defeat : Trials after Chapter III
         0.19.0 : Chemist job : Frost Flask, Elixir : Installable app, plays offline
         0.20.0 : Enemies path, face and focus healers : Chapter III rebalanced : Text size
+        0.21.0 : Travelling merchant : Camp scenes : Side-battle trophies
 ```
 
 | Version | Theme | Highlights |
@@ -50,6 +51,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.21 | On the road | Wenna the Pedlar, a travelling merchant with early gear and goods of her own; six camp scenes between story battles; a trophy for the first win at each side battle; 6 new items (60) |
 | 0.20 | Smarter foes | Enemies walk the real path round cliffs, face their foes, respect Weapon Guard and drop healers first; Chapter III rebalanced (0% → about 30–60% in the sim); a text-size setting |
 | 0.19 | Kit and reach | The Chemist (16 jobs, 93 abilities) with Pharmacology for supplies, Frost Flask and Elixir (8 supplies), an installable app that plays offline |
 | 0.18 | Choices for the player | Easy / Normal / Hard, three save slots with export and import, a lost battle returns its supplies, the Trials open after Chapter III |
@@ -66,21 +68,20 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.20.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.21.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
-    subgraph NOW["Now (0.21): needs a person"]
+    subgraph NOW["Now (0.22): needs a person"]
         direction TB
         N1["Play the campaign by hand:<br/>Chapter III, Act II"]
         N2["Real-device QA:<br/>iOS Safari, Android, pads"]
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.21 – 0.23): depth"]
+    subgraph NEXT["Next (0.22 – 0.24): depth"]
         direction TB
         X1["AI: items and<br/>two-ply look-ahead"]
-        X2["World map events:<br/>merchant, camp scenes"]
         X3["Recruiting at the market"]
         X4["Mastery abilities"]
         X5["Play-tests in CI"]
@@ -99,20 +100,19 @@ flowchart LR
     NOW --> NEXT --> LATER
 ```
 
-### Now (0.21): checks that need a person
+### Now (0.22): checks that need a person
 
 | Item | Why | Size | Notes |
 | :--- | :--- | :---: | :--- |
 | **Play the campaign by hand** | Act II, difficulty and 0.20's Chapter III change were tuned by an AI-versus-AI sim with a starter-geared squad | S | One run on Normal, one on Easy; note where it drags (Chapter V is the lowest in the sim now) |
 | **Real-device QA** | Input has only been verified in Chromium with synthesized events | S | iPhone Safari (gestures, safe areas), Android Chrome, iPad + Pencil, Xbox/PlayStation pads |
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
-| **Devlog and store update** | itch and the project page still describe 0.14 | S | One devlog covering 0.13 to 0.20 |
+| **Devlog and store update** | itch and the project page still describe 0.14 | S | One devlog covering 0.13 to 0.21 |
 
-### Next (0.21 – 0.23): depth
+### Next (0.22 – 0.24): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **World map events**: a travelling merchant with one rare item, camp scenes between chapters, side battles with their own rewards | Side battles all pay the same; nothing happens on the road | M |
 | **Recruiting at the market** | The squad is the opening four plus two story recruits; hiring (and choosing who deploys) would give gil a second sink | M |
 | **Mastery abilities** | Mastery (0.16) is stat bonuses only; a signature ability per job at Master would give builds an identity | M |
 | **Play-test suite in CI** | Device matrix, input, campaign and feature bots exist but aren't committed | M |
@@ -150,7 +150,6 @@ quadrantChart
     "Device QA": [0.25, 0.72]
     "Devlog + store": [0.1, 0.55]
     "AI look-ahead": [0.75, 0.5]
-    "World map events": [0.55, 0.62]
     "Recruiting": [0.5, 0.5]
     "Mastery abilities": [0.55, 0.45]
     "Play-tests in CI": [0.4, 0.6]
@@ -181,6 +180,7 @@ quadrantChart
 | Tips | First-battle tips are remembered per device, not per save, and don't show controller glyphs | Low | Fine for now |
 | World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Fine for now |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
+| World map | Camp scenes play once per playthrough with no way to watch them again; the merchant has three goods of her own, so late in the game she runs out | Low | More with Act III |
 | Art | The itch banner image still says "Fifteen jobs" | Low | Regenerate with the next store update |
 
 ---
