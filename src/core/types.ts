@@ -140,7 +140,7 @@ export interface Job {
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
     | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
     // Monsters (0.26.0)
-    | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer';
+    | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer' | 'Undead' | 'Plant';
   spriteClass: string;
   baseMove: number;
   baseJump: number;

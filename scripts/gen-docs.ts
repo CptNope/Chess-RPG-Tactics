@@ -16,7 +16,7 @@ import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { TERRAIN_SPELLS } from '../src/core/Geomancy';
 import { STATUS_DURATION, BENEFICIAL_STATUSES } from '../src/core/CombatEngine';
-import { TRIAL_MONSTERS_FROM, buildTrialFloor, isBossFloor } from '../src/core/Trials';
+import { TRIAL_DEEP_MONSTERS_FROM, TRIAL_MONSTERS_FROM, buildTrialFloor, isBossFloor } from '../src/core/Trials';
 import { Ability, EquipmentSlot } from '../src/core/types';
 import { gearKind, jobGearText, whoCanUse } from '../src/data/gear-rules';
 import { JOB_LEVEL_JP, JOB_MASTERY, VETERAN_JOB_LEVEL, MAX_JOB_LEVEL, masteryLabel } from '../src/core/JobSystem';
@@ -153,7 +153,7 @@ for (const j of jobs) {
 // ---------------------------------------------------------------- Monsters (0.26.0)
 w('## Monsters');
 w();
-w(`${monsters.length} monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from ${TRIAL_MONSTERS_FROM} up, and in Workshop scenarios.`);
+w(`${monsters.length} monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow and Briar Barrow side battles, on Trials floors from ${TRIAL_MONSTERS_FROM} up (the Barrow's from ${TRIAL_DEEP_MONSTERS_FROM}), from Chapter II in the story, and in Workshop scenarios.`);
 w();
 w('| Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to |');
 w('| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |');

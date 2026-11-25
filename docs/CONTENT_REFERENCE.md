@@ -388,7 +388,7 @@ pie showData title Abilities by slot type
 
 ## Monsters
 
-5 monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow side battle, on Trials floors from 3 up, and in Workshop scenarios.
+8 monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow and Briar Barrow side battles, on Trials floors from 3 up (the Barrow's from 8), from Chapter II in the story, and in Workshop scenarios.
 
 | Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |
@@ -397,6 +397,9 @@ pie showData title Abilities by slot type
 | **Bog Ooze** `ooze` | Ooze | 3 | 1 | 1.45× | 0.40× | 1.15× | 0.50× | 0.80× | regen | poison, blind, sleep |
 | **Marsh Wisp** `wisp` | Spirit | 4 | 8 | 1.05× | 1.40× | 0.85× | 1.30× | 1.15× | — | poison, sleep, immobilize |
 | **Stonehide Brute** `brute` | Brute | 3 | 1 | 1.45× | 0.30× | 1.40× | 0.30× | 0.75× | protect | poison |
+| **Basilisk** `basilisk` | Beast | 4 | 2 | 1.45× | 0.60× | 1.45× | 0.60× | 1.00× | — | immobilize, blind |
+| **Bone Knight** `bone_knight` | Undead | 4 | 3 | 1.30× | 0.60× | 1.50× | 0.50× | 1.20× | — | poison, sleep, blind |
+| **Thornling** `thornling` | Plant | 3 | 1 | 1.35× | 0.70× | 1.35× | 0.90× | 1.00× | regen | sleep, blind |
 
 ### Dire Wolf
 
@@ -448,6 +451,36 @@ pie showData title Abilities by slot type
 | **Ground Pound** `mon_ground_pound` | Action | 0 | 0 | 0 | 2 | 1 | 0.8 | physical | inflicts **immobilize** | Hits every foe next to it: damage and Immobilize. |
 | **Hurl Boulder** `mon_hurl_boulder` | Action | 0 | 4 | 4 | 3 | — | 0.95 | physical | — | Throws a rock at a foe up to 4 tiles away. |
 
+### Basilisk
+
+*A long, low lizard in plates of olive scale. Slow to move, hard to hurt, and its stare roots you where you stand.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Tail Lash** `mon_tail_lash` | Action | 0 | 0 | 1 | 2 | — | 1.3 | physical | — | A heavy sweep of the tail. |
+| **Stone Gaze** `mon_stone_gaze` | Action | 0 | 8 | 4 | 3 | — | — | dark | inflicts **immobilize** | Its stare roots a foe up to 4 tiles away: Immobilize. |
+| **Dread Stare** `mon_dread_stare` | Action | 0 | 10 | 3 | 3 | — | 0.8 | dark | inflicts **slow** | A long, heavy look at a foe up to 3 tiles away: damage and Slow. |
+
+### Bone Knight
+
+*A knight long dead, still on guard in a rusted helm. It feels no poison, never sleeps, and fights on with a notched sword and a dented shield.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Rusted Blade** `mon_rusted_blade` | Action | 0 | 0 | 1 | 2 | — | 1.3 | physical | — | A notched, rusty cut. |
+| **Shield Bash** `mon_shield_bash` | Action | 0 | 0 | 1 | 2 | — | 0.7 | physical | inflicts **slow** | Slams its shield into a foe: damage and Slow. |
+| **Grave Chill** `mon_grave_chill` | Action | 0 | 8 | 3 | 3 | 1 | 0.8 | dark | — | A breath from the grave over a small area up to 3 tiles away: dark damage. |
+
+### Thornling
+
+*A knot of briars that walked off on its roots. It mends itself, lashes with poisoned thorns and blinds with clouds of pollen.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Thorn Lash** `mon_thorn_lash` | Action | 0 | 0 | 3 | 2 | — | 1 | physical | inflicts **poison** | A thorny vine lashes a foe up to 3 tiles away: damage and Poison. |
+| **Bramble Burst** `mon_bramble_burst` | Action | 0 | 6 | 0 | 2 | 1 | 0.75 | physical | inflicts **immobilize** | Briars burst out at every foe next to it: damage and Immobilize. |
+| **Pollen Cloud** `mon_pollen` | Action | 0 | 8 | 3 | 3 | 1 | 0.3 | physical | inflicts **blind** | A puff of pollen over a small area up to 3 tiles away: light damage and Blind. |
+
 ## Status effects
 
 | Status | Kind | Lasts (turns) | Effect |
@@ -485,7 +518,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-68 items across five gear slots.
+69 items across five gear slots.
 
 ### Weapon (24)
 
@@ -558,7 +591,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Chain Barding** `chain_barding` | beast | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job | Tamed beasts |
 | **Runed Barding** `runed_barding` | beast | HP +40, MP +15 | guards sleep, silence | 560 | Starting gear of a job | Tamed beasts |
 
-### Accessory (17)
+### Accessory (18)
 
 | Item | Kind | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
@@ -576,6 +609,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Lucky Coin** `lucky_coin` | light | HP +10, EVASION +10 | guards blind | 380 | Wenna the Pedlar only | Anyone |
 | **Wayfarer Boots** `wayfarer_boots` | light | MOVE +1, SPEED +1 | — | 760 | Wenna the Pedlar only | Anyone |
 | **Chanting Censer** `chanting_censer` | light | MAGIC +4, MP +20 | guards silence | 540 | First win at Drowned Shrine | Anyone |
+| **Basilisk Eye** `basilisk_eye` | light | HP +15, MAGIC +4, SPEED +1 | guards immobilize, slow | 600 | First win at Briar Barrow | Anyone |
 | **Leather Collar** `leather_collar` | beast | HP +20, EVASION +4 | — | 160 | Starting gear of a job | Tamed beasts |
 | **Spiked Collar** `spiked_collar` | beast | ATTACK +5 | — | 320 | Starting gear of a job | Tamed beasts |
 | **Glowstone Charm** `glowstone_charm` | beast | MAGIC +6, MP +15 | — | 340 | Starting gear of a job | Tamed beasts |
@@ -606,7 +640,7 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 | Chapter II won | 580 | 55 |
 | Campaign cleared / Trials | none | 58 |
 
-Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle.
+Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye.
 
 Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the relics and trophies above can't be sold.
 
@@ -631,6 +665,7 @@ flowchart LR
   shrine["Drowned Shrine<br/><i>side battle</i>"]
   ridge["Watchfire Ridge<br/><i>side battle</i>"]
   hollow["Howling Hollow<br/><i>side battle</i>"]
+  barrow["Briar Barrow<br/><i>side battle</i>"]
   market --- ruins
   market --- battlement
   ruins --- mire
@@ -647,14 +682,16 @@ flowchart LR
   market --- isle
   thornwood --- cape
   battlement --- hollow
+  ruins --- barrow
+  barrow --- battlement
 ```
 
 | Place | Kind | What happens there | Roads to |
 | :--- | :--- | :--- | :--- |
 | **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement, Thornwood Ford, Emberwick Harbor, Greywatch Isle |
-| **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement, Emberwick Harbor |
+| **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement, Emberwick Harbor, Briar Barrow |
 | **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit, Drowned Shrine |
-| **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit, Thornwood Ford, Howling Hollow |
+| **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit, Thornwood Ford, Howling Hollow, Briar Barrow |
 | **Zodiac Summit** | mission | CHAPTER III: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials, Watchfire Ridge |
 | **Gate of Trials** | trials | Enter the Trials of the Zodiac (after the story) | Zodiac Summit |
 | **Emberwick Harbor** | mission | CHAPTER IV: Fire on the Water | Riverside Ruins, Larkmoor Market |
@@ -664,6 +701,7 @@ flowchart LR
 | **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
 | **Howling Hollow** | skirmish | Side battle: Wild Beasts | Night Battlement |
+| **Briar Barrow** | skirmish | Side battle: Barrow Things | Riverside Ruins, Night Battlement |
 
 ### Camp scenes
 
@@ -698,6 +736,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Drowned Shrine** | Chanting Censer |
 | **Watchfire Ridge** | Watchfire Helm |
 | **Howling Hollow** | Wolfpelt Mantle |
+| **Briar Barrow** | Basilisk Eye |
 
 | Place | Battlefield | Enemies | Drawn from | Goal | Opens after |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -705,6 +744,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Drowned Shrine** | Gloomy Mire | Mire Cultists | Hexer (Black Mage), Augur (Oracle), Caller (Summoner), Seer (Time Weaver), Acolyte (White Mage), Shade (Ninja) | Defeat every enemy | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
 | **Watchfire Ridge** | Night Battlement | Night Raiders | Raider (Knight), Lancer (Dragoon), Marksman (Archer), Shade (Ninja), Duelist (Spellblade), Warden (Geomancer) | Survive 6 rounds | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
 | **Howling Hollow** | Zodiac Summit | Wild Beasts | Pack Leader (Dire Wolf), Dire Wolf (Dire Wolf), Wyvern (Wyvern), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Stonehide Brute (Stonehide Brute) | Defeat every enemy | CHAPTER I |
+| **Briar Barrow** | Gloomy Mire | Barrow Things | Barrow Guard (Bone Knight), Basilisk (Basilisk), Thornling (Thornling), Bone Knight (Bone Knight), Briar Thornling (Thornling), Barrow Wisp (Marsh Wisp) | Defeat every enemy | CHAPTER III |
 
 ## Armory & drops
 
@@ -858,13 +898,13 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 | 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Dancer, Bog Ooze, Ninja, Chemist |
 | 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Bard, Oracle, Paladin, Dire Wolf, Time Weaver |
 | 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Paladin, Bard, Geomancer, Spellblade |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dancer, Thief, Bog Ooze, Dire Wolf |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Paladin, Summoner, Stonehide Brute, Spellblade, Bog Ooze, Marsh Wisp |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Summoner, Bog Ooze, Marsh Wisp, Ninja |
-| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Marsh Wisp, Ninja, Dire Wolf, Wyvern |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Thief, Paladin, Dragoon, Knight, Dire Wolf |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dancer, Thief, Stonehide Brute, Dire Wolf |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Paladin, Summoner, Bone Knight, Spellblade, Marsh Wisp, Basilisk |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Summoner, Stonehide Brute, Basilisk, Ninja |
+| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Basilisk, Bone Knight, Ninja, Dire Wolf, Bog Ooze |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Thief, Paladin, Dragoon, Knight, Wyvern |
 | 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Spellblade, Dancer, Dire Wolf, White Mage, Wyvern, Ninja |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Stonehide Brute, Time Weaver, Monk, Bog Ooze, Marsh Wisp |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dancer, Ninja, Squire, Oracle, Bog Ooze |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Thornling, Time Weaver, Monk, Marsh Wisp, Stonehide Brute, Basilisk |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dancer, Ninja, Squire, Oracle, Stonehide Brute |
 
 *Floors continue forever; the table shows the first 15.*

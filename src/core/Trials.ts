@@ -28,11 +28,15 @@ const TITLES: Record<string, string> = {
   ninja: 'Shade', time_mage: 'Seer', geomancer: 'Warden', squire: 'Recruit',
   monk: 'Fist', thief: 'Cutpurse', summoner: 'Caller', oracle: 'Augur', paladin: 'Templar', spellblade: 'Duelist', chemist: 'Alchemist',
   bard: 'Minstrel', dancer: 'Bladedancer',
-  wolf: 'Hound', wyvern: 'Drake', ooze: 'Ooze', wisp: 'Wisp', brute: 'Brute'
+  wolf: 'Hound', wyvern: 'Drake', ooze: 'Ooze', wisp: 'Wisp', brute: 'Brute',
+  basilisk: 'Basilisk', bone_knight: 'Bone Knight', thornling: 'Thornling'
 };
 /** Monsters on the Trials' floors (0.26.0), from this floor up. */
 const TRIAL_MONSTERS = ['wolf', 'wyvern', 'ooze', 'wisp', 'brute'];
 export const TRIAL_MONSTERS_FROM = 3;
+/** Deeper down, the Briar Barrow's monsters join them (0.32.0). Shallower floors don't change. */
+const TRIAL_MONSTERS_DEEP = [...TRIAL_MONSTERS, 'basilisk', 'bone_knight', 'thornling'];
+export const TRIAL_DEEP_MONSTERS_FROM = 8;
 
 /** Bosses appear every fifth floor. */
 export function isBossFloor(floor: number): boolean {
@@ -73,7 +77,8 @@ export function buildTrialFloor(floor: number): CampaignChapter {
     let jobId = TRIAL_JOBS[Math.floor(rng() * TRIAL_JOBS.length)];
     const t = pickTile();
     const isLeader = boss && i === 0;
-    if (!isLeader && floor >= TRIAL_MONSTERS_FROM && beasts() < 0.3) jobId = TRIAL_MONSTERS[Math.floor(beasts() * TRIAL_MONSTERS.length)];
+    const pool = floor >= TRIAL_DEEP_MONSTERS_FROM ? TRIAL_MONSTERS_DEEP : TRIAL_MONSTERS;
+    if (!isLeader && floor >= TRIAL_MONSTERS_FROM && beasts() < 0.3) jobId = pool[Math.floor(beasts() * pool.length)];
     roster.push({
       name: isLeader ? `${sign} Warden` : `${sign} ${TITLES[jobId]}`,
       jobId: isLeader ? 'dragoon' : jobId,

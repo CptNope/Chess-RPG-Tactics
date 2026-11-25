@@ -35,7 +35,8 @@ export const WORLD_NODES: WorldNode[] = [
   { id: 'thornwood', name: SKIRMISHES.thornwood.name, kind: 'skirmish', skirmishId: 'thornwood', x: 0.37, y: 0.21, blurb: 'A river crossing in the northern woods, held by bandits.' },
   { id: 'shrine', name: SKIRMISHES.shrine.name, kind: 'skirmish', skirmishId: 'shrine', x: 0.66, y: 0.68, blurb: 'A flooded chapel at the edge of the mire, where a cult gathers.' },
   { id: 'ridge', name: SKIRMISHES.ridge.name, kind: 'skirmish', skirmishId: 'ridge', x: 0.88, y: 0.78, blurb: 'An old watch-fort on the cliffs below the summit, its signal fire still kept.' },
-  { id: 'hollow', name: SKIRMISHES.hollow.name, kind: 'skirmish', skirmishId: 'hollow', x: 0.7, y: 0.38, blurb: 'A wooded hollow under the high pass, where the howling carries for miles.' }
+  { id: 'hollow', name: SKIRMISHES.hollow.name, kind: 'skirmish', skirmishId: 'hollow', x: 0.7, y: 0.38, blurb: 'A wooded hollow under the high pass, where the howling carries for miles.' },
+  { id: 'barrow', name: SKIRMISHES.barrow.name, kind: 'skirmish', skirmishId: 'barrow', x: 0.42, y: 0.52, blurb: 'An old kings\' grave-mound gone to briars, between the ruins and the battlement.' }
 ];
 
 /** Roads the party walks between locations. */
@@ -55,7 +56,9 @@ export const WORLD_ROADS: [string, string][] = [
   ['market', 'harbor'],
   ['market', 'isle'],
   ['thornwood', 'cape'],
-  ['battlement', 'hollow']
+  ['battlement', 'hollow'],
+  ['ruins', 'barrow'],
+  ['barrow', 'battlement']
 ];
 
 export const worldNode = (id: string): WorldNode | undefined => WORLD_NODES.find((n) => n.id === id);
