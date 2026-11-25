@@ -38,6 +38,8 @@ export interface WorldState {
   merchant: MerchantVisit | null;
   /** The camp scene waiting to be played (0.21.0), or null. */
   camp: { title: string } | null;
+  /** How many camp nights this save remembers, to watch again (0.39.0). */
+  memories: number;
   /** The market's recruiting board (0.25.0). */
   recruits: RecruitOffer[];
   /** How many units the squad has. */
@@ -56,6 +58,8 @@ export interface WorldHost {
   buyFromMerchant(id: string): boolean;
   /** Plays the waiting camp scene. */
   makeCamp(): void;
+  /** Lists the remembered camp nights, to watch one again (0.39.0). */
+  memories(): void;
   /** Hires a hopeful from the recruiting board (0.25.0). False when it can't be done. */
   hire(slot: number): boolean;
   /** Opens the barracks: pick the party, dismiss hired units (0.25.0). */
@@ -248,6 +252,13 @@ export class WorldMap {
       go.textContent = `Sit by the fire (+${CAMP_JP} JP each)`;
       go.addEventListener('click', () => { this.host.blip(); this.host.makeCamp(); });
       box.append(t, go);
+    } else if (st.memories > 0) {
+      // Camp nights already seen can be watched again (0.39.0)
+      const again = document.createElement('button');
+      again.className = 'wm-action wm-memories';
+      again.textContent = `📖 Memories by the fire (${st.memories})`;
+      again.addEventListener('click', () => { this.host.blip(); this.host.memories(); });
+      add('div', 'wm-camp-again', '').append(again);
     }
 
     add('h3', 'wm-place', node.name);

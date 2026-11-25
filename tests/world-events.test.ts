@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { ITEMS, MERCHANT_ITEMS, RARE_DROP_POOL, STARTING_ARMORY } from '../src/data/items';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
-import { CAMP_SCENES, pendingCamp, sanitizeCampSeen } from '../src/data/camp';
+import { CAMP_SCENES, campMemories, pendingCamp, sanitizeCampSeen } from '../src/data/camp';
 import { SHOP_PRICE_CAP, UNIQUE_ITEMS, gearSaleBlock, shopStock } from '../src/core/Economy';
 import { EARLY_MARKUP, merchantStops, merchantVisit, merchantVisitIndex } from '../src/core/Merchant';
 import { SKIRMISHES, missingTrophies, skirmishOpen } from '../src/core/Skirmish';
@@ -122,6 +122,17 @@ describe('camp scenes (0.21.0)', () => {
     expect(sanitizeCampSeen(undefined, ACT1)).toEqual(['chapter_1', 'chapter_2a']);
     expect(pendingCamp(ACT1, sanitizeCampSeen(undefined, ACT1))?.chapterId).toBe('chapter_3');
     expect(sanitizeCampSeen(['chapter_1', 'chapter_1', '__proto__', 7, 'chapter_99', 'nope'], ACT1)).toEqual(['chapter_1']);
+  });
+
+  it('remembers every camp night seen, in story order, through New Game+ (0.39.0)', () => {
+    // A save from before 0.39 remembers what it has seen this playthrough
+    expect(campMemories(undefined, ['chapter_2a', 'chapter_1'])).toEqual(['chapter_1', 'chapter_2a']);
+    // New Game+ clears campSeen but not the memories
+    const kept = campMemories(['chapter_1', 'chapter_2a', 'chapter_3'], []);
+    expect(kept).toEqual(['chapter_1', 'chapter_2a', 'chapter_3']);
+    expect(campMemories(kept, ['chapter_2b'])).toEqual(['chapter_1', 'chapter_2a', 'chapter_2b', 'chapter_3']);
+    // Junk and duplicates are dropped
+    expect(campMemories(['chapter_1', 'chapter_1', '__proto__', 7, 'chapter_99'], [])).toEqual(['chapter_1']);
   });
 
   it('the JP a scene pays goes into the job the unit is in', () => {

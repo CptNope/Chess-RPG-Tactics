@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.39.0] - 2026-11-25
+
+### Added
+- **Memories by the fire.** Camp scenes can be watched again. Once you've seen one, the world map's panel shows **📖 Memories by the fire**: every camp night this save has seen, in story order, even from earlier playthroughs before New Game+. Picking one plays it as it was. A second viewing pays no JP, and the scene's place in the story doesn't change.
+
+### Developer
+- `campMemories` in the save (sanitized to real scenes, in story order; a save from before 0.39 remembers what it saw this playthrough). New Game+ keeps it, a new game clears it. 1 new test (291 total).
+
 ## [0.38.0] - 2026-11-25
 
 ### Added — effects per ability

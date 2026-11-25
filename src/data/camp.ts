@@ -153,6 +153,16 @@ export function pendingCamp(cleared: string[], seen: string[]): CampScene | null
 }
 
 /**
+ * Camp nights remembered (0.39.0): every scene seen in any playthrough of this save, in story
+ * order. Unlike `campSeen`, New Game+ doesn't clear them, so they can be watched again from the
+ * world map. A save from before 0.39 remembers what it has seen this playthrough.
+ */
+export function campMemories(raw: unknown, seen: string[]): string[] {
+  const ids = new Set([...(Array.isArray(raw) ? raw : []), ...seen].filter((id): id is string => typeof id === 'string' && has(CAMP_SCENES, id)));
+  return Object.keys(CAMP_SCENES).filter((id) => ids.has(id));
+}
+
+/**
  * Seen scenes from a save, kept to real ones. A save from before 0.21.0 has no list: everything it
  * has won counts as seen except its latest battle, so an old save gets one scene, not a backlog.
  */
