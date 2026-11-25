@@ -13,8 +13,9 @@ flowchart TB
         T2["Unit tests<br/>vitest · 275 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
+        T5["Browser play-tests<br/>npm run playtest · 7 checks"]
     end
-    subgraph Dev["Run during development (Playwright, not yet in CI)"]
+    subgraph Dev["Run during development (Playwright scripts)"]
         P1["Campaign bot<br/>AUTO plays every turn"]
         P2["Device matrix<br/>7 viewports × 11 screens"]
         P4["Workshop flow<br/>edit → play → end, 3 viewports"]
@@ -35,7 +36,8 @@ flowchart TB
 | Unit tests | `npm test` | ✅ | Rule regressions (combat, AI, pathing, data) |
 | Build smoke test | `npm run test:build` | ✅ | Missing assets in `dist/`; the service worker listing a file that isn't there; a manifest icon missing |
 | Docs check | `npm run docs:check` | ✅ | Data changed without regenerating the Content Reference |
-| Browser play-tests | Playwright scripts (see §3) | ❌ | Runtime errors, layout collisions, broken gestures |
+| Browser play-tests | `npm run build && npm run playtest` | ✅ | The built game in headless Chromium: page errors, a battle that never ends, screens that don't open, a phone layout that scrolls sideways (see §3) |
+| Release play-tests | Playwright scripts (see §3) | ❌ | Layout collisions, broken gestures, each release's new features |
 
 ---
 
@@ -75,6 +77,24 @@ Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `
 ---
 
 ## 3. Browser play-tests
+
+### In CI: `npm run playtest`
+
+`scripts/playtest.mjs` serves `dist/` with `vite preview`, opens it in headless Chromium (Playwright) and runs seven checks, each in a fresh page. Any page error or console error fails the check; a failed check saves a screenshot, which CI uploads as `playtest-failures`.
+
+| Check | What it does |
+| :--- | :--- |
+| Title screen starts a new game | No `?fast`: the title shows, **New Game** → **Normal** puts a battle on the field |
+| Chapter I plays to the end on AUTO | Every player turn on AUTO, dialogue skipped, until the result screen says VICTORY or DEFEAT |
+| Team screen | Jobs list, the five gear slots and the shop all render |
+| World map, market and side battle | After Chapter I: the map opens, the market and the Howling Hollow panels open, **Fight** starts a battle with wolves |
+| A later chapter loads with monsters | Chapter V loads with its wyvern and plays 120 steps: the enemy planner with items and caution |
+| Save and load | A save round-trips gil and the squad |
+| Phone | 390×844 with touch: a turn on AUTO, the Team screen, no sideways scrolling |
+
+Locally: `npm run build && npm run playtest` (about two minutes). `CHROME_PATH=/path/to/chrome` uses an installed Chrome instead of Playwright's Chromium (`npx playwright install chromium`).
+
+### Release play-tests
 
 These scripts ran during 0.7–0.8 development against `npm run preview` with `?debug&fast`. `?debug` exposes the game as `window.__tactics`; `?fast` speeds animations up about 8×.
 

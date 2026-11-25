@@ -106,7 +106,6 @@ flowchart LR
     subgraph NEXT["Next (0.31 – 0.33): depth"]
         direction TB
         X1["AI: combos with allies;<br/>simulate foe turns"]
-        X5["Play-tests in CI"]
     end
     subgraph LATER["Later (1.0+): breadth"]
         direction TB
@@ -184,7 +183,7 @@ quadrantChart
 | Balance | Chapter V is the lowest chapter in the simulation (under 15% at squad level 7–9 on Normal). The sim is pessimistic (no gear upgrades, no items), so a hand play-through decides whether it needs the Chapter III treatment | Medium | Now |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |
 | QA | High-quality graphics frame rate not yet measured on real GPUs (CI has none); Auto steps down if slow | Medium | Now (device QA) |
-| QA | Browser play-tests not in CI | Medium | Next |
+| QA | Browser play-tests in CI cover the main flows only (7 checks); each release's new features are still checked by hand-run scripts | Low | Add a check per feature as it lands |
 | App | The offline build is tested in headless Chrome only; iOS installs from Safari's Share menu (no Install button there) | Low | Now (install on a phone) |
 | App | An installed app picks up a new version on the next launch after it downloads, not instantly | Low | Fine for now |
 | Code | `main.ts` (2.3k lines) and `UIManager.ts` (1.2k lines) are large | Medium | Split battle flow, saves, the map host and input into modules |

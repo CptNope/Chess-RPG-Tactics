@@ -44,6 +44,23 @@ jobs:
       - name: Check generated docs are current
         run: npm run docs:check
 
+      # The built game in headless Chromium: a new game, Chapter I on AUTO to the end, the Team
+      # screen, the world map and a side battle, Chapter V, save and load, and a phone layout.
+      # Any page error fails the build (scripts/playtest.mjs).
+      - name: Install Chromium for the play-tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser play-tests
+        run: npm run playtest
+
+      - name: Upload play-test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playtest-failures
+          path: playtest-*.png
+          retention-days: 14
+
       # The same build, zipped for itch.io (relative paths, no remote fonts or scripts)
       - name: Package the itch.io HTML5 zip
         run: node scripts/package-itch.mjs

@@ -12,7 +12,8 @@
     "build:itch": "npm run build && node scripts/package-itch.mjs",
     "balance": "vite-node scripts/balance-sim.ts",
     "docs:gen": "vite-node scripts/gen-docs.ts",
-    "docs:check": "vite-node scripts/gen-docs.ts --check"
+    "docs:check": "vite-node scripts/gen-docs.ts --check",
+    "playtest": "node scripts/playtest.mjs"
   },
   "dependencies": {
     "@fontsource/press-start-2p": "^5.3.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.170.0",
+    "playwright": "^1.49.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vitest": "^2.1.9"
