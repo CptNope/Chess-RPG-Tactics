@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.40.0] - 2026-11-25
+
+### Added
+- **Remappable controls.** On the Controls screen (**H**, or View/Back on a controller), every key and controller button is now a button: press it, then the new key or button. **Reset controls to defaults** puts everything back. Bindings are kept per browser.
+  - Fixed: the cursor keys, Enter, Space, Esc and Tab on the keyboard, and the d-pad, sticks and triggers on a controller. They move, confirm and cancel everywhere, so nobody can lock themselves out.
+  - Nothing is left unbound. A key taken from another action gives that action your old key, and a controller button swaps with whichever action had it, so Confirm and Cancel can't both end up on one button.
+  - The keyboard and controller cards now list the controls you actually have.
+
+### Changed
+- PlayStation buttons are named in words on the Controls screen (Cross, Circle, Square, Triangle), since the pixel font has no symbols for them.
+
+### Developer
+- `input/Bindings.ts` (defaults, `rebindKey`, `rebindButton`, `sanitizeBindings`, storage), `ui/ControlsPanel.ts`; `GamepadInput.setButtons` and `captureButton`. 6 new tests (297 total).
+
 ## [0.39.0] - 2026-11-25
 
 ### Added

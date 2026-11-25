@@ -305,7 +305,7 @@ Unlocked once Chapter III is won. Enter at the **Gate of Trials** on the world m
   <img src="images/phone-landscape.webp" alt="Phone landscape layout" width="440">
 </p>
 
-Press **H**, the **?** button, or **View/Back** on a controller in-game for the full list.
+Press **H**, the **?** button, or **View/Back** on a controller in-game for the full list. **Change any of them there** (0.40): press a key or button on the list, then the new one. The cursor keys, Enter, Space, Esc, the d-pad, sticks and triggers stay fixed. Taking a key from another action gives that action your old key, so nothing is left unbound, and a controller button swaps with whichever action had it. **Reset controls to defaults** puts everything back. Bindings are kept per browser.
 
 **Graphics:** Menu → Graphics cycles Auto, High, Medium and Low. Auto uses Medium on phones and High elsewhere, and lowers itself if the game starts to stutter.
 

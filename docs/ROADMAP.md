@@ -58,6 +58,7 @@ timeline
         0.37.0 : Reserve training
         0.38.0 : Effects per ability
         0.39.0 : Memories by the fire
+        0.40.0 : Remappable controls
 ```
 
 | Version | Theme | Highlights |
@@ -70,6 +71,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.40 | Remappable controls | Every key and controller button on the Controls screen can be changed (the cursor keys, Enter, Space, Esc, d-pad, sticks and triggers stay fixed); clashes swap rather than unbind; kept per browser |
 | 0.39 | Memories by the fire | Camp scenes seen in any playthrough of a save can be watched again from the world map, in story order (no JP the second time) |
 | 0.38 | Effects per ability | Arrows and bullets fly from shooter to target (muzzle flash, a shotgun fan for Scattershot); spears thrust, fists uppercut, whips crack, beasts claw, the Brute smashes; ice and lightning area spells burst over the area; Jump, Flash Powder and the Gunner's rounds have their own looks. An AI teamwork experiment for Hard was measured, changed nothing, and was shelved |
 | 0.37 | Reserve training | Units left out of the party train at camp: half a share of every win (+20 EXP, +30 JP), the same as a party member who fell (raised from 15 EXP and 20 JP); a RESERVE row on the spoils screen |
@@ -106,7 +108,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.39.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.40.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -152,7 +154,6 @@ flowchart LR
 | :--- | :---: |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |
-| Remappable keyboard and controller bindings | M |
 | Localization (strings out of code) | M |
 | Asynchronous online duels (exchange turns via a back end) | XL |
 
