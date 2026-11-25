@@ -151,7 +151,8 @@ export class CombatEngine {
   ): CombatForecast {
     const isSelf = attacker.id === target.id;
     const facingType = isSelf ? 'front' : this.getFacingType(attacker.x, attacker.z, target);
-    const heightAdvantage = attackerHeight - targetHeight;
+    // A gun's shot is as good uphill as down (0.36.0)
+    const heightAdvantage = ability.ignoresHeight ? 0 : attackerHeight - targetHeight;
     const supportive = this.isSupportive(ability);
 
     // Base hit chance, modified by facing, elevation and the target's gear evasion
@@ -683,6 +684,21 @@ export class CombatEngine {
           status: 'sleep',
           label: 'SLEEP',
           description: `${target.name} turns the blow into a dance; ${attacker.name} stares, spellbound, and falls asleep!`
+        };
+      }
+      case 'gu_return_fire': {
+        // A gunner shoots back at a ranged attacker within the gun's reach (0.36.0)
+        const gun = target.equipment.weapon;
+        if (dist < 2 || gun?.weaponType !== 'gun' || attacker.isDead || target.isDead || rng() * 100 > 50) return undefined;
+        if (dist > JobSystem.gunRange(target)) return undefined;
+        const shot = Math.max(1, Math.round(JobSystem.getAttackPower(target) * 2.5));
+        this.damage(attacker, shot);
+        return {
+          name: 'Return Fire',
+          type: 'counter_attack',
+          target: attacker,
+          damage: shot,
+          description: `${target.name} returns fire at ${attacker.name} for ${shot} DMG!`
         };
       }
       case 'ta_snarl': {

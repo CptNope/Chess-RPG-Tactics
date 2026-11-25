@@ -326,6 +326,37 @@ export const ITEMS: Record<string, Item> = {
     range: 1,
     traits: { boost: ['holy'] }
   },
+  // Guns (0.36.0): for the Gunner. A shot reaches any height in range.
+  flintlock: {
+    id: 'flintlock',
+    name: 'Flintlock Pistol',
+    slot: 'weapon',
+    weaponType: 'gun',
+    description: 'A short pistol with a brass lock. Reaches 4 tiles, at any height.',
+    price: 300,
+    stats: { attack: 7 },
+    range: 4
+  },
+  long_musket: {
+    id: 'long_musket',
+    name: 'Long Musket',
+    slot: 'weapon',
+    weaponType: 'gun',
+    description: 'A long-barrelled musket, slow to swing about. Reaches 6 tiles, at any height.',
+    price: 540,
+    stats: { attack: 10, speed: -1 },
+    range: 6
+  },
+  thunderlock: {
+    id: 'thunderlock',
+    name: 'Thunderlock Rifle',
+    slot: 'weapon',
+    weaponType: 'gun',
+    description: 'A rifled barrel and a lock that never misfires. Reaches 6 tiles, at any height, and hits like a thunderclap.',
+    price: 880,
+    stats: { attack: 13, speed: 1 },
+    range: 6
+  },
   siege_crossbow: {
     id: 'siege_crossbow',
     name: 'Siege Crossbow',

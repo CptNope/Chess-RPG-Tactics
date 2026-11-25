@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.36.0] - 2026-11-25
+
+### Added — the Gunner
+- **A new advanced job, the Gunner** (Archer Lv 3 and Thief Lv 2). A gun's shot reaches any tile in range however high or low, and high ground neither helps nor hurts it: no bonus from above, no penalty from below. A gunner in the valley hits the archers on the cliff just as hard.
+- **Abilities:** Steady Shot (a free heavy shot, reach 5), Hobble Shot (Slow), Flash Powder (Blind in an area), Breaching Round (Breach), Scattershot (area damage that hits your own side too), **Return Fire** (reaction: 50% to shoot back at an attacker 2+ tiles away and in reach), **Long Barrel** (support: a gun's Attack reaches 2 tiles further). Mastery +1/+2 ATK. Master signature: **Thunder Volley** (reach 7, area 1, Breach).
+- **Guns** for the Gunner alone: Flintlock Pistol (reach 4), Long Musket (reach 6), Thunderlock Rifle (reach 6, ATK 13), on the market's weapon shelves as the story goes on.
+- A three-cornered hat, a long coat with brass buttons, and a musket that fires with a flash and a puff of smoke, plus a portrait.
+- Gunners turn up on the recruiting board from Chapter IV and in the Trials of the Zodiac (the "Musketeer"). Veteran enemy gunners return fire.
+
+### Balance
+- With Tobin as a Gunner instead of an Archer, the balance sim's results are about the same in Chapters III, V and IX. In Chapter VII the auto-battler gets him shot: it fires from low ground in reach of melee foes. That's a known AI issue on the roadmap.
+
+### Developer
+- `Ability.ignoresHeight`; `WeaponType` `gun`; `JobSystem.gunRange`. The balance sim's `GUNNER=1` and `FULLKIT=1` compare jobs like for like.
+- 4 new tests (282 total). [ADR 0043](docs/adr/0043-gunner.md).
+
 ## [0.35.0] - 2026-11-24
 
 ### Added — Act III's finale

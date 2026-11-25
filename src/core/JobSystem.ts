@@ -24,7 +24,8 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   chemist: { reaction: 'ch_field_dressing' },
   bard: { reaction: 'bd_refrain' },
   dancer: { reaction: 'dn_captivate' },
-  tamer: { reaction: 'ta_snarl' }
+  tamer: { reaction: 'ta_snarl' },
+  gunner: { reaction: 'gu_return_fire' }
 };
 
 /** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
@@ -57,7 +58,8 @@ export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; m
   chemist: { stat: 'hp', veteran: 8, master: 20 },
   bard: { stat: 'mp', veteran: 8, master: 20 },
   dancer: { stat: 'speed', veteran: 1, master: 2 },
-  tamer: { stat: 'hp', veteran: 10, master: 25 }
+  tamer: { stat: 'hp', veteran: 10, master: 25 },
+  gunner: { stat: 'attack', veteran: 1, master: 2 }
 };
 const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
 /** "+10 HP", "+1 ATK"… */
@@ -186,6 +188,10 @@ export class JobSystem {
       initialGear.accessory = ITEMS.feather_boots;
     } else if (jobId === 'tamer') {
       initialGear.weapon = ITEMS.drovers_whip;
+      initialGear.head = ITEMS.leather_cap;
+      initialGear.body = ITEMS.leather_vest;
+    } else if (jobId === 'gunner') {
+      initialGear.weapon = ITEMS.flintlock;
       initialGear.head = ITEMS.leather_cap;
       initialGear.body = ITEMS.leather_vest;
     }
@@ -704,11 +710,21 @@ export class JobSystem {
     unit.usedSignatures = [...(unit.usedSignatures || []).filter((id) => id !== ability.id), ability.id];
   }
 
+  /** How far the unit's gun reaches with its Attack (0 without a gun): Long Barrel adds 2 (0.36.0). */
+  public static gunRange(unit: Unit): number {
+    const gun = unit.equipment.weapon;
+    if (gun?.weaponType !== 'gun') return 0;
+    return (gun.range || 1) + (unit.equippedAbilities.support === 'gu_long_barrel' ? 2 : 0);
+  }
+
   public static getCombatActionAbilities(unit: Unit) {
     const actions = [BASIC_ATTACK];
 
     // If unit is equipped with a spear or bow, update basic attack range!
-    if (unit.equipment.weapon) {
+    if (unit.equipment.weapon?.weaponType === 'gun') {
+      // A gun reaches any height in range, and Long Barrel reaches further (0.36.0)
+      actions[0] = { ...BASIC_ATTACK, range: this.gunRange(unit), heightTolerance: 99, ignoresHeight: true };
+    } else if (unit.equipment.weapon) {
       if (unit.equipment.weapon.range && unit.equipment.weapon.range > 1) {
         actions[0] = {
           ...BASIC_ATTACK,

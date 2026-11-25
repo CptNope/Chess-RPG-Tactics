@@ -29,7 +29,7 @@ export const HIRED_PREFIX = 'hire-';
 export const RECRUIT_JOBS: { from: number; jobs: string[] }[] = [
   { from: 0, jobs: ['squire', 'knight', 'archer', 'black_mage', 'white_mage', 'monk', 'thief', 'chemist'] },
   { from: 2, jobs: ['dragoon', 'geomancer', 'ninja', 'time_mage', 'oracle', 'summoner', 'tamer'] },
-  { from: 4, jobs: ['paladin', 'spellblade', 'bard', 'dancer'] }
+  { from: 4, jobs: ['paladin', 'spellblade', 'bard', 'dancer', 'gunner'] }
 ];
 
 /** Original names for hopefuls (none belongs to a story character). */
@@ -60,7 +60,8 @@ export const RECRUIT_PITCH: Record<string, string> = {
   spellblade: 'Steel or sorcery? Why choose?',
   bard: 'Every company needs a song. Yours is about to get better.',
   dancer: 'They watch my feet. They never see the blades.',
-  tamer: 'The last wolf that bit me follows me home now. Point me at the next one.'
+  tamer: 'The last wolf that bit me follows me home now. Point me at the next one.',
+  gunner: 'Keep your heads down and your ears covered. I hit what I point at.'
 };
 
 export interface RecruitOffer {
