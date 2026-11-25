@@ -5,7 +5,7 @@
 [![Support the game](https://img.shields.io/badge/support-donate%20on%20itch-ff69b4?logo=githubsponsors&logoColor=white)](https://cptnope.itch.io/chess-rpg-tactics/donate)
 <br />
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.36.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.36.1-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)

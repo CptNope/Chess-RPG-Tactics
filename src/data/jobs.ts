@@ -2078,7 +2078,7 @@ export const JOBS: Record<string, Job> = {
       mp: 0.75,
       attack: 1.1,
       magic: 0.7,
-      speed: 1.0
+      speed: 1.05
     },
     prerequisites: [{ jobId: 'archer', level: 3 }, { jobId: 'thief', level: 2 }],
     abilities: [

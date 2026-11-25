@@ -64,7 +64,7 @@ quadrantChart
     Bard: [0.25, 0.62]
     Dancer: [0.62, 0.8]
     Beast Tamer: [0.7, 0.5]
-    Gunner: [0.82, 0.4]
+    Gunner: [0.8, 0.6]
 ```
 
 | Job | Plays like | Signature tools |
