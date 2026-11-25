@@ -13,6 +13,7 @@ import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize }
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, missingTrophies, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { MERCHANT_NAME, MerchantSales, merchantVisit, merchantVisitIndex, sanitizeMerchantSales } from './core/Merchant';
 import { beastFromTamed, isBeast } from './core/Taming';
+import { PARTY_EXP, PARTY_JP, RESERVE_EXP, RESERVE_JP, trainReserve } from './core/Reserve';
 import { farShoreOpen } from './core/World';
 import { LEADER_ID, MAX_SQUAD, PARTY_SIZE, RecruitHires, chooseParty, hireRecruit, isHired, recruitBoard, sanitizeParty, sanitizeRecruitHires } from './core/Recruits';
 import { CAMP_JP, pendingCamp, sanitizeCampSeen } from './data/camp';
@@ -2116,8 +2117,9 @@ class TacticsGame {
     const rows: string[] = [];
     for (const u of this.deployedUnits()) {
       const survived = !u.isDead;
-      const exp = survived ? 40 : 15;
-      const jp = survived ? 60 : 20;
+      // The fallen take half a share, the same as the reserve (0.37.0; was 15 EXP and 20 JP)
+      const exp = survived ? PARTY_EXP : RESERVE_EXP;
+      const jp = survived ? PARTY_JP : RESERVE_JP;
       const jobGain = JobSystem.gainJp(u, Math.round(jp * (u.equippedAbilities.support === 'sq_jp_boost' ? 1.5 : 1)));
       this.announceJobGain(u, jobGain, false);
       const jobNews = (this.jobNews[u.id] || []).map((t) => `<span class="levelup jobup">${esc(t)}</span>`).join('');
@@ -2127,6 +2129,23 @@ class TacticsGame {
         <span><span class="result-name">${esc(u.name)}</span>${levels > 0 ? `<span class="levelup">LEVEL UP! Lv ${u.level}</span>` : ''}${jobNews}</span>
         <span class="result-detail">${survived ? '' : 'Fell in battle · '}+${exp} EXP · +${jp} JP${killsText}</span>
       </div>`);
+    }
+
+    // The reserve trains at camp and takes half a share (0.37.0); a Workshop scenario has no camp
+    if (this.mode !== 'custom') {
+      const bench = trainReserve(this.squad, this.deployed);
+      if (bench.length) {
+        const news = bench.map((g) => {
+          const notes: string[] = [];
+          if (g.levels > 0) notes.push(`LEVEL UP! Lv ${g.unit.level}`);
+          if (g.job.leveledTo) notes.push(`${JOBS[g.unit.jobId]?.name || g.unit.jobId} ${g.job.leveledTo >= MAX_JOB_LEVEL ? 'MASTER' : `Lv ${g.job.leveledTo}`}`);
+          if (g.job.mastery) notes.push(`mastery ${g.job.mastery}`);
+          for (const id of g.job.unlocked) notes.push(`can become a ${JOBS[id].name}`);
+          if (notes.length) this.ui.addLogEntry(`[CAMP] ${g.unit.name} trained in reserve: ${notes.join(', ')}.`, 'system');
+          return `${esc(g.unit.name)}${notes.length ? ` <span class="levelup">${esc(notes.join(' · '))}</span>` : ''}`;
+        });
+        rows.push(`<div class="result-loot"><b>RESERVE:</b> ${news.join(', ')}<br><small>Trained at camp: +${RESERVE_EXP} EXP and +${RESERVE_JP} JP each (more with JP Boost), half a share for sitting out.</small></div>`);
+      }
     }
 
     const newItems: string[] = [];
@@ -2399,7 +2418,7 @@ class TacticsGame {
       const joinNote = newcomer ? `<p class="party-count">${esc(newcomer.name)} joins you in this battle and takes a place.</p>` : '';
       this.ui.showResultModal({
         title: go ? 'CHOOSE YOUR PARTY' : 'BARRACKS',
-        subtitle: `${PARTY_SIZE} fight at a time. Rowan leads and always goes. Units in reserve keep their levels, jobs and gear, but earn nothing while they sit out.`,
+        subtitle: `${PARTY_SIZE} fight at a time. Rowan leads and always goes. Units in reserve keep their levels, jobs and gear, and train at camp: half a share of each win's EXP and JP.`,
         bodyHtml: `${joinNote}<p class="party-count">In the party: ${pick.length + (newcomer ? 1 : 0)} / ${PARTY_SIZE} · Barracks ${this.squad.length} / ${MAX_SQUAD}</p><div class="party-list">${cards}</div>`,
         buttons: go
           ? [{ label: `March with ${pick.length + (newcomer ? 1 : 0)}`, primary: true, onClick: () => { this.party = [...pick]; this.ui.hideResultModal(); go(); } },

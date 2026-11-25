@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.37.0] - 2026-11-25
+
+### Added — reserve training
+- **The reserve trains at camp.** Squad members left out of the party now earn half a share of every win: **+20 EXP and +30 JP** in their current job (JP Boost counts). This covers story battles, side battles and the Trials, but not Workshop scenarios. A big squad's bench no longer falls further behind with every battle.
+- The spoils screen has a **RESERVE** row listing who trained and any level-up, job level, mastery or new job it brought. The battle log notes each one.
+- The Choose your party screen says so.
+
+### Changed
+- **A party member who falls now takes the same half share**, 20 EXP and 30 JP (was 15 and 20), plus 10 EXP a KO. Sitting out never pays better than fighting.
+
+### Developer
+- `core/Reserve.ts` (`trainReserve`, `reserveOf`, `PARTY_EXP`, `PARTY_JP`, `RESERVE_EXP`, `RESERVE_JP`). 4 new tests (286 total). [ADR 0044](docs/adr/0044-reserve-training.md), superseding ADR 0033's "reserve earns nothing".
+
 ## [0.36.1] - 2026-11-25
 
 ### Fixed

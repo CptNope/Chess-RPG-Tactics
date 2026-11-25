@@ -230,11 +230,13 @@ stateDiagram-v2
 | Any action | 10 | 24 (36 with JP Boost) |
 | Action that scores a KO | +20 | — |
 | Battle won, unit survived | 40 + 10/KO | 60 |
-| Battle won, unit fell | 15 + 10/KO | 20 |
+| Battle won, unit fell | 20 + 10/KO (0.37; was 15) | 30 (was 20) |
+| Battle won, unit in reserve (0.37) | 20 | 30 |
 | Battle lost | — (EXP/JP earned during the fight is kept) | — |
 
 * **100 EXP = 1 level.** Speed rises by 1 every third level (`8 + ⌊level / 3⌋`).
-* **JP belongs to a job.** Points earned as a Knight buy Knight abilities only.
+* **JP belongs to a job.** Points earned as a Knight buy Knight abilities only. JP Boost multiplies the spoils' JP by 1.5 too.
+* **Reserve training (0.37):** squad members left out of the party train at camp and take half a share of each win, the same as a party member who fell. Before 0.37 they earned nothing ([ADR 0044](adr/0044-reserve-training.md)). The rules are in `src/core/Reserve.ts`.
 * **Persistence:** levels, JP, learned abilities, equipped slots and gear carry over between chapters, into New Game+ and into the Trials.
 
 ---

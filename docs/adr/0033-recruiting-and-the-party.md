@@ -13,7 +13,7 @@ Accepted (0.25.0, 2026-11-24).
 3. **Hired through the normal unit path.** `hireRecruit` is `createUnit` (job gear, prerequisites, first ability) plus `gainJp(level × 40)` in the job. A hired unit is an ordinary squad member, saved and loaded like anyone else. Its id starts with `hire-`, which is what makes it dismissable.
 4. **A barracks of ten, a party of six.** `chooseParty` puts the leader (Rowan) first, then anyone required (a story recruit in the battle they join), then the player's last pick in order, or the squad in order if none, up to six. When the squad fits, everyone goes and no screen appears.
 5. **The party screen sits in front of the battle,** wrapping the world map's march, side battle and Trials actions. It's the result modal with cards (a toggle each, Dismiss for hires in the Barracks), so focus navigation, keyboard and controller work as in the save-slot screen. New Game+, Workshop battles and Retry reuse the saved pick without asking.
-6. **Reserve earns nothing.** Spoils (EXP, JP) go to whoever deployed. That keeps the choice meaningful and the levels of a big squad from running away.
+6. **Reserve earns nothing.** Spoils (EXP, JP) go to whoever deployed. That keeps the choice meaningful and the levels of a big squad from running away. *(Superseded in 0.37.0 by [ADR 0044](0044-reserve-training.md): the reserve takes half a share.)*
 
 ## Consequences
 - **Gil has a second sink**, and players can try a job by hiring rather than retraining.
