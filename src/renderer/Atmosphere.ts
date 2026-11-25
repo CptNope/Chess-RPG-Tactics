@@ -73,6 +73,15 @@ export const ATMOSPHERES: Record<string, AtmospherePreset> = {
     rimColor: 0x9fc8ff, rimIntensity: 0.6,
     exposure: 1.05, bloom: 0.45, torchColor: 0xffa040
   },
+  // The Drowned City (0.35.0): pale towers under a green moon, the sea's light still in the stone
+  drowned_city: {
+    skyTop: '#06121c', skyHorizon: '#2c6f6a', skyBottom: '#030a10', stars: 140,
+    fog: 0x1d4a4f, fogNear: 34, fogFar: 82,
+    hemiSky: 0x9fe8dc, hemiGround: 0x16303a, hemiIntensity: 1.1,
+    sunColor: 0xc8fff0, sunIntensity: 1.5, sunDir: [-8, 34, 10],
+    rimColor: 0x5fd3c6, rimIntensity: 0.9,
+    exposure: 1.05, bloom: 0.75, torchColor: 0x5fd3c6
+  },
   // Zodiac Summit: violet aurora above the clouds
   zodiac_summit: {
     skyTop: '#0a0420', skyHorizon: '#5b2a7a', skyBottom: '#120a24', stars: 240,

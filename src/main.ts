@@ -2487,7 +2487,8 @@ class TacticsGame {
 
   /** The market trades only while the party stands at it on the world map. */
   private marketOpen(): boolean {
-    return this.world.isOpen && this.world.location === 'market';
+    // The ship's quartermaster at the Anchorage trades too (0.35.0)
+    return this.world.isOpen && (this.world.location === 'market' || this.world.location === 'anchorage');
   }
 
   /** Buys one consumable. False when the market is closed, the purse is short or the stack is full. */

@@ -939,7 +939,9 @@ const NAMED: Record<string, Face> = {
   corvin: { job: 'dragoon', enemy: false, hair: '#2c3446', hairStyle: 'spiky', skin: '#d9a77c', eyes: '#1f78b4', scar: true, helmetOff: true },
   bria: { job: 'geomancer', enemy: false, hair: '#5f8f2a', hairStyle: 'braid', skin: '#c99068', eyes: '#7a4a1e' },
   // Act III (0.34.0): a Beast Tamer from the Far Shore
-  kestrel: { job: 'tamer', enemy: false, hair: '#7a2e1a', hairStyle: 'braid', skin: '#b9825a', eyes: '#c08a1e', scar: true }
+  kestrel: { job: 'tamer', enemy: false, hair: '#7a2e1a', hairStyle: 'braid', skin: '#b9825a', eyes: '#c08a1e', scar: true },
+  // Act III's last foe (0.35.0): the Regent's daughter, risen with the city
+  pale_heir: { job: 'summoner', enemy: true, hair: '#eef2f7', hairStyle: 'long', skin: '#e4ded8', eyes: '#5fd3c6', brows: '#c7d2e0' }
 };
 
 /** Every portrait id the game knows: named characters, ally jobs and `foe_<job>` for enemies. */

@@ -473,6 +473,25 @@ export const ITEMS: Record<string, Item> = {
     stats: { hp: 90, attack: 2 },
     traits: { guard: ['slow'] }
   },
+  // Act III finale (0.35.0)
+  pale_pearl: {
+    id: 'pale_pearl',
+    name: 'Pale Pearl',
+    slot: 'accessory',
+    description: 'A pearl from the Court\'s treasury, cold as the deep sea. It steadies the voice: Silence can\'t take hold.',
+    price: 720,
+    stats: { mp: 30, magic: 3, hp: 20 },
+    traits: { guard: ['silence'] }
+  },
+  tidecrown: {
+    id: 'tidecrown',
+    name: 'Tidecrown',
+    slot: 'accessory',
+    description: 'The Pale Heir\'s circlet of sea glass and silver. It keeps its wearer\'s head above any water: no Sleep, no Poison.',
+    price: 1200,
+    stats: { hp: 40, magic: 6, speed: 1 },
+    traits: { guard: ['sleep', 'poison'] }
+  },
   templar_mail: {
     id: 'templar_mail',
     armor: 'heavy',
@@ -615,6 +634,16 @@ export const ITEMS: Record<string, Item> = {
     price: 560,
     stats: { hp: 25, evasion: 6, move: 1 },
     traits: { guard: ['poison'] }
+  },
+  glasswing_lance: {
+    id: 'glasswing_lance',
+    name: 'Glasswing Lance',
+    slot: 'weapon',
+    weaponType: 'spear',
+    description: 'A lance tipped with a wyvern\'s glass-bright claw, won in the Glasswing Dunes. Light enough to vault with, long enough to strike from two tiles.',
+    price: 900,
+    stats: { attack: 14, speed: 1, jump: 1 },
+    range: 2
   },
   basilisk_eye: {
     id: 'basilisk_eye',

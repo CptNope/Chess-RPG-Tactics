@@ -260,12 +260,13 @@ describe('the world map', () => {
   });
 
   it('nothing is open once the story is won', () => {
-    const cleared = ['chapter_1', 'chapter_2b', 'chapter_3', 'chapter_4', 'chapter_5', 'chapter_6', 'chapter_7', 'chapter_8'];
+    const cleared = ['chapter_1', 'chapter_2b', 'chapter_3', 'chapter_4', 'chapter_5', 'chapter_6', 'chapter_7', 'chapter_8', 'chapter_9'];
     expect(storyFinished(cleared)).toBe(true);
+    expect(storyFinished(cleared.slice(0, 8))).toBe(false); // Frostfang Pass was the end in 0.34 only
     expect(storyFinished(cleared.slice(0, 6))).toBe(false); // the Regent is no longer the end (0.34.0)
     expect(storyFinished(['chapter_1', 'chapter_2b'])).toBe(false);
     expect(storyFinished(['chapter_1', 'chapter_2b', 'chapter_3'])).toBe(false); // the Summit is no longer the end
-    expect(openMissions('chapter_8', cleared)).toEqual([]);
+    expect(openMissions('chapter_9', cleared)).toEqual([]);
     expect(openMissions('chapter_1', cleared)).toEqual([]);
     expect(nodeState(worldNode('mire')!, 'chapter_6', cleared, true)).toBe('locked');
     expect(nodeState(worldNode('summit')!, 'chapter_6', cleared, true)).toBe('cleared');

@@ -80,7 +80,7 @@ describe('side battles', () => {
         expect(a).toEqual(b);
         expect(a.id).toBe(`skirmish_${id}`);
         expect(a.introDialogue.length).toBe(1);
-        expect(a.enemyRoster.length).toBe(wins >= SKIRMISH_MAX_HEAT ? 5 : 4);
+        expect(a.enemyRoster.length).toBe((SKIRMISHES[id].size ?? 4) + (wins >= SKIRMISH_MAX_HEAT ? 1 : 0)); // the Glasswing Dunes field five (0.35.0)
         const map = MAPS[a.mapId]();
         const seen = new Set<string>();
         const level = skirmishLevel(squad, wins);
@@ -254,9 +254,11 @@ describe('Act II (0.17.0)', () => {
       order.push(at.id);
     }
     // Act III (0.34.0) runs on from Chapter VI across the sea
-    expect(order).toEqual(['chapter_4', 'chapter_5', 'chapter_6', 'chapter_7', 'chapter_8']);
-    expect(CAMPAIGN_CHAPTERS.chapter_8.choices).toBeUndefined();
-    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => !c.choices?.length).map((c) => c.id)).toEqual(['chapter_8']);
+    expect(order).toEqual(['chapter_4', 'chapter_5', 'chapter_6', 'chapter_7', 'chapter_8', 'chapter_9']);
+    expect(CAMPAIGN_CHAPTERS.chapter_9.choices).toBeUndefined();
+    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => !c.choices?.length).map((c) => c.id)).toEqual(['chapter_9']);
+    // The finale has its own closing screen (0.35.0)
+    expect(CAMPAIGN_CHAPTERS.chapter_9.epilogue?.title).toBeTruthy();
   });
 
   it('a squad that finished the first act finds Chapter IV waiting, and nothing behind it reopens', () => {

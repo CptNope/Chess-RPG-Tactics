@@ -115,6 +115,29 @@ export const CAMP_SCENES: Record<string, CampScene> = {
       L('Corvin', 'And the Pale Heir? Is she a neighbour too?', 'right'),
       L('Kestrel', 'She is the one who makes the neighbours run. Sleep. The pass is cold, and the Marshal does not sleep at all.')
     ]
+  },
+  // Act III finale (0.35.0)
+  chapter_8: {
+    chapterId: 'chapter_8',
+    title: 'The Top of the Pass',
+    lines: [
+      L('Corvin', 'You can hear the bells from up here. Under the water. Every quarter hour, like a clock.', 'right'),
+      L('Sable', 'The chart had a note in the margin. "The heir sleeps with the city." Someone woke her.'),
+      L('Maren', 'Or she woke herself. A whole kingdom under the sea, and her the last one breathing.', 'right'),
+      L('Bria', 'That is sad. It is still not a reason to drown the coast.'),
+      L('Rowan', 'Then we tell her so. Down the mountain in the morning.', 'right')
+    ]
+  },
+  chapter_9: {
+    chapterId: 'chapter_9',
+    title: 'The Ship Home',
+    lines: [
+      L('Tobin', 'Calm sea, this time. I could get used to this.', 'right'),
+      L('Kestrel', 'The dunes will keep without me for a season. I want to see this Larkmoor Market of yours.'),
+      L('Sable', 'Bring gold. The prices there are a crime, and I would know.', 'right'),
+      L('Maren', 'Grandmother was right about one thing. The people here remember the old kingdom. Now they can remember how it ended.'),
+      L('Rowan', 'Three acts and we are all still standing. Same time next year?', 'right')
+    ]
   }
 };
 

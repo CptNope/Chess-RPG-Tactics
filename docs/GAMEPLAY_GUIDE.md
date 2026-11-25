@@ -81,7 +81,8 @@ flowchart LR
     C5 --> C6["Chapter VI<br/>The Drowned Regent"]
     C6 -->|"Take ship for the Far Shore"| C7["Chapter VII<br/>The Saltglass Shore"]
     C7 --> C8["Chapter VIII<br/>Frostfang Pass"]
-    C8 --> E(["To be continued"])
+    C8 --> C9["Chapter IX<br/>The Pale Heir"]
+    C9 --> E(["Epilogue"])
     E --> NG["New Game+<br/>keep your squad"]
     E --> TR["Trials of the Zodiac<br/>endless"]
 ```
@@ -96,7 +97,8 @@ flowchart LR
 | V | Greywatch Isle | Tidecaller Maelis | — | Runeblade, plus a Warding Amulet for marching |
 | VI | Stormbreak Cape | The Drowned Regent | — | Dawnbringer, plus Templar Mail for marching |
 | VII | Saltglass Shore | Herald Isaine | Kestrel (Beast Tamer) | Saltglass Blade, plus a Frostfang Mail for marching |
-| VIII | Frostfang Pass | Marshal Hale | — | (the story continues in a later update) |
+| VIII | Frostfang Pass | Marshal Hale | — | A Pale Pearl for marching |
+| IX | The Drowned City | The Pale Heir | — | The Tidecrown (a relic) |
 
 **Act II** (Chapters IV to VI) is one road with bigger fights, and each battlefield asks something different:
 
@@ -112,9 +114,10 @@ If you finished the story before Act II existed, Chapter IV is waiting on your m
 
 * **Saltglass Shore:** dunes and a tidal channel. **Sand** is ordinary ground; the channel is crossed at one sandbar ford. The Court holds the old stone port in the north, and two monsters wait in the dunes and the wreck.
 * **Frostfang Pass:** terraces climbing to a fort. **Snow** costs 2 movement for everyone, so keep to the road or the west ledge.
+* **The Drowned City** (Chapter IX, the finale): pale streets between canals silted with weed (slow to wade), a plaza in the middle and a stair to the palace dais. The east canal has one bridge.
 * Geomancers get two new spells: **Dust Devil** on sand (Blind) and **Whiteout** on snow (Slow).
 
-To shop at Larkmoor Market, **⛵ Sail home** from the Anchorage, and sail back from Emberwick. Wenna the Pedlar stays in the realm. Chapter VIII ends the story for now: the Trials and New Game+ stay open after it.
+Since 0.35 the ship's quartermaster at the Anchorage trades from Larkmoor Market's stock (**◆ Buy & sell**). To hire recruits, **⛵ Sail home** to Emberwick and walk to the market. Wenna the Pedlar stays in the realm. Chapter IX ends the story; the Trials and New Game+ stay open after it.
 
 Each road also adds gear to your armory the moment you march down it ([details](CONTENT_REFERENCE.md#campaign)). The game autosaves at the start of every chapter and whenever you reach the world map.
 
@@ -144,7 +147,8 @@ flowchart LR
     R --- BB["⚑ Briar Barrow"] --- B
     H -. "⛵ after Chapter VI" .- A
     subgraph FS["The Far Shore (Act III)"]
-        A["⛵ The Anchorage"] --- SG["Saltglass Shore<br/>Chapter VII"] --- FP["Frostfang Pass<br/>Chapter VIII"]
+        A["⛵ The Anchorage<br/>ship's stores"] --- SG["Saltglass Shore<br/>Chapter VII"] --- FP["Frostfang Pass<br/>Chapter VIII"] --- DC["The Drowned City<br/>Chapter IX"]
+        A --- GD["⚑ Glasswing Dunes"] --- SG
     end
 ```
 
@@ -157,7 +161,7 @@ flowchart LR
 | ⚑ orange pin | A **side battle**: optional, and it can be fought again |
 | ★ Gate of Trials | Sealed until Chapter III is won |
 | 🎒 beside a pin | Wenna the Pedlar, the travelling merchant, is there |
-| ⛵ harbour | Ships between Emberwick Harbor and the Anchorage on the Far Shore, once Chapter VI is won |
+| ⛵ harbour | Ships between Emberwick Harbor and the Anchorage on the Far Shore, once Chapter VI is won. The Anchorage also trades (0.35) |
 
 * **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough.
 * **Side battles** are for gil, EXP and JP, and for practice when the story gets hard. They never move the story on.
@@ -169,6 +173,7 @@ flowchart LR
   | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja | Hold out for 6 rounds | Watchfire Helm (HP +40, no Sleep or Blind) |
   | Howling Hollow | After Chapter I | Monsters: wolves, a wyvern, oozes, wisps, a stone brute | Defeat them all | Wolfpelt Mantle (HP +25, Evasion +6, Move +1, no Poison) |
   | Briar Barrow (0.32) | After Chapter III | Monsters: bone knights, a basilisk, thornlings, a wisp | Defeat them all | Basilisk Eye (HP +15, MAG +4, Speed +1, no Immobilize or Slow) |
+  | Glasswing Dunes (0.35, Far Shore) | After Chapter VII | Monsters: a wyvern, a basilisk, thornlings, jackals, a golem, a drowned sentry (five of them, not four) | Defeat them all | Glasswing Lance (ATK +14, Speed +1, Jump +1, range 2) |
 
   Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after. The first win also brings the place's **trophy**, a piece of gear found nowhere else (it can't be sold).
 * **Monsters** (0.26) fight differently from people. They wear no gear and know all their tricks from the start ([full table](CONTENT_REFERENCE.md#monsters)):

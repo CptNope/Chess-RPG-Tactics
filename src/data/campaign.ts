@@ -315,10 +315,6 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER VIII',
     subtitle: 'Frostfang Pass',
     mapId: 'frostfang_pass',
-    epilogue: {
-      title: 'THE PASS IS OURS',
-      text: 'The Marshal has fallen, and the road over the mountains is open. Beyond it, white towers are rising from the sea, and the Pale Heir waits in the drowned city. Act III continues in a coming update. Until then, the Far Shore is yours to wander, and the Trials of the Zodiac stand open: endless generated battles with rare gear and a Warden boss every fifth floor.'
-    },
     introDialogue: [
       { speaker: 'Marshal Hale', portrait: 'foe_knight', portraitClass: '🛡', side: 'right', text: 'Far enough. Three hundred years my order has kept this pass for the true crown. We will keep it one more day.' },
       { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'Terraces all the way up, and the fort on top. The snow is deep off the road: two steps for one. Stay on the beaten track or take the west ledge.' },
@@ -331,6 +327,14 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The drowned city is rising. We rest, we gather what we can, and then we go down to meet her.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Together, like always. The Pale Heir has not met us yet.' }
     ],
+    choices: [
+      {
+        text: 'Go down to the drowned city and stop the Pale Heir before the old kingdom rises with it.',
+        nextChapterId: 'chapter_9',
+        rewardText: 'Armory: a Pale Pearl',
+        rewardItemIds: ['pale_pearl']
+      }
+    ],
     enemyRoster: [
       { name: 'Marshal Hale', jobId: 'knight', level: 11, x: 7, z: 1, isBoss: true },
       { name: 'Frost Wyvern', jobId: 'wyvern', level: 10, x: 10, z: 2 },
@@ -338,6 +342,41 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Court Seer', jobId: 'time_mage', level: 10, x: 6, z: 0 },
       { name: 'Pass Wolf', jobId: 'wolf', level: 10, x: 12, z: 6 },
       { name: 'Vael Revenant', jobId: 'bone_knight', level: 10, x: 4, z: 5 }
+    ]
+  },
+
+  // ACT III FINALE (0.35.0)
+  chapter_9: {
+    id: 'chapter_9',
+    title: 'CHAPTER IX',
+    subtitle: 'The Pale Heir',
+    mapId: 'drowned_city',
+    rewardItemIds: ['tidecrown'],
+    epilogue: {
+      title: 'THE SEA IS QUIET',
+      text: 'The Pale Heir is beaten, and the drowned city sinks back into the bay, bells and all. The old kingdom stays under the water. The Court is broken, Kestrel\'s village can be rebuilt, and the ship is waiting at the Anchorage to take the squad home. Act III is complete. The Far Shore stays open to wander, and the Trials of the Zodiac stand open: endless generated battles with rare gear and a Warden boss every fifth floor.'
+    },
+    introDialogue: [
+      { speaker: 'Pale Heir', portrait: 'pale_heir', portraitClass: '🌊', side: 'right', text: 'You walked all this way to watch? Listen. The bells are ringing. My father\'s kingdom is coming back up, street by street.' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The chart called her the last of the line. It did not say she could call the sea.' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'The canals are silted with weed. Wade them and you are slow. The bridge in the east is the only dry way over.' },
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Her knights hold the stair to the dais. Take the plaza first, then go up together.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'One more fight, and then everyone goes home. Squad, into the city!' }
+    ],
+    victoryDialogue: [
+      { speaker: 'Pale Heir', portrait: 'pale_heir', portraitClass: '🌊', side: 'right', text: 'The bells... they are stopping. Father, I am sorry. The sea wants it back.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The water is coming in again. Slowly. The city is going back to sleep.' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'Then my village is safe, and so are the wild things in the dunes. Thank you. All of you.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'Up to the causeway, before it floods. The ship will not wait forever.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Home, then. Together, like always.' }
+    ],
+    enemyRoster: [
+      { name: 'The Pale Heir', jobId: 'summoner', level: 12, x: 7, z: 0, isBoss: true },
+      { name: 'Heir\'s Guard', jobId: 'bone_knight', level: 11, x: 5, z: 3 },
+      { name: 'Heir\'s Guard', jobId: 'bone_knight', level: 11, x: 9, z: 3 },
+      { name: 'Tide Priest', jobId: 'white_mage', level: 11, x: 8, z: 1 },
+      { name: 'Drowned Wisp', jobId: 'wisp', level: 10, x: 3, z: 5 },
+      { name: 'Canal Basilisk', jobId: 'basilisk', level: 11, x: 13, z: 4 }
     ]
   }
 };

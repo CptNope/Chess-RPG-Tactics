@@ -25,6 +25,8 @@ export interface SkirmishDef {
   intro: string;
   /** Gear won the first time the place is cleared (0.21.0). A relic: never sold. */
   trophy: string;
+  /** Enemies on a first visit (default 4); one more once the place is at full heat (0.35.0). */
+  size?: number;
 }
 
 export const SKIRMISHES: Record<string, SkirmishDef> = {
@@ -80,6 +82,18 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     opensAfter: ['chapter_3'],
     intro: 'The old kings\' barrow has gone to briars, and something in there is still standing guard. Watch for the lizard: don\'t meet its eyes.',
     trophy: 'basilisk_eye'
+  },
+  // Added in 0.35.0: the Far Shore
+  glasswing: {
+    id: 'glasswing',
+    name: 'Glasswing Dunes',
+    mapId: 'saltglass_shore',
+    size: 5,
+    foe: 'Dune Beasts',
+    jobs: [['wyvern', 'Glasswing Wyvern'], ['basilisk', 'Dune Basilisk'], ['thornling', 'Sea Thornling'], ['wolf', 'Dune Jackal'], ['brute', 'Glass Golem'], ['bone_knight', 'Drowned Sentry']],
+    opensAfter: ['chapter_7'],
+    intro: 'Kestrel says the wyvern that nests in the glass dunes has started taking goats from the coast. It has jackals following it for the scraps. Mind the wind: it dives with it.',
+    trophy: 'glasswing_lance'
   }
 };
 
@@ -113,7 +127,7 @@ export function buildSkirmish(id: string, squadLevels: number[], wins: number): 
   const level = skirmishLevel(squadLevels, wins);
   const rng = seededRng(hashId(id) + wins * 7919 + level * 31);
   const map = MAPS[def.mapId]();
-  const count = wins >= SKIRMISH_MAX_HEAT ? 5 : 4;
+  const count = (def.size ?? 4) + (wins >= SKIRMISH_MAX_HEAT ? 1 : 0);
 
   // Enemies deploy on the northern quarter of the map, on walkable tiles, never stacked
   const zone = Math.max(3, Math.floor(map.depth / 4));

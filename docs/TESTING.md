@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 277 tests"]
+        T2["Unit tests<br/>vitest · 278 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
         T5["Browser play-tests<br/>npm run playtest · 8 checks"]
@@ -43,7 +43,7 @@ flowchart TB
 
 ## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`)
 
-All 277 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 278 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -89,7 +89,7 @@ Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `
 | Team screen | Jobs list, the five gear slots and the shop all render |
 | World map, market and side battle | After Chapter I: the map opens, the market and the Howling Hollow panels open, **Fight** starts a battle with wolves |
 | A later chapter loads with monsters | Chapter V loads with its wyvern and plays 120 steps: the enemy planner with items and caution |
-| Sail to the Far Shore (0.34) | After Chapter VI: **Sail to the Far Shore** at Emberwick Harbor shows THE FAR SHORE with only its places; **March** at Saltglass Shore starts Chapter VII with its basilisk |
+| Sail to the Far Shore (0.34) | After Chapter VI: **Sail to the Far Shore** at Emberwick Harbor shows THE FAR SHORE with only its places, the Drowned City among them, and the ship's stores trading at the Anchorage; **March** at Saltglass Shore starts Chapter VII with its basilisk |
 | Save and load | A save round-trips gil and the squad |
 | Phone | 390×844 with touch: a turn on AUTO, the Team screen, no sideways scrolling |
 

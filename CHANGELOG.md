@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.35.0] - 2026-11-24
+
+### Added — Act III's finale
+- **Chapter IX: The Pale Heir.** Frostfang Pass now leads down to **the Drowned City**, the old kingdom's capital risen from the bay: pale streets, canals silted with weed (slow to wade), one bridge over the east canal, and a stair to the palace dais where the Regent's daughter calls the sea. Win: the **Tidecrown** (HP +40, MAG +6, Speed +1, no Sleep or Poison), a relic. March there for a **Pale Pearl** (MP +30, MAG +3, HP +20, no Silence).
+- **The story ends.** The Pale Heir's closing screen says Act III is complete; the Trials and New Game+ stay open. If you finished 0.34, Chapter IX is waiting on your Far Shore map.
+- **The Glasswing Dunes**, a side battle on the Far Shore, open after Chapter VII: a wyvern, a basilisk and whatever follows them. Five enemies instead of four. First win: the **Glasswing Lance** (ATK +14, Speed +1, Jump +1, range 2), a relic.
+- **The ship's stores.** The quartermaster at the Anchorage buys and sells from Larkmoor Market's stock, so you can restock without sailing home. Hiring is still at Larkmoor.
+- **Two camp scenes:** at the top of the pass, and on the ship home after the finale.
+- The Pale Heir has her own portrait.
+
+### Balance
+- Chapter IX, Normal, at L11 / L12 / L13: about 7 / 29 / 40% in the sim, between Chapter VI and Chapter VIII.
+- The Glasswing Dunes: 87–100% on a first visit, 70–93% on the second, 10–40% at full heat.
+
+### Developer
+- `createDrownedCityMap` (`drowned_city`, night theme, its own atmosphere). `SkirmishDef.size`. The Anchorage counts as the market for trading. The balance sim covers Chapter IX.
+- The camp-scene test now expects a scene after every chapter, the finale included.
+- 1 new test (278 total); the Far Shore play-test also checks the ship's stores and the Drowned City. [ADR 0042](docs/adr/0042-act-three-finale.md).
+
 ## [0.34.0] - 2026-11-24
 
 ### Added — Act III begins: across the sea

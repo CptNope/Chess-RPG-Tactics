@@ -174,6 +174,8 @@ const CHECKS = [
     const title = await page.locator('#world-map h2').textContent();
     expect(title === 'THE FAR SHORE', `map title: ${title}`);
     expect((await page.locator('[data-node="market"]').count()) === 0, 'the realm\'s places should be hidden');
+    expect((await page.locator('.wm-action', { hasText: 'Buy & sell' }).count()) === 1, 'the ship\'s stores should trade at the Anchorage');
+    expect((await page.locator('[data-node="drowned_city"]').count()) === 1, 'the Drowned City should be on the Far Shore map');
     await page.click('[data-node="saltglass"]');
     await page.waitForTimeout(800);
     await page.locator('.wm-action', { hasText: 'March' }).click();

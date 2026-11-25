@@ -520,9 +520,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-71 items across five gear slots.
+74 items across five gear slots.
 
-### Weapon (25)
+### Weapon (26)
 
 | Item | Type | Range | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :---: | :--- | :--- | ---: | :--- | :--- |
@@ -551,6 +551,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
 | **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only | Knight, Dragoon |
 | **Fordwarden's Bow** `fordwarden_bow` | bow | 5 | ATTACK +8, SPEED +1, EVASION +5 | — | 520 | First win at Thornwood Ford | Archer, Bard, Beast Tamer |
+| **Glasswing Lance** `glasswing_lance` | spear | 2 | ATTACK +14, SPEED +1, JUMP +1 | — | 900 | First win at Glasswing Dunes | Knight, Dragoon |
 
 ### Shield (5)
 
@@ -595,7 +596,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Chain Barding** `chain_barding` | beast | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job | Tamed beasts |
 | **Runed Barding** `runed_barding` | beast | HP +40, MP +15 | guards sleep, silence | 560 | Starting gear of a job | Tamed beasts |
 
-### Accessory (18)
+### Accessory (20)
 
 | Item | Kind | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
@@ -605,6 +606,8 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Gauntlet of Might** `power_wrist` | light | ATTACK +4 | — | 200 | Win CHAPTER I · Trials drop | Anyone |
 | **Ring of Arcana** `mage_ring` | light | MAGIC +4, MP +25 | — | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop | Anyone |
 | **Zodiac Ribbon** `ribbon` | light | HP +20, MP +20, SPEED +1, EVASION +5 | guards poison, slow, immobilize, blind, silence, sleep, breach | 800 | Win CHAPTER III · Trials drop | Anyone |
+| **Pale Pearl** `pale_pearl` | light | MP +30, MAGIC +3, HP +20 | guards silence | 720 | Choose "Go down to the drowned city and stop the Pale Heir before the old kingdom rises with it." | Anyone |
+| **Tidecrown** `tidecrown` | light | HP +40, MAGIC +6, SPEED +1 | guards sleep, poison | 1200 | Win CHAPTER IX | Anyone |
 | **Verdant Charm** `verdant_charm` | light | HP +10 | starts with regen | 600 | Win CHAPTER II-A · Trials drop | Anyone |
 | **Warding Amulet** `warding_amulet` | light | HP +10 | starts with protect + shell | 520 | Choose "Sail for Greywatch Isle before the Tidecaller finds the seal!" · Trials drop | Anyone |
 | **Purity Bangle** `purity_bangle` | light | HP +10 | guards poison, slow, immobilize, breach | 420 | Trials drop | Anyone |
@@ -642,9 +645,9 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 | Before the first victory | 380 | 34 |
 | Chapter I won | 480 | 48 |
 | Chapter II won | 580 | 55 |
-| Campaign cleared / Trials | none | 60 |
+| Campaign cleared / Trials | none | 61 |
 
-Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye.
+Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye, Tidecrown, Glasswing Lance.
 
 Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the relics and trophies above can't be sold.
 
@@ -674,6 +677,8 @@ flowchart LR
     anchorage["The Anchorage<br/><i>ship to the realm</i>"]
     saltglass["Saltglass Shore<br/><i>CHAPTER VII</i>"]
     frostfang["Frostfang Pass<br/><i>CHAPTER VIII</i>"]
+    drowned_city["The Drowned City<br/><i>CHAPTER IX</i>"]
+    glasswing["Glasswing Dunes<br/><i>side battle</i>"]
   end
   market --- ruins
   market --- battlement
@@ -695,6 +700,9 @@ flowchart LR
   barrow --- battlement
   anchorage --- saltglass
   saltglass --- frostfang
+  frostfang --- drowned_city
+  anchorage --- glasswing
+  glasswing --- saltglass
   harbor -. "⛵ by sea" .- anchorage
 ```
 
@@ -714,9 +722,11 @@ flowchart LR
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
 | **Howling Hollow** | skirmish | Side battle: Wild Beasts | Night Battlement |
 | **Briar Barrow** | skirmish | Side battle: Barrow Things | Riverside Ruins, Night Battlement |
-| **The Anchorage** | port | Take ship back to Emberwick Harbor | Saltglass Shore |
-| **Saltglass Shore** | mission | CHAPTER VII: The Saltglass Shore | The Anchorage, Frostfang Pass |
-| **Frostfang Pass** | mission | CHAPTER VIII: Frostfang Pass | Saltglass Shore |
+| **The Anchorage** | port | Take ship back to Emberwick Harbor | Saltglass Shore, Glasswing Dunes |
+| **Saltglass Shore** | mission | CHAPTER VII: The Saltglass Shore | The Anchorage, Frostfang Pass, Glasswing Dunes |
+| **Frostfang Pass** | mission | CHAPTER VIII: Frostfang Pass | Saltglass Shore, The Drowned City |
+| **The Drowned City** | mission | CHAPTER IX: The Pale Heir | Frostfang Pass |
+| **Glasswing Dunes** | skirmish | Side battle: Dune Beasts | The Anchorage, Saltglass Shore |
 
 ### Camp scenes
 
@@ -732,6 +742,8 @@ After each story battle but the last, the squad makes camp on the world map. Sit
 | CHAPTER V | The Night Before the Cape | Bria, Corvin, Tobin, Sable, Rowan |
 | CHAPTER VI | The Last Night Ashore | Tobin, Sable, Maren, Bria, Rowan |
 | CHAPTER VII | Fire in the Dunes | Kestrel, Tobin, Corvin |
+| CHAPTER VIII | The Top of the Pass | Corvin, Sable, Maren, Bria, Rowan |
+| CHAPTER IX | The Ship Home | Tobin, Kestrel, Sable, Maren, Rowan |
 
 ## Difficulty
 
@@ -754,6 +766,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Watchfire Ridge** | Watchfire Helm |
 | **Howling Hollow** | Wolfpelt Mantle |
 | **Briar Barrow** | Basilisk Eye |
+| **Glasswing Dunes** | Glasswing Lance |
 
 | Place | Battlefield | Enemies | Drawn from | Goal | Opens after |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -762,6 +775,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Watchfire Ridge** | Night Battlement | Night Raiders | Raider (Knight), Lancer (Dragoon), Marksman (Archer), Shade (Ninja), Duelist (Spellblade), Warden (Geomancer) | Survive 6 rounds | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
 | **Howling Hollow** | Zodiac Summit | Wild Beasts | Pack Leader (Dire Wolf), Dire Wolf (Dire Wolf), Wyvern (Wyvern), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Stonehide Brute (Stonehide Brute) | Defeat every enemy | CHAPTER I |
 | **Briar Barrow** | Gloomy Mire | Barrow Things | Barrow Guard (Bone Knight), Basilisk (Basilisk), Thornling (Thornling), Bone Knight (Bone Knight), Briar Thornling (Thornling), Barrow Wisp (Marsh Wisp) | Defeat every enemy | CHAPTER III |
+| **Glasswing Dunes** | Saltglass Shore | Dune Beasts | Glasswing Wyvern (Wyvern), Dune Basilisk (Basilisk), Sea Thornling (Thornling), Dune Jackal (Dire Wolf), Glass Golem (Stonehide Brute), Drowned Sentry (Bone Knight) | Defeat every enemy | CHAPTER VII |
 
 ## Armory & drops
 
@@ -783,6 +797,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Stormbreak Cape** | `stormbreak_cape` | 16×16 | night | 0.4–5.4 | grass 27%, stone 23%, dirt 21%, parapet 18%, water 10%, wood 2% | 14 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Saltglass Shore** | `saltglass_shore` | 16×16 | desert | 0.4–5 | sand 57%, stone 21%, water 18%, wood 4% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Frostfang Pass** | `frostfang_pass` | 16×16 | snow | 1–7 | snow 53%, stone 27%, dirt 10%, parapet 6%, wood 3%, water 2% | 55 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **The Drowned City** | `drowned_city` | 16×16 | night | 0.4–5 | stone 51%, water 26%, parapet 9%, swamp 8%, sand 5%, wood 1% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 
 ## Campaign
 
@@ -797,6 +812,7 @@ flowchart LR
   chapter_6["CHAPTER VI<br/>The Drowned Regent<br/><i>Stormbreak Cape</i>"]
   chapter_7["CHAPTER VII<br/>The Saltglass Shore<br/><i>Saltglass Shore</i>"]
   chapter_8["CHAPTER VIII<br/>Frostfang Pass<br/><i>Frostfang Pass</i>"]
+  chapter_9["CHAPTER IX<br/>The Pale Heir<br/><i>The Drowned City</i>"]
   epilogue(["Epilogue (to be continued)<br/>New Game+ / Trials"])
   chapter_1 -->|"Pursue the fleeing sorcerer into the Gloomy Mire"| chapter_2a
   chapter_1 -->|"Rush to reinforce the garrison at Night Battlement"| chapter_2b
@@ -807,7 +823,8 @@ flowchart LR
   chapter_5 -->|"Make for Stormbreak Cape and stop the Drowned Regent at the water's edge"| chapter_6
   chapter_6 -->|"Take ship at Emberwick Harbor and follow the Regent's court across the sea to the Far Shore."| chapter_7
   chapter_7 -->|"Climb Frostfang Pass and break the Court's fort before the Pale Heir reaches the sea."| chapter_8
-  chapter_8 --> epilogue
+  chapter_8 -->|"Go down to the drowned city and stop the Pale Heir before the old kingdom rises with it."| chapter_9
+  chapter_9 --> epilogue
 ```
 
 | Chapter | Map | Enemies | Boss | Recruit | Win reward | Branch rewards |
@@ -820,7 +837,8 @@ flowchart LR
 | **CHAPTER V**: The Greywatch Light | Greywatch Isle | 6 | Tidecaller Maelis (Summoner L7) | — | Runeblade | Templar Mail |
 | **CHAPTER VI**: The Drowned Regent | Stormbreak Cape | 7 | The Drowned Regent (Paladin L9) | — | Dawnbringer | undefined |
 | **CHAPTER VII**: The Saltglass Shore | Saltglass Shore | 7 | Herald Isaine (Spellblade L10) | Kestrel (Beast Tamer) | Saltglass Blade | Frostfang Mail |
-| **CHAPTER VIII**: Frostfang Pass | Frostfang Pass | 6 | Marshal Hale (Knight L11) | — | — | — |
+| **CHAPTER VIII**: Frostfang Pass | Frostfang Pass | 6 | Marshal Hale (Knight L11) | — | — | Pale Pearl |
+| **CHAPTER IX**: The Pale Heir | The Drowned City | 6 | The Pale Heir (Summoner L12) | — | Tidecrown | — |
 
 <details><summary><b>CHAPTER I</b> enemy roster</summary>
 
@@ -934,6 +952,19 @@ flowchart LR
 | Court Seer | Time Weaver | 10 | (6, 0) |  |
 | Pass Wolf | Dire Wolf | 10 | (12, 6) |  |
 | Vael Revenant | Bone Knight | 10 | (4, 5) |  |
+
+</details>
+
+<details><summary><b>CHAPTER IX</b> enemy roster</summary>
+
+| Enemy | Job | Level | Tile | Boss |
+| :--- | :--- | :---: | :---: | :---: |
+| The Pale Heir | Summoner | 12 | (7, 0) | ★ |
+| Heir's Guard | Bone Knight | 11 | (5, 3) |  |
+| Heir's Guard | Bone Knight | 11 | (9, 3) |  |
+| Tide Priest | White Mage | 11 | (8, 1) |  |
+| Drowned Wisp | Marsh Wisp | 10 | (3, 5) |  |
+| Canal Basilisk | Basilisk | 11 | (13, 4) |  |
 
 </details>
 
