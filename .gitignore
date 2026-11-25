@@ -9,3 +9,6 @@ dist/
 *.local
 .vite/
 release/
+
+# Browser play-test failure screenshots
+playtest-*.png
