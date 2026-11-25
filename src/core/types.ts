@@ -185,6 +185,8 @@ export interface Unit {
   id: string;
   name: string;
   team: Team;
+  /** The side the unit fights for when it isn't its team (versus alliances); see Sides.ts (0.41.0). */
+  alliance?: string;
   level: number;
   exp: number;
   jobId: string;

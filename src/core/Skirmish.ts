@@ -8,7 +8,7 @@
  */
 import { BattleObjective, CampaignChapter, EnemySpawn } from './types';
 import { MAPS } from '../data/maps';
-import { seededRng } from './Trials';
+import { seededRng } from './Rng';
 
 export interface SkirmishDef {
   id: string;

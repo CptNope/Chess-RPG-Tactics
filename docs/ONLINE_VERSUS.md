@@ -2,7 +2,7 @@
 
 A plan for **2 to 4 players battling each other online**. Each player brings their campaign squad, a preset team, or a team built on a fixed JP budget. The server runs on Cloudflare.
 
-> **Status: later.** Versus itself isn't scheduled. What *is* under way is the groundwork in the game's code (section 4), so versus can be added without tearing the battle code apart. The first part ships in 0.41. This page is a proposal; once a part ships, its design decision becomes an ADR and this page is updated.
+> **Status: later.** Versus itself isn't scheduled. What *is* under way is the groundwork in the game's code (section 4), so versus can be added without tearing the battle code apart. Part 1 shipped in 0.41 ([ADR 0046](adr/0046-battle-engine-groundwork.md)). This page is a proposal; once a part ships, its design decision becomes an ADR and this page is updated.
 
 ---
 
@@ -201,7 +201,7 @@ The biggest job isn't the server; it's the rules.
 
 The first two are worth doing even if online play never ships: the game gets replays, a truthful balance sim and tests that cover whole battles.
 
-**Groundwork, part 1 (0.41):**
+**Groundwork, part 1 (0.41, done):**
 - Sides go through `isFoe` / `isAlly`, with room for alliances.
 - One seeded RNG per battle.
 - A `BattleRules` object (campaign rules today; the rule set above later).

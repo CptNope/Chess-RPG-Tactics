@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 297 tests"]
+        T2["Unit tests<br/>vitest · 306 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
         T5["Browser play-tests<br/>npm run playtest · 8 checks"]
@@ -41,9 +41,9 @@ flowchart TB
 
 ---
 
-## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`)
+## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`, `tests/engine.test.ts`, …)
 
-All 297 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 306 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -53,6 +53,7 @@ All 297 tests import `src/core` and `src/data` directly in Node. No browser is n
 | **Grid** | 7 | Range/height/self-target rule; water costs; enemies blocking and allies not standable; Teleport; walking paths are adjacent, climbable, within Move, avoid enemies, and none for teleporters |
 | **Geomancy** | 1 | Terrain → spell mapping |
 | **Enemy AI** | 4 | Never hitting its own team; finishing wounded foes; healing allies, never buffing players; never casting unaffordable spells |
+| **Battle engine (0.41)** | 9 | Sides and alliances (a 2v2 alliance, Tame joining a side, sides standing); the same seed rolling the same numbers; `resolveAction` paying costs and turning the caster before anything is rolled, rolling a blow only when asked, granting JP only to the teams the rules name, taking a supply from the caster's own pouch, and a revive aiming only at a fallen ally |
 | **Trials** | 3 | Determinism; walkable unique spawns; boss every 5th floor; drops never repeat owned items |
 | **Turn manager** | 1 | Speed order; timeline prediction doesn't mutate state |
 | **Jobs and gear (0.13)** | 30 | The four new jobs' kits; status bookkeeping (every status is a buff or an ailment); Breach, Shell, Blind, Silence, Sleep (skips turns, wakes on damage, wears off) and Regen; cleanse, drain, ATK-scaled healing, Steal (order, odds, bosses); Conserve; the new reactions and supports; gear guard, start-status and element-boost traits; old-save JP migration; the AI never Steals or wastes ailments on guarded targets |

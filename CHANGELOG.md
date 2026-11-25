@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.41.0] - 2026-11-25
+
+Groundwork for online versus (planned for later; see [docs/ONLINE_VERSUS.md](docs/ONLINE_VERSUS.md)). Nothing looks or plays differently.
+
+### Changed
+- **The rules for an action now live in one place.** `core/Action.ts` resolves an ability step by step, with no drawing or waiting. The game shows each step as it happens, and the balance sim runs the same code. `victimsFor` and `forecastFor` moved there too.
+- **Each battle rolls its own seeded dice** (`core/Rng.ts`). Every hit, crit, status and reaction roll comes from the battle's generator.
+- **Friend or foe goes through one question** (`core/Sides.ts`: `isFoe`, `isAlly`). Units can carry an alliance, so allied sides become possible later. The campaign doesn't use one.
+- **`BattleRules`** (`core/Rules.ts`) says which teams earn JP and EXP. It's the campaign's rules today; versus settings will join it.
+- **The balance sim** takes `SEED=n` and gives the same numbers for the same command. Its results are unchanged within noise.
+
+### Fixed
+- An enemy using an item it has no pouch for no longer takes it from the squad's inventory. This couldn't happen in play: enemies only plan items they carry.
+
+### Developer
+- ADR 0046. 9 new tests (306 total).
+
 ## [0.40.0] - 2026-11-25
 
 ### Added

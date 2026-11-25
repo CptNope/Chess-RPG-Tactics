@@ -22,7 +22,7 @@ flowchart TB
 
     subgraph Core["Rules · src/core (no DOM, unit-tested)"]
         direction LR
-        TM["TurnManager"] ~~~ Grid["BattleGrid"] ~~~ CE["CombatEngine"] ~~~ JS["JobSystem"]
+        Act["Action<br/>resolveAction"] ~~~ TM["TurnManager"] ~~~ Grid["BattleGrid"] ~~~ CE["CombatEngine"] ~~~ JS["JobSystem"]
         AI["EnemyAI"] ~~~ Geo["Geomancy"] ~~~ Tr["Trials"] ~~~ Save["SaveManager"] ~~~ Scn["Scenario"]
         Eco["Economy"] ~~~ Wld["World"]
     end
@@ -48,6 +48,10 @@ flowchart TB
 | :--- | :--- | :--- | :--- |
 | **platform** | `src/platform.ts` | Where the game runs (itch.io, embedded, web): store links, share-link base, fullscreen, page-scroll guard | — |
 | **TacticsGame** | `src/main.ts` | Owns all state; turn flow, action pipeline, input dispatch, spoils, chapters, Trials, save/load | everything |
+| **Action** | `src/core/Action.ts` | Resolves an ability step by step with no drawing or waiting: costs, the caster's facing, a call begun, one roll per target, JP and EXP under the rules (`resolveAction`, `runAction`, `victimsFor`, `forecastFor`). Shared by the game and the balance sim (0.41) | CombatEngine, JobSystem, EnemyAI, Sides, Rules |
+| **Sides** | `src/core/Sides.ts` | Friend or foe: `isFoe`, `isAlly`, `allianceOf` (a unit's alliance, else its team), `joinSide` (Tame), `sidesStanding` (0.41) | types |
+| **Rng** | `src/core/Rng.ts` | The seeded generator every battle rolls with, and new seeds (0.41) | — |
+| **Rules** | `src/core/Rules.ts` | `BattleRules`: what a battle is played under (today: which teams earn JP and EXP); `CAMPAIGN_RULES` (0.41) | types |
 | **TurnManager** | `src/core/TurnManager.ts` | CT clock, turn order prediction, CT refunds, status ticking, poison | JobSystem |
 | **BattleGrid** | `src/core/Grid.ts` | Tile lookup, Dijkstra movement (Jump, terrain cost, Teleport), `findPath` for walking, `canTarget` range rule | types |
 | **CombatEngine** | `src/core/CombatEngine.ts` | Facing, forecast, hit/crit rolls, statuses, reactions, boss enrage | JobSystem |
@@ -191,6 +195,8 @@ sequenceDiagram
 ## 4. The action pipeline
 
 Player actions, enemy actions and AUTO all go through one function, `TacticsGame.performAction()`. Before 0.7.0 the player and enemy paths were separate copies and drifted apart.
+
+Since 0.41 the rules part lives in `src/core/Action.ts`. `resolveAction` is a generator: a **start** step (costs paid, caster turned, a call begun), then one **hit** step per target, each rolled only when the next step is asked for, and it returns what the caster earned. `performAction` plays the effects, banners and waits around those steps, so a second target isn't rolled before the first is shown. The balance sim runs the same resolver headless (`runAction`). The flow below is the same either way; the rolls come from the battle's seeded dice (`core/Rng.ts`).
 
 ```mermaid
 flowchart TD
