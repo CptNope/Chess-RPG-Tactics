@@ -31,7 +31,7 @@ Every number here is read straight from the game data, so it always matches what
 | **Bard** `bard` | Troubadour | 3 | 2 | 0.85× | 1.10× | 0.80× | 1.05× | 1.05× | 6 |
 | **Dancer** `dancer` | Performer | 4 | 3 | 0.90× | 0.90× | 1.00× | 0.85× | 1.15× | 6 |
 | **Beast Tamer** `tamer` | Tamer | 4 | 3 | 1.05× | 0.80× | 1.05× | 0.80× | 1.00× | 6 |
-| **Gunner** `gunner` | Marksman | 3 | 3 | 0.95× | 0.75× | 1.10× | 0.70× | 1.00× | 7 |
+| **Gunner** `gunner` | Marksman | 3 | 3 | 0.95× | 0.75× | 1.10× | 0.70× | 1.05× | 7 |
 
 ```mermaid
 xychart-beta

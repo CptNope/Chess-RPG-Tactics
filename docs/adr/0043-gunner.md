@@ -1,7 +1,7 @@
 # ADR 0043: The Gunner
 
 ## Status
-Accepted (0.36.0, 2026-11-25).
+Accepted (0.36.0, 2026-11-25). Amended in 0.36.1: the Chapter VII gap was the Gunner's Speed, not the AI (see Balance).
 
 ## Context
 - With the story finished, the roadmap's next big item was a gunner: a ranged job that doesn't care about height. Height is the main thing a Tactics map is built around, and every other ranged job (Archer, Bard with a bow, Squire's Throw Stone) is bounded by it.
@@ -25,7 +25,18 @@ The balance sim's `GUNNER=1` puts Tobin in the Gunner job, keeping the archer's 
 | IX (L11/12/13) | 12 / 35 / 43% | 15 / 40 / 47% |
 
 - The first kit had no free heavy shot. The auto-battler spent every turn on Hobble Shot (power 0.8) where the Archer used Aim (1.4), and the squad lost far more. Steady Shot closed most of the gap.
-- In Chapter VII the Gunner squad still loses much more. Tobin's damage per shot matches the Archer's. But he acts half as often, because the enemy focuses him. Free of height limits, the auto-battler picks firing spots on the low ground in reach of the court's melee fighters. That is a positioning weakness in the AI, not in the job's numbers. It's listed on the roadmap rather than patched with a Chapter VII special case.
+- In Chapter VII the Gunner squad still lost much more. 0.36.0 blamed the AI's choice of firing spots. That was wrong. In 0.36.1, testing the AI changed nothing: harsher penalties for likely-fatal spots, a stronger pull to high ground, and counting ailments as threat all left it in the same place. The cause was **Speed**. The Gunner's ×1.0 left Tobin at 12 Speed at level 10, against the Archer's 13. In Chapter VII that one point puts the Thornling and the Court Crossbow ahead of him in the turn order. They blind him and shoot him before he fires, and he acts half as often. An early test of Speed alone had run without the archer's Feather Boots (Move 3), which hid it.
+
+### 0.36.1: Speed ×1.05, the Archer's own
+
+| Chapter (Normal, 60 battles) | Tobin as Archer | Tobin as Gunner |
+| :--- | :--- | :--- |
+| III (L3/4/5) | 5 / 2 / 10% | 0 / 8 / 7% |
+| V (L7/8/9) | 42 / 72 / 75% | 40 / 62 / 62% |
+| VII (L9/10/11) | 23 / 48 / 60% | 25 / 65 / 77% |
+| IX (L11/12/13) | 7 / 30 / 40% | 7 / 33 / 47% |
+
+The two are even, within the sim's noise (about ±12 points at 60 battles). A test now pins the Gunner's Speed to the Archer's.
 
 ## Consequences
 - 20 jobs, 121 abilities. The Trials and the recruiting board can field gunners.

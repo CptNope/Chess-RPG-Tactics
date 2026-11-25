@@ -30,6 +30,8 @@ describe('gunner', () => {
     expect(jobCanUse('archer', ITEMS.long_musket)).toBe(false);
     expect(recruitJobs(3)).not.toContain('gunner');
     expect(recruitJobs(4)).toContain('gunner');
+    // As quick as an Archer (0.36.1): one point of Speed decides who shoots first
+    expect(JOBS.gunner.statMultipliers.speed).toBe(JOBS.archer.statMultipliers.speed);
     // Every shot ignores height
     for (const a of JOBS.gunner.abilities.filter((x) => x.type === 'action')) expect(a.ignoresHeight, a.id).toBe(true);
   });

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.36.1] - 2026-11-25
+
+### Fixed
+- **The Gunner's Speed now matches the Archer's** (×1.05, was ×1.0). With Tobin as a Gunner, the balance sim's squad lost Chapter VII far more often than with Tobin as an Archer. 0.36.0 blamed the AI for picking bad firing spots. It wasn't the AI. One point of Speed let the Thornling and the Court Crossbow act before him, blind him and shoot him first. Now the two jobs come out even (Chapter VII at L10: 48% as an Archer, 65% as a Gunner).
+
+### Developer
+- ADR 0043 amended with the right cause and the new numbers; the roadmap's "AI: ranged positioning" item is gone. The AI changes tested on the way (harsher penalties for likely-fatal spots, a stronger pull to high ground, ailments in the threat map) made no difference and were not kept.
+- A test pins the Gunner's Speed to the Archer's (282 tests).
+
 ## [0.36.0] - 2026-11-25
 
 ### Added — the Gunner
@@ -17,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gunners turn up on the recruiting board from Chapter IV and in the Trials of the Zodiac (the "Musketeer"). Veteran enemy gunners return fire.
 
 ### Balance
-- With Tobin as a Gunner instead of an Archer, the balance sim's results are about the same in Chapters III, V and IX. In Chapter VII the auto-battler gets him shot: it fires from low ground in reach of melee foes. That's a known AI issue on the roadmap.
+- With Tobin as a Gunner instead of an Archer, the balance sim's results are about the same in Chapters III, V and IX. Chapter VII lagged; 0.36.1 found the cause.
 
 ### Developer
 - `Ability.ignoresHeight`; `WeaponType` `gun`; `JobSystem.gunRange`. The balance sim's `GUNNER=1` and `FULLKIT=1` compare jobs like for like.
