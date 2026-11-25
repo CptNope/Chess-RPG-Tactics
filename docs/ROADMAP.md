@@ -55,6 +55,7 @@ timeline
         0.35.0 : Act III's finale : The Drowned City : Glasswing Dunes : Ship's stores
         0.36.0 : The Gunner (20 jobs)
         0.36.1 : Gunner Speed fix
+        0.37.0 : Reserve training
 ```
 
 | Version | Theme | Highlights |
@@ -67,6 +68,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.37 | Reserve training | Units left out of the party train at camp: half a share of every win (+20 EXP, +30 JP), the same as a party member who fell (raised from 15 EXP and 20 JP); a RESERVE row on the spoils screen |
 | 0.36.1 | Gunner Speed | The Gunner's Speed now matches the Archer's: one point decided who fired first in Chapter VII, where the Gunner squad had been losing far more |
 | 0.36 | The Gunner | A new advanced job (Archer 3 + Thief 2; 20 jobs, 121 abilities): guns reach any height in range and high ground neither helps nor hurts the shot; Steady Shot, Hobble Shot, Flash Powder, Breaching Round, Scattershot, Return Fire, Long Barrel, the Thunder Volley signature; three guns |
 | 0.35 | Act III's finale | Chapter IX in the Drowned City against the Pale Heir, with its own closing screen; the Glasswing Dunes side battle; the ship's quartermaster trades at the Anchorage; camp scenes after Chapters VIII and IX; the Tidecrown, the Glasswing Lance and the Pale Pearl |
@@ -100,7 +102,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.36.1. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.37.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -111,9 +113,8 @@ flowchart LR
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.36 – 0.38): depth"]
+    subgraph NEXT["Next (0.38 – 0.40): depth"]
         direction TB
-        X0["Reserve training"]
         X1["AI: combos with allies;<br/>simulate foe turns"]
     end
     subgraph LATER["Later (1.0+): breadth"]
@@ -135,11 +136,10 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.36 – 0.38): depth
+### Next (0.38 – 0.40): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **Reserve training** | Units in reserve earn nothing (0.25); if a big squad falls behind in hand play, a share of the spoils for the reserve | S |
 | **AI: combos and a real second ply** | Since 0.31 enemies avoid likely KOs and use items; next they could set up combos with allies (Slow then strike) and simulate the squad's replies instead of estimating them ([details](ENEMY_AI.md#5-known-limits)) | L |
 
 ### Later (1.0+): breadth
@@ -170,7 +170,6 @@ quadrantChart
     "Device QA": [0.25, 0.72]
     "Devlog + store": [0.1, 0.55]
     "AI look-ahead": [0.75, 0.5]
-    "Reserve training": [0.3, 0.45]
     "Online duels": [0.88, 0.6]
     "Localization": [0.6, 0.28]
 ```

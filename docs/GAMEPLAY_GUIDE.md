@@ -219,7 +219,7 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
   ![Larkmoor Market: supplies and gear on the BUY counter](images/market.webp)
 
 * **Hire recruits at the market** (0.25). Its recruiting board shows three hopefuls, about a level below your squad, for 200 G plus 90 a level (a quarter more for a job that needs others first). They arrive in their job with its gear, its first ability and some JP to spend. More jobs turn up on the board as the story goes on, and the board changes after every battle won.
-* **Six fight; the barracks hold ten.** Once the squad has more than six, a **Choose your party** screen opens before each battle (and **Barracks** at the market lets you set it any time). Rowan leads and always goes; a story recruit fights the battle they join. Units in reserve keep everything but earn no EXP or JP while they sit out. Hired units can be dismissed from the Barracks.
+* **Six fight; the barracks hold ten.** Once the squad has more than six, a **Choose your party** screen opens before each battle (and **Barracks** at the market lets you set it any time). Rowan leads and always goes; a story recruit fights the battle they join. Units in reserve keep everything and **train at camp** (0.37): after each win they earn half a share, +20 EXP and +30 JP in their current job, the same as a party member who fell. Survivors in the party earn +40 EXP, +60 JP and 10 EXP a KO. Hired units can be dismissed from the Barracks.
 * **Sell what you don't need** at the market's SELL counter for half price. Gear someone is wearing has to come off first; the three relics are never sold.
 * **Carry supplies.** Up to 9 of each, shared by the squad:
 
