@@ -35,6 +35,8 @@ import { enemyCaution, enemyPouch, salvage } from './core/EnemyPouch';
 import { breakCall, callArea, callDue, callHolds, startCall } from './core/Summons';
 import { buildTrialFloor, rollTrialDrop } from './core/Trials';
 import { GamepadInput, PadAction } from './input/GamepadInput';
+import { Bindings, actionForKey, loadBindings, saveBindings } from './input/Bindings';
+import { ControlsPanel } from './ui/ControlsPanel';
 import { getQualitySetting, setQualitySetting, resolveQuality, QualitySetting, PROFILES } from './renderer/GraphicsQuality';
 import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
 import { Workshop } from './ui/Workshop';
@@ -148,6 +150,8 @@ class TacticsGame {
   // Interaction state
   private currentMode: InputMode = 'dialogue';
   private pad = new GamepadInput();
+  /** Which keys and buttons do what (0.40.0), kept per browser. */
+  private bindings: Bindings = loadBindings();
   private selectedAbility: Ability | null = null;
   private currentForecast: CombatForecast | null = null;
   private targetTile: { x: number; z: number } | null = null;
@@ -525,6 +529,13 @@ class TacticsGame {
       this.ui.setInputMode('gamepad');
       this.handlePad(a);
     };
+    // Rebindable keys and buttons (0.40.0): the Controls screen edits them
+    this.pad.setButtons(this.bindings.pad);
+    new ControlsPanel(document.getElementById('help-modal')!, () => this.bindings, (b) => {
+      this.bindings = b;
+      saveBindings(b);
+      this.pad.setButtons(b.pad);
+    }, this.pad);
     this.pad.onPan = (dx, dz) => this.scene.panBy(dx, dz);
     this.pad.onZoom = (d) => (d > 0 ? this.scene.zoomOut(d) : this.scene.zoomIn(-d));
     this.pad.onConnect = () => {
@@ -744,11 +755,14 @@ class TacticsGame {
     }
     if (typing) return;
 
-    // On the title screen only menu keys work (H opens Controls)
+    // Rebound keys (0.40.0): what this key does, if anything
+    const bound = actionForKey(this.bindings, k);
+
+    // On the title screen only menu keys work (the Controls key opens Controls)
     if (this.isTitleOpen && !this.ui.isHelpOpen) {
       const dir = ({ ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' } as Record<string, Dir>)[k];
       if (dir) { e.preventDefault(); this.handleDirection(dir); }
-      else if (k.toLowerCase() === 'h' || k === '?') this.ui.toggleHelp(true);
+      else if (bound === 'help') this.ui.toggleHelp(true);
       return;
     }
 
@@ -776,25 +790,26 @@ class TacticsGame {
 
     if (this.currentMode === 'dialogue') return;
 
-    const lower = k.toLowerCase();
-    if (lower === 'q') { this.scene.rotateLeft(); this.scene.updateUnits(this.units); }
-    else if (lower === 'e') { this.scene.rotateRight(); this.scene.updateUnits(this.units); }
-    else if (k === '+' || k === '=') this.scene.zoomIn(1.5);
-    else if (k === '-' || k === '_') this.scene.zoomOut(1.5);
-    else if (lower === 'w') this.scene.panBy(0, -1.0);
-    else if (lower === 's') this.scene.panBy(0, 1.0);
-    else if (lower === 'a') this.scene.panBy(-1.0, 0);
-    else if (lower === 'd') this.scene.panBy(1.0, 0);
-    else if (lower === 'r' || k === 'Home') this.recenter();
-    else if (lower === 'h' || k === '?') this.ui.toggleHelp();
-    else if (lower === 'l') this.ui.toggleCombatLog();
-    else if (lower === 'j') { if (this.ui.isJobModalOpen) this.ui.closeJobModal(); else this.openTeamFor(this.turnManager.activeUnit); }
-    else if (this.isPlayerIdle() && !this.ui.activeLayer()) {
-      if (k === '1') this.clickIfEnabled('btn-action-move');
-      else if (k === '2') this.clickIfEnabled('btn-action-act');
-      else if (k === '3') this.clickIfEnabled('btn-action-wait');
-      else if (k === '4' || lower === 't') this.handleAutoCommand();
-      else if (k === '5' || lower === 'i') this.clickIfEnabled('btn-action-item');
+    switch (bound) {
+      case 'rotateLeft': this.scene.rotateLeft(); this.scene.updateUnits(this.units); return;
+      case 'rotateRight': this.scene.rotateRight(); this.scene.updateUnits(this.units); return;
+      case 'zoomIn': this.scene.zoomIn(1.5); return;
+      case 'zoomOut': this.scene.zoomOut(1.5); return;
+      case 'panUp': this.scene.panBy(0, -1.0); return;
+      case 'panDown': this.scene.panBy(0, 1.0); return;
+      case 'panLeft': this.scene.panBy(-1.0, 0); return;
+      case 'panRight': this.scene.panBy(1.0, 0); return;
+      case 'recenter': this.recenter(); return;
+      case 'help': this.ui.toggleHelp(); return;
+      case 'log': this.ui.toggleCombatLog(); return;
+      case 'team': if (this.ui.isJobModalOpen) this.ui.closeJobModal(); else this.openTeamFor(this.turnManager.activeUnit); return;
+    }
+    if (this.isPlayerIdle() && !this.ui.activeLayer()) {
+      if (bound === 'move') this.clickIfEnabled('btn-action-move');
+      else if (bound === 'act') this.clickIfEnabled('btn-action-act');
+      else if (bound === 'wait') this.clickIfEnabled('btn-action-wait');
+      else if (bound === 'auto') this.handleAutoCommand();
+      else if (bound === 'item') this.clickIfEnabled('btn-action-item');
     }
   }
 
@@ -1920,7 +1935,7 @@ class TacticsGame {
     }
     window.addEventListener('keydown', (e) => {
       const typing = (e.target as HTMLElement)?.matches?.('input, textarea, select');
-      if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'f' && canFullscreen()) toggleFullscreen();
+      if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && actionForKey(this.bindings, e.key) === 'fullscreen' && canFullscreen()) toggleFullscreen();
     });
     guardPageScroll();
   }

@@ -5,12 +5,12 @@
 [![Support the game](https://img.shields.io/badge/support-donate%20on%20itch-ff69b4?logo=githubsponsors&logoColor=white)](https://cptnope.itch.io/chess-rpg-tactics/donate)
 <br />
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.39.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.40.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, eighteen mix-and-match jobs, a two-act campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
+A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics* and *Tactics Ogre*: isometric 3D battlefields with height, facing-based combat, twenty mix-and-match jobs, a three-act campaign with bosses, and an endless post-game. It runs on phones, tablets and desktops, with mouse, keyboard, touch, pen or a controller.
 
 ### ▶ [Play it now](https://cptnope.github.io/Chess-RPG-Tactics/) · [on itch.io](https://cptnope.itch.io/chess-rpg-tactics) · [♥ Support development](https://cptnope.itch.io/chess-rpg-tactics/donate)
 
@@ -33,7 +33,7 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | **Campaign** | A three-act campaign (ten chapters, nine per playthrough, with a branch in the first act) on 16×16 battlefields, sailing to a second world map, the Far Shore, for Act III; with three recruits, monsters from Chapter II (a Beast Tamer can win them over to join the squad), boss fights with enrage phases, and gear rewards |
 | **Post-game** | New Game+ and the endless, seeded **Trials of the Zodiac** with a Warden boss every fifth floor |
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters, thinks a turn ahead to stay out of reach, and uses Potions and other items. **AUTO** lets it play your turn |
-| **Play anywhere** | Phone (portrait and landscape), tablet and desktop layouts; mouse, keyboard, touch, pen and controller |
+| **Play anywhere** | Phone (portrait and landscape), tablet and desktop layouts; mouse, keyboard, touch, pen and controller, with remappable keys and buttons |
 | **Graphics** | Per-map skies, fog and lighting, soft shadows, flowing water, torches, bloom; Auto / High / Medium / Low quality that adapts to your device |
 | **Workshop** | Build your own battles: sculpt terrain, place enemies and bosses, write dialogue, pick an objective (rout, defeat the boss, survive N rounds), then play it or share it as a link |
 | **Art & sound** | Animated 48px pixel-art units (walk, strike, flinch), drawn character portraits, hand-animated pixel-art spell and hit effects, synthesized music and SFX; no image files |
@@ -89,7 +89,7 @@ New to the game? Read the **[Gameplay Guide](docs/GAMEPLAY_GUIDE.md)**.
 
 ## Controls
 
-Press **H**, the **?** button, or **View/Back** on a controller for the in-game list.
+Press **H**, the **?** button, or **View/Back** on a controller for the in-game list. Every key and controller button there can be changed, apart from the cursor keys, Enter, Space, Esc, the d-pad, sticks and triggers (0.40).
 
 | | Select | Back | Pan | Zoom | Rotate |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -108,7 +108,7 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` I
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 291 rule tests
+npm test             # 297 rule tests
 npm run build        # type-check + production build
 npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
 npm run balance      # headless AUTO battles: win rate per chapter

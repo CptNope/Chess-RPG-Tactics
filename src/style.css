@@ -1566,6 +1566,27 @@ kbd {
   background: #0f1a2b;
   color: var(--text-light);
 }
+/* Rebindable keys and buttons (0.40.0): each looks like a key cap, and says so while it waits */
+.bind-btn {
+  font-family: var(--font-pixel);
+  font-size: calc(8px * var(--ts));
+  min-width: 2.4em;
+  min-height: 24px;
+  border: 1px solid var(--panel-border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 3px 6px;
+  background: #0f1a2b;
+  color: var(--text-light);
+  cursor: pointer;
+  text-align: left;
+}
+.bind-btn:hover, .bind-btn:focus-visible { border-color: var(--gold); color: var(--gold-glow); }
+.bind-btn.waiting { border-color: var(--gold); background: #2a2410; color: var(--gold-glow); animation: bind-blink 1s steps(2) infinite; }
+@keyframes bind-blink { 50% { border-color: var(--panel-border); } }
+@media (prefers-reduced-motion: reduce) { .bind-btn.waiting { animation: none; } }
+.bind-note { min-height: 1.2em; margin: 10px 0 4px; color: var(--gold-glow); font-size: calc(15px * var(--ts)); }
+.bind-reset { margin-bottom: 8px; }
 /* The card for the input you're using leads, and is outlined */
 html[data-input="touch"] .help-card[data-input="touch"],
 html[data-input="pen"] .help-card[data-input="pen"],

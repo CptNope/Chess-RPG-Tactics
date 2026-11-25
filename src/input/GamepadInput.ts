@@ -13,7 +13,8 @@ export type PadAction =
 // Standard Gamepad button indices
 const BTN = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, L3: 10, R3: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 
-const BUTTON_ACTIONS: [number, PadAction][] = [
+/** The default buttons; the player can move them (0.40.0, see Bindings.ts). */
+const DEFAULT_BUTTON_ACTIONS: [number, PadAction][] = [
   [BTN.A, 'confirm'],
   [BTN.B, 'cancel'],
   [BTN.X, 'commands'],
@@ -40,6 +41,22 @@ export class GamepadInput {
   public onDisconnect?: () => void;
 
   private prev = new Map<number, boolean>();
+  private buttonActions: [number, PadAction][] = DEFAULT_BUTTON_ACTIONS;
+  /** Set while the Controls screen waits for a button to bind (0.40.0). */
+  private capture: ((button: number) => void) | null = null;
+
+  /** Which button does what (0.40.0). */
+  public setButtons(map: Partial<Record<PadAction, number>>): void {
+    this.buttonActions = (Object.entries(map) as [PadAction, number][]).map(([a, b]) => [b, a]);
+  }
+
+  /**
+   * The next button pressed goes to `cb` instead of doing anything (0.40.0). Buttons already held
+   * when it starts don't count. Call with null to stop waiting.
+   */
+  public captureButton(cb: ((button: number) => void) | null): void {
+    this.capture = cb;
+  }
   private dirHeld: { dir: PadAction; since: number; last: number } | null = null;
   public connected = false;
 
@@ -76,8 +93,24 @@ export class GamepadInput {
 
     const pressed = (i: number) => !!pad.buttons[i] && (pad.buttons[i].pressed || pad.buttons[i].value > 0.5);
 
+    // Waiting for a button to bind: the first new press is taken, and does nothing else
+    if (this.capture) {
+      for (let i = 0; i < pad.buttons.length; i++) {
+        const down = pressed(i);
+        if (down && !this.prev.get(i)) {
+          const cb = this.capture;
+          this.capture = null;
+          this.prev.set(i, down);
+          cb(i);
+          return;
+        }
+        this.prev.set(i, down);
+      }
+      return;
+    }
+
     // Edge-triggered buttons
-    for (const [i, action] of BUTTON_ACTIONS) {
+    for (const [i, action] of this.buttonActions) {
       const down = pressed(i);
       if (down && !this.prev.get(i)) this.onAction?.(action);
       this.prev.set(i, down);
