@@ -1384,6 +1384,7 @@ export class TacticsScene {
     this.updateFloatingNumbers();
     this.vfx.update(delta);
     this.pfx.facing = this.currentRotationAngle;
+    this.pfx.aspect = this.renderer.domElement.clientWidth / Math.max(1, this.renderer.domElement.clientHeight);
     this.pfx.update(delta);
     this.updateSummonLayers(delta);
 

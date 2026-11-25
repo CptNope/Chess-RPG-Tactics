@@ -1471,6 +1471,13 @@ class TacticsGame {
       later(() => this.scene.dim(0), 700);
     }
 
+    // An arrow or a ball in flight lands before the blow does; an area spell bursts over its area (0.38.0)
+    if (!calling && !summoning) {
+      const flight = this.fx.launch(caster, ability, tx, tz, 1 / SPEED);
+      if (flight > 0) await wait((flight * 1000) / SPEED);
+      if (victims.length) this.fx.area(ability, { x: tx, z: tz });
+    }
+
     let anyKill = false;
     for (const target of calling ? [] : victims) {
       const a = asFor(target);

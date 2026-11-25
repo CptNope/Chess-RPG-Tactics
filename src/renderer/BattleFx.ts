@@ -60,7 +60,28 @@ const ABILITY: Record<string, Cue> = {
   bm_firestorm: { id: 'fire/fire-tornado', holdFor: 1.1, speed: 1.3 },
   su_salamander: { id: 'fire/fire-tornado', holdFor: 1.1, speed: 1.3 },
   su_undine: { id: 'water/wave-crash', startAt: 0.95, speed: 1.6 },
-  or_soul_drain: { id: 'shadow/soul-drain', holdFor: 1.0, speed: 1.4 }
+  or_soul_drain: { id: 'shadow/soul-drain', holdFor: 1.0, speed: 1.4 },
+  // 0.38.0
+  dr_jump: { id: 'impacts/heavy-landing', speed: 1.5 },
+  gu_flash_powder: { id: 'explosions/smoke-bomb', speed: 2.4, scale: 0.6 },
+  gu_scattershot: { id: 'impacts/bullet-impact', speed: 1.4, scale: 0.8 },
+  gu_breaching_round: { id: 'impacts/bullet-impact', speed: 1.3 },
+  sig_thunder_volley: { id: 'impacts/heavy-landing', speed: 1.4 }
+};
+
+/**
+ * Area spells by element (0.38.0): a burst over the area instead of one strike per target. Played
+ * once, on the aim tile; the targets get the single-target look only if there's none here.
+ */
+const AREA: Record<string, Cue> = {
+  ice: { id: 'ice/frost-nova', speed: 2.2, scale: 0.7, startAt: 0.3 },
+  lightning: { id: 'lightning/thunderclap', speed: 1.6, scale: 0.7, startAt: 0.2 }
+};
+
+/** What a ranged weapon fires (0.38.0): drawn pointing right, its origin at the tip. */
+const MISSILE: Record<string, { id: string; speed: number; arc: number; flash?: string }> = {
+  bow: { id: 'projectiles/arrow', speed: 18, arc: 0.7 },
+  gun: { id: 'projectiles/bullet-tracer', speed: 34, arc: 0, flash: 'projectiles/muzzle-pistol' }
 };
 
 export class BattleFx {
@@ -98,6 +119,44 @@ export class BattleFx {
     return impact / speed;
   }
 
+  /**
+   * Something in flight before the blow lands (0.38.0): an arrow from a bow, a ball from a gun
+   * (with a flash at the muzzle). Returns the seconds until it arrives, so the damage can wait for
+   * it; 0 when nothing flies (a melee blow, a spell, a target next to the shooter).
+   */
+  public launch(caster: Unit, ability: Ability, tx: number, tz: number, speed = 1): number {
+    const w = caster.equipment.weapon?.weaponType;
+    if (ability.element !== 'physical' || ability.isSelfOnly || ability.summon || ability.power <= 0 || !w) return 0;
+    const m = MISSILE[w];
+    const dist = Math.abs(caster.x - tx) + Math.abs(caster.z - tz);
+    if (!m || dist < 2) return 0;
+    const from = this.ground(caster), to = this.ground({ x: tx, z: tz });
+    const flip = this.leftward(caster, { x: tx, z: tz });
+    const len = Math.hypot(tx - caster.x, tz - caster.z, to.y - from.y);
+    const flight = Math.max(0.12, len / m.speed) / speed;
+    const pfx = this.scene.pfx;
+    if (m.flash) this.scene.pfx.play(ability.id === 'gu_scattershot' ? 'projectiles/muzzle-shotgun' : m.flash, from, { flip, lift: 18, speed: 1.6 * speed, scale: 0.6 });
+    // Scattershot fires a spray: three tracers fanned out a little
+    const n = ability.id === 'gu_scattershot' ? 3 : 1;
+    for (let k = 0; k < n; k++) {
+      const spread = (k - (n - 1) / 2) * 0.35;
+      const end = to.clone().add(new THREE.Vector3(spread, 0, -spread));
+      pfx.play(m.id, from, {
+        flip, lift: 18, to: end, flight, arc: m.arc * Math.min(1, len / 6),
+        angle: pfx.screenAngle(from, end), speed: 1.5, holdFor: flight + 0.1
+      });
+    }
+    return flight;
+  }
+
+  /** An area spell's burst over the whole area (0.38.0); false when the element has none. */
+  public area(ability: Ability, at: { x: number; z: number }): boolean {
+    const cue = ability.aoe > 0 && ability.power > 0 ? AREA[ability.element] : undefined;
+    if (!cue || ABILITY[ability.id]) return false;
+    this.play(cue, at);
+    return true;
+  }
+
   /** A damaging hit: weapon arc and spark for physical blows, the element's spell otherwise. */
   public hit(caster: Unit, target: Unit, ability: Ability, crit: boolean): void {
     const flip = this.leftward(caster, target);
@@ -117,11 +176,16 @@ export class BattleFx {
         // The arc starts just short of the target and sweeps across it
         this.meleeArc(caster, target, flip, 1.15);
       }
-      // A gun's ball lands with a heavy thump rather than a spark (0.36.0)
+      // A gun's ball lands with a puff of dust and chips (0.38.0; a blunt thump in 0.36)
       const shot = ability.ignoresHeight && caster.equipment.weapon?.weaponType === 'gun';
-      this.play({ id: crit ? 'impacts/crit-hit' : shot ? 'impacts/blunt-hit' : 'impacts/hit-spark', delay: dist <= 1 ? 0.06 : 0 }, target, { flip, scale: crit ? 0.85 : 1 });
+      if (shot && !crit) return this.play({ id: 'impacts/bullet-impact', speed: 1.5, scale: 0.7 }, target, { flip });
+      // A fist lands with a thump, a blade with a spark
+      const fist = caster.jobId === 'monk' || caster.equipment.weapon?.weaponType === 'knuckles';
+      this.play({ id: crit ? 'impacts/crit-hit' : fist ? 'impacts/blunt-hit' : 'impacts/hit-spark', delay: dist <= 1 ? 0.06 : 0 }, target, { flip, scale: crit ? 0.85 : 1 });
       return;
     }
+    // An area spell's burst already covered the targets: a spark on each is enough
+    if (ability.aoe > 0 && AREA[ability.element]) return this.play({ id: crit ? 'impacts/crit-hit' : 'impacts/hit-spark', scale: crit ? 0.85 : 0.8 }, target, { flip });
     const cue = ELEMENT[ability.element];
     if (cue) this.play(cue, target, { flip });
     if (crit) this.play({ id: 'impacts/crit-hit', delay: 0.15, scale: 0.85 }, target, { flip });
@@ -144,10 +208,17 @@ export class BattleFx {
     this.play({ id: 'impacts/hit-spark', delay: 0.06 }, target, { flip });
   }
 
-  /** The weapon's swing: a blade arc, a dagger flurry, or a fist's blunt impact. */
+  /**
+   * The weapon's swing (0.38.0: per weapon, not just blade or fist): a sword's arc, a dagger
+   * flurry, a spear's thrust, a fist's uppercut, a whip's crack, a monster's claws or a brute's smash.
+   */
   private meleeArc(caster: Unit, target: Unit, flip: boolean, speed: number): void {
     const w = caster.equipment.weapon?.weaponType;
-    if (caster.jobId === 'monk' || w === 'knuckles') return this.play({ id: 'impacts/blunt-hit', speed }, target, { flip });
+    if (caster.jobId === 'brute') return this.play({ id: 'melee/hammer-smash', speed: speed * 1.8, startAt: 0.5, scale: 0.7 }, target, { flip, offsetX: flip ? 20 : -20 });
+    if (['wolf', 'wyvern', 'basilisk', 'thornling', 'ooze'].includes(caster.jobId)) return this.play({ id: 'melee/claw-swipe', speed }, target, { flip, offsetX: flip ? 14 : -14 });
+    if (caster.jobId === 'monk' || w === 'knuckles') return this.play({ id: 'melee/uppercut', speed }, target, { flip, offsetX: flip ? 12 : -12 });
+    if (w === 'spear') return this.play({ id: 'melee/thrust', speed }, target, { flip, offsetX: flip ? 40 : -40, scale: 0.8 });
+    if (w === 'whip') return this.play({ id: 'melee/whip-crack', speed }, target, { flip, offsetX: flip ? 44 : -44, scale: 0.8 });
     const arc = caster.jobId === 'ninja' || caster.jobId === 'thief' || w === 'dagger' ? 'melee/dagger-flurry' : 'melee/sword-slash';
     this.play({ id: arc, speed }, target, { flip, offsetX: flip ? 30 : -30 });
   }

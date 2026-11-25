@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.38.0] - 2026-11-25
+
+### Added — effects per ability
+- **Arrows and bullets fly.** A bow's arrow arcs from the archer to the target, and a gun's tracer streaks across with a muzzle flash. Scattershot fans three tracers out of a shotgun blast. The blow lands when the shot arrives.
+- **Every weapon swings its own way.** Spears thrust, fists throw an uppercut and land with a thump, whips crack, wolves, wyverns and other beasts claw, and the Brute smashes. Swords and daggers keep their arcs.
+- **Area spells burst over the whole area.** Ice spells like Blizzard open in a frost nova, and lightning spells in a thunderclap, instead of one strike per target.
+- **Looks of their own:** Jump lands heavily, Flash Powder goes off as a smoke bomb, Breaching Round and Scattershot hit with a puff of dust and chips, and Thunder Volley lands heavily.
+- The title screen says **twenty** jobs (it still said eighteen).
+
+### Developer
+- 14 new pixelfx effects vendored unchanged from upstream commit 5294518 (read first; drawing code only); the unused `status/haste` removed. `PixelEffects` can fly an effect (`to`, `flight`, `arc`) and rotate it (`angle`). `BattleFx.launch` and `BattleFx.area`; `MISSILE` and `AREA` cue tables. Bundle +64 KB (+25 KB gzipped).
+- An AI teamwork experiment for Hard (setups, focus fire, softening foes for allies) was measured in the balance sim, made no difference even at three times the weight, and was not merged. The result is noted in ENEMY_AI.md.
+- 4 new tests (290 total), one of which checks that every named effect is vendored and every vendored effect is used. [ADR 0045](docs/adr/0045-per-ability-effects.md).
+
 ## [0.37.0] - 2026-11-25
 
 ### Added — reserve training

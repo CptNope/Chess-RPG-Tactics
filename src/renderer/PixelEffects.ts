@@ -114,6 +114,15 @@ export interface PlayOptions {
   options?: Record<string, unknown>;
   /** Draw over the whole board, ignoring depth (summons, 0.24.0). */
   overlay?: boolean;
+  /** Rotate the effect on screen (radians, clockwise; after `flip`). */
+  angle?: number;
+  /**
+   * Fly the effect from `pos` to here over `flight` seconds (0.38.0: arrows, bullets): its origin
+   * travels in a straight line, lifted by `arc` world units at the middle, then it's removed.
+   */
+  to?: THREE.Vector3;
+  flight?: number;
+  arc?: number;
 }
 
 interface Layer {
@@ -134,6 +143,12 @@ interface Live {
   acc: number;
   age: number;
   holdFor: number;
+  /** A flying effect (0.38.0): where it starts and lands, its flight time and arc, and how far it has flown. */
+  from?: THREE.Vector3;
+  to?: THREE.Vector3;
+  flight?: number;
+  arc?: number;
+  flown?: number;
 }
 
 const geomCache = new Map<string, THREE.PlaneGeometry>();
@@ -163,7 +178,8 @@ export class PixelEffects {
       ...(o.palette ? { palette: o.palette } : {}),
       ...(o.seed !== undefined ? { seed: o.seed } : {}),
       ...(o.light !== undefined ? { light: o.light } : {}),
-      ...(o.actor ? { actor: o.actor } : {})
+      ...(o.actor ? { actor: o.actor } : {}),
+      ...(o.angle ? { angle: o.angle } : {})
     });
 
     const scale = o.scale ?? 1;
@@ -235,9 +251,30 @@ export class PixelEffects {
       step: 1 / fps,
       acc: 1 / fps, // draw on the first frame it's visible
       age: 0,
-      holdFor: o.holdFor ?? (mod.meta.loop ? 1.6 : Infinity)
+      holdFor: o.holdFor ?? (mod.meta.loop ? 1.6 : Infinity),
+      ...(o.to && o.flight ? {
+        from: base.clone(),
+        to: new THREE.Vector3(o.to.x, o.to.y + FEET + (o.lift ?? 0) * FX_PIXEL, o.to.z),
+        flight: o.flight,
+        arc: o.arc ?? 0,
+        flown: 0
+      } : {})
     });
   }
+
+  /**
+   * The on-screen angle (radians, clockwise, for an effect authored pointing right and mirrored
+   * by `flip` when it goes leftward) of a flight from `a` to `b` (0.38.0).
+   */
+  public screenAngle(a: THREE.Vector3, b: THREE.Vector3): number {
+    const pa = a.clone().project(this.camera), pb = b.clone().project(this.camera);
+    const dx = pb.x - pa.x, dy = pb.y - pa.y;
+    // Screen y points up in clip space; the effect's pixel rows run down
+    return Math.atan2(-dy, Math.abs(dx) * (this.aspect || 1));
+  }
+
+  /** Width over height of the view, so screen angles come out right (set by the scene). */
+  public aspect = 1;
 
   public update(dt: number): void {
     // Shift layers along the view direction only, so they don't slide on screen (orthographic camera)
@@ -253,6 +290,18 @@ export class PixelEffects {
         continue;
       }
       for (const g of l.groups) g.visible = true;
+      // A flying effect moves along its path, and is gone when it lands
+      if (l.from && l.to && l.flight) {
+        l.flown = (l.flown ?? 0) + dt;
+        const k = Math.min(1, l.flown / l.flight);
+        l.base.lerpVectors(l.from, l.to, k);
+        l.base.y += (l.arc ?? 0) * 4 * k * (1 - k);
+        if (k >= 1) {
+          this.dispose(l);
+          this.live.splice(i, 1);
+          continue;
+        }
+      }
       const d = dt * l.speed;
       l.age += d;
       l.acc += d;

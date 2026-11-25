@@ -21,7 +21,7 @@ What's on [cptnope.itch.io/chess-rpg-tactics](https://cptnope.itch.io/chess-rpg-
 | :--- | :--- |
 | Title | Chess RPG Tactics |
 | URL | `chess-rpg-tactics` |
-| Short description | Free isometric tactics RPG: eighteen jobs, high ground, bosses and a map editor. |
+| Short description | Free isometric tactics RPG: twenty jobs, high ground, bosses and a map editor. |
 | Classification · status | Games · Released |
 | Pricing | No payments required, donations welcome ($0 or donate, suggested $3) |
 | Genre | Strategy |
@@ -51,11 +51,11 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 
 > Paste into the itch.io description editor. Headings and lists keep their formatting.
 
-**Chess RPG Tactics** is a free turn-based tactics RPG that runs right in your browser: isometric 3D battlefields with height, facing-based combat, eighteen mix-and-match jobs, a two-act campaign with boss fights, an endless post-game, and a Workshop to build and share your own battles.
+**Chess RPG Tactics** is a free turn-based tactics RPG that runs right in your browser: isometric 3D battlefields with height, facing-based combat, twenty mix-and-match jobs, a three-act campaign across two world maps with boss fights, an endless post-game, and a Workshop to build and share your own battles.
 
 ### Features
 - **Real tactics.** Speed decides who moves next, not teams. Hit from behind for big damage, take the high ground for range, mind water and swamp. Enemies fight smart too: they path around cliffs, turn to face you, go for your healers first and respect a knight's parry.
-- **Eighteen jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Chemist, Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin, Spellblade, Bard and Dancer as your units level their jobs. Bards and Dancers perform: a song or dance that plays again every turn they hold their ground. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
+- **Twenty jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Chemist, Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin, Spellblade, Bard, Dancer, Beast Tamer and Gunner as your units level their jobs. Bards and Dancers perform: a song or dance that plays again every turn they hold their ground. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
 - **Steal their gear.** Thieves lift weapons and trinkets straight off enemies into your armory. Over 50 pieces of gear, some with traits: start battles with Regen, boost an element, or ward off Sleep and Silence.
 - **A world map between battles.** Walk the realm, choose which road the story takes, and fall back to regroup after a defeat. Win optional side battles for trophies found nowhere else, buy early gear and one-of-a-kind goods from a travelling merchant, and make camp after each chapter to hear what your squad has to say.
 - **A market that grows with the story.** Bounties and wins pay gil. Buy gear that outfits the whole squad, sell what you don't need, and stock up on supplies.

@@ -150,7 +150,7 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 
 | Limit | Effect | Idea |
 | :--- | :--- | :--- |
-| One-turn horizon, plus a threat estimate (0.31) | Avoids walking into a likely KO and drinks a Potion when hurt, but doesn't set up combos with allies | Two-ply search on the best N plans |
+| One-turn horizon, plus a threat estimate (0.31) | Avoids walking into a likely KO and drinks a Potion when hurt, but doesn't set up combos with allies | Two-ply search on the best N plans. *Tried and shelved in 0.38:* scoring terms for teamwork (Breach and Slow worth more when allies can follow up, focus fire, softening a foe for an ally to finish) made no measurable difference in the balance sim, even at three times the weight ([ADR 0045](adr/0045-per-ability-effects.md)) |
 | Knows only Counter Tackle and Weapon Guard (0.20) | Other reactions (Field Dressing, Auto-Potion) don't change its choices | Add terms as they matter |
 | One raise per battle for the enemy side (0.17) | The first healer to act takes it, whoever fell | Let the planner hold it for the most valuable unit |
 | Raises the fallen whenever it can (0.16) | A revive scores 110 + 2 × the fallen unit's level, about the same as a likely kill, so a healer with MP nearly always does it | Weigh the fallen unit's job and how exposed the tile is |
