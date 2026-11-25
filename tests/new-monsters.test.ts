@@ -71,3 +71,14 @@ describe('the Briar Barrow', () => {
     for (let f = 1; f < TRIAL_DEEP_MONSTERS_FROM; f++) expect(buildTrialFloor(f).enemyRoster.some((e) => NEW.includes(e.jobId)), `floor ${f}`).toBe(false);
   });
 });
+
+describe('in the story (0.33.0)', () => {
+  it('a Basilisk guards the Greywatch light and a Bone Knight comes up with the Regent', async () => {
+    const { CAMPAIGN_CHAPTERS } = await import('../src/data/campaign');
+    expect(CAMPAIGN_CHAPTERS.chapter_5.enemyRoster.some((e) => e.jobId === 'basilisk')).toBe(true);
+    expect(CAMPAIGN_CHAPTERS.chapter_6.enemyRoster.some((e) => e.jobId === 'bone_knight')).toBe(true);
+    // the squad warns you about them
+    expect(CAMPAIGN_CHAPTERS.chapter_5.introDialogue.some((l) => /basilisk/i.test(l.text))).toBe(true);
+    expect(CAMPAIGN_CHAPTERS.chapter_6.introDialogue.some((l) => /knights/i.test(l.text))).toBe(true);
+  });
+});

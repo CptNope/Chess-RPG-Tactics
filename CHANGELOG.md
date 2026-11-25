@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.33.0] - 2026-11-24
+
+### Changed — the new beasts join the story
+- **Chapter V (The Greywatch Light):** a **Cliff Basilisk** suns itself by the tower, in place of the Storm Hexer. Corvin warns you not to stand where it can see you.
+- **Final Chapter (The Drowned Regent):** one of the Regent's old knights, a **Drowned Knight** (a Bone Knight), comes up out of the sea with him, in place of the Hourglass Seer. Sable warns you it won't sleep.
+- Each swap was picked with the balance sim from several candidates as the one that keeps the chapter about as hard as it was:
+
+  | Chapter (Normal, 100 battles) | 0.32 | 0.33 |
+  | :--- | :--- | :--- |
+  | V at L7 / L8 / L9 | 47 / 53 / 65% | 38 / 69 / 62% |
+  | Final at L8 / L9 / L10 | 5 / 11 / 27% | 3 / 17 / 26% |
+
+  Swapping other units moved the numbers a lot: the Basilisk in place of the Sentinel made Chapter V far harder (2 / 14 / 45%), and the Bone Knight in place of the Wraith Lancer made the Final Chapter far easier (67 / 31 / 65%).
+
 ## [0.32.0] - 2026-11-24
 
 ### Added — new beasts

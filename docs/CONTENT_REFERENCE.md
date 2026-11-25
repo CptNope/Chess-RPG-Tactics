@@ -867,7 +867,7 @@ flowchart LR
 | Tide Augur | Oracle | 6 | (5, 3) |  |
 | Greywatch Sentinel | Knight | 6 | (7, 5) |  |
 | Storm Wyvern | Wyvern | 6 | (10, 4) |  |
-| Storm Hexer | Black Mage | 6 | (6, 1) |  |
+| Cliff Basilisk | Basilisk | 6 | (6, 1) |  |
 
 </details>
 
@@ -881,7 +881,7 @@ flowchart LR
 | Barrow Brute | Stonehide Brute | 8 | (7, 4) |  |
 | Wraith Duelist | Spellblade | 8 | (3, 7) |  |
 | Wraith Lancer | Dragoon | 8 | (12, 7) |  |
-| Hourglass Seer | Time Weaver | 8 | (12, 3) |  |
+| Drowned Knight | Bone Knight | 8 | (12, 3) |  |
 
 </details>
 

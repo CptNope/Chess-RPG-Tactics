@@ -50,6 +50,7 @@ timeline
         0.30.0 : Equipment rules per job
         0.31.0 : Enemies think a turn ahead : Enemies use items
         0.32.0 : Basilisk, Bone Knight, Thornling : The Briar Barrow
+        0.33.0 : A Basilisk and a Bone Knight in Act II
 ```
 
 | Version | Theme | Highlights |
@@ -62,6 +63,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.33 | Beasts in Act II | A Cliff Basilisk in Chapter V and a Drowned Knight in the Final Chapter, each swapped in for the enemy that kept the chapter's simulated difficulty closest |
 | 0.32 | New beasts | Basilisk, Bone Knight and Thornling, with their own art; the Briar Barrow side battle and its relic, the Basilisk Eye; deeper Trials floors; all tameable |
 | 0.31 | Smarter enemies | Enemies weigh what you could do to them next turn (hurt ones on Normal, everyone on Hard) and carry Potions and more by role; 🎒 on their card; salvage what they didn't use |
 | 0.30 | Gear by job | Each job uses its own weapon types, and shields, heavy armor and robes belong to some jobs; job changes swap gear for the best you own; the Team screen and market show who can use what |
@@ -90,7 +92,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.32.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.33.0. The game now has a two-act campaign, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -109,7 +111,6 @@ flowchart LR
     subgraph LATER["Later (1.0+): breadth"]
         direction TB
         L1["Act III"]
-        L2["New monsters in<br/>the story"]
         L4["Workshop gallery"]
         L5["Remappable controls"]
         L6["Localization"]
@@ -140,7 +141,6 @@ flowchart LR
 | Item | Size |
 | :--- | :---: |
 | Act III: Chapters VII to IX, new battlefields and map places | L |
-| The 0.32 monsters in story chapters, swapped in chapter by chapter with the sim as 0.27 did (they're at the Briar Barrow and the deeper Trials since 0.32) | S |
 | More jobs (a gunner) | L |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |
@@ -168,7 +168,6 @@ quadrantChart
     "AI look-ahead": [0.75, 0.5]
     "Play-tests in CI": [0.4, 0.6]
     "Act III": [0.8, 0.7]
-    "Monsters in story": [0.35, 0.45]
     "Online duels": [0.88, 0.6]
     "Localization": [0.6, 0.28]
 ```

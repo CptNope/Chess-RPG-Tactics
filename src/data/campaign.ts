@@ -203,7 +203,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     rewardItemIds: ['runeblade'],
     introDialogue: [
       { speaker: 'Tidecaller Maelis', portrait: 'foe_summoner', portraitClass: '🌊', side: 'right', text: 'You are late, little knights. The light has shown me where the Drowned Regent sleeps. Stay, and watch the tide come in.' },
-      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'She holds the high ground the whole way up. Every terrace we take makes the next one easier. Except for that wyvern nesting on the light: walls mean nothing to it.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'She holds the high ground the whole way up. Every terrace we take makes the next one easier. Except for that wyvern nesting on the light: walls mean nothing to it. And there is a basilisk sunning itself by the tower. Do not stand where it can see you.' },
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The shallows on either side are slow going, but nobody watches them. Her healer stands by the tower door: get to him, or we will kill the same cultists twice.' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'And watch the ground. When she starts calling and the stones round you begin to glow, move. That is the sea she is calling up, and it does not miss.' }
     ],
@@ -226,7 +226,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Tide Augur', jobId: 'oracle', level: 6, x: 5, z: 3 },
       { name: 'Greywatch Sentinel', jobId: 'knight', level: 6, x: 7, z: 5 },
       { name: 'Storm Wyvern', jobId: 'wyvern', level: 6, x: 10, z: 4 },
-      { name: 'Storm Hexer', jobId: 'black_mage', level: 6, x: 6, z: 1 }
+      { name: 'Cliff Basilisk', jobId: 'basilisk', level: 6, x: 6, z: 1 }
     ]
   },
 
@@ -241,7 +241,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'It stopped being yours when they sealed you under the sea. Squad, with me!' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The chasm splits the climb. Pick a side and go together, or cross the rope bridge and take his guard in the flank.' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'He is still half drowned. Wound him and the old seal will drag at him... but it will make him furious first.' },
-      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'He did not come up alone. Barrow-stone that walks, and dead lights off the water. Watch the lights: they will put you to sleep if you let them.' }
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'He did not come up alone. Barrow-stone that walks, dead lights off the water, and one of his old knights, still in its helm. Watch the lights: they will put you to sleep if you let them. The knight will not sleep at all.' }
     ],
     victoryDialogue: [
       { speaker: 'The Drowned Regent', portrait: 'foe_paladin', portraitClass: '👑', side: 'right', text: 'The sea... takes me back. Remember who it was... that stood here...' },
@@ -256,7 +256,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Barrow Brute', jobId: 'brute', level: 8, x: 7, z: 4 },
       { name: 'Wraith Duelist', jobId: 'spellblade', level: 8, x: 3, z: 7 },
       { name: 'Wraith Lancer', jobId: 'dragoon', level: 8, x: 12, z: 7 },
-      { name: 'Hourglass Seer', jobId: 'time_mage', level: 8, x: 12, z: 3 }
+      { name: 'Drowned Knight', jobId: 'bone_knight', level: 8, x: 12, z: 3 }
     ]
   }
 };
