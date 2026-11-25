@@ -14,7 +14,7 @@ export const STARTING_GIL = 300;
  * Relics that are only ever won, never sold: the story's relics and, since 0.21.0, the trophy
  * each side-battle place gives the first time it is cleared.
  */
-export const UNIQUE_ITEMS = ['zodiac_blade', 'ribbon', 'dragon_mail', 'fordwarden_bow', 'chanting_censer', 'watchfire_helm', 'wolfpelt_mantle', 'basilisk_eye'];
+export const UNIQUE_ITEMS = ['zodiac_blade', 'ribbon', 'dragon_mail', 'fordwarden_bow', 'chanting_censer', 'watchfire_helm', 'wolfpelt_mantle', 'basilisk_eye', 'tidecrown', 'glasswing_lance'];
 
 /**
  * How far the campaign has come: 0 = Chapter I, 1 = Chapter II, 2 = Chapter III,
@@ -25,7 +25,7 @@ export type ShopProgress = 0 | 1 | 2 | 3;
 /** The dearest item the shop stocks at each stage of the campaign. */
 export const SHOP_PRICE_CAP: Record<ShopProgress, number> = { 0: 380, 1: 480, 2: 580, 3: Infinity };
 
-const CHAPTER_PROGRESS: Record<string, ShopProgress> = { chapter_1: 0, chapter_2a: 1, chapter_2b: 1, chapter_3: 2, chapter_4: 3, chapter_5: 3, chapter_6: 3, chapter_7: 3, chapter_8: 3 };
+const CHAPTER_PROGRESS: Record<string, ShopProgress> = { chapter_1: 0, chapter_2a: 1, chapter_2b: 1, chapter_3: 2, chapter_4: 3, chapter_5: 3, chapter_6: 3, chapter_7: 3, chapter_8: 3, chapter_9: 3 };
 
 /**
  * @param chapterWon the chapter the campaign is at has been won (the squad is on the world map,

@@ -52,6 +52,7 @@ timeline
         0.32.0 : Basilisk, Bone Knight, Thornling : The Briar Barrow
         0.33.0 : A Basilisk and a Bone Knight in Act II
         0.34.0 : Act III begins : The Far Shore : Sand and snow
+        0.35.0 : Act III's finale : The Drowned City : Glasswing Dunes : Ship's stores
 ```
 
 | Version | Theme | Highlights |
@@ -64,6 +65,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.35 | Act III's finale | Chapter IX in the Drowned City against the Pale Heir, with its own closing screen; the Glasswing Dunes side battle; the ship's quartermaster trades at the Anchorage; camp scenes after Chapters VIII and IX; the Tidecrown, the Glasswing Lance and the Pale Pearl |
 | 0.34 | Act III begins | Sail from Emberwick to the Far Shore, a second world map; Chapter VII (Saltglass Shore) and VIII (Frostfang Pass) on sand and snow; Kestrel the Beast Tamer joins; two new pieces of gear; Dust Devil and Whiteout for Geomancers |
 | 0.33 | Beasts in Act II | A Cliff Basilisk in Chapter V and a Drowned Knight in the Final Chapter, each swapped in for the enemy that kept the chapter's simulated difficulty closest |
 | 0.32 | New beasts | Basilisk, Bone Knight and Thornling, with their own art; the Briar Barrow side battle and its relic, the Basilisk Eye; deeper Trials floors; all tameable |
@@ -94,7 +96,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.34.0. The game now has a campaign two acts and two chapters long, with Act III under way, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.35.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -105,9 +107,9 @@ flowchart LR
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.35 – 0.37): depth"]
+    subgraph NEXT["Next (0.36 – 0.38): depth"]
         direction TB
-        X0["Act III: the drowned city<br/>and the Pale Heir"]
+        X0["A gunner job;<br/>reserve training"]
         X1["AI: combos with allies;<br/>simulate foe turns"]
     end
     subgraph LATER["Later (1.0+): breadth"]
@@ -129,11 +131,11 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.35 – 0.37): depth
+### Next (0.36 – 0.38): depth
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **Act III, continued** | 0.34 brought the squad to the Far Shore and over Frostfang Pass; the drowned city and the Pale Heir are still ahead (a Chapter IX finale, more Far Shore places and side battles, and a camp scene for Chapter VIII) | L |
+| **A gunner job** | Moved up from Later now that the story is done: a ranged job that ignores height, for the fights the campaign has added since the job list last grew | L |
 | **Reserve training** | Units in reserve earn nothing (0.25); if a big squad falls behind in hand play, a share of the spoils for the reserve | S |
 | **AI: combos and a real second ply** | Since 0.31 enemies avoid likely KOs and use items; next they could set up combos with allies (Slow then strike) and simulate the squad's replies instead of estimating them ([details](ENEMY_AI.md#5-known-limits)) | L |
 
@@ -141,7 +143,6 @@ flowchart LR
 
 | Item | Size |
 | :--- | :---: |
-| More jobs (a gunner) | L |
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |
 | Remappable keyboard and controller bindings | M |
@@ -166,7 +167,7 @@ quadrantChart
     "Device QA": [0.25, 0.72]
     "Devlog + store": [0.1, 0.55]
     "AI look-ahead": [0.75, 0.5]
-    "Finish Act III": [0.7, 0.75]
+    "Gunner job": [0.7, 0.55]
     "Online duels": [0.88, 0.6]
     "Localization": [0.6, 0.28]
 ```
@@ -194,7 +195,8 @@ quadrantChart
 | World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Fine for now |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
 | World map | Camp scenes play once per playthrough with no way to watch them again; the merchant has three goods of her own, so late in the game she runs out | Low | More with Act III |
-| World map | The Far Shore has no market or side battle yet, so restocking means sailing home | Low | Next (Act III, continued) |
+| World map | The Far Shore's ship's stores sell the market's stock, but hiring still means sailing home to Larkmoor | Low | Fine for now |
+| Balance | Side-battle rosters are drawn at random per level and visit, and a draw heavy in wyverns is far harder than the rest (the Glasswing Dunes: 87–100% on a first visit, 10–40% at full heat in the sim) | Low | Revisit after a hand play-through |
 | Balance | Chapter VIII lost a seventh enemy in tuning: any seventh unit took it to about 5% in the sim, so the pass fort holds six | Low | Revisit after a hand play-through |
 | Art | The itch banner image still says "Fifteen jobs" | Low | Regenerate with the next store update |
 

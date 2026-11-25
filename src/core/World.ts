@@ -48,7 +48,9 @@ export const WORLD_NODES: WorldNode[] = [
   // The Far Shore (0.34.0)
   { id: 'anchorage', name: 'The Anchorage', kind: 'port', region: 'shore', x: 0.2, y: 0.78, blurb: 'Where the ship from Emberwick rides at anchor, in the lee of a sea-glass spit.' },
   { id: 'saltglass', name: 'Saltglass Shore', kind: 'mission', chapterId: 'chapter_7', region: 'shore', x: 0.46, y: 0.62, blurb: 'The drowned kingdom\'s old harbour, half buried in glittering dunes.' },
-  { id: 'frostfang', name: 'Frostfang Pass', kind: 'mission', chapterId: 'chapter_8', region: 'shore', x: 0.64, y: 0.24, blurb: 'The one road over the mountains, with the Court\'s fort at the top.' }
+  { id: 'frostfang', name: 'Frostfang Pass', kind: 'mission', chapterId: 'chapter_8', region: 'shore', x: 0.64, y: 0.24, blurb: 'The one road over the mountains, with the Court\'s fort at the top.' },
+  { id: 'drowned_city', name: 'The Drowned City', kind: 'mission', chapterId: 'chapter_9', region: 'shore', x: 0.86, y: 0.66, blurb: 'The drowned kingdom\'s capital, standing up out of the bay with the sea still running off it.' },
+  { id: 'glasswing', name: SKIRMISHES.glasswing.name, kind: 'skirmish', skirmishId: 'glasswing', region: 'shore', x: 0.28, y: 0.4, blurb: 'Dunes of wind-polished glass where a wyvern nests, and the jackals that follow it.' }
 ];
 
 /** Roads the party walks between locations. */
@@ -73,7 +75,10 @@ export const WORLD_ROADS: [string, string][] = [
   ['barrow', 'battlement'],
   // The Far Shore (0.34.0): no road crosses the sea; ships sail between the two harbours
   ['anchorage', 'saltglass'],
-  ['saltglass', 'frostfang']
+  ['saltglass', 'frostfang'],
+  ['frostfang', 'drowned_city'],
+  ['anchorage', 'glasswing'],
+  ['glasswing', 'saltglass']
 ];
 
 /** The region a location is in. */

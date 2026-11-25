@@ -380,6 +380,40 @@ export function createFrostfangMap(): MapData {
   return b.build('frostfang_pass', 'Frostfang Pass', 'snow', SOUTH_SPAWNS);
 }
 
+/**
+ * The Drowned City (16×16, 0.35.0): the drowned kingdom's capital, risen from the bay. The squad
+ * comes up the causeway from the south. Streets of pale stone run between canals the sea left
+ * behind, silted with weed; broken towers stand on the corners. A plaza in the middle, then a
+ * wide stair to the palace dais in the north, where the Pale Heir waits. The east canal is
+ * spanned by one bridge; the west street is long but dry.
+ */
+export function createDrownedCityMap(): MapData {
+  const b = new MapBuilder(16, 16, 1.2, 'stone');
+  // The bay still lapping at the edges, and the causeway the squad comes up
+  b.rect(0, 13, 15, 15, 0.4, 'water');
+  b.rect(5, 13, 10, 15, 1.0, 'stone');
+  b.rect(6, 12, 9, 12, 1.1, 'stone');
+  b.rect(0, 0, 0, 12, 0.4, 'water');
+  b.rect(15, 0, 15, 12, 0.4, 'water');
+  // The canals, silted with weed: wading is slow
+  b.rect(1, 9, 5, 10, 0.8, 'swamp');
+  b.rect(10, 9, 14, 10, 0.8, 'swamp');
+  b.rect(11, 3, 12, 8, 0.6, 'water');
+  b.rect(11, 5, 12, 5, 1.6, 'wood'); // the one bridge over the east canal
+  // Sand drifted into the low streets
+  b.rect(1, 11, 4, 12, 1.0, 'sand');
+  b.rect(12, 11, 14, 12, 1.0, 'sand');
+  // The plaza
+  b.rect(5, 5, 10, 8, 1.8, 'stone');
+  // The stair and the palace dais
+  b.rect(4, 3, 10, 4, 2.6, 'stone');
+  b.rect(3, 0, 10, 2, 3.6, 'parapet');
+  b.rect(6, 0, 7, 1, 4.2, 'parapet');
+  // Broken towers (impassable) on the corners of the streets
+  for (const [x, z] of [[2, 6], [13, 1], [4, 11], [9, 10], [14, 7], [1, 2]]) b.set(x, z, 5.0, 'stone', false);
+  return b.build('drowned_city', 'The Drowned City', 'night', SOUTH_SPAWNS);
+}
+
 /** The squad's deployment tiles on a map (map-defined, else the southern rows). */
 export function spawnsFor(map: MapData): { x: number; z: number }[] {
   if (map.playerSpawns && map.playerSpawns.length > 0) return map.playerSpawns;
@@ -397,5 +431,6 @@ export const MAPS: Record<string, () => MapData> = {
   greywatch_isle: createGreywatchMap,
   stormbreak_cape: createCapeMap,
   saltglass_shore: createSaltglassMap,
-  frostfang_pass: createFrostfangMap
+  frostfang_pass: createFrostfangMap,
+  drowned_city: createDrownedCityMap
 };

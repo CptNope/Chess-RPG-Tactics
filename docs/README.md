@@ -84,6 +84,7 @@ timeline
     0.31.0 : 0039 Smarter enemies
     0.32.0 : 0040 More monsters
     0.34.0 : 0041 Act III, the Far Shore
+    0.35.0 : 0042 Act III's finale
 ```
 
 | # | Decision | Release |
@@ -121,6 +122,7 @@ timeline
 | [0037](adr/0037-beast-gear.md) | Beasts wear only beast gear (barding and a collar), people never do; one `canEquip` rule; sold on its own market shelf | 0.29.0 |
 | [0040](adr/0040-more-monsters.md) | Basilisk, Bone Knight and Thornling at a new side battle and the deeper Trials, tuned with the sim against the other side battles | 0.32.0 |
 | [0041](adr/0041-act-three-the-far-shore.md) | Act III ships in parts: a second world map across the sea, sand and snow, Kestrel, and two chapters tuned against Chapter VI | 0.34.0 |
+| [0042](adr/0042-act-three-finale.md) | Chapter IX ends the act in the Drowned City; the ship's stores trade at the Anchorage; a side battle sized for the shore (`SkirmishDef.size`) | 0.35.0 |
 | [0039](adr/0039-smarter-enemies.md) | A threat map lets the planner think a turn ahead (light on Normal, full on Hard and AUTO); enemies carry item pouches by role; leftovers are salvaged | 0.31.0 |
 | [0038](adr/0038-equipment-rules.md) | Each job has weapon types and armor weights it can use; starting gear complies, so balance holds; job changes swap gear; old saves fixed on load | 0.30.0 |
 | [0034](adr/0034-monsters.md) | Monsters are jobs flagged `monster`, with innate statuses and immunities instead of gear, their own art, and player job lists filtered | 0.26.0 |

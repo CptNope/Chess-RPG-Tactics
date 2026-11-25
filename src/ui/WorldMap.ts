@@ -254,7 +254,8 @@ export class WorldMap {
     add('p', 'wm-blurb', node.blurb);
 
     if (node.kind === 'port') {
-      add('p', 'wm-status', 'The ship from Emberwick waits here. The market is back across the sea.');
+      add('p', 'wm-status', 'The ship from Emberwick waits here. Its quartermaster trades from the same stock as Larkmoor Market; for hires, sail home.');
+      action('◆ Buy & sell (ship\'s stores)', () => this.host.openShop());
       action('⛵ Sail home to Emberwick Harbor', () => this.sail('realm'), true);
     } else if (node.kind === 'market') {
       add('p', 'wm-status', 'The market is open. Stock up on potions before the next battle.');
@@ -586,7 +587,7 @@ function paintShore(canvas: HTMLCanvasElement): void {
   const pos = (id: string) => { const n = worldNode(id)!; return [n.x * W, n.y * H] as const; };
   const roads = WORLD_ROADS.filter(([a, b]) => regionOf(a) === 'shore' && regionOf(b) === 'shore').map(([a, b]) => [...pos(a), ...pos(b)] as [number, number, number, number]);
   const [fx, fy] = pos('frostfang');
-  const city = [0.86 * W, 0.7 * H] as const;
+  const city = [worldNode('drowned_city')!.x * W, worldNode('drowned_city')!.y * H + 4] as const;
 
   const landAt = (x: number, y: number): number => {
     const nx = x / W, ny = y / H;
@@ -652,9 +653,15 @@ function paintShore(canvas: HTMLCanvasElement): void {
       r(x - 3, y - 2, 7, 4, '#565b6b'); r(x - 3, y - 3, 1, 1, '#565b6b'); r(x + 3, y - 3, 1, 1, '#565b6b'); r(x, y, 1, 2, '#1b1f2b'); r(x, y - 7, 1, 2, '#ef4444');
     }
   };
-  for (const n of SHORE) icon[n.id]?.(n.x * W, n.y * H - 4);
-  // The drowned city: pale towers rising out of the bay, the sea pulling back around them
-  const [cx, cy] = city;
-  for (const [dx, h] of [[-8, 9], [-3, 14], [2, 11], [7, 7]]) { r(cx + dx, cy - h, 3, h, '#eef2f7'); r(cx + dx, cy - h, 3, 1, '#ffffff'); r(cx + dx + 1, cy - h - 2, 1, 2, '#c7d2e0'); }
-  r(cx - 11, cy, 22, 1, '#a9d8ee'); r(cx - 9, cy + 2, 18, 1, '#7fc8e8');
+  // The drowned city: pale towers rising out of the bay, the sea pulling back around them (0.35.0: its own place)
+  icon.drowned_city = (x, y) => {
+    for (const [dx, h] of [[-8, 9], [-3, 14], [2, 11], [7, 7]]) { r(x + dx, y - h, 3, h, '#eef2f7'); r(x + dx, y - h, 3, 1, '#ffffff'); r(x + dx + 1, y - h - 2, 1, 2, '#c7d2e0'); }
+    r(x - 11, y, 22, 1, '#a9d8ee'); r(x - 9, y + 2, 18, 1, '#7fc8e8');
+  };
+  // A side battle's camp: a lean-to and a flag
+  const camp = (x: number, y: number) => {
+    for (let k = 0; k < 5; k++) r(x - 6 + (4 - k), y - 4 + k, k * 2 + 1, 1, k % 2 ? '#8a6a3a' : '#a8834a');
+    r(x + 4, y - 9, 1, 10, '#3b2a17'); r(x + 5, y - 9, 4, 3, '#d97706'); r(x + 5, y - 8, 3, 1, '#fbbf24');
+  };
+  for (const n of SHORE) (icon[n.id] || (n.kind === 'skirmish' ? camp : undefined))?.(n.x * W, n.y * H - 4);
 }
