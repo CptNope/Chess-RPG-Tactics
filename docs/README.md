@@ -42,6 +42,7 @@ flowchart LR
 | **[Enemy AI](ENEMY_AI.md)** | Developers | Planner search, scoring table, guarantees, known limits |
 | **[Testing](TESTING.md)** | Developers | CI layers, unit test map, browser play-tests, release checklist |
 | **[Roadmap](ROADMAP.md)** | Everyone | Release timeline, Now / Next / Later, impact vs effort, known issues |
+| **[Online Versus](ONLINE_VERSUS.md)** | Everyone | The plan for 2–4 player online battles on Cloudflare: modes, team building with a JP budget, server design, releases, cost |
 | **[Contributing](../CONTRIBUTING.md)** | Developers | Setup, workflow, recipes for abilities, jobs, maps, chapters, items and UI |
 | **[Changelog](../CHANGELOG.md)** | Everyone | Every release |
 
