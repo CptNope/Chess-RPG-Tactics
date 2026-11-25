@@ -78,8 +78,10 @@ flowchart LR
     C2b --> C3
     C3 --> C4["Chapter IV<br/>Fire on the Water"]
     C4 --> C5["Chapter V<br/>The Greywatch Light"]
-    C5 --> C6["Final Chapter<br/>The Drowned Regent"]
-    C6 --> E(["Epilogue"])
+    C5 --> C6["Chapter VI<br/>The Drowned Regent"]
+    C6 -->|"Take ship for the Far Shore"| C7["Chapter VII<br/>The Saltglass Shore"]
+    C7 --> C8["Chapter VIII<br/>Frostfang Pass"]
+    C8 --> E(["To be continued"])
     E --> NG["New Game+<br/>keep your squad"]
     E --> TR["Trials of the Zodiac<br/>endless"]
 ```
@@ -92,7 +94,9 @@ flowchart LR
 | III | Zodiac Summit | Zodiac Champion | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail |
 | IV | Emberwick Harbor | Captain Varrow | Sable (Thief) | Oathkeeper, plus Moonfang for marching |
 | V | Greywatch Isle | Tidecaller Maelis | — | Runeblade, plus a Warding Amulet for marching |
-| Final | Stormbreak Cape | The Drowned Regent | — | Dawnbringer, plus Templar Mail for marching |
+| VI | Stormbreak Cape | The Drowned Regent | — | Dawnbringer, plus Templar Mail for marching |
+| VII | Saltglass Shore | Herald Isaine | Kestrel (Beast Tamer) | Saltglass Blade, plus a Frostfang Mail for marching |
+| VIII | Frostfang Pass | Marshal Hale | — | (the story continues in a later update) |
 
 **Act II** (Chapters IV to VI) is one road with bigger fights, and each battlefield asks something different:
 
@@ -103,6 +107,14 @@ flowchart LR
 ![Chapter IV: the squad on the quay at Emberwick Harbor, with the corsair ship across the piers](images/act2-harbor.webp)
 
 If you finished the story before Act II existed, Chapter IV is waiting on your map and the Trials stay open.
+
+**Act III** (0.34) crosses the sea. Once the Regent is beaten, **⛵ Sail to the Far Shore** at Emberwick Harbor; the ship lands you at the Anchorage, on a map of its own. The battlefields there have new ground:
+
+* **Saltglass Shore:** dunes and a tidal channel. **Sand** is ordinary ground; the channel is crossed at one sandbar ford. The Court holds the old stone port in the north, and two monsters wait in the dunes and the wreck.
+* **Frostfang Pass:** terraces climbing to a fort. **Snow** costs 2 movement for everyone, so keep to the road or the west ledge.
+* Geomancers get two new spells: **Dust Devil** on sand (Blind) and **Whiteout** on snow (Slow).
+
+To shop at Larkmoor Market, **⛵ Sail home** from the Anchorage, and sail back from Emberwick. Wenna the Pedlar stays in the realm. Chapter VIII ends the story for now: the Trials and New Game+ stay open after it.
 
 Each road also adds gear to your armory the moment you march down it ([details](CONTENT_REFERENCE.md#campaign)). The game autosaves at the start of every chapter and whenever you reach the world map.
 
@@ -118,18 +130,22 @@ flowchart LR
     M --- B["Night Battlement<br/>Chapter II-B"]
     R --- G["Gloomy Mire<br/>Chapter II-A"]
     R --- B
-    G --- Z["Zodiac Summit<br/>Final Chapter"]
+    G --- Z["Zodiac Summit<br/>Chapter III"]
     B --- Z
     Z --- T["★ Gate of Trials<br/>opens after Chapter III"]
     R --- H["Emberwick Harbor<br/>Chapter IV"]
     M --- H
     M --- I["Greywatch Isle<br/>Chapter V"]
     M --- TF["⚑ Thornwood Ford"] --- B
-    TF --- CP["Stormbreak Cape<br/>Final Chapter"]
+    TF --- CP["Stormbreak Cape<br/>Chapter VI"]
     G --- DS["⚑ Drowned Shrine"]
     Z --- WR["⚑ Watchfire Ridge"]
     B --- HH["⚑ Howling Hollow"]
     R --- BB["⚑ Briar Barrow"] --- B
+    H -. "⛵ after Chapter VI" .- A
+    subgraph FS["The Far Shore (Act III)"]
+        A["⛵ The Anchorage"] --- SG["Saltglass Shore<br/>Chapter VII"] --- FP["Frostfang Pass<br/>Chapter VIII"]
+    end
 ```
 
 | On the map | Means |
@@ -141,6 +157,7 @@ flowchart LR
 | ⚑ orange pin | A **side battle**: optional, and it can be fought again |
 | ★ Gate of Trials | Sealed until Chapter III is won |
 | 🎒 beside a pin | Wenna the Pedlar, the travelling merchant, is there |
+| ⛵ harbour | Ships between Emberwick Harbor and the Anchorage on the Far Shore, once Chapter VI is won |
 
 * **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough.
 * **Side battles** are for gil, EXP and JP, and for practice when the story gets hard. They never move the story on.

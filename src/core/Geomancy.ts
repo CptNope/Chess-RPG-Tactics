@@ -19,7 +19,10 @@ export const TERRAIN_SPELLS: Record<TerrainType, TerrainSpell> = {
   dirt: { name: 'Sandstorm', element: 'physical', status: 'slow', powerScale: 0.85 },
   water: { name: 'Torrent', element: 'ice', powerScale: 1.05 },
   swamp: { name: 'Quicksand', element: 'dark', status: 'poison', powerScale: 0.8 },
-  wood: { name: 'Wildfire', element: 'fire', powerScale: 1.1 }
+  wood: { name: 'Wildfire', element: 'fire', powerScale: 1.1 },
+  // The Far Shore (0.34.0)
+  sand: { name: 'Dust Devil', element: 'physical', status: 'blind', powerScale: 0.9 },
+  snow: { name: 'Whiteout', element: 'ice', status: 'slow', powerScale: 0.9 }
 };
 
 /**

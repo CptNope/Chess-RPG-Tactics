@@ -515,12 +515,14 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | water | **Torrent** | ice | — | 1.05× |
 | swamp | **Quicksand** | dark | poison | 0.80× |
 | wood | **Wildfire** | fire | — | 1.10× |
+| sand | **Dust Devil** | physical | blind | 0.90× |
+| snow | **Whiteout** | ice | slow | 0.90× |
 
 ## Items
 
-69 items across five gear slots.
+71 items across five gear slots.
 
-### Weapon (24)
+### Weapon (25)
 
 | Item | Type | Range | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :---: | :--- | :--- | ---: | :--- | :--- |
@@ -539,12 +541,13 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Drover's Whip** `drovers_whip` | whip | 2 | ATTACK +5, SPEED +1 | — | 260 | Starting gear | Dancer, Beast Tamer |
 | **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer |
 | **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop | Knight, Dragoon |
-| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win FINAL CHAPTER · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win CHAPTER VI · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
 | **Siege Crossbow** `siege_crossbow` | bow | 4 | ATTACK +11, SPEED -1 | — | 480 | Trials drop | Archer, Bard, Beast Tamer |
 | **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Saltglass Blade** `saltglass_blade` | sword | 1 | ATTACK +12, MAGIC +4, SPEED +1 | ice +25% | 820 | Win CHAPTER VII | Squire, Knight, Geomancer, Paladin, Spellblade |
 | **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
 | **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only | Knight, Dragoon |
 | **Fordwarden's Bow** `fordwarden_bow` | bow | 5 | ATTACK +8, SPEED +1, EVASION +5 | — | 520 | First win at Thornwood Ford | Archer, Bard, Beast Tamer |
@@ -573,7 +576,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Circlet of Clarity** `clarity_circlet` | light | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop | Anyone |
 | **Watchfire Helm** `watchfire_helm` | heavy | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge | Squire, Knight, Dragoon, Geomancer, Paladin |
 
-### Body (13)
+### Body (14)
 
 | Item | Kind | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
@@ -585,6 +588,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Leather Vest** `leather_vest` | light | HP +25, EVASION +3 | — | 90 | Starting gear | Anyone |
 | **Brawler's Gi** `brawler_gi` | light | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop | Anyone |
 | **Summoner's Robe** `summoner_robe` | robe | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard |
+| **Frostfang Mail** `frostfang_mail` | heavy | HP +90, ATTACK +2 | guards slow | 880 | Choose "Climb Frostfang Pass and break the Court's fort before the Pale Heir reaches the sea." | Squire, Knight, Dragoon, Geomancer, Paladin |
 | **Templar Mail** `templar_mail` | heavy | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
 | **Wolfpelt Mantle** `wolfpelt_mantle` | light | HP +25, EVASION +6, MOVE +1 | guards poison | 560 | First win at Howling Hollow | Anyone |
 | **Hide Barding** `hide_barding` | beast | HP +30, ATTACK +1 | — | 200 | Starting gear of a job | Tamed beasts |
@@ -638,7 +642,7 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 | Before the first victory | 380 | 34 |
 | Chapter I won | 480 | 48 |
 | Chapter II won | 580 | 55 |
-| Campaign cleared / Trials | none | 58 |
+| Campaign cleared / Trials | none | 60 |
 
 Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye.
 
@@ -648,7 +652,7 @@ Trading happens at the market on the world map. It buys spare gear and supplies 
 
 ## World map
 
-Where the squad stands between missions. Roads join the places; the squad walks the shortest way along them.
+Where the squad stands between missions. Roads join the places; the squad walks the shortest way along them. There are two maps: the realm, and the Far Shore across the sea (0.34), where ships sail between the two harbours once Chapter VI is won.
 
 ```mermaid
 flowchart LR
@@ -660,12 +664,17 @@ flowchart LR
   trials["Gate of Trials<br/><i>post-game</i>"]
   harbor["Emberwick Harbor<br/><i>CHAPTER IV</i>"]
   isle["Greywatch Isle<br/><i>CHAPTER V</i>"]
-  cape["Stormbreak Cape<br/><i>FINAL CHAPTER</i>"]
+  cape["Stormbreak Cape<br/><i>CHAPTER VI</i>"]
   thornwood["Thornwood Ford<br/><i>side battle</i>"]
   shrine["Drowned Shrine<br/><i>side battle</i>"]
   ridge["Watchfire Ridge<br/><i>side battle</i>"]
   hollow["Howling Hollow<br/><i>side battle</i>"]
   barrow["Briar Barrow<br/><i>side battle</i>"]
+  subgraph far_shore["The Far Shore"]
+    anchorage["The Anchorage<br/><i>ship to the realm</i>"]
+    saltglass["Saltglass Shore<br/><i>CHAPTER VII</i>"]
+    frostfang["Frostfang Pass<br/><i>CHAPTER VIII</i>"]
+  end
   market --- ruins
   market --- battlement
   ruins --- mire
@@ -684,6 +693,9 @@ flowchart LR
   battlement --- hollow
   ruins --- barrow
   barrow --- battlement
+  anchorage --- saltglass
+  saltglass --- frostfang
+  harbor -. "⛵ by sea" .- anchorage
 ```
 
 | Place | Kind | What happens there | Roads to |
@@ -696,12 +708,15 @@ flowchart LR
 | **Gate of Trials** | trials | Enter the Trials of the Zodiac (after the story) | Zodiac Summit |
 | **Emberwick Harbor** | mission | CHAPTER IV: Fire on the Water | Riverside Ruins, Larkmoor Market |
 | **Greywatch Isle** | mission | CHAPTER V: The Greywatch Light | Larkmoor Market |
-| **Stormbreak Cape** | mission | FINAL CHAPTER: The Drowned Regent | Thornwood Ford |
+| **Stormbreak Cape** | mission | CHAPTER VI: The Drowned Regent | Thornwood Ford |
 | **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement, Stormbreak Cape |
 | **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
 | **Howling Hollow** | skirmish | Side battle: Wild Beasts | Night Battlement |
 | **Briar Barrow** | skirmish | Side battle: Barrow Things | Riverside Ruins, Night Battlement |
+| **The Anchorage** | port | Take ship back to Emberwick Harbor | Saltglass Shore |
+| **Saltglass Shore** | mission | CHAPTER VII: The Saltglass Shore | The Anchorage, Frostfang Pass |
+| **Frostfang Pass** | mission | CHAPTER VIII: Frostfang Pass | Saltglass Shore |
 
 ### Camp scenes
 
@@ -715,6 +730,8 @@ After each story battle but the last, the squad makes camp on the world map. Sit
 | CHAPTER III | After the Seal | Rowan, Bria, Corvin, Maren |
 | CHAPTER IV | The Charts | Sable, Rowan, Tobin, Maren |
 | CHAPTER V | The Night Before the Cape | Bria, Corvin, Tobin, Sable, Rowan |
+| CHAPTER VI | The Last Night Ashore | Tobin, Sable, Maren, Bria, Rowan |
+| CHAPTER VII | Fire in the Dunes | Kestrel, Tobin, Corvin |
 
 ## Difficulty
 
@@ -764,6 +781,8 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Emberwick Harbor** | `ember_harbor` | 16×16 | day | 0.4–4 | stone 36%, wood 30%, water 27%, dirt 6% | 72 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Greywatch Isle** | `greywatch_isle` | 16×16 | night | 0.4–7 | water 44%, dirt 21%, stone 15%, grass 15%, parapet 5% | 90 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Stormbreak Cape** | `stormbreak_cape` | 16×16 | night | 0.4–5.4 | grass 27%, stone 23%, dirt 21%, parapet 18%, water 10%, wood 2% | 14 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Saltglass Shore** | `saltglass_shore` | 16×16 | desert | 0.4–5 | sand 57%, stone 21%, water 18%, wood 4% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Frostfang Pass** | `frostfang_pass` | 16×16 | snow | 1–7 | snow 53%, stone 27%, dirt 10%, parapet 6%, wood 3%, water 2% | 55 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 
 ## Campaign
 
@@ -775,8 +794,10 @@ flowchart LR
   chapter_3["CHAPTER III<br/>The Awakening at the Summit<br/><i>Zodiac Summit</i>"]
   chapter_4["CHAPTER IV<br/>Fire on the Water<br/><i>Emberwick Harbor</i>"]
   chapter_5["CHAPTER V<br/>The Greywatch Light<br/><i>Greywatch Isle</i>"]
-  chapter_6["FINAL CHAPTER<br/>The Drowned Regent<br/><i>Stormbreak Cape</i>"]
-  epilogue(["Epilogue<br/>New Game+ / Trials"])
+  chapter_6["CHAPTER VI<br/>The Drowned Regent<br/><i>Stormbreak Cape</i>"]
+  chapter_7["CHAPTER VII<br/>The Saltglass Shore<br/><i>Saltglass Shore</i>"]
+  chapter_8["CHAPTER VIII<br/>Frostfang Pass<br/><i>Frostfang Pass</i>"]
+  epilogue(["Epilogue (to be continued)<br/>New Game+ / Trials"])
   chapter_1 -->|"Pursue the fleeing sorcerer into the Gloomy Mire"| chapter_2a
   chapter_1 -->|"Rush to reinforce the garrison at Night Battlement"| chapter_2b
   chapter_2a -->|"Ascend to the Zodiac Summit for the final battle"| chapter_3
@@ -784,7 +805,9 @@ flowchart LR
   chapter_3 -->|"Ride for Emberwick Harbor and find out who is hunting the second seal"| chapter_4
   chapter_4 -->|"Sail for Greywatch Isle before the Tidecaller finds the seal"| chapter_5
   chapter_5 -->|"Make for Stormbreak Cape and stop the Drowned Regent at the water's edge"| chapter_6
-  chapter_6 --> epilogue
+  chapter_6 -->|"Take ship at Emberwick Harbor and follow the Regent's court across the sea to the Far Shore."| chapter_7
+  chapter_7 -->|"Climb Frostfang Pass and break the Court's fort before the Pale Heir reaches the sea."| chapter_8
+  chapter_8 --> epilogue
 ```
 
 | Chapter | Map | Enemies | Boss | Recruit | Win reward | Branch rewards |
@@ -795,7 +818,9 @@ flowchart LR
 | **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | 4 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
 | **CHAPTER IV**: Fire on the Water | Emberwick Harbor | 6 | Captain Varrow (Ninja L7) | Sable (Thief) | Oathkeeper | Warding Amulet |
 | **CHAPTER V**: The Greywatch Light | Greywatch Isle | 6 | Tidecaller Maelis (Summoner L7) | — | Runeblade | Templar Mail |
-| **FINAL CHAPTER**: The Drowned Regent | Stormbreak Cape | 7 | The Drowned Regent (Paladin L9) | — | Dawnbringer | — |
+| **CHAPTER VI**: The Drowned Regent | Stormbreak Cape | 7 | The Drowned Regent (Paladin L9) | — | Dawnbringer | undefined |
+| **CHAPTER VII**: The Saltglass Shore | Saltglass Shore | 7 | Herald Isaine (Spellblade L10) | Kestrel (Beast Tamer) | Saltglass Blade | Frostfang Mail |
+| **CHAPTER VIII**: Frostfang Pass | Frostfang Pass | 6 | Marshal Hale (Knight L11) | — | — | — |
 
 <details><summary><b>CHAPTER I</b> enemy roster</summary>
 
@@ -871,7 +896,7 @@ flowchart LR
 
 </details>
 
-<details><summary><b>FINAL CHAPTER</b> enemy roster</summary>
+<details><summary><b>CHAPTER VI</b> enemy roster</summary>
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
@@ -882,6 +907,33 @@ flowchart LR
 | Wraith Duelist | Spellblade | 8 | (3, 7) |  |
 | Wraith Lancer | Dragoon | 8 | (12, 7) |  |
 | Drowned Knight | Bone Knight | 8 | (12, 3) |  |
+
+</details>
+
+<details><summary><b>CHAPTER VII</b> enemy roster</summary>
+
+| Enemy | Job | Level | Tile | Boss |
+| :--- | :--- | :---: | :---: | :---: |
+| Herald Isaine | Spellblade | 10 | (7, 1) | ★ |
+| Court Pugilist | Monk | 9 | (5, 3) |  |
+| Court Crossbow | Archer | 9 | (10, 2) |  |
+| Court Chaplain | White Mage | 9 | (8, 0) |  |
+| Tide Augur | Oracle | 9 | (6, 1) |  |
+| Dune Basilisk | Basilisk | 9 | (13, 6) |  |
+| Wreck Thornling | Thornling | 9 | (13, 10) |  |
+
+</details>
+
+<details><summary><b>CHAPTER VIII</b> enemy roster</summary>
+
+| Enemy | Job | Level | Tile | Boss |
+| :--- | :--- | :---: | :---: | :---: |
+| Marshal Hale | Knight | 11 | (7, 1) | ★ |
+| Frost Wyvern | Wyvern | 10 | (10, 2) |  |
+| Court Hexer | Black Mage | 10 | (9, 0) |  |
+| Court Seer | Time Weaver | 10 | (6, 0) |  |
+| Pass Wolf | Dire Wolf | 10 | (12, 6) |  |
+| Vael Revenant | Bone Knight | 10 | (4, 5) |  |
 
 </details>
 

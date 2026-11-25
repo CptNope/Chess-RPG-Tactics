@@ -42,8 +42,9 @@ export function merchantVisitIndex(cleared: string[], skirmishWins: Record<strin
  * the market, which has its own stalls, nor a battle still to be fought), in map order.
  */
 export function merchantStops(cleared: string[]): string[] {
-  return WORLD_NODES.filter((n) =>
-    (n.kind === 'skirmish' && skirmishOpen(n.skirmishId!, cleared)) || (n.kind === 'mission' && cleared.includes(n.chapterId!))
+  // She keeps to the realm: the Far Shore is no place for a pedlar's cart (0.34.0)
+  return WORLD_NODES.filter((n) => !n.region &&
+    ((n.kind === 'skirmish' && skirmishOpen(n.skirmishId!, cleared)) || (n.kind === 'mission' && cleared.includes(n.chapterId!)))
   ).map((n) => n.id);
 }
 

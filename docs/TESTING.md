@@ -10,10 +10,10 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 275 tests"]
+        T2["Unit tests<br/>vitest · 277 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
-        T5["Browser play-tests<br/>npm run playtest · 7 checks"]
+        T5["Browser play-tests<br/>npm run playtest · 8 checks"]
     end
     subgraph Dev["Run during development (Playwright scripts)"]
         P1["Campaign bot<br/>AUTO plays every turn"]
@@ -43,7 +43,7 @@ flowchart TB
 
 ## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`)
 
-All 275 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 277 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -80,7 +80,7 @@ Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `
 
 ### In CI: `npm run playtest`
 
-`scripts/playtest.mjs` serves `dist/` with `vite preview`, opens it in headless Chromium (Playwright) and runs seven checks, each in a fresh page. Any page error or console error fails the check; a failed check saves a screenshot, which CI uploads as `playtest-failures`.
+`scripts/playtest.mjs` serves `dist/` with `vite preview`, opens it in headless Chromium (Playwright) and runs eight checks, each in a fresh page. Any page error or console error fails the check; a failed check saves a screenshot, which CI uploads as `playtest-failures`.
 
 | Check | What it does |
 | :--- | :--- |
@@ -89,6 +89,7 @@ Randomness is injectable: `CombatEngine.executeAttack(forecast, rng)` takes an `
 | Team screen | Jobs list, the five gear slots and the shop all render |
 | World map, market and side battle | After Chapter I: the map opens, the market and the Howling Hollow panels open, **Fight** starts a battle with wolves |
 | A later chapter loads with monsters | Chapter V loads with its wyvern and plays 120 steps: the enemy planner with items and caution |
+| Sail to the Far Shore (0.34) | After Chapter VI: **Sail to the Far Shore** at Emberwick Harbor shows THE FAR SHORE with only its places; **March** at Saltglass Shore starts Chapter VII with its basilisk |
 | Save and load | A save round-trips gil and the squad |
 | Phone | 390×844 with touch: a turn on AUTO, the Team screen, no sideways scrolling |
 
@@ -167,4 +168,4 @@ The Final Chapter is near 0% on pure AUTO in 0.9 as well; the campaign bot clear
 | ☐ | New browser profile: the tips appear once each during Chapter I and never cover a button you need |
 | ☐ | Move, UNDO, move elsewhere, act: the unit ends where you last put it |
 | ☐ | Win a side battle twice: the second visit is a level harder and pays the smaller bonus |
-| ☐ | Play the Final Chapter with a re-geared squad: hard but fair |
+| ☐ | Play Chapter VI (the Drowned Regent) with a re-geared squad: hard but fair |

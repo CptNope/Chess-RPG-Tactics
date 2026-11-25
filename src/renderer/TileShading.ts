@@ -89,6 +89,8 @@ export interface TerrainTextures {
   parapet: THREE.Texture;
   water: THREE.Texture;
   swamp: THREE.Texture;
+  sand: THREE.Texture;
+  snow: THREE.Texture;
 }
 
 /** Builds one top + one side material per terrain. */
@@ -112,7 +114,10 @@ export function createTileMaterials(t: TerrainTextures): Record<TerrainType, { t
     stone: { top: lambert(t.stone, 'top'), side: lambert(t.stone, 'side') },
     parapet: { top: lambert(t.parapet, 'top'), side: lambert(t.parapet, 'side') },
     water: { top: waterTop, side: lambert(t.water, 'side', { color: 0x9ab8d8 }) },
-    swamp: { top: swampTop, side: lambert(t.swamp, 'side') }
+    swamp: { top: swampTop, side: lambert(t.swamp, 'side') },
+    // The Far Shore (0.34.0): dune sides are sand; snowfields sit on grey rock
+    sand: { top: lambert(t.sand, 'top'), side: lambert(t.sand, 'side', { color: 0xd8c8a8 }) },
+    snow: { top: lambert(t.snow, 'top'), side: lambert(t.stone, 'side', { color: 0xc8d4e4 }) }
   };
 }
 

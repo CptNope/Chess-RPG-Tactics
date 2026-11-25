@@ -8,7 +8,7 @@ import { CAMP_SCENES, pendingCamp, sanitizeCampSeen } from '../src/data/camp';
 import { SHOP_PRICE_CAP, UNIQUE_ITEMS, gearSaleBlock, shopStock } from '../src/core/Economy';
 import { EARLY_MARKUP, merchantStops, merchantVisit, merchantVisitIndex } from '../src/core/Merchant';
 import { SKIRMISHES, missingTrophies } from '../src/core/Skirmish';
-import { WORLD_NODES, worldNode } from '../src/core/World';
+import { SEA_PORTS, WORLD_NODES, WORLD_ROADS, farShoreOpen, regionOf, route, worldNode } from '../src/core/World';
 import { SaveManager } from '../src/core/SaveManager';
 import { JobSystem } from '../src/core/JobSystem';
 import { portraitForSpeaker } from '../src/graphics/CharacterArt';
@@ -98,7 +98,7 @@ describe('camp scenes (0.21.0)', () => {
   it('one scene after every story battle but the last, and only squad members speak', () => {
     const story = Object.values(CAMPAIGN_CHAPTERS).filter((c) => c.choices?.length).map((c) => c.id);
     expect(Object.keys(CAMP_SCENES).sort()).toEqual(story.sort());
-    const joins: Record<string, string[]> = { chapter_2a: ['Bria'], chapter_2b: ['Bria'], chapter_3: ['Bria'], chapter_4: ['Bria', 'Sable'], chapter_5: ['Bria', 'Sable'] };
+    const joins: Record<string, string[]> = { chapter_2a: ['Bria'], chapter_2b: ['Bria'], chapter_3: ['Bria'], chapter_4: ['Bria', 'Sable'], chapter_5: ['Bria', 'Sable'], chapter_6: ['Bria', 'Sable'], chapter_7: ['Bria', 'Sable', 'Kestrel'] };
     for (const scene of Object.values(CAMP_SCENES)) {
       expect(scene.lines.length).toBeGreaterThanOrEqual(4);
       const cast = ['Rowan', 'Maren', 'Tobin', 'Corvin', ...(joins[scene.chapterId] || [])];
@@ -120,7 +120,7 @@ describe('camp scenes (0.21.0)', () => {
   it('an old save gets its latest scene, not a backlog; junk is dropped', () => {
     expect(sanitizeCampSeen(undefined, ACT1)).toEqual(['chapter_1', 'chapter_2a']);
     expect(pendingCamp(ACT1, sanitizeCampSeen(undefined, ACT1))?.chapterId).toBe('chapter_3');
-    expect(sanitizeCampSeen(['chapter_1', 'chapter_1', '__proto__', 7, 'chapter_6', 'nope'], ACT1)).toEqual(['chapter_1']);
+    expect(sanitizeCampSeen(['chapter_1', 'chapter_1', '__proto__', 7, 'chapter_8', 'nope'], ACT1)).toEqual(['chapter_1']);
   });
 
   it('the JP a scene pays goes into the job the unit is in', () => {
@@ -140,7 +140,20 @@ describe('world map places (0.21.0)', () => {
   it('the merchant never sets up at the market or the Gate', () => {
     const stops = merchantStops(Object.keys(CAMPAIGN_CHAPTERS));
     for (const id of stops) expect(['market', 'trials']).not.toContain(worldNode(id)!.kind);
-    expect(stops.length).toBe(WORLD_NODES.filter((n) => n.kind === 'mission' || n.kind === 'skirmish').length);
+    expect(stops.length).toBe(WORLD_NODES.filter((n) => !n.region && (n.kind === 'mission' || n.kind === 'skirmish')).length);
+  });
+
+  it('ships sail for the Far Shore once Chapter VI is won (0.34.0)', () => {
+    expect(farShoreOpen(['chapter_5'])).toBe(false);
+    expect(farShoreOpen(['chapter_6'])).toBe(true);
+    for (const id of ['chapter_7', 'chapter_8']) expect(regionOf(WORLD_NODES.find((n) => n.chapterId === id)!.id)).toBe('shore');
+    expect(regionOf(SEA_PORTS.realm)).toBe('realm');
+    expect(regionOf(SEA_PORTS.shore)).toBe('shore');
+    // The Far Shore's places join up by road, and no road crosses the sea
+    expect(route('anchorage', 'frostfang').at(-1)).toBe('frostfang');
+    for (const [a, b] of WORLD_ROADS) expect(regionOf(a), `${a}-${b}`).toBe(regionOf(b));
+    // The merchant keeps to the realm
+    for (const id of merchantStops(Object.keys(CAMPAIGN_CHAPTERS))) expect(regionOf(id)).toBe('realm');
   });
 });
 

@@ -55,6 +55,24 @@ export const ATMOSPHERES: Record<string, AtmospherePreset> = {
     rimColor: 0x7ad3a0, rimIntensity: 0.5,
     exposure: 1.2, bloom: 0.5, torchColor: 0x9cff7a
   },
+  // Saltglass Shore (0.34.0): white-hot noon over the sea
+  saltglass_shore: {
+    skyTop: '#2a6fb0', skyHorizon: '#f3d9a2', skyBottom: '#1d3550', stars: 0,
+    fog: 0xc9b48a, fogNear: 46, fogFar: 96,
+    hemiSky: 0xfff1d0, hemiGround: 0x8a6a3a, hemiIntensity: 1.35,
+    sunColor: 0xfff0c8, sunIntensity: 2.9, sunDir: [10, 38, 14],
+    rimColor: 0x8ad8ff, rimIntensity: 0.45,
+    exposure: 1.0, bloom: 0.4, torchColor: 0xffa040
+  },
+  // Frostfang Pass (0.34.0): cold grey light and blowing snow
+  frostfang_pass: {
+    skyTop: '#3a4a66', skyHorizon: '#c8d4e4', skyBottom: '#1c2433', stars: 0,
+    fog: 0xa8b6c8, fogNear: 40, fogFar: 88,
+    hemiSky: 0xe0ecff, hemiGround: 0x5a6478, hemiIntensity: 1.4,
+    sunColor: 0xe8f0ff, sunIntensity: 2.2, sunDir: [-12, 32, 16],
+    rimColor: 0x9fc8ff, rimIntensity: 0.6,
+    exposure: 1.05, bloom: 0.45, torchColor: 0xffa040
+  },
   // Zodiac Summit: violet aurora above the clouds
   zodiac_summit: {
     skyTop: '#0a0420', skyHorizon: '#5b2a7a', skyBottom: '#120a24', stars: 240,

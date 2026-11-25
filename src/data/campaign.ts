@@ -232,7 +232,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
 
   chapter_6: {
     id: 'chapter_6',
-    title: 'FINAL CHAPTER',
+    title: 'CHAPTER VI',
     subtitle: 'The Drowned Regent',
     mapId: 'stormbreak_cape',
     rewardItemIds: ['dawn_blade'],
@@ -247,7 +247,18 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'The Drowned Regent', portrait: 'foe_paladin', portraitClass: '👑', side: 'right', text: 'The sea... takes me back. Remember who it was... that stood here...' },
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'Gone, armour and all. I have robbed a lot of tombs. First time I have put anything back in one.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Both seals are quiet. The realm is safe, and this time I believe it. Thank you, all of you.' },
-      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Safe, yes. Though the mountain still hums at night. If any of you grow restless, the Gate of Trials stands open.' }
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Safe, yes. Though the mountain still hums at night. If any of you grow restless, the Gate of Trials stands open.' },
+      // Act III (0.34.0): the story goes on across the sea
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'Not so fast. I took one thing out of his tomb before I put him back: this chart. His court did not drown with him. They sailed for the old kingdom\'s shore, a month ago.' },
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The Far Shore. My grandmother said it was all desert and mountains now, and that nobody who sailed there came back to say so.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then we will be the first. Emberwick has ships. Rest tonight; we sail when you are ready.' }
+    ],
+    choices: [
+      {
+        text: 'Take ship at Emberwick Harbor and follow the Regent\'s court across the sea to the Far Shore.',
+        nextChapterId: 'chapter_7',
+        rewardText: 'A passage across the sea, and Sable\'s stolen chart'
+      }
     ],
     enemyRoster: [
       { name: 'The Drowned Regent', jobId: 'paladin', level: 9, x: 7, z: 1, isBoss: true },
@@ -257,6 +268,76 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Wraith Duelist', jobId: 'spellblade', level: 8, x: 3, z: 7 },
       { name: 'Wraith Lancer', jobId: 'dragoon', level: 8, x: 12, z: 7 },
       { name: 'Drowned Knight', jobId: 'bone_knight', level: 8, x: 12, z: 3 }
+    ]
+  },
+
+  // ACT III: THE FAR SHORE (0.34.0)
+  chapter_7: {
+    id: 'chapter_7',
+    title: 'CHAPTER VII',
+    subtitle: 'The Saltglass Shore',
+    mapId: 'saltglass_shore',
+    rewardItemIds: ['saltglass_blade'],
+    recruit: { id: 'kestrel', name: 'Kestrel', jobId: 'tamer', level: 9 },
+    introDialogue: [
+      { speaker: 'Herald Isaine', portrait: 'foe_spellblade', portraitClass: '🌊', side: 'right', text: 'Knights of the little kingdom, on our beach. The Regent sleeps again, then. No matter. His daughter is awake.' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'You came off that ship, so you are not with them. Good. They burned my village for a road to the old harbour. I know these dunes, and I know what lives in them.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then fight with us. Who is the Regent\'s daughter?' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'They call her the Pale Heir. Later. There is a basilisk in the dunes and a briar-thing in the wreck, and they will not wait for introductions.' },
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The channel splits the beach. Take the sandbar ford or the old steps; the Herald holds the high stones of the port.' }
+    ],
+    victoryDialogue: [
+      { speaker: 'Herald Isaine', portrait: 'foe_spellblade', portraitClass: '🌊', side: 'right', text: 'Run home, little knights... The Marshal holds the pass. The Heir is already in the mountains, and beyond them the sea is giving the city back.' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'Frostfang Pass. The only road over the mountains, and the Court built a fort at the top of it. I am coming. I have a village to answer for.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: '"Giving the city back." The drowned capital. If she raises it, the old kingdom comes with it.' }
+    ],
+    choices: [
+      {
+        text: 'Climb Frostfang Pass and break the Court\'s fort before the Pale Heir reaches the sea.',
+        nextChapterId: 'chapter_8',
+        rewardText: 'Armory: Frostfang Mail',
+        rewardItemIds: ['frostfang_mail']
+      }
+    ],
+    enemyRoster: [
+      { name: 'Herald Isaine', jobId: 'spellblade', level: 10, x: 7, z: 1, isBoss: true },
+      { name: 'Court Pugilist', jobId: 'monk', level: 9, x: 5, z: 3 },
+      { name: 'Court Crossbow', jobId: 'archer', level: 9, x: 10, z: 2 },
+      { name: 'Court Chaplain', jobId: 'white_mage', level: 9, x: 8, z: 0 },
+      { name: 'Tide Augur', jobId: 'oracle', level: 9, x: 6, z: 1 },
+      { name: 'Dune Basilisk', jobId: 'basilisk', level: 9, x: 13, z: 6 },
+      { name: 'Wreck Thornling', jobId: 'thornling', level: 9, x: 13, z: 10 }
+    ]
+  },
+
+  chapter_8: {
+    id: 'chapter_8',
+    title: 'CHAPTER VIII',
+    subtitle: 'Frostfang Pass',
+    mapId: 'frostfang_pass',
+    epilogue: {
+      title: 'THE PASS IS OURS',
+      text: 'The Marshal has fallen, and the road over the mountains is open. Beyond it, white towers are rising from the sea, and the Pale Heir waits in the drowned city. Act III continues in a coming update. Until then, the Far Shore is yours to wander, and the Trials of the Zodiac stand open: endless generated battles with rare gear and a Warden boss every fifth floor.'
+    },
+    introDialogue: [
+      { speaker: 'Marshal Hale', portrait: 'foe_knight', portraitClass: '🛡', side: 'right', text: 'Far enough. Three hundred years my order has kept this pass for the true crown. We will keep it one more day.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'Terraces all the way up, and the fort on top. The snow is deep off the road: two steps for one. Stay on the beaten track or take the west ledge.' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'There is a wyvern over the fort and wolves in the pines. And one of the drowned knights walks with them. The cold does not bother it.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then we climb fast. Squad, up the pass!' }
+    ],
+    victoryDialogue: [
+      { speaker: 'Marshal Hale', portrait: 'foe_knight', portraitClass: '🛡', side: 'right', text: 'Kept it... one day short. She is past the mountains. When the bells ring under the water... you will know you were too late.' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'From the top you can see it. The far coast, and the sea pulling back from something white. Towers.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The drowned city is rising. We rest, we gather what we can, and then we go down to meet her.' },
+      { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Together, like always. The Pale Heir has not met us yet.' }
+    ],
+    enemyRoster: [
+      { name: 'Marshal Hale', jobId: 'knight', level: 11, x: 7, z: 1, isBoss: true },
+      { name: 'Frost Wyvern', jobId: 'wyvern', level: 10, x: 10, z: 2 },
+      { name: 'Court Hexer', jobId: 'black_mage', level: 10, x: 9, z: 0 },
+      { name: 'Court Seer', jobId: 'time_mage', level: 10, x: 6, z: 0 },
+      { name: 'Pass Wolf', jobId: 'wolf', level: 10, x: 12, z: 6 },
+      { name: 'Vael Revenant', jobId: 'bone_knight', level: 10, x: 4, z: 5 }
     ]
   }
 };

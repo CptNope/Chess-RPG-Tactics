@@ -6,7 +6,13 @@ import { CAMPAIGN_CHAPTERS } from '../data/campaign';
 import { StoryChoice } from './types';
 import { SKIRMISHES, skirmishOpen } from './Skirmish';
 
-export type WorldNodeKind = 'mission' | 'market' | 'trials' | 'skirmish';
+export type WorldNodeKind = 'mission' | 'market' | 'trials' | 'skirmish' | 'port';
+
+/**
+ * The map has two regions (0.34.0): the realm, and the Far Shore across the sea, where Act III is
+ * fought. Ships sail between Emberwick Harbor and the Anchorage once Chapter VI is won.
+ */
+export type Region = 'realm' | 'shore';
 
 export interface WorldNode {
   id: string;
@@ -20,6 +26,8 @@ export interface WorldNode {
   /** The side battle fought here (skirmish nodes): optional and replayable. */
   skirmishId?: string;
   blurb: string;
+  /** Which map it's on (0.34.0). The realm when unset. */
+  region?: Region;
 }
 
 export const WORLD_NODES: WorldNode[] = [
@@ -36,7 +44,11 @@ export const WORLD_NODES: WorldNode[] = [
   { id: 'shrine', name: SKIRMISHES.shrine.name, kind: 'skirmish', skirmishId: 'shrine', x: 0.66, y: 0.68, blurb: 'A flooded chapel at the edge of the mire, where a cult gathers.' },
   { id: 'ridge', name: SKIRMISHES.ridge.name, kind: 'skirmish', skirmishId: 'ridge', x: 0.88, y: 0.78, blurb: 'An old watch-fort on the cliffs below the summit, its signal fire still kept.' },
   { id: 'hollow', name: SKIRMISHES.hollow.name, kind: 'skirmish', skirmishId: 'hollow', x: 0.7, y: 0.38, blurb: 'A wooded hollow under the high pass, where the howling carries for miles.' },
-  { id: 'barrow', name: SKIRMISHES.barrow.name, kind: 'skirmish', skirmishId: 'barrow', x: 0.42, y: 0.52, blurb: 'An old kings\' grave-mound gone to briars, between the ruins and the battlement.' }
+  { id: 'barrow', name: SKIRMISHES.barrow.name, kind: 'skirmish', skirmishId: 'barrow', x: 0.42, y: 0.52, blurb: 'An old kings\' grave-mound gone to briars, between the ruins and the battlement.' },
+  // The Far Shore (0.34.0)
+  { id: 'anchorage', name: 'The Anchorage', kind: 'port', region: 'shore', x: 0.2, y: 0.78, blurb: 'Where the ship from Emberwick rides at anchor, in the lee of a sea-glass spit.' },
+  { id: 'saltglass', name: 'Saltglass Shore', kind: 'mission', chapterId: 'chapter_7', region: 'shore', x: 0.46, y: 0.62, blurb: 'The drowned kingdom\'s old harbour, half buried in glittering dunes.' },
+  { id: 'frostfang', name: 'Frostfang Pass', kind: 'mission', chapterId: 'chapter_8', region: 'shore', x: 0.64, y: 0.24, blurb: 'The one road over the mountains, with the Court\'s fort at the top.' }
 ];
 
 /** Roads the party walks between locations. */
@@ -58,8 +70,23 @@ export const WORLD_ROADS: [string, string][] = [
   ['thornwood', 'cape'],
   ['battlement', 'hollow'],
   ['ruins', 'barrow'],
-  ['barrow', 'battlement']
+  ['barrow', 'battlement'],
+  // The Far Shore (0.34.0): no road crosses the sea; ships sail between the two harbours
+  ['anchorage', 'saltglass'],
+  ['saltglass', 'frostfang']
 ];
+
+/** The region a location is in. */
+export const regionOf = (id: string): Region => WORLD_NODES.find((n) => n.id === id)?.region || 'realm';
+
+/** Where ships sail from and to, by region (0.34.0). */
+export const SEA_PORTS: Record<Region, string> = { realm: 'harbor', shore: 'anchorage' };
+
+/** The chapter whose win opens the sea crossing. */
+export const FAR_SHORE_OPENS_AFTER = 'chapter_6';
+
+/** True once ships sail for the Far Shore. */
+export const farShoreOpen = (cleared: string[]): boolean => cleared.includes(FAR_SHORE_OPENS_AFTER);
 
 export const worldNode = (id: string): WorldNode | undefined => WORLD_NODES.find((n) => n.id === id);
 export const nodeForChapter = (chapterId: string): WorldNode | undefined => WORLD_NODES.find((n) => n.chapterId === chapterId);
@@ -113,7 +140,7 @@ export type NodeState = 'open' | 'cleared' | 'locked';
 
 /** How a location shows on the map. */
 export function nodeState(node: WorldNode, currentChapterId: string, cleared: string[], trialsOpen: boolean): NodeState {
-  if (node.kind === 'market') return 'open';
+  if (node.kind === 'market' || node.kind === 'port') return 'open';
   if (node.kind === 'trials') return trialsOpen ? 'open' : 'locked';
   // Side battles never show as cleared: they can always be fought again
   if (node.kind === 'skirmish') return skirmishOpen(node.skirmishId!, cleared) ? 'open' : 'locked';

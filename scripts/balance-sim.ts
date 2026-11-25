@@ -30,7 +30,7 @@ import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import type { Ability, Unit } from '../src/core/types';
 
-function squad(level: number, bria: boolean, sable = false): Unit[] {
+function squad(level: number, bria: boolean, sable = false, kestrel = false): Unit[] {
   const s = [
     JobSystem.createUnit('p1', 'Rowan', 'player', 'squire', 0, 0, 'N', level),
     JobSystem.createUnit('p2', 'Maren', 'player', 'knight', 0, 0, 'N', level),
@@ -42,6 +42,7 @@ function squad(level: number, bria: boolean, sable = false): Unit[] {
   s[3].unlockedAbilities['dr_jump'] = true; s[3].unlockedAbilities['dr_ignore_height'] = true; s[3].equippedAbilities.movement = 'dr_ignore_height'; JobSystem.recalculateDerivedStats(s[3]);
   if (bria) s.push(JobSystem.createUnit('bria', 'Bria', 'player', 'geomancer', 0, 0, 'N', Math.max(4, level)));
   if (sable) s.push(JobSystem.createUnit('sable', 'Sable', 'player', 'thief', 0, 0, 'N', Math.max(6, level)));
+  if (kestrel) s.push(JobSystem.createUnit('kestrel', 'Kestrel', 'player', 'tamer', 0, 0, 'N', Math.max(9, level)));
   return s;
 }
 
@@ -61,7 +62,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     if (!OLD_AI && ITEMS) u.pouch = enemyPouch(u, i, DIFF);
     return u;
   });
-  const sq = squad(level, chId !== 'chapter_1', /chapter_[456]/.test(chId));
+  const sq = squad(level, chId !== 'chapter_1', /chapter_[456]/.test(chId) || (/chapter_[78]/.test(chId) && process.env.KESTREL === '0'), /chapter_[78]/.test(chId) && process.env.KESTREL !== '0'); // a party of six: Kestrel takes Sable's place in Act III
   const spawns = spawnsFor(map);
   sq.forEach((m, i) => JobSystem.resetForBattle(m, spawns[i % spawns.length].x, spawns[i % spawns.length].z));
   const units = [...sq, ...enemies];
@@ -118,7 +119,7 @@ if (process.argv[5]) Object.assign(CAMPAIGN_CHAPTERS[Object.keys(JSON.parse(proc
 const chapters = (process.argv[3] || 'chapter_1,chapter_2a,chapter_2b,chapter_3,chapter_4,chapter_5,chapter_6').split(',');
 const levels = (process.argv[4] || '3,4,5').split(',').map(Number);
 // Act II is met at higher levels: shift the default levels up by the chapter's enemy level
-const ACT_TWO_SHIFT: Record<string, number> = { chapter_4: 3, chapter_5: 4, chapter_6: 5 };
+const ACT_TWO_SHIFT: Record<string, number> = { chapter_4: 3, chapter_5: 4, chapter_6: 5, chapter_7: 6, chapter_8: 7 };
 console.log(`Difficulty: ${DIFFICULTIES[DIFF].label}`);
 for (const ch of chapters) {
   const row: string[] = [];

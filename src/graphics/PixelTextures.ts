@@ -144,6 +144,40 @@ export function createSwampTexture(): THREE.CanvasTexture {
   });
 }
 
+/** Sand (0.34.0): warm dunes with wind ripples and glints of sea glass. */
+export function createSandTexture(): THREE.CanvasTexture {
+  return createPixelTexture(16, 16, (ctx) => {
+    ctx.fillStyle = '#d9b97a';
+    ctx.fillRect(0, 0, 16, 16);
+    ctx.fillStyle = '#c4a063'; // ripples
+    for (const [x, y, w] of [[1, 3, 5], [9, 2, 6], [3, 8, 6], [11, 9, 4], [0, 13, 4], [7, 14, 6]]) ctx.fillRect(x, y, w, 1);
+    ctx.fillStyle = '#ecd6a0';
+    for (const [x, y, w] of [[2, 2, 4], [10, 1, 4], [4, 7, 5], [12, 8, 3], [8, 13, 4]]) ctx.fillRect(x, y, w, 1);
+    ctx.fillStyle = '#5fd3c4'; // sea glass
+    ctx.fillRect(6, 5, 1, 1); ctx.fillRect(13, 12, 1, 1);
+    ctx.fillStyle = '#9be7dc';
+    ctx.fillRect(2, 11, 1, 1);
+    ctx.strokeStyle = '#a8864e';
+    ctx.strokeRect(0, 0, 16, 16);
+  });
+}
+
+/** Snow (0.34.0): packed snow, blue in the hollows, with a few sparkles. */
+export function createSnowTexture(): THREE.CanvasTexture {
+  return createPixelTexture(16, 16, (ctx) => {
+    ctx.fillStyle = '#e8eef6';
+    ctx.fillRect(0, 0, 16, 16);
+    ctx.fillStyle = '#c9d6e6'; // drifts and hollows
+    for (const [x, y, w] of [[0, 4, 4], [8, 3, 5], [3, 10, 6], [12, 11, 4], [5, 15, 5]]) ctx.fillRect(x, y, w, 1);
+    ctx.fillStyle = '#b4c4da';
+    ctx.fillRect(9, 4, 2, 1); ctx.fillRect(4, 11, 2, 1);
+    ctx.fillStyle = '#ffffff';
+    for (const [x, y] of [[2, 2], [11, 7], [6, 13], [14, 1]]) ctx.fillRect(x, y, 1, 1);
+    ctx.strokeStyle = '#9fb0c8';
+    ctx.strokeRect(0, 0, 16, 16);
+  });
+}
+
 // Unit Sprite Texture Cache to avoid redundant canvas & GPU texture allocations
 const unitSpriteTextureCache = new Map<string, THREE.CanvasTexture>();
 

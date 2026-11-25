@@ -13,6 +13,7 @@ import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize }
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, missingTrophies, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
 import { MERCHANT_NAME, MerchantSales, merchantVisit, merchantVisitIndex, sanitizeMerchantSales } from './core/Merchant';
 import { beastFromTamed, isBeast } from './core/Taming';
+import { farShoreOpen } from './core/World';
 import { LEADER_ID, MAX_SQUAD, PARTY_SIZE, RecruitHires, chooseParty, hireRecruit, isHired, recruitBoard, sanitizeParty, sanitizeRecruitHires } from './core/Recruits';
 import { CAMP_JP, pendingCamp, sanitizeCampSeen } from './data/camp';
 import { SIGNATURES } from './data/signatures';
@@ -173,7 +174,8 @@ class TacticsGame {
         merchant: this.merchant(),
         camp: pendingCamp(this.clearedChapters, this.campSeen),
         recruits: this.recruitBoard(),
-        squadSize: this.squad.length
+        squadSize: this.squad.length,
+        farShore: farShoreOpen(this.clearedChapters)
       }),
       hire: (slot) => this.hire(slot),
       barracks: () => this.openParty(null),
@@ -2271,9 +2273,10 @@ class TacticsGame {
 
   private showEpilogue(): void {
     const best = SaveManager.getBestTrialFloor();
+    const end = this.currentChapter.epilogue;
     this.ui.showResultModal({
-      title: 'THE REALM IS AT PEACE',
-      subtitle: 'Campaign complete! Both seals are quiet. The mountain still hums at night, though: the Trials of the Zodiac are endless generated battles with rare gear and a Warden boss every fifth floor.',
+      title: end?.title || 'THE REALM IS AT PEACE',
+      subtitle: end?.text || 'Campaign complete! Both seals are quiet. The mountain still hums at night, though: the Trials of the Zodiac are endless generated battles with rare gear and a Warden boss every fifth floor.',
       bodyHtml: best > 0 ? `<div class="result-row"><span class="result-name">BEST TRIAL</span><span class="result-detail">Floor ${best}</span></div>` : '',
       buttons: [
         { label: 'World Map', primary: true, onClick: () => this.openWorldMap(nodeForChapter(this.campaignChapterId)?.id) },

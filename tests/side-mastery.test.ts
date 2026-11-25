@@ -45,8 +45,8 @@ describe('side battles', () => {
       expect(route('market', node!.id).at(-1)).toBe(node!.id);
     }
     for (const n of WORLD_NODES.filter((w) => w.kind === 'skirmish')) expect(SKIRMISHES[n.skirmishId!]).toBeTruthy();
-    // No two places share a spot (labels would collide)
-    for (const a of WORLD_NODES) for (const b of WORLD_NODES) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y), `${a.id}/${b.id}`).toBeGreaterThan(0.12);
+    // No two places on the same map share a spot (labels would collide)
+    for (const a of WORLD_NODES) for (const b of WORLD_NODES) if (a !== b && (a.region || 'realm') === (b.region || 'realm')) expect(Math.hypot(a.x - b.x, a.y - b.y), `${a.id}/${b.id}`).toBeGreaterThan(0.12);
   });
 
   it('open once the story reaches them, lock nothing, and never count as cleared', () => {
@@ -253,10 +253,10 @@ describe('Act II (0.17.0)', () => {
       at = CAMPAIGN_CHAPTERS[at.choices[0].nextChapterId];
       order.push(at.id);
     }
-    expect(order).toEqual(['chapter_4', 'chapter_5', 'chapter_6']);
-    expect(CAMPAIGN_CHAPTERS.chapter_6.choices).toBeUndefined();
-    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => !c.choices?.length).map((c) => c.id)).toEqual(['chapter_6']);
-    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => /FINAL/.test(c.title)).map((c) => c.id)).toEqual(['chapter_6']);
+    // Act III (0.34.0) runs on from Chapter VI across the sea
+    expect(order).toEqual(['chapter_4', 'chapter_5', 'chapter_6', 'chapter_7', 'chapter_8']);
+    expect(CAMPAIGN_CHAPTERS.chapter_8.choices).toBeUndefined();
+    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => !c.choices?.length).map((c) => c.id)).toEqual(['chapter_8']);
   });
 
   it('a squad that finished the first act finds Chapter IV waiting, and nothing behind it reopens', () => {

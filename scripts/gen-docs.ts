@@ -24,7 +24,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER } from '../src/core/Difficulty';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus } from '../src/core/Skirmish';
 import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress, resaleValue } from '../src/core/Economy';
 import { CONSUMABLES, MAX_STACK, STARTING_INVENTORY, consumableStock } from '../src/data/consumables';
-import { WORLD_NODES, WORLD_ROADS, worldNode } from '../src/core/World';
+import { SEA_PORTS, WORLD_NODES, WORLD_ROADS, worldNode } from '../src/core/World';
 
 const OUT = path.resolve('docs/CONTENT_REFERENCE.md');
 const lines: string[] = [];
@@ -285,19 +285,24 @@ w();
 // ---------------------------------------------------------------- World map
 w('## World map');
 w();
-w('Where the squad stands between missions. Roads join the places; the squad walks the shortest way along them.');
+w('Where the squad stands between missions. Roads join the places; the squad walks the shortest way along them. There are two maps: the realm, and the Far Shore across the sea (0.34), where ships sail between the two harbours once Chapter VI is won.');
 w();
 w('```mermaid');
 w('flowchart LR');
-for (const n of WORLD_NODES) w(`  ${n.id}["${n.name}${n.chapterId ? `<br/><i>${CAMPAIGN_CHAPTERS[n.chapterId].title}</i>` : n.kind === 'market' ? '<br/><i>buy and sell</i>' : n.kind === 'skirmish' ? '<br/><i>side battle</i>' : '<br/><i>post-game</i>'}"]`);
+const nodeLabel = (n: (typeof WORLD_NODES)[number]) => `${n.id}["${n.name}${n.chapterId ? `<br/><i>${CAMPAIGN_CHAPTERS[n.chapterId].title}</i>` : n.kind === 'market' ? '<br/><i>buy and sell</i>' : n.kind === 'skirmish' ? '<br/><i>side battle</i>' : n.kind === 'port' ? '<br/><i>ship to the realm</i>' : '<br/><i>post-game</i>'}"]`;
+for (const n of WORLD_NODES.filter((x) => !x.region)) w(`  ${nodeLabel(n)}`);
+w('  subgraph far_shore["The Far Shore"]');
+for (const n of WORLD_NODES.filter((x) => x.region === 'shore')) w(`    ${nodeLabel(n)}`);
+w('  end');
 for (const [a, b] of WORLD_ROADS) w(`  ${a} --- ${b}`);
+w(`  ${SEA_PORTS.realm} -. "⛵ by sea" .- ${SEA_PORTS.shore}`);
 w('```');
 w();
 w('| Place | Kind | What happens there | Roads to |');
 w('| :--- | :--- | :--- | :--- |');
 for (const n of WORLD_NODES) {
   const roads = WORLD_ROADS.filter(([a, b]) => a === n.id || b === n.id).map(([a, b]) => worldNode(a === n.id ? b : a)!.name).join(', ');
-  const what = n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : n.kind === 'skirmish' ? `Side battle: ${SKIRMISHES[n.skirmishId!].foe}` : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
+  const what = n.kind === 'port' ? 'Take ship back to Emberwick Harbor' : n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : n.kind === 'skirmish' ? `Side battle: ${SKIRMISHES[n.skirmishId!].foe}` : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
   w(`| **${n.name}** | ${n.kind} | ${what} | ${roads} |`);
 }
 w();
@@ -369,7 +374,7 @@ w();
 w('```mermaid');
 w('flowchart LR');
 for (const c of chapters) w(`  ${c.id}["${c.title}<br/>${c.subtitle}<br/><i>${MAPS[c.mapId]().name}</i>"]`);
-w('  epilogue(["Epilogue<br/>New Game+ / Trials"])');
+w('  epilogue(["Epilogue (to be continued)<br/>New Game+ / Trials"])');
 for (const c of chapters) {
   if (c.choices?.length) for (const o of c.choices) w(`  ${c.id} -->|"${o.text.replace(/"/g, "'").replace(/!$/, '')}"| ${o.nextChapterId}`);
   else w(`  ${c.id} --> epilogue`);
