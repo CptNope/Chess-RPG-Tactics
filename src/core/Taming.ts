@@ -10,6 +10,7 @@
  * the likelier it gives in: a sleeping one is easier still, and Beast Lore helps.
  */
 import { Unit } from './types';
+import { isFoe, joinSide } from './Sides';
 import { JOBS } from '../data/jobs';
 import { JobSystem } from './JobSystem';
 
@@ -35,7 +36,7 @@ const isMonster = (u: Unit) => !!JOBS[u.jobId]?.monster;
 
 /** True when `caster` can try to tame `target` at all. */
 export function canTame(caster: Unit, target: Unit): boolean {
-  return caster.team === 'player' && target.team !== caster.team && isMonster(target)
+  return caster.team === 'player' && isFoe(target, caster) && isMonster(target)
     && !target.isBoss && !target.isDead && !target.tamed;
 }
 
@@ -55,7 +56,7 @@ export function tameChance(caster: Unit, target: Unit, facing: 'front' | 'flank'
 
 /** Wins the monster over: it wakes, and fights for the caster's side from now on. */
 export function tame(caster: Unit, target: Unit): void {
-  target.team = caster.team;
+  joinSide(target, caster);
   target.tamed = true;
   target.statuses = target.statuses.filter((s) => s.type !== 'sleep');
   JobSystem.recalculateDerivedStats(target);

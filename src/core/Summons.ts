@@ -9,6 +9,7 @@
  * Pure rules on units; the battle screen, the balance sim and the AI call them.
  */
 import { Ability, Unit } from './types';
+import { isAlly } from './Sides';
 import { JOBS } from '../data/jobs';
 
 /**
@@ -99,7 +100,7 @@ export function callingAbility(unit: Unit): Ability | undefined {
 export function callsLandingOn(unit: Unit, x: number, z: number, units: Unit[]): number {
   let n = 0;
   for (const c of units) {
-    if (c.team === unit.team || !callHolds(c)) continue;
+    if (isAlly(c, unit) || !callHolds(c)) continue;
     const a = callingAbility(c);
     if (!a || a.power <= 0) continue;
     if (Math.abs(x - c.calling!.x) + Math.abs(z - c.calling!.z) <= a.aoe) n++;

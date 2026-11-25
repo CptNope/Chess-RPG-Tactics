@@ -1,4 +1,5 @@
 import { Ability, FacingDirection, Unit } from './types';
+import { isAlly, isFoe } from './Sides';
 import { BattleGrid } from './Grid';
 import { CombatEngine, HARMFUL_STATUSES, guardsAgainst } from './CombatEngine';
 import { JobSystem } from './JobSystem';
@@ -36,11 +37,11 @@ export interface AiPlan {
 
 /** Units on the opposing side of `unit`. */
 function foesOf(unit: Unit, units: Unit[]): Unit[] {
-  return units.filter((u) => !u.isDead && u.team !== unit.team);
+  return units.filter((u) => !u.isDead && isFoe(u, unit));
 }
 
 function alliesOf(unit: Unit, units: Unit[]): Unit[] {
-  return units.filter((u) => !u.isDead && u.team === unit.team);
+  return units.filter((u) => !u.isDead && isAlly(u, unit));
 }
 
 /**
@@ -97,7 +98,7 @@ export function unitsInBlast(caster: Unit, ability: Ability, cx: number, cz: num
     if (ability.revive && (u.isBoss || units.some((o) => !o.isDead && o.x === u.x && o.z === u.z))) return false;
     const dist = Math.abs(u.x - cx) + Math.abs(u.z - cz);
     if (dist > ability.aoe) return false;
-    return supportive ? u.team === caster.team : u.team !== caster.team;
+    return supportive ? isAlly(u, caster) : isFoe(u, caster);
   });
 }
 
@@ -129,7 +130,7 @@ export function isSupportCaster(u: Unit): boolean {
  * Positive = good for the caster. Uses forecasts (expected values), never rolls dice.
  */
 function foesNear(u: Unit, units: Unit[], dist: number): boolean {
-  return units.some((f) => !f.isDead && f.team !== u.team && Math.abs(f.x - u.x) + Math.abs(f.z - u.z) <= dist);
+  return units.some((f) => !f.isDead && isFoe(f, u) && Math.abs(f.x - u.x) + Math.abs(f.z - u.z) <= dist);
 }
 
 /**
@@ -206,7 +207,7 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     }
 
     if (ability.power < 0 || ability.fixedHeal) {
-      if (v.team !== caster.team) continue;
+      if (isFoe(v, caster)) continue;
       const missing = v.maxHp - v.currentHp;
       if (missing < v.maxHp * 0.25) continue; // not worth a heal
       score += (Math.min(missing, Math.abs(fc.expectedDamage)) / v.maxHp) * 100 * 1.3 + (v.isBoss ? 20 : 0);
@@ -239,7 +240,7 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     score += (dmg / v.maxHp) * 100 * p * (support ? 1.3 : 1);
     if (fc.expectedDamage >= v.currentHp) {
       score += (120 + (v.isBoss ? 40 : 0) + (support ? 30 : 0)) * p; // likely kill
-      if (p >= 0.7 && v.team !== caster.team) kills?.add(v.id);
+      if (p >= 0.7 && isFoe(v, caster)) kills?.add(v.id);
     }
     if (ability.appliesStatus && !v.statuses.some((s) => s.type === ability.appliesStatus) && !guardsAgainst(v, ability.appliesStatus)) score += 15 * p;
     if (ability.drain) score += (Math.min(fc.expectedDamage * ability.drain, caster.maxHp - caster.currentHp) / caster.maxHp) * 60 * p;
@@ -322,8 +323,8 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
         // Candidate aim points: every unit on the relevant side within reach
         // A performance is centred on the performer, wherever it stands
         const aimUnits = ability.isSelfOnly || isCentered(ability) ? [unit]
-          : ability.revive ? units.filter((u) => u.isDead && u.team === unit.team) // a revive aims at the fallen
-          : ability.rebirth ? units.filter((u) => u.team === unit.team && u.id !== unit.id) // heals the living, raises the fallen
+          : ability.revive ? units.filter((u) => u.isDead && isAlly(u, unit)) // a revive aims at the fallen
+          : ability.rebirth ? units.filter((u) => isAlly(u, unit) && u.id !== unit.id) // heals the living, raises the fallen
           : supportive ? alliesOf(unit, units) : foes;
         for (const aim of aimUnits) {
           const ax = aim.id === unit.id ? tile.x : aim.x;

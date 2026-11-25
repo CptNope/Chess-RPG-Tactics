@@ -1,24 +1,16 @@
 import { EnemySpawn, CampaignChapter } from './types';
 import { MAPS } from '../data/maps';
 import { RARE_DROP_POOL } from '../data/items';
+import { seededRng } from './Rng';
+
+/** Moved to Rng.ts in 0.41.0; re-exported for older imports. */
+export { seededRng } from './Rng';
 
 /**
  * Trials of the Zodiac: the post-game endless mode. Each floor is a generated battle whose
  * map, roster and levels are derived from the floor number with a seeded RNG, so a given
  * floor is always the same fight (handy for sharing "I beat floor 12" and for tests).
  */
-
-/** Small, fast, seedable PRNG (mulberry32). */
-export function seededRng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 export const TRIAL_MAP_ROTATION = ['river_ruins', 'gloomy_swamp', 'night_fortress', 'zodiac_summit'];
 const TRIAL_JOBS = ['knight', 'archer', 'black_mage', 'white_mage', 'dragoon', 'ninja', 'time_mage', 'geomancer', 'squire', 'monk', 'thief', 'summoner', 'oracle', 'paladin', 'spellblade', 'chemist', 'bard', 'dancer', 'gunner'];

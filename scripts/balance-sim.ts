@@ -6,16 +6,21 @@
  *   npm run balance                      # 30 battles per chapter at L3, L4, L5
  *   npm run balance -- 100 chapter_2b 3,4
  *
- * It's a yardstick, not the real game: no reactions, no gear upgrades, no player cleverness.
- * Compare numbers between versions rather than reading them as absolute difficulty.
+ * Actions go through the game's own resolver (core/Action.ts, 0.41.0): costs, signatures,
+ * songs and dances, calls, reactions and steals happen as in the game. It's still a yardstick,
+ * not the real game: no gear upgrades, no encores, no player cleverness. Compare numbers between
+ * versions rather than reading them as absolute difficulty.
+ *
+ * The dice are seeded (SEED=n, default 1), so the same command gives the same numbers.
  */
 import { BattleGrid } from '../src/core/Grid';
 import { TurnManager } from '../src/core/TurnManager';
 import { JobSystem } from '../src/core/JobSystem';
-import { CombatEngine } from '../src/core/CombatEngine';
-import { planTurn, summonVictims } from '../src/core/EnemyAI';
-import { noFalloff } from '../src/core/Performance';
-import { callDue, startCall } from '../src/core/Summons';
+import { runAction, ActionContext } from '../src/core/Action';
+import { seededRng } from '../src/core/Rng';
+import type { BattleRules } from '../src/core/Rules';
+import { planTurn } from '../src/core/EnemyAI';
+import { callDue } from '../src/core/Summons';
 import { DIFFICULTIES, enemyLevel, sanitizeDifficulty, scaleBoss } from '../src/core/Difficulty';
 
 /** DIFFICULTY=easy|normal|hard npm run balance */
@@ -25,12 +30,16 @@ const OLD_AI = process.env.OLD_AI === '1';
 /** For experiments: CAUTION=enemy|player|none (default both sides), ITEMS=0 (no enemy pouches). */
 const CAUTION = process.env.CAUTION || 'both';
 const ITEMS = process.env.ITEMS !== '0';
+/** SEED=n: where the dice start (each battle draws its own seed from this). */
+const dice = seededRng(Number(process.env.SEED || 1));
+/** Nobody levels up mid-battle in the sim: the squad's level is the thing being measured. */
+const SIM_RULES: BattleRules = { progressionTeams: [] };
 import { enemyCaution, enemyPouch } from '../src/core/EnemyPouch';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { JOBS } from '../src/data/jobs';
 import { ITEMS as ITEM_DATA } from '../src/data/items';
-import type { Ability, Unit } from '../src/core/types';
+import type { Unit } from '../src/core/types';
 
 function squad(level: number, bria: boolean, sable = false, kestrel = false): Unit[] {
   const s = [
@@ -73,17 +82,10 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
   sq.forEach((m, i) => JobSystem.resetForBattle(m, spawns[i % spawns.length].x, spawns[i % spawns.length].z));
   const units = [...sq, ...enemies];
   const tm = new TurnManager(units);
-  const resolve = (u: Unit, ab: Ability, tx: number, tz: number) => {
-    const victims = ab.isSelfOnly ? [{ unit: u, ability: ab }]
-      : ab.aoe > 0 || ab.revive ? summonVictims(u, ab, tx, tz, units)
-      : units.filter((v) => !v.isDead && v.x === tx && v.z === tz).map((unit) => ({ unit, ability: ab }));
-    for (const { unit: t, ability: a } of victims) {
-      if (t.isDead && !a.revive) continue;
-      const isSplash = a.aoe > 0 && !noFalloff(a) && (t.x !== tx || t.z !== tz);
-      const f = CombatEngine.getForecast(u, t, a, grid.getHeight(u.x, u.z), grid.getHeight(t.x, t.z), grid.getTile(t.x, t.z)?.terrain, isSplash);
-      CombatEngine.executeAttack(f);
-      if (u.isDead) break;
-    }
+  const squadPouch: Record<string, number> = {};
+  const ctx: ActionContext = {
+    units, grid, rng: seededRng(Math.floor(dice() * 4294967296)), rules: SIM_RULES,
+    pouchOf: (c) => (c.team === 'enemy' ? c.pouch : squadPouch)
   };
   let enemyRaises = 0;
   for (let turn = 0; turn < 400; turn++) {
@@ -95,7 +97,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     if (u.isDead) { tm.endTurn(u); continue; }
     // A grand summon called last turn lands before the unit acts (0.24.0)
     const call = callDue(u);
-    if (call && call !== 'broken') resolve(u, call.ability, call.x, call.z);
+    if (call && call !== 'broken') runAction(ctx, u, call.ability, call.x, call.z, { called: true });
     if (u.isDead) { tm.endTurn(u); continue; }
     const foe = u.team === 'enemy';
     const plan = planTurn(u, units, grid, {
@@ -105,13 +107,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     });
     if (plan.ability?.revive && u.team === 'enemy') enemyRaises++;
     u.x = plan.moveTo.x; u.z = plan.moveTo.z; u.hasMoved = true;
-    if (plan.ability && plan.targetTile) {
-      const ab = plan.ability, { x: tx, z: tz } = plan.targetTile;
-      u.currentMp = Math.max(0, u.currentMp - ab.mpCost);
-      if (ab.item && u.pouch) u.pouch[ab.item] = Math.max(0, (u.pouch[ab.item] || 0) - 1);
-      if (ab.charge) startCall(u, ab, tx, tz);
-      else resolve(u, ab, tx, tz);
-    }
+    if (plan.ability && plan.targetTile) runAction(ctx, u, plan.ability, plan.targetTile.x, plan.targetTile.z);
     u.hasActed = true;
     if (!u.isDead) u.facing = plan.facing;
     tm.endTurn(u);

@@ -1,4 +1,5 @@
 import { TileData, Unit } from './types';
+import { isFoe } from './Sides';
 import { MapData } from '../data/maps';
 
 export interface PathNode {
@@ -137,7 +138,7 @@ export class BattleGrid {
         if (Math.abs(nextTile.height - current.height) > unit.jump) continue;
 
         const nextOccupant = occupiedMap.get(this.key(nx, nz));
-        if (nextOccupant && nextOccupant.team !== unit.team) continue; // Enemies block movement
+        if (nextOccupant && isFoe(nextOccupant, unit)) continue; // Enemies block movement
 
         const newCost = current.cost + this.enterCost(unit, nextTile);
         if (newCost > unit.move) continue;

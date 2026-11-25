@@ -59,6 +59,7 @@ timeline
         0.38.0 : Effects per ability
         0.39.0 : Memories by the fire
         0.40.0 : Remappable controls
+        0.41.0 : Battle-engine groundwork
 ```
 
 | Version | Theme | Highlights |
@@ -71,6 +72,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.41 | Battle-engine groundwork | No visible change: sides and alliances, one seeded RNG per battle, battle rules, and the action resolver moved into `src/core` and shared with the balance sim; the first step toward [online versus](ONLINE_VERSUS.md) |
 | 0.40 | Remappable controls | Every key and controller button on the Controls screen can be changed (the cursor keys, Enter, Space, Esc, d-pad, sticks and triggers stay fixed); clashes swap rather than unbind; kept per browser |
 | 0.39 | Memories by the fire | Camp scenes seen in any playthrough of a save can be watched again from the world map, in story order (no JP the second time) |
 | 0.38 | Effects per ability | Arrows and bullets fly from shooter to target (muzzle flash, a shotgun fan for Scattershot); spears thrust, fists uppercut, whips crack, beasts claw, the Brute smashes; ice and lightning area spells burst over the area; Jump, Flash Powder and the Gunner's rounds have their own looks. An AI teamwork experiment for Hard was measured, changed nothing, and was shelved |
@@ -108,7 +110,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.40.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.41.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -119,9 +121,13 @@ flowchart LR
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.38 – 0.40): depth"]
+    subgraph NEXT["Next (0.42 –): depth, then groundwork"]
         direction TB
-        X1["AI: combos with allies;<br/>simulate foe turns"]
+        X2["0.42 Workshop<br/>scenario chains"]
+        X3["0.43 More story"]
+        X4["Engine groundwork 2:<br/>turn loop, events, replays"]
+        X5["Balance pass on the 20 jobs,<br/>then new jobs"]
+        X1["AI: simulate foe turns"]
     end
     subgraph LATER["Later (1.0+): breadth"]
         direction TB
@@ -141,10 +147,16 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.38 – 0.40): depth
+### Next (0.42 –): depth, then groundwork
+
+New jobs are paused until the engine groundwork is done and the balance sim runs the whole battle with the game's rules: then a balance pass on the 20 jobs, then new ones.
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
+| **0.42 Workshop scenario chains** | Mini campaigns from Workshop scenarios, no back end needed | M |
+| **0.43 More story** | An epilogue chapter or a new act after the Pale Heir (direction to settle) | M |
+| **Engine groundwork, part 2** | Turn start, end of turn and victory move to `src/core`; the engine emits events; a whole battle replays from its seed and choices ([plan](ONLINE_VERSUS.md#5-releases)) | L |
+| **Balance pass, then new jobs** | With the sim playing the real turn loop (encores included), retune the 20 jobs; new jobs after that | M |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |
 
 ### Later (1.0+): breadth
@@ -184,7 +196,7 @@ quadrantChart
 | Area | Issue | Impact | Plan |
 | :--- | :--- | :---: | :--- |
 | Progression | Master takes 1,900 lifetime JP in one job (about 20 battles in it), so signatures are a late-game reward; whether that pace feels right needs a hand play-through | Low | Now (play it by hand) |
-| Balance | The balance sim doesn't play encores, so Bards and Dancers (Trials only, on the enemy side) count for less there than in play | Low | Fine for now |
+| Balance | The balance sim doesn't play encores, so Bards and Dancers (Trials only, on the enemy side) count for less there than in play | Low | Engine groundwork part 2 (the turn loop moves to `src/core`) |
 | Balance | Act II and the difficulty settings are tuned by simulation only (AI against AI, starter gear, no items) | Medium | Now (play it by hand) |
 | Balance | Chapter V is the lowest chapter in the simulation (under 15% at squad level 7–9 on Normal). The sim is pessimistic (no gear upgrades, no items), so a hand play-through decides whether it needs the Chapter III treatment | Medium | Now |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |
@@ -192,7 +204,7 @@ quadrantChart
 | QA | Browser play-tests in CI cover the main flows only (8 checks); each release's new features are still checked by hand-run scripts | Low | Add a check per feature as it lands |
 | App | The offline build is tested in headless Chrome only; iOS installs from Safari's Share menu (no Install button there) | Low | Now (install on a phone) |
 | App | An installed app picks up a new version on the next launch after it downloads, not instantly | Low | Fine for now |
-| Code | `main.ts` (2.3k lines) and `UIManager.ts` (1.2k lines) are large | Medium | Split battle flow, saves, the map host and input into modules |
+| Code | `main.ts` (2.8k lines) and `UIManager.ts` (1.2k lines) are large. Action resolution moved out in 0.41 | Medium | Part 2 of the engine groundwork moves turn start, end of turn and victory to `src/core`; then saves, the map host and input |
 | Rules | Speed Save's +2 Speed is lost at the unit's next end of turn (stats are recalculated) | Low | Make it a status |
 | A11y | Text size scales every UI label of 22px or less; the large title art keeps its size | Low | Fine for now |
 | Saves | Export downloads may be blocked inside the itch.io embed; Copy works there | Low | Fine for now |
