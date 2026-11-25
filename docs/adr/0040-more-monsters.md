@@ -17,4 +17,11 @@ Accepted (0.32.0, 2026-11-24).
 ## Consequences
 - **Eight monsters** to meet and tame; the Barrow's relic (Basilisk Eye) is the first accessory that wards off both Immobilize and Slow.
 - **Tamed Bone Knights and Basilisks are strong** (a Bone Knight at level 7 has more attack than a knight). Beasts still can't change jobs or wear people's gear, so they don't scale with the market.
-- **No story changes.** The new monsters could replace story enemies later, chapter by chapter with the sim, as 0.27 did.
+- **No story changes in 0.32.** See the amendment below.
+
+## Amendment (0.33.0)
+Two of the new monsters joined Act II, each replacing the enemy whose swap kept the chapter's simulated win rates closest (several candidates were tried per chapter):
+- Chapter V: a Cliff Basilisk for the Storm Hexer (47/53/65% → 38/69/62%). The Basilisk in place of the Greywatch Sentinel made the chapter far harder (2/14/45%).
+- Final Chapter: a Drowned Knight (Bone Knight) for the Hourglass Seer (5/11/27% → 3/17/26%). In place of the Wraith Lancer it made the chapter far easier (67/31/65%).
+
+ADR 0035 found replacing the Seer with a damage dealer made the Cape harder; with 0.31's planner and this monster, it doesn't. The sim, not intuition about roles, decides each swap. The Thornling stays at the Barrow and in the Trials: no chapter fit it without a third monster in one battle.
