@@ -28,17 +28,23 @@ const ITEMS = process.env.ITEMS !== '0';
 import { enemyCaution, enemyPouch } from '../src/core/EnemyPouch';
 import { MAPS, spawnsFor } from '../src/data/maps';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
+import { JOBS } from '../src/data/jobs';
+import { ITEMS as ITEM_DATA } from '../src/data/items';
 import type { Ability, Unit } from '../src/core/types';
 
 function squad(level: number, bria: boolean, sable = false, kestrel = false): Unit[] {
   const s = [
     JobSystem.createUnit('p1', 'Rowan', 'player', 'squire', 0, 0, 'N', level),
     JobSystem.createUnit('p2', 'Maren', 'player', 'knight', 0, 0, 'N', level),
-    JobSystem.createUnit('p3', 'Tobin', 'player', 'archer', 0, 0, 'N', level),
+    JobSystem.createUnit('p3', 'Tobin', 'player', process.env.GUNNER === '1' ? 'gunner' : 'archer', 0, 0, 'N', level), // GUNNER=1: Tobin as a Gunner (0.36.0)
     JobSystem.createUnit('p4', 'Corvin', 'player', 'dragoon', 0, 0, 'N', level)
   ];
   JobSystem.setSecondarySkillset(s[0], 'knight'); s[0].unlockedAbilities['kn_rend_armor'] = true;
   s[0].unlockedAbilities['sq_move_plus'] = true; s[0].equippedAbilities.movement = 'sq_move_plus'; JobSystem.recalculateDerivedStats(s[0]);
+  // GUNNER=1: Tobin keeps the archer's band and boots, as he would after a job change (0.36.0)
+  if (process.env.GUNNER === '1') { s[2].equipment.head = ITEM_DATA.shinobi_band; s[2].equipment.body = undefined; s[2].equipment.accessory = ITEM_DATA.feather_boots; JobSystem.recalculateDerivedStats(s[2]); }
+  // FULLKIT=1: Tobin knows every action of his job, for comparing jobs like for like (0.36.0)
+  if (process.env.FULLKIT === '1') for (const a of JOBS[s[2].jobId].abilities) if (a.type === 'action') s[2].unlockedAbilities[a.id] = true;
   s[3].unlockedAbilities['dr_jump'] = true; s[3].unlockedAbilities['dr_ignore_height'] = true; s[3].equippedAbilities.movement = 'dr_ignore_height'; JobSystem.recalculateDerivedStats(s[3]);
   if (bria) s.push(JobSystem.createUnit('bria', 'Bria', 'player', 'geomancer', 0, 0, 'N', Math.max(4, level)));
   if (sable) s.push(JobSystem.createUnit('sable', 'Sable', 'player', 'thief', 0, 0, 'N', Math.max(6, level)));

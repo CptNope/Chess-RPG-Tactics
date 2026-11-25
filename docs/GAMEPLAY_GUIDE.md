@@ -212,7 +212,8 @@ Bosses have a gold outline in the turn order and a **BOSS** badge. At half HP th
 
   ![Team → Jobs: each job lists its two mastery bonuses, ticked once earned](images/mastery.webp)
 
-* **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Five advanced jobs, **Paladin**, **Spellblade**, **Bard**, **Dancer** and **Beast Tamer**, each need two other jobs.
+* **Jobs level up as you use them**, and job levels unlock new jobs. Open **Team → Jobs** to see every job, its level, and what a locked job (🔒) still needs. A level takes about a battle. Six advanced jobs, **Paladin**, **Spellblade**, **Bard**, **Dancer**, **Beast Tamer** and **Gunner**, each need two other jobs.
+* **The Gunner** (0.36, Archer Lv 3 and Thief Lv 2) carries a gun: its shot reaches any tile in range however high or low, and high ground neither helps nor hurts it, so a gunner on the valley floor hits the archers on the cliff just as hard. Guns are the Gunner's alone: the **Flintlock Pistol** (reach 4), the **Long Musket** (reach 6) and the **Thunderlock Rifle** (reach 6, hits hardest) are on the market's weapon shelves. **Long Barrel** adds 2 to a gun's reach, and **Return Fire** shoots back at archers and casters in range. **Scattershot** hits everyone near the aim, your own side included.
 * **Spend your gil at Larkmoor Market** on the world map. Enemies pay bounties and every win pays a bonus. Gear you buy, anyone in the squad whose job can use it can equip. New stock arrives each time you win a chapter. In battle, **Team → Shop** shows the shelves but the market is closed.
 
   ![Larkmoor Market: supplies and gear on the BUY counter](images/market.webp)

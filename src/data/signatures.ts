@@ -314,5 +314,23 @@ export const SIGNATURES: Record<string, Ability> = {
     scalesWith: 'attack',
     beasts: { power: 1.25 },
     signature: true
+  },
+  gunner: {
+    id: 'sig_thunder_volley',
+    name: 'Thunder Volley',
+    jobId: 'gunner',
+    type: 'action',
+    description: 'Every barrel at once: a roaring volley up to 7 tiles away, at any height. Heavy damage (ATK) to every foe within 1 tile of the aim, and Breach.',
+    jpCost: 0,
+    mpCost: 0,
+    range: 7,
+    heightTolerance: 99,
+    aoe: 1,
+    power: 1.3,
+    element: 'physical',
+    appliesStatus: 'breach',
+    scalesWith: 'attack',
+    ignoresHeight: true,
+    signature: true
   }
 };

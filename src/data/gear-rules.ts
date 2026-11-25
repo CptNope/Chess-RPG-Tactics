@@ -40,7 +40,8 @@ export const JOB_GEAR: Record<string, JobGear> = {
   spellblade: { weapons: ['sword', 'dagger'], shield: true, robe: true },
   bard: { weapons: ['bow', 'staff'], robe: true },
   dancer: { weapons: ['dagger', 'whip'] },
-  tamer: { weapons: ['whip', 'dagger', 'bow'] }
+  tamer: { weapons: ['whip', 'dagger', 'bow'] },
+  gunner: { weapons: ['gun', 'dagger'] }
 };
 
 /** What kind of gear an item is, as the rules see it. */
@@ -75,7 +76,7 @@ export function whoCanUse(item: Item): string[] | null {
 }
 
 const KIND_NAME: Record<GearKind, string> = {
-  sword: 'Swords', spear: 'Spears', bow: 'Bows', staff: 'Staves & rods', dagger: 'Daggers', knuckles: 'Knuckles', whip: 'Whips',
+  sword: 'Swords', spear: 'Spears', bow: 'Bows', staff: 'Staves & rods', dagger: 'Daggers', knuckles: 'Knuckles', whip: 'Whips', gun: 'Guns',
   shield: 'Shields', heavy: 'Heavy armor & helms', robe: 'Robes', light: 'Light gear'
 };
 

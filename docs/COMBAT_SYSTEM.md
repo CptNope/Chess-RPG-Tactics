@@ -88,6 +88,7 @@ $$\Delta H = H_{\text{attacker}} - H_{\text{target}}$$
 * **Low Ground Penalty ($\Delta H < 0$)**:
   * Accuracy: $-10\%$ penalty.
   * Melee Restriction: Melee attacks fail if $|\Delta H| > 1.5$ height units.
+* **Guns ignore height (0.36)**: an ability with `ignoresHeight` (a gun's Attack, every Gunner action, Thunder Volley) reaches any tile in range whatever the height, and is scored as if $\Delta H = 0$, so neither bonus nor penalty applies.
 
 ---
 
@@ -214,6 +215,7 @@ flowchart TD
 | Attacker higher | +5 | ×1.10 (physical) |
 | Level | — | — |
 | Attacker lower | −10 | — |
+| Gun shot (`ignoresHeight`, 0.36) | — | — |
 
 ---
 

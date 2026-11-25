@@ -117,7 +117,9 @@ export class BattleFx {
         // The arc starts just short of the target and sweeps across it
         this.meleeArc(caster, target, flip, 1.15);
       }
-      this.play({ id: crit ? 'impacts/crit-hit' : 'impacts/hit-spark', delay: dist <= 1 ? 0.06 : 0 }, target, { flip, scale: crit ? 0.85 : 1 });
+      // A gun's ball lands with a heavy thump rather than a spark (0.36.0)
+      const shot = ability.ignoresHeight && caster.equipment.weapon?.weaponType === 'gun';
+      this.play({ id: crit ? 'impacts/crit-hit' : shot ? 'impacts/blunt-hit' : 'impacts/hit-spark', delay: dist <= 1 ? 0.06 : 0 }, target, { flip, scale: crit ? 0.85 : 1 });
       return;
     }
     const cue = ELEMENT[ability.element];

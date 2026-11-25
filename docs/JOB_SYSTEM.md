@@ -63,6 +63,8 @@ quadrantChart
     Spellblade: [0.5, 0.5]
     Bard: [0.25, 0.62]
     Dancer: [0.62, 0.8]
+    Beast Tamer: [0.7, 0.5]
+    Gunner: [0.82, 0.4]
 ```
 
 | Job | Plays like | Signature tools |
@@ -84,6 +86,8 @@ quadrantChart
 | **Chemist** *(0.19)* | Field medic, bomb-maker | Salve (free heal from ATK, reach 3), Purge (cleanse), Acid Flask (Breach), Smoke Bomb (area Blind), Field Dressing (heals 15% when a blow leaves you under half HP), **Pharmacology** (items +50% and +1 reach) |
 | **Oracle** *(0.13)* | Ailments | Dim Sight (Blind), Hush (Silence), Lullaby (area Sleep), Soul Drain, Hex Ward, Hex Mastery |
 | **Bard** *(0.22, advanced)* | Performer: support | Songs that play again each turn: Battle Hymn (Focus), Mending Air (heal), Quickening Ballad (Haste); Discord (dark damage + Silence); Healing Refrain (Regen when hit); **Resonance** (performances reach +1) |
+| **Beast Tamer** *(0.28, advanced)* | Monster wrangler | Tame (a hurt monster fights for you and joins the squad), Snare (Immobilize), Treat (heal, double on beasts), Soothe (Sleep), Snarl, **Beast Lore** (+25% against monsters) |
+| **Gunner** *(0.36, advanced)* | Marksman who ignores height | Guns reach any height in range, and high ground neither helps nor hurts the shot. Hobble Shot (Slow), Flash Powder (area Blind), Breaching Round (Breach), Scattershot (area, hits friends too), Return Fire (shoots back at ranged attackers), **Long Barrel** (gun Attack +2 reach) |
 | **Dancer** *(0.22, advanced)* | Performer: disruption | Dances that play again each turn: Blade Waltz (free damage to every foe within 2), Veil of Silks (Blind), Leaden Reel (Slow); Feint (damage + Breach); Captivate (melee attackers may fall asleep); **Encore** (performances last 2 more turns) |
 
 ### Performances (0.22)

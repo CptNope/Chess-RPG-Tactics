@@ -25,7 +25,7 @@ export interface ActiveStatus {
 
 export type EquipmentSlot = 'weapon' | 'shield' | 'head' | 'body' | 'accessory';
 
-export type WeaponType = 'sword' | 'spear' | 'bow' | 'staff' | 'dagger' | 'knuckles' | 'whip';
+export type WeaponType = 'sword' | 'spear' | 'bow' | 'staff' | 'dagger' | 'knuckles' | 'whip' | 'gun';
 
 /** Passive effects some gear carries on top of its stats. */
 export interface ItemTraits {
@@ -128,6 +128,11 @@ export interface Ability {
   rebirth?: number;
   /** Added to the chance to hit (0.27.0): the Wisp's Lure is easy to resist. */
   accuracy?: number;
+  /**
+   * A shot that doesn't care about height (0.36.0, guns): it reaches any tile in range however
+   * high or low, and high ground neither helps nor hurts its aim or its damage.
+   */
+  ignoresHeight?: boolean;
   /** Beast Tamer (0.28.0): wins a weakened monster over to the caster's side (see core/Taming.ts). */
   tame?: boolean;
   /** Beast Tamer (0.28.0): extra chance to hit, and a power multiplier, when the target is a monster. */

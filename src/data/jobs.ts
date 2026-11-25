@@ -2062,6 +2062,133 @@ export const JOBS: Record<string, Job> = {
         element: 'physical'
       }
     ]
+  },
+
+  // 0.36.0
+  gunner: {
+    id: 'gunner',
+    name: 'Gunner',
+    description: 'An advanced job. A marksman with powder and shot: a gun reaches any tile in range however high or low it is, and hits just as hard uphill as down. Weaker at close quarters.',
+    role: 'Marksman',
+    spriteClass: 'gunner',
+    baseMove: 3,
+    baseJump: 3,
+    statMultipliers: {
+      hp: 0.95,
+      mp: 0.75,
+      attack: 1.1,
+      magic: 0.7,
+      speed: 1.0
+    },
+    prerequisites: [{ jobId: 'archer', level: 3 }, { jobId: 'thief', level: 2 }],
+    abilities: [
+      {
+        id: 'gu_steady_shot',
+        name: 'Steady Shot',
+        jobId: 'gunner',
+        type: 'action',
+        description: 'Braces, breathes out and fires: heavy damage (ATK) up to 5 tiles away, at any height.',
+        jpCost: 80,
+        mpCost: 0,
+        range: 5,
+        heightTolerance: 99,
+        aoe: 0,
+        power: 1.4,
+        element: 'physical',
+        ignoresHeight: true
+      },
+      {
+        id: 'gu_hobble_shot',
+        name: 'Hobble Shot',
+        jobId: 'gunner',
+        type: 'action',
+        description: 'A low shot at the knee, up to 5 tiles away at any height: light damage (ATK) and Slow.',
+        jpCost: 120,
+        mpCost: 6,
+        range: 5,
+        heightTolerance: 99,
+        aoe: 0,
+        power: 0.8,
+        element: 'physical',
+        appliesStatus: 'slow',
+        ignoresHeight: true
+      },
+      {
+        id: 'gu_flash_powder',
+        name: 'Flash Powder',
+        jobId: 'gunner',
+        type: 'action',
+        description: 'Fires a charge of flash powder up to 4 tiles away: every foe within 1 tile of it is Blinded.',
+        jpCost: 150,
+        mpCost: 10,
+        range: 4,
+        heightTolerance: 99,
+        aoe: 1,
+        power: 0,
+        element: 'physical',
+        appliesStatus: 'blind',
+        ignoresHeight: true
+      },
+      {
+        id: 'gu_breaching_round',
+        name: 'Breaching Round',
+        jobId: 'gunner',
+        type: 'action',
+        description: 'A heavy ball that punches through plate, up to 5 tiles away at any height: damage (ATK) and Breach, so the target takes 25% more physical damage.',
+        jpCost: 200,
+        mpCost: 8,
+        range: 5,
+        heightTolerance: 99,
+        aoe: 0,
+        power: 1.0,
+        element: 'physical',
+        appliesStatus: 'breach',
+        ignoresHeight: true
+      },
+      {
+        id: 'gu_scattershot',
+        name: 'Scattershot',
+        jobId: 'gunner',
+        type: 'action',
+        description: 'A blast of grapeshot up to 4 tiles away: damage (ATK) to everyone within 1 tile of the aim, friend or foe.',
+        jpCost: 260,
+        mpCost: 12,
+        range: 4,
+        heightTolerance: 99,
+        aoe: 1,
+        power: 0.85,
+        element: 'physical',
+        ignoresHeight: true
+      },
+      {
+        id: 'gu_return_fire',
+        name: 'Return Fire',
+        jobId: 'gunner',
+        type: 'reaction',
+        description: 'When struck from 2 or more tiles away with a gun in hand, 50% chance to shoot back if the attacker is in range.',
+        jpCost: 220,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'gu_long_barrel',
+        name: 'Long Barrel',
+        jobId: 'gunner',
+        type: 'support',
+        description: 'A longer barrel and a steadier eye: a gun\'s Attack reaches 2 tiles further.',
+        jpCost: 260,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      }
+    ]
   }
 
 };

@@ -53,6 +53,7 @@ timeline
         0.33.0 : A Basilisk and a Bone Knight in Act II
         0.34.0 : Act III begins : The Far Shore : Sand and snow
         0.35.0 : Act III's finale : The Drowned City : Glasswing Dunes : Ship's stores
+        0.36.0 : The Gunner (20 jobs)
 ```
 
 | Version | Theme | Highlights |
@@ -65,6 +66,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.36 | The Gunner | A new advanced job (Archer 3 + Thief 2; 20 jobs, 121 abilities): guns reach any height in range and high ground neither helps nor hurts the shot; Steady Shot, Hobble Shot, Flash Powder, Breaching Round, Scattershot, Return Fire, Long Barrel, the Thunder Volley signature; three guns |
 | 0.35 | Act III's finale | Chapter IX in the Drowned City against the Pale Heir, with its own closing screen; the Glasswing Dunes side battle; the ship's quartermaster trades at the Anchorage; camp scenes after Chapters VIII and IX; the Tidecrown, the Glasswing Lance and the Pale Pearl |
 | 0.34 | Act III begins | Sail from Emberwick to the Far Shore, a second world map; Chapter VII (Saltglass Shore) and VIII (Frostfang Pass) on sand and snow; Kestrel the Beast Tamer joins; two new pieces of gear; Dust Devil and Whiteout for Geomancers |
 | 0.33 | Beasts in Act II | A Cliff Basilisk in Chapter V and a Drowned Knight in the Final Chapter, each swapped in for the enemy that kept the chapter's simulated difficulty closest |
@@ -96,7 +98,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.35.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.36.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -109,7 +111,7 @@ flowchart LR
     end
     subgraph NEXT["Next (0.36 – 0.38): depth"]
         direction TB
-        X0["A gunner job;<br/>reserve training"]
+        X0["Reserve training"]
         X1["AI: combos with allies;<br/>simulate foe turns"]
     end
     subgraph LATER["Later (1.0+): breadth"]
@@ -135,7 +137,6 @@ flowchart LR
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **A gunner job** | Moved up from Later now that the story is done: a ranged job that ignores height, for the fights the campaign has added since the job list last grew | L |
 | **Reserve training** | Units in reserve earn nothing (0.25); if a big squad falls behind in hand play, a share of the spoils for the reserve | S |
 | **AI: combos and a real second ply** | Since 0.31 enemies avoid likely KOs and use items; next they could set up combos with allies (Slow then strike) and simulate the squad's replies instead of estimating them ([details](ENEMY_AI.md#5-known-limits)) | L |
 
@@ -167,7 +168,7 @@ quadrantChart
     "Device QA": [0.25, 0.72]
     "Devlog + store": [0.1, 0.55]
     "AI look-ahead": [0.75, 0.5]
-    "Gunner job": [0.7, 0.55]
+    "AI: ranged positioning": [0.45, 0.5]
     "Online duels": [0.88, 0.6]
     "Localization": [0.6, 0.28]
 ```
@@ -196,6 +197,7 @@ quadrantChart
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
 | World map | Camp scenes play once per playthrough with no way to watch them again; the merchant has three goods of her own, so late in the game she runs out | Low | More with Act III |
 | World map | The Far Shore's ship's stores sell the market's stock, but hiring still means sailing home to Larkmoor | Low | Fine for now |
+| AI | The auto-battler doesn't use a Gunner's freedom from height well: it fires from low ground in reach of melee foes, and in the sim a Gunner squad loses Chapter VII far more often than an Archer one | Medium | Next (AI) |
 | Balance | Side-battle rosters are drawn at random per level and visit, and a draw heavy in wyverns is far harder than the rest (the Glasswing Dunes: 87–100% on a first visit, 10–40% at full heat in the sim) | Low | Revisit after a hand play-through |
 | Balance | Chapter VIII lost a seventh enemy in tuning: any seventh unit took it to about 5% in the sim, so the pass fort holds six | Low | Revisit after a hand play-through |
 | Art | The itch banner image still says "Fifteen jobs" | Low | Regenerate with the next store update |

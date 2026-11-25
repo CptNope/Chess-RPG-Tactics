@@ -8,7 +8,7 @@ Every number here is read straight from the game data, so it always matches what
 
 ## Jobs
 
-19 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+20 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -31,14 +31,15 @@ Every number here is read straight from the game data, so it always matches what
 | **Bard** `bard` | Troubadour | 3 | 2 | 0.85× | 1.10× | 0.80× | 1.05× | 1.05× | 6 |
 | **Dancer** `dancer` | Performer | 4 | 3 | 0.90× | 0.90× | 1.00× | 0.85× | 1.15× | 6 |
 | **Beast Tamer** `tamer` | Tamer | 4 | 3 | 1.05× | 0.80× | 1.05× | 0.80× | 1.00× | 6 |
+| **Gunner** `gunner` | Marksman | 3 | 3 | 0.95× | 0.75× | 1.10× | 0.70× | 1.00× | 7 |
 
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer", "Beast Tamer"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer", "Beast Tamer", "Gunner"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1, 1.05]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85, 0.8]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1, 1.05, 1.1]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85, 0.8, 0.7]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
@@ -72,6 +73,7 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 | **Bard** | Archer Lv 2 + White Mage Lv 2 |
 | **Dancer** | Thief Lv 2 + Monk Lv 2 |
 | **Beast Tamer** | Archer Lv 2 + Chemist Lv 2 |
+| **Gunner** | Archer Lv 3 + Thief Lv 2 |
 
 Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
 
@@ -100,6 +102,7 @@ Each job uses its own weapon types (0.30.0). Shields, heavy armor and helms, and
 | **Bard** | Bows, Staves & rods · Robes |
 | **Dancer** | Daggers, Whips |
 | **Beast Tamer** | Whips, Daggers, Bows |
+| **Gunner** | Guns, Daggers |
 
 ## Job mastery
 
@@ -126,16 +129,17 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 | **Bard** | +8 MP | +20 MP | **Grand Finale** `sig_finale` | The last song of the night, sung once: heals you and every ally within 3 tiles, and gives them Haste. | around the user, area 3 |
 | **Dancer** | +1 Speed | +2 Speed | **Last Dance** `sig_last_dance` | One dance nobody forgets: damage (ATK) and Slow to every foe within 2 tiles of you. | around the user, area 2 |
 | **Beast Tamer** | +10 HP | +25 HP | **Stampede** `sig_stampede` | One call and the wild answers: a charging herd tramples a wide area up to 4 tiles away. Heavy damage (ATK) and Immobilize; beasts take more. | range 4, area 2 |
+| **Gunner** | +1 ATK | +2 ATK | **Thunder Volley** `sig_thunder_volley` | Every barrel at once: a roaring volley up to 7 tiles away, at any height. Heavy damage (ATK) to every foe within 1 tile of the aim, and Breach. | range 7, area 1 |
 
 ## Abilities
 
-114 learnable abilities: 71 actions, 19 reactions, 15 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+121 learnable abilities: 76 actions, 20 reactions, 16 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 71
-  "Reaction" : 19
-  "Support" : 15
+  "Action" : 76
+  "Reaction" : 20
+  "Support" : 16
   "Movement" : 9
 ```
 
@@ -386,6 +390,20 @@ pie showData title Abilities by slot type
 | **Snarl** `ta_snarl` | Reaction | 200 | — | — | — | — | — | — | — | When struck in melee, snarl like a wolf: 35% chance the attacker is Slowed. |
 | **Beast Lore** `ta_beast_lore` | Support | 240 | — | — | — | — | — | — | — | Knows where a beast is soft: +25% damage to monsters, and Tame works 15% more often. |
 
+### Gunner
+
+*An advanced job. A marksman with powder and shot: a gun reaches any tile in range however high or low it is, and hits just as hard uphill as down. Weaker at close quarters.*
+
+| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Steady Shot** `gu_steady_shot` | Action | 80 | 0 | 5 | 99 | — | 1.4 | physical | — | Braces, breathes out and fires: heavy damage (ATK) up to 5 tiles away, at any height. |
+| **Hobble Shot** `gu_hobble_shot` | Action | 120 | 6 | 5 | 99 | — | 0.8 | physical | inflicts **slow** | A low shot at the knee, up to 5 tiles away at any height: light damage (ATK) and Slow. |
+| **Flash Powder** `gu_flash_powder` | Action | 150 | 10 | 4 | 99 | 1 | — | physical | inflicts **blind** | Fires a charge of flash powder up to 4 tiles away: every foe within 1 tile of it is Blinded. |
+| **Breaching Round** `gu_breaching_round` | Action | 200 | 8 | 5 | 99 | — | 1 | physical | inflicts **breach** | A heavy ball that punches through plate, up to 5 tiles away at any height: damage (ATK) and Breach, so the target takes 25% more physical damage. |
+| **Scattershot** `gu_scattershot` | Action | 260 | 12 | 4 | 99 | 1 | 0.85 | physical | — | A blast of grapeshot up to 4 tiles away: damage (ATK) to everyone within 1 tile of the aim, friend or foe. |
+| **Return Fire** `gu_return_fire` | Reaction | 220 | — | — | — | — | — | — | — | When struck from 2 or more tiles away with a gun in hand, 50% chance to shoot back if the attacker is in range. |
+| **Long Barrel** `gu_long_barrel` | Support | 260 | — | — | — | — | — | — | — | A longer barrel and a steadier eye: a gun's Attack reaches 2 tiles further. |
+
 ## Monsters
 
 8 monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow and Briar Barrow side battles, on Trials floors from 3 up (the Barrow's from 8), from Chapter II in the story, and in Workshop scenarios.
@@ -520,9 +538,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-74 items across five gear slots.
+77 items across five gear slots.
 
-### Weapon (26)
+### Weapon (29)
 
 | Item | Type | Range | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :---: | :--- | :--- | ---: | :--- | :--- |
@@ -531,17 +549,20 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear | Knight, Dragoon |
 | **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | — | 250 | Starting gear | Archer, Bard, Beast Tamer |
 | **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
-| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer |
+| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
 | **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop | Archer, Bard, Beast Tamer |
 | **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III | Squire, Knight, Geomancer, Paladin, Spellblade |
 | **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear | Monk, Thief |
 | **Tiger Claws** `tiger_claws` | knuckles | 1 | ATTACK +10, SPEED +1 | — | 480 | Trials drop | Monk, Thief |
-| **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer |
+| **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
 | **Drover's Whip** `drovers_whip` | whip | 2 | ATTACK +5, SPEED +1 | — | 260 | Starting gear | Dancer, Beast Tamer |
-| **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer |
+| **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
 | **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop | Knight, Dragoon |
 | **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win CHAPTER VI · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Flintlock Pistol** `flintlock` | gun | 4 | ATTACK +7 | — | 300 | Starting gear of a job | Gunner |
+| **Long Musket** `long_musket` | gun | 6 | ATTACK +10, SPEED -1 | — | 540 | Starting gear of a job | Gunner |
+| **Thunderlock Rifle** `thunderlock` | gun | 6 | ATTACK +13, SPEED +1 | — | 880 | Starting gear of a job | Gunner |
 | **Siege Crossbow** `siege_crossbow` | bow | 4 | ATTACK +11, SPEED -1 | — | 480 | Trials drop | Archer, Bard, Beast Tamer |
 | **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
@@ -642,10 +663,10 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 
 | Stage | Price cap | Items on the shelves |
 | :--- | ---: | ---: |
-| Before the first victory | 380 | 34 |
-| Chapter I won | 480 | 48 |
-| Chapter II won | 580 | 55 |
-| Campaign cleared / Trials | none | 61 |
+| Before the first victory | 380 | 35 |
+| Chapter I won | 480 | 49 |
+| Chapter II won | 580 | 57 |
+| Campaign cleared / Trials | none | 64 |
 
 Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye, Tidecrown, Glasswing Lance.
 
@@ -974,20 +995,20 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
-| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Archer, Time Weaver |
-| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Dancer, Thief, Summoner |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Spellblade, Stonehide Brute, Archer, Oracle |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Dancer, Bard, Bog Ooze |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Dancer, Bog Ooze, Ninja, Chemist |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Bard, Oracle, Paladin, Dire Wolf, Time Weaver |
-| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Paladin, Bard, Geomancer, Spellblade |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dancer, Thief, Stonehide Brute, Dire Wolf |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Paladin, Summoner, Bone Knight, Spellblade, Marsh Wisp, Basilisk |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Time Weaver, Summoner, Stonehide Brute, Basilisk, Ninja |
+| 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Archer, Black Mage, Geomancer |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Gunner, Summoner |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Chemist, Stonehide Brute, Archer, Oracle |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Gunner, Dancer, Bog Ooze |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Gunner, Bog Ooze, Time Weaver, Bard |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Dancer, Paladin, Spellblade, Dire Wolf, Geomancer |
+| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Spellblade, Dancer, Geomancer |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Gunner, Thief, Stonehide Brute, Dire Wolf |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Spellblade, Oracle, Bone Knight, Chemist, Marsh Wisp, Basilisk |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Geomancer, Summoner, Stonehide Brute, Basilisk, Ninja |
 | 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Basilisk, Bone Knight, Ninja, Dire Wolf, Bog Ooze |
 | 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Thief, Paladin, Dragoon, Knight, Wyvern |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Spellblade, Dancer, Dire Wolf, White Mage, Wyvern, Ninja |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Spellblade, Gunner, Dire Wolf, White Mage, Wyvern, Time Weaver |
 | 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Thornling, Time Weaver, Monk, Marsh Wisp, Stonehide Brute, Basilisk |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dancer, Ninja, Squire, Oracle, Stonehide Brute |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Gunner, Ninja, Monk, Paladin, Stonehide Brute |
 
 *Floors continue forever; the table shows the first 15.*
