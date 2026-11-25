@@ -16,7 +16,7 @@ import { beastFromTamed, isBeast } from './core/Taming';
 import { PARTY_EXP, PARTY_JP, RESERVE_EXP, RESERVE_JP, trainReserve } from './core/Reserve';
 import { farShoreOpen } from './core/World';
 import { LEADER_ID, MAX_SQUAD, PARTY_SIZE, RecruitHires, chooseParty, hireRecruit, isHired, recruitBoard, sanitizeParty, sanitizeRecruitHires } from './core/Recruits';
-import { CAMP_JP, pendingCamp, sanitizeCampSeen } from './data/camp';
+import { CAMP_JP, CAMP_SCENES, campMemories, pendingCamp, sanitizeCampSeen } from './data/camp';
 import { SIGNATURES } from './data/signatures';
 import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeCleared } from './core/World';
 import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
@@ -101,6 +101,8 @@ class TacticsGame {
   private skirmishWins: Record<string, number> = {};
   /** Camp scenes already played this playthrough (0.21.0). */
   private campSeen: string[] = [];
+  /** Camp scenes seen in any playthrough of this save, to watch again (0.39.0). */
+  private campMemories: string[] = [];
   /** Bought from the travelling merchant on her current visit (0.21.0). */
   private merchantSales: MerchantSales | undefined;
   /** The party the player picked when the squad outgrew it (0.25.0), by unit id. */
@@ -174,6 +176,7 @@ class TacticsGame {
         armory: this.armory,
         merchant: this.merchant(),
         camp: pendingCamp(this.clearedChapters, this.campSeen),
+        memories: this.campMemories.length,
         recruits: this.recruitBoard(),
         squadSize: this.squad.length,
         farShore: farShoreOpen(this.clearedChapters)
@@ -183,6 +186,7 @@ class TacticsGame {
       skirmish: (id) => this.withParty(() => this.startSkirmish(id)),
       buyFromMerchant: (id) => this.buyFromMerchant(id),
       makeCamp: () => this.makeCamp(),
+      memories: () => this.openMemories(),
       tip: () => (this.tutor.wants('worldMap') ? TIPS.worldMap : null),
       tipSeen: () => this.tutor.markSeen('worldMap'),
       march: (m) => this.withParty(() => this.marchTo(m), CAMPAIGN_CHAPTERS[m.chapterId]?.recruit),
@@ -819,6 +823,7 @@ class TacticsGame {
       onWorldMap: this.world.isOpen || this.mode === 'skirmish',
       skirmishWins: this.skirmishWins,
       campSeen: this.campSeen,
+      campMemories: this.campMemories,
       merchantSales: this.merchantSales,
       party: this.party,
       recruitHires: this.recruitHires,
@@ -898,6 +903,7 @@ class TacticsGame {
     }
     this.campaignChapterId = chapterId;
     this.campSeen = sanitizeCampSeen(data.campSeen, this.clearedChapters);
+    this.campMemories = campMemories(data.campMemories, this.campSeen);
     this.merchantSales = sanitizeMerchantSales(data.merchantSales);
     this.party = sanitizeParty(data.party);
     this.recruitHires = sanitizeRecruitHires(data.recruitHires);
@@ -2346,6 +2352,7 @@ class TacticsGame {
     this.clearedChapters = [];
     this.skirmishWins = {};
     this.campSeen = [];
+    this.campMemories = [];
     this.merchantSales = undefined;
     this.party = undefined;
     this.recruitHires = undefined;
@@ -2496,6 +2503,7 @@ class TacticsGame {
       mapEl.inert = false;
       this.currentMode = 'menu';
       this.campSeen.push(scene.chapterId);
+      this.campMemories = campMemories(this.campMemories, this.campSeen);
       const ups: string[] = [];
       for (const u of this.squad) {
         const gain = JobSystem.gainJp(u, CAMP_JP);
@@ -2506,6 +2514,35 @@ class TacticsGame {
       this.ui.showBanner(`AROUND THE FIRE: +${CAMP_JP} JP EACH`);
       this.ui.addLogEntry(`[CAMP] ${scene.title}. Everyone gains ${CAMP_JP} JP${ups.length ? ` (${ups.join(', ')} gained a job level)` : ''}.`, 'system');
       this.saveGame(false);
+      this.world.refresh();
+      this.world.focusDefault();
+    });
+  }
+
+  /** Lists the camp nights this save remembers, to watch one again (0.39.0). */
+  private openMemories(): void {
+    if (!this.world.isOpen || this.currentMode === 'dialogue' || !this.campMemories.length) return;
+    this.ui.showResultModal({
+      title: 'MEMORIES BY THE FIRE',
+      subtitle: 'Camp nights from this save, in story order. Watching one again earns no JP.',
+      buttons: [
+        ...this.campMemories.map((id) => ({ label: `🔥 ${CAMP_SCENES[id].title} (${CAMPAIGN_CHAPTERS[id]?.title.replace('CHAPTER ', 'Ch. ') || id})`, onClick: () => this.replayCamp(id) })),
+        { label: 'Close', primary: true, onClick: () => this.world.focusDefault() }
+      ]
+    });
+  }
+
+  /** Plays a remembered camp scene again, as it was, with no JP (0.39.0). */
+  private replayCamp(id: string): void {
+    const scene = CAMP_SCENES[id];
+    if (!scene || !this.world.isOpen || this.currentMode === 'dialogue') return;
+    const mapEl = document.getElementById('world-map')!;
+    mapEl.inert = true;
+    (document.activeElement as HTMLElement | null)?.blur();
+    this.ui.showBanner(`A MEMORY: ${scene.title.toUpperCase()}`);
+    this.playDialogueSequence(scene.lines, () => {
+      mapEl.inert = false;
+      this.currentMode = 'menu';
       this.world.refresh();
       this.world.focusDefault();
     });

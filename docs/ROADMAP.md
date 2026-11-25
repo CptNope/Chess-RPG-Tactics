@@ -57,6 +57,7 @@ timeline
         0.36.1 : Gunner Speed fix
         0.37.0 : Reserve training
         0.38.0 : Effects per ability
+        0.39.0 : Memories by the fire
 ```
 
 | Version | Theme | Highlights |
@@ -69,6 +70,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.39 | Memories by the fire | Camp scenes seen in any playthrough of a save can be watched again from the world map, in story order (no JP the second time) |
 | 0.38 | Effects per ability | Arrows and bullets fly from shooter to target (muzzle flash, a shotgun fan for Scattershot); spears thrust, fists uppercut, whips crack, beasts claw, the Brute smashes; ice and lightning area spells burst over the area; Jump, Flash Powder and the Gunner's rounds have their own looks. An AI teamwork experiment for Hard was measured, changed nothing, and was shelved |
 | 0.37 | Reserve training | Units left out of the party train at camp: half a share of every win (+20 EXP, +30 JP), the same as a party member who fell (raised from 15 EXP and 20 JP); a RESERVE row on the spoils screen |
 | 0.36.1 | Gunner Speed | The Gunner's Speed now matches the Archer's: one point decided who fired first in Chapter VII, where the Gunner squad had been losing far more |
@@ -104,7 +106,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.38.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.39.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -197,7 +199,7 @@ quadrantChart
 | Tips | First-battle tips are remembered per device, not per save, and don't show controller glyphs | Low | Fine for now |
 | World map | Workshop battles and the battlefield picker sit outside the map; New Game starts in Chapter I without showing it | Low | Fine for now |
 | Workshop | Shared scenarios live in links and files only; there's no gallery | Low | Later |
-| World map | Camp scenes play once per playthrough with no way to watch them again; the merchant has three goods of her own, so late in the game she runs out | Low | More with Act III |
+| World map | The merchant has three goods of her own, so late in the game she runs out | Low | Later |
 | World map | The Far Shore's ship's stores sell the market's stock, but hiring still means sailing home to Larkmoor | Low | Fine for now |
 | Balance | Side-battle rosters are drawn at random per level and visit, and a draw heavy in wyverns is far harder than the rest (the Glasswing Dunes: 87–100% on a first visit, 10–40% at full heat in the sim) | Low | Revisit after a hand play-through |
 | Balance | Chapter VIII lost a seventh enemy in tuning: any seventh unit took it to about 5% in the sim, so the pass fort holds six | Low | Revisit after a hand play-through |

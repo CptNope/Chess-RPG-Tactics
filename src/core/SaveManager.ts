@@ -35,6 +35,8 @@ export interface GameSaveData {
   difficulty?: Difficulty;
   /** Camp scenes played this playthrough (0.21.0): the chapter ids they follow. */
   campSeen?: string[];
+  /** Camp scenes seen in any playthrough, to watch again (0.39.0). */
+  campMemories?: string[];
   /** What was bought from the travelling merchant on her current visit (0.21.0). */
   merchantSales?: { visit: number; ids: string[] };
   /** The party the player last picked, by unit id, when the squad outgrew it (0.25.0). */
@@ -61,7 +63,7 @@ export class SaveManager {
   public static saveGame(
     chapterId: string,
     playerUnits: Unit[],
-    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation' | 'skirmishWins' | 'difficulty' | 'campSeen' | 'merchantSales' | 'party' | 'recruitHires'> = {},
+    extra: Pick<GameSaveData, 'armory' | 'mode' | 'trialsFloor' | 'campaignCleared' | 'gil' | 'inventory' | 'clearedChapters' | 'onWorldMap' | 'worldLocation' | 'skirmishWins' | 'difficulty' | 'campSeen' | 'campMemories' | 'merchantSales' | 'party' | 'recruitHires'> = {},
     slot = 1
   ): boolean {
     if (!validSlot(slot)) return false;
@@ -189,6 +191,7 @@ export class SaveManager {
       skirmishWins: counts(d.skirmishWins),
       difficulty: d.difficulty === 'easy' || d.difficulty === 'hard' ? d.difficulty : 'normal',
       campSeen: strings(d.campSeen, 32),
+      campMemories: strings(d.campMemories, 32),
       merchantSales: sanitizeMerchantSales(d.merchantSales),
       party: sanitizeParty(d.party),
       recruitHires: sanitizeRecruitHires(d.recruitHires)
