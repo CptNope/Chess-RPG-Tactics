@@ -2,7 +2,7 @@
 
 A plan for **2 to 4 players battling each other online**. Each player brings their campaign squad, a preset team, or a team built on a fixed JP budget. The server runs on Cloudflare.
 
-> **This is a proposal, not a promise.** Nothing here is built yet. Version numbers are pencilled in after 0.41 (Workshop scenario chains) and 0.42 (more story) and can move. Once a release ships, its design decision becomes an ADR and this page is updated.
+> **Status: later.** Versus itself isn't scheduled. What *is* under way is the groundwork in the game's code (section 4), so versus can be added without tearing the battle code apart. The first part ships in 0.41. This page is a proposal; once a part ships, its design decision becomes an ADR and this page is updated.
 
 ---
 
@@ -107,17 +107,57 @@ Every team (preset, built, or exported from a save) is stored in one format: uni
 
 The server never trusts a team code. It rebuilds every unit with `JobSystem` and runs `validateTeam(team, rules)`. Any team that fails is refused with the reason: unknown job, ability not learned, prerequisites not met, over budget, gear not allowed.
 
-### 3.2 The budget (host's settings)
+### 3.2 Rule sets: everything is a setting
 
-| Setting | Default | Range | Notes |
-| :--- | :---: | :---: | :--- |
-| Units per player | 4 | 3–5 | 4 players × 4 units = 16 on a 16 × 16 map |
-| Unit level | 8 | 1–20 | Everyone is set to this level |
-| **JP per unit** | 1,500 | 0–5,000 | Spent as described below |
-| Gil per team | 3,000 | 0–20,000 | Buys gear from the market list at shop prices |
-| Jobs allowed | all | pick | E.g. "no monsters", "starting jobs only" |
-| Duplicate jobs | allowed | on / off | |
-| Items in the pouch | 3 | 0–8 | Supplies carried into battle |
+A match is played under a **rule set**: one object the host edits in the lobby. Rule sets can be saved, named, shared as a code (`#r=…`, like team codes) and picked from presets ("Classic duel", "Four-way brawl", "Leader hunt", "Low-level scramble"). The same object drives hot-seat and online play. The server validates it once, then every rule reads from it, so a new setting is one field plus the code that honours it.
+
+**Players and sides**
+
+| Setting | Default | Choices |
+| :--- | :---: | :--- |
+| Seats | 2 | 2–4, each a person or an AI (Easy / Normal / Hard) |
+| Alliances | none | Any grouping: 1v1, 1v1v1(v1), 2v2, 2v1, 3v1, 2v1v1 |
+| Friendly fire | off | Off (area spells skip allies) / on |
+| Handicap | none | Per seat: extra or fewer units, level ±, JP ± |
+
+**Teams**
+
+| Setting | Default | Choices |
+| :--- | :---: | :--- |
+| Team sources allowed | preset + built | Any mix of preset, built, campaign |
+| Units per player | 4 | 1–6 |
+| Unit level | 8 | 1–20, or "as built" |
+| Level sync for campaign squads | on | On / off |
+| JP budget | 1,500 per unit | Per unit, or one pool per team; 0–10,000 |
+| Gil for gear | 3,000 per team | 0–50,000; or "starter gear only" / "anything" |
+| Gear tiers | all | Up to a shop tier; relics on / off |
+| Jobs | all | Allow or ban each job; monsters on / off |
+| Abilities | all | Ban individual abilities |
+| Duplicate jobs | allowed | Allowed / max 2 / unique |
+| Supplies | 3 | 0–10 per team; which supplies are allowed |
+
+**Battle**
+
+| Setting | Default | Choices |
+| :--- | :---: | :--- |
+| Map | pick | Any versus map, any Workshop map with side zones, or random |
+| Deployment | fixed zones | Fixed zones / place your units in your zone before the start |
+| Victory | last side standing | Last side standing / **Leader** (KO the other side's chosen leader, the chess checkmate) / most KOs or most HP after a round cap / hold the centre for N rounds |
+| Round cap | none | None or 10–50 rounds, with a tiebreak |
+| Raise | on | On / off / once per unit |
+| Grand summons, signatures | on | On / off each |
+| Steal, Tame | steal on (for the match only), tame off | On / off each |
+| Weather and terrain spells | map's | Map's / off |
+| Starting CT | normal | Normal / random / slowest side first |
+
+**Clock**
+
+| Setting | Default | Choices |
+| :--- | :---: | :--- |
+| Turn timer | 60 s | None / 15–300 s per unit turn |
+| Time bank | none | A chess clock per player (e.g. 10 min) that tops up a slow turn |
+| On timeout | AUTO | AUTO / wait in place |
+| Disconnect grace | 2 min | 0–10 min, then AUTO or forfeit |
 
 ### 3.3 Spending JP the campaign way
 
@@ -131,9 +171,9 @@ The budget counter shows JP left per unit. **Reaching an advanced job costs budg
 
 **Campaign squads and level sync.** With level sync on, a campaign unit keeps its jobs, learned abilities and gear, but its level is set to the room's level. With it off, the squad plays exactly as saved.
 
-### 3.4 Versus rules to settle
+### 3.4 Defaults to settle
 
-Some abilities assume a campaign around them. Each needs a versus ruling, checked in hot-seat play:
+Some abilities assume a campaign around them. Each is a setting (above); these are the proposed defaults, to check in hot-seat play:
 
 | Thing | Proposal |
 | :--- | :--- |
@@ -161,27 +201,42 @@ The biggest job isn't the server; it's the rules.
 
 The first two are worth doing even if online play never ships: the game gets replays, a truthful balance sim and tests that cover whole battles.
 
+**Groundwork, part 1 (0.41):**
+- Sides go through `isFoe` / `isAlly`, with room for alliances.
+- One seeded RNG per battle.
+- A `BattleRules` object (campaign rules today; the rule set above later).
+- Action resolution (`resolveAction`) moves into `src/core`, used by both the game and the balance sim.
+
+**Part 2 (later):**
+- The turn loop (turn start, end of turn, victory) moves into `src/core` too.
+- The engine emits events.
+- Whole-battle replay tests.
+
 ---
 
 ## 5. Releases
 
+Groundwork comes first and ships as ordinary releases between the game's other work. The versus releases (V1–V5) aren't scheduled; they get version numbers when they start.
+
 ```mermaid
 flowchart LR
-    A["0.43<br/>Battle engine<br/>(no visible change)"] --> B["0.44<br/>Hot-seat versus<br/>2–4 on one device"]
-    B --> C["0.45<br/>Team Builder<br/>JP budget · team codes"]
-    C --> D["0.46<br/>Online duels<br/>Cloudflare room"]
-    D --> E["0.47<br/>3–4 players online<br/>FFA · 2v2 · AI seats"]
-    E --> F["0.48<br/>Rematch · replays<br/>quick match (maybe)"]
+    G1["0.41<br/>Groundwork 1<br/>sides · seeded dice · rules · actions"] --> G2["Groundwork 2<br/>turn loop · events · replays"]
+    G2 -.-> V1["V1<br/>Hot-seat versus<br/>2–4 on one device"]
+    V1 --> V2["V2<br/>Team Builder · rule sets<br/>JP budget · codes"]
+    V2 --> V3["V3<br/>Online duels<br/>Cloudflare room"]
+    V3 --> V4["V4<br/>3–4 players online<br/>FFA · 2v2 · AI seats"]
+    V4 --> V5["V5<br/>Rematch · replays<br/>quick match (maybe)"]
 ```
 
-| Version | Release | What ships | Size |
+| Step | Release | What ships | Size |
 | :---: | :--- | :--- | :---: |
-| **0.43** | **Battle engine** | Rules move out of `main.ts` into `src/core/Battle.ts` (`apply(intent) → events`); one seeded RNG; sides + alliances instead of player/enemy; AI can play any side; balance sim switched to the engine. **Test:** a recorded battle replayed from its seed and intents gives the same events, move for move | L |
-| **0.44** | **Hot-seat versus** | "Versus" on the title screen: 2–4 players on one device or controller, preset teams only. Side colours (ring + banner), "Player 2's turn" handover screen, last-side-standing and 2v2 victory, AI seats. Two or three versus maps with corner zones | M |
-| **0.45** | **Team Builder** | Build teams to a budget; preset teams in the same format; export a campaign squad; team codes (`#t=`) to save and share; `validateTeam` with tests for every budget rule | M |
-| **0.46** | **Online duels** | `server/` folder: Worker + Room Durable Object (`wrangler`), deployed by a GitHub Action. Create/join by code, lobby, ready check, turn timer by alarm, rejoin by token, version check. Two players | L |
-| **0.47** | **Up to four online** | Free-for-all and 2v2 online; host settings; AI seats; AUTO on timeout and disconnect; forfeits | M |
-| **0.48** | **Polish** | Rematch; match summary; replays (the action log, downloadable, played back with the engine); rate limits and name filtering. Maybe a quick-match queue (one more Durable Object) | M |
+| **0.41** | **Groundwork 1** | `isFoe` / `isAlly`; a seeded RNG per battle; `BattleRules`; `resolveAction` in `src/core`, used by `main.ts` (which only presents) and by the balance sim. No visible change. **Test:** the same seed resolves an action the same way | M |
+| **G2** | **Groundwork 2** | Turn start (calls, encores, poison), end of turn and victory move to `src/core/Battle.ts`; `apply(intent) → events`; the AI can play any side. **Test:** a recorded battle replayed from its seed and intents gives the same events | L |
+| **V1** | **Hot-seat versus** | "Versus" on the title screen: 2–4 players on one device or controller, preset teams, preset rule sets. Side colours (ring + banner), "Player 2's turn" handover screen, every victory condition, AI seats. Two or three versus maps with corner zones | M |
+| **V2** | **Team Builder and rule sets** | Build teams to a budget; preset teams in the same format; export a campaign squad; the rule-set editor; team and rule codes to save and share; `validateTeam` and `validateRules` with tests for every rule | M |
+| **V3** | **Online duels** | `server/` folder: Worker + Room Durable Object (`wrangler`), deployed by a GitHub Action. Create/join by code, lobby, ready check, turn timer by alarm, rejoin by token, version check. Two players | L |
+| **V4** | **Up to four online** | Free-for-all, alliances and AI seats online; AUTO on timeout and disconnect; forfeits | M |
+| **V5** | **Polish** | Rematch; match summary; replays (the action log, downloadable, played back with the engine); rate limits and name filtering. Maybe a quick-match queue (one more Durable Object) | M |
 
 **Later, if it catches on:** accounts and rankings (needs sign-in and a durable database such as D1), asynchronous matches (a room already keeps state for days; a turn could be played whenever, with a notification), spectators, a public room list.
 
@@ -199,11 +254,11 @@ flowchart LR
   - 13,000 GB-s of duration.
   - Going over makes further requests fail; you aren't charged.
   - Incoming WebSocket messages count 20 to 1 toward requests, and outgoing messages are free.
-  - A match of a few hundred messages is a tiny slice, so hobby-scale play should fit for free. Phase 0.46 measures it.
+  - A match of a few hundred messages is a tiny slice, so hobby-scale play should fit for free. V3 measures it.
 - **Paid plan,** if it ever grows: $5 a month base, then $0.15 per million requests and $12.50 per million GB-s.
 - **Where it runs:** the same code serves the GitHub Pages build, the itch.io build and the installed app.
   - The room accepts WebSocket connections only from known origins: `cptnope.github.io`, itch's game host `html-classic.itch.zone`, `jeremyanderson.tech`, and localhost for development.
-  - itch allows a browser game to reach an outside server over HTTPS/WSS; **the 0.46 work starts with a spike that proves a socket opens from the itch embed**.
+  - itch allows a browser game to reach an outside server over HTTPS/WSS; **V3 starts with a spike that proves a socket opens from the itch embed**.
 
 ---
 
@@ -211,11 +266,11 @@ flowchart LR
 
 | Risk | How it's handled |
 | :--- | :--- |
-| Pulling rules out of a 2,857-line `main.ts` breaks the campaign | 0.43 ships alone with no new features; whole-battle replay tests plus the 8 play-tests guard it |
-| Four-player free-for-all ganging up on the leader, long matches | Hot-seat 0.44 is the place to tune it: unit count, timer, a round cap with "most HP left wins" |
+| Pulling rules out of a 2,857-line `main.ts` breaks the campaign | Groundwork ships in two parts with no new features; resolver tests, replay tests and the 8 play-tests guard it |
+| Four-player free-for-all ganging up on the leader, long matches | Hot-seat (V1) is the place to tune it; the rule set has the dials: unit count, timer, round cap, victory condition |
 | Campaign squads are wildly uneven | Level sync, and preset/built teams as the default; campaign squads are opt-in per room |
 | A modified browser cheats | The server validates every intent and every team and rolls every die. The browser only draws |
-| Itch or a school network blocks the socket | Spike first (0.46); the GitHub Pages build is the fallback link |
+| Itch or a school network blocks the socket | Spike first (V3); the GitHub Pages build is the fallback link |
 | Free-plan limits reached | Requests fail rather than bill. Watch the dashboard; the paid plan is $5 a month |
 | Players on different builds | Version check on `hello`; an out-of-date browser is asked to reload |
 
@@ -223,7 +278,6 @@ flowchart LR
 
 ## 8. Open questions
 
-1. **Order:** keep 0.41 (Workshop chains) and 0.42 (story) first, or start versus right after 0.40?
-2. **Cloudflare account and domain:** use `workers.dev` to start, or put `jeremyanderson.tech`'s DNS on Cloudflare for `versus.jeremyanderson.tech`?
-3. **Default budget:** 4 units, level 8, 1,500 JP each, 3,000 gil is a first guess. Hot-seat play will settle it.
-4. **Preset teams:** about eight, themed by the campaign's factions (Thornwood bandits, Mire cultists, Night raiders, the Pale Heir's court …)?
+1. **Cloudflare account and domain** (when V3 starts): use `workers.dev` to start, or put `jeremyanderson.tech`'s DNS on Cloudflare for `versus.jeremyanderson.tech`?
+2. **Default rule set:** 4 units, level 8, 1,500 JP each, 3,000 gil is a first guess. Hot-seat play will settle it.
+3. **Preset teams:** about eight, themed by the campaign's factions (Thornwood bandits, Mire cultists, Night raiders, the Pale Heir's court …)?

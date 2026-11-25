@@ -127,7 +127,7 @@ flowchart LR
         direction TB
         L4["Workshop gallery"]
         L6["Localization"]
-        L7["Online versus, 2–4 players<br/>(plan: 0.43 – 0.48)"]
+        L7["Online versus, 2–4 players<br/>(groundwork from 0.41)"]
     end
     NOW --> NEXT --> LATER
 ```
@@ -154,7 +154,7 @@ flowchart LR
 | Enemies that steal from you (needs a way to win it back) | S |
 | Workshop: a browsable gallery of shared scenarios (needs a small back end); scenario chains (mini campaigns); props and multi-wave enemies | M |
 | Localization (strings out of code) | M |
-| **Online versus for 2–4 players** on Cloudflare: duels, free-for-all and 2v2, with preset, built (JP budget) or campaign teams. Phased plan, 0.43 – 0.48: [Online Versus](ONLINE_VERSUS.md) | XL |
+| **Online versus for 2–4 players** on Cloudflare: duels, free-for-all and 2v2, with preset, built (JP budget) or campaign teams. Every match setting is configurable (a rule set). The code groundwork starts in 0.41; the versus releases come later: [Online Versus](ONLINE_VERSUS.md) | XL |
 
 ---
 
