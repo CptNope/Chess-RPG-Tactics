@@ -52,7 +52,7 @@ const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
 const STROKE_TOOLS: Tool[] = ['raise', 'lower', 'level', 'paint', 'block'];
 
 const TERRAIN_COLORS: Record<TerrainType, string> = {
-  grass: '#4f9a3a', stone: '#8d95a3', dirt: '#8a5a32', water: '#2f6fd6', wood: '#a0703d', swamp: '#3f5a2c', parapet: '#5f6b84'
+  grass: '#4f9a3a', stone: '#8d95a3', dirt: '#8a5a32', water: '#2f6fd6', wood: '#a0703d', swamp: '#3f5a2c', parapet: '#5f6b84', sand: '#d9b97a', snow: '#e8eef6'
 };
 const FACINGS: FacingDirection[] = ['N', 'E', 'S', 'W'];
 const FACING_NAMES: Record<FacingDirection, string> = { N: 'North', E: 'East', S: 'South', W: 'West' };
@@ -606,7 +606,7 @@ export class Workshop {
             onclick: () => { this.paintTerrain = t; SoundFX.playMenuBlip(); this.render(); }
           }, h('span', { class: 'ws-chip', style: `background:${TERRAIN_COLORS[t]}` }), t)))) : null,
       h('p', { class: 'ws-note' }, this.dragMode === 'paint' ? 'Drag across tiles to paint a stroke (one undo step). Pan with two fingers, the right mouse button, WASD or the camera buttons.' : 'Tap tiles to edit them one at a time; dragging moves the camera.'),
-      h('p', { class: 'ws-note' }, 'Water and swamp cost 2 movement. Height differences above a unit\'s Jump block the step. Wood is a bridge or boardwalk; parapet is battlement stone.')
+      h('p', { class: 'ws-note' }, 'Water, swamp and snow cost 2 movement. Height differences above a unit\'s Jump block the step. Wood is a bridge or boardwalk; parapet is battlement stone.')
     ].filter(Boolean) as Node[];
   }
 

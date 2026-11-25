@@ -66,7 +66,7 @@ export function walkingDistances(grid: BattleGrid, from: { x: number; z: number 
       const t = grid.getTile(cur.x + dx, cur.z + dz);
       if (!t || !t.walkable || Math.abs(t.height - here.height) > jump) continue;
       // Cost of stepping off `t` toward the foe (the search runs backwards from the foe)
-      const cost = !waterWalk && (t.terrain === 'water' || t.terrain === 'swamp') ? 2 : 1;
+      const cost = t.terrain === 'snow' || (!waterWalk && (t.terrain === 'water' || t.terrain === 'swamp')) ? 2 : 1;
       const nd = cur.d + cost;
       if (nd < (dist.get(k(t.x, t.z)) ?? Infinity)) {
         dist.set(k(t.x, t.z), nd);

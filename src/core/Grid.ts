@@ -39,7 +39,8 @@ export class BattleGrid {
 
   /** Movement cost to enter a tile: water and swamp cost 2 unless the unit has Water Walk. */
   public enterCost(unit: Unit, tile: TileData): number {
-    if ((tile.terrain === 'water' || tile.terrain === 'swamp') && unit.equippedAbilities.movement !== 'ni_water_walk') {
+    // Water, swamp and deep snow (0.34.0) cost 2 to enter; Water Walk crosses water and swamp
+    if (tile.terrain === 'snow' || ((tile.terrain === 'water' || tile.terrain === 'swamp') && unit.equippedAbilities.movement !== 'ni_water_walk')) {
       return 2;
     }
     return 1;

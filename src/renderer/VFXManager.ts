@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { MapData } from '../data/maps';
 
 /** Weather particles and camera shake. Spell and hit effects are pixel art (PixelEffects + BattleFx). */
 export class VFXManager {
@@ -8,7 +9,7 @@ export class VFXManager {
   private ambientParticles: THREE.Points | null = null;
   private ambientPositions: Float32Array | null = null;
   private ambientCount: number = 200;
-  public currentTheme: 'day' | 'night' | 'swamp' = 'day';
+  public currentTheme: MapData['theme'] = 'day';
 
   // Camera Trauma / Shake
   public cameraTrauma: number = 0;
@@ -19,7 +20,7 @@ export class VFXManager {
     this.initAmbientParticles('day');
   }
 
-  public setWeatherTheme(theme: 'day' | 'night' | 'swamp'): void {
+  public setWeatherTheme(theme: MapData['theme']): void {
     this.currentTheme = theme;
     if (this.ambientParticles) {
       this.scene.remove(this.ambientParticles);
@@ -30,7 +31,7 @@ export class VFXManager {
     this.initAmbientParticles(theme);
   }
 
-  private initAmbientParticles(theme: 'day' | 'night' | 'swamp'): void {
+  private initAmbientParticles(theme: MapData['theme']): void {
     const geom = new THREE.BufferGeometry();
     const positions = new Float32Array(this.ambientCount * 3);
     const colors = new Float32Array(this.ambientCount * 3);
@@ -40,6 +41,10 @@ export class VFXManager {
       baseColor = new THREE.Color(0x60a5fa); // Night motes / glowing embers
     } else if (theme === 'swamp') {
       baseColor = new THREE.Color(0x34d399); // Toxic green spores
+    } else if (theme === 'desert') {
+      baseColor = new THREE.Color(0xf5deb3); // Blowing sand (0.34.0)
+    } else if (theme === 'snow') {
+      baseColor = new THREE.Color(0xf8fbff); // Snowflakes (0.34.0)
     }
 
     for (let i = 0; i < this.ambientCount; i++) {
@@ -57,7 +62,7 @@ export class VFXManager {
     geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const mat = new THREE.PointsMaterial({
-      size: theme === 'night' ? 0.25 : 0.2,
+      size: theme === 'night' || theme === 'snow' ? 0.25 : 0.2,
       vertexColors: true,
       transparent: true,
       opacity: 0.75,

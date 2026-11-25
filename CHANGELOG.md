@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.34.0] - 2026-11-24
+
+### Added — Act III begins: across the sea
+- **Chapter VI** (The Drowned Regent) is no longer the end. After the victory, Sable shows the chart she stole from the Regent's ship, and the squad takes ship after his court.
+- **The Far Shore**, a second world map. Once Chapter VI is won, **⛵ Sail to the Far Shore** at Emberwick Harbor; the ship lands at **the Anchorage**. Sail home from there to shop: the market and Wenna the Pedlar stay in the realm.
+- **Chapter VII: The Saltglass Shore.** The drowned kingdom's old harbour in the dunes, held by Herald Isaine and the Regent's court, with a basilisk in the dunes and a thornling in the wreck. Win: the **Saltglass Blade** (ATK +12, MAG +4, Speed +1, ice damage up). March on: **Frostfang Mail** (heavy armor, HP +90, ATK +2, no Slow).
+- **Kestrel** joins in Chapter VII: a Beast Tamer from a village the Court burned.
+- **Chapter VIII: Frostfang Pass.** Terraces up to the Court's fort, held by Marshal Hale with a frost wyvern, a wolf and a drowned knight. It ends the story for now; its closing screen says Act III continues in a coming update. The Trials and New Game+ stay open.
+- **Sand and snow.** Two new kinds of ground with their own textures, decorations, light and weather (drifting sand, falling snow). **Snow costs 2 movement**, like water and swamp. Geomancers cast **Dust Devil** on sand (Blind) and **Whiteout** on snow (Slow). Both are in the Workshop palette.
+- **Two camp scenes:** the last night ashore before sailing, and a fire in the dunes with Kestrel.
+
+### Balance
+- Tuned with the balance sim against Chapter VI (Normal, 100 battles):
+
+  | Chapter | lower | middle | upper |
+  | :--- | :--- | :--- | :--- |
+  | VI at L8 / L9 / L10 | 1% | 17% | 35% |
+  | VII at L9 / L10 / L11 | 18% | 47% | 55% |
+  | VIII at L10 / L11 / L12 | 10% | 34% | 40% |
+
+  The first rosters won 5% and 3% at the middle level. In VII a ninja made the difference (now a monk, the Court Pugilist); in VIII any seventh unit kept the chapter near 5%, so the fort holds six.
+
+### Fixed
+- The guide's world map diagram called the Zodiac Summit the Final Chapter; it's Chapter III.
+
+### Developer
+- `WorldNode.region` (`'realm' | 'shore'`), `regionOf`, `SEA_PORTS`, `farShoreOpen`; a `port` node kind. `paintWorld(canvas, region)`. `CampaignChapter.epilogue`. Terrain `sand` and `snow` (map letters `a` and `n`), themes `desert` and `snow`.
+- The balance sim fields Kestrel for Sable in VII and VIII and shifts its levels for Act III. `KESTREL=0` puts Sable back.
+- A new play-test sails to the Far Shore (8 checks). 2 new tests (277 total). [ADR 0041](docs/adr/0041-act-three-the-far-shore.md).
+- The README and TESTING test counts were one behind since 0.33; fixed.
+
 ## [0.33.0] - 2026-11-24
 
 ### Changed — the new beasts join the story

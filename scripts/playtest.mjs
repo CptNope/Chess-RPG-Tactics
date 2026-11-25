@@ -161,6 +161,26 @@ const CHECKS = [
     return 'Chapter V ran';
   }],
 
+  ['sail to the Far Shore (Act III)', async (page) => {
+    await skipDialogue(page);
+    await page.evaluate(() => {
+      const g = window.__tactics;
+      g.clearedChapters = ['chapter_1', 'chapter_2a', 'chapter_3', 'chapter_4', 'chapter_5', 'chapter_6']; g.campSeen = [...g.clearedChapters];
+      g.campaignChapterId = 'chapter_7';
+      g.openWorldMap('harbor');
+    });
+    await page.locator('.wm-action', { hasText: 'Sail to the Far Shore' }).click();
+    await page.waitForSelector('[data-node="saltglass"]');
+    const title = await page.locator('#world-map h2').textContent();
+    expect(title === 'THE FAR SHORE', `map title: ${title}`);
+    expect((await page.locator('[data-node="market"]').count()) === 0, 'the realm\'s places should be hidden');
+    await page.click('[data-node="saltglass"]');
+    await page.waitForTimeout(800);
+    await page.locator('.wm-action', { hasText: 'March' }).click();
+    await page.waitForFunction(() => window.__tactics.units.some((u) => u.team === 'enemy' && u.jobId === 'basilisk'), null, { timeout: 20000 });
+    return 'Saltglass Shore loaded';
+  }],
+
   ['save and load', async (page) => {
     await skipDialogue(page);
     const before = await page.evaluate(() => { const g = window.__tactics; g.gil = 1234; g.saveGame(false); return g.squad.map((u) => u.name).join(','); });

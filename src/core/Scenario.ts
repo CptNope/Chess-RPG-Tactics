@@ -18,14 +18,16 @@ export const MAX_ENEMIES = 16;
 export const MAX_SPAWNS = 6;
 export const MAX_LINES = 40;
 
-export const TERRAINS: TerrainType[] = ['grass', 'stone', 'dirt', 'water', 'wood', 'swamp', 'parapet'];
+export const TERRAINS: TerrainType[] = ['grass', 'stone', 'dirt', 'water', 'wood', 'swamp', 'parapet', 'sand', 'snow'];
 
 /** Map "looks": lighting, sky and weather presets. */
 export const LOOKS: { id: string; name: string; theme: MapData['theme'] }[] = [
   { id: 'day', name: 'Daylight', theme: 'day' },
   { id: 'night', name: 'Moonlit night', theme: 'night' },
   { id: 'swamp', name: 'Misty swamp', theme: 'swamp' },
-  { id: 'zodiac_summit', name: 'Zodiac summit', theme: 'night' }
+  { id: 'zodiac_summit', name: 'Zodiac summit', theme: 'night' },
+  { id: 'saltglass_shore', name: 'Desert noon', theme: 'desert' },
+  { id: 'frostfang_pass', name: 'Snowy pass', theme: 'snow' }
 ];
 
 /** Named characters with drawn portraits (job portraits cover everyone else). */
@@ -340,7 +342,7 @@ export function parseScenario(json: string): Scenario {
 
 /** Compact form for links: tiles become one string per row (height*10, terrain letter, ! for blocked). */
 function packForShare(s: Scenario): unknown {
-  const letter: Record<TerrainType, string> = { grass: 'g', stone: 's', dirt: 'd', water: 'w', wood: 'o', swamp: 'm', parapet: 'p' };
+  const letter: Record<TerrainType, string> = { grass: 'g', stone: 's', dirt: 'd', water: 'w', wood: 'o', swamp: 'm', parapet: 'p', sand: 'a', snow: 'n' };
   const rows: string[] = [];
   for (let z = 0; z < s.map.depth; z++) {
     const row: string[] = [];
@@ -355,7 +357,7 @@ function packForShare(s: Scenario): unknown {
 
 function unpackShare(raw: unknown): unknown {
   if (!isObj(raw) || !isObj(raw.map) || !Array.isArray(raw.map.rows)) return raw;
-  const byLetter: Record<string, TerrainType> = { g: 'grass', s: 'stone', d: 'dirt', w: 'water', o: 'wood', m: 'swamp', p: 'parapet' };
+  const byLetter: Record<string, TerrainType> = { g: 'grass', s: 'stone', d: 'dirt', w: 'water', o: 'wood', m: 'swamp', p: 'parapet', a: 'sand', n: 'snow' };
   const tiles: unknown[] = [];
   raw.map.rows.slice(0, MAX_SIZE).forEach((row, z) => {
     if (typeof row !== 'string') return;

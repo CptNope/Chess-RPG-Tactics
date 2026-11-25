@@ -1,4 +1,5 @@
-export type TerrainType = 'grass' | 'stone' | 'dirt' | 'water' | 'wood' | 'swamp' | 'parapet';
+// sand and snow: added in 0.34.0 for the Far Shore
+export type TerrainType = 'grass' | 'stone' | 'dirt' | 'water' | 'wood' | 'swamp' | 'parapet' | 'sand' | 'snow';
 
 export type FacingDirection = 'N' | 'E' | 'S' | 'W';
 
@@ -287,6 +288,8 @@ export interface CampaignChapter {
   mapData?: import('../data/maps').MapData;
   /** How the battle is won. Defaults to routing every enemy. */
   objective?: BattleObjective;
+  /** What the closing screen says when this is the last chapter so far (0.34.0). */
+  epilogue?: { title: string; text: string };
 }
 
 /** rout: defeat every enemy · boss: defeat the boss · survive: keep one ally standing for N rounds */

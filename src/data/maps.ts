@@ -3,7 +3,7 @@ import { TileData, TerrainType } from '../core/types';
 export interface MapData {
   id: string;
   name: string;
-  theme: 'day' | 'night' | 'swamp';
+  theme: 'day' | 'night' | 'swamp' | 'desert' | 'snow';
   width: number;
   depth: number;
   tiles: TileData[];
@@ -315,6 +315,71 @@ export function createCapeMap(): MapData {
   return b.build('stormbreak_cape', 'Stormbreak Cape', 'night', SOUTH_SPAWNS);
 }
 
+/**
+ * The Saltglass Shore (16×16, 0.34.0): the drowned kingdom's old harbour on the Far Shore. The
+ * squad lands on the beach in the south; dunes roll up to the broken quay and the ruined port in
+ * the north, where the Tide Court holds the high stones. The sea runs along the west, a tidal
+ * channel cuts the middle, and a wrecked hull lies on the east sands.
+ */
+export function createSaltglassMap(): MapData {
+  const b = new MapBuilder(16, 16, 1, 'sand');
+  // The sea along the west and the shallows of the landing
+  b.rect(0, 0, 1, 15, 0.4, 'water');
+  b.rect(2, 12, 3, 15, 0.6, 'water');
+  b.set(2, 11, 0.6, 'water');
+  // Dunes
+  b.rect(10, 11, 14, 13, 1.5);
+  b.rect(11, 12, 13, 12, 2.0);
+  b.rect(4, 8, 6, 10, 1.6);
+  b.rect(5, 9, 5, 9, 2.2);
+  b.rect(12, 5, 15, 7, 2.0);
+  b.rect(14, 4, 15, 5, 2.6);
+  // The tidal channel through the middle, with a sandbar ford
+  b.rect(7, 6, 9, 7, 0.5, 'water');
+  b.rect(8, 6, 8, 7, 0.8, 'sand');
+  // The broken quay and the port on the high stones
+  b.rect(3, 3, 12, 5, 2.4, 'stone');
+  b.rect(4, 0, 11, 2, 3.2, 'stone');
+  b.rect(6, 0, 9, 0, 3.8, 'stone');
+  b.rect(7, 5, 8, 5, 1.8, 'stone'); // steps up from the channel
+  b.rect(2, 3, 2, 5, 1.2, 'wood'); // the old jetty
+  // Fallen columns and the wreck
+  for (const [x, z] of [[4, 1], [11, 1], [3, 4], [12, 3], [6, 10]]) b.set(x, z, 5.0, 'stone', false);
+  b.rect(12, 8, 14, 9, 1.6, 'wood');
+  b.set(13, 8, 3.2, 'wood', false); // the mast stump
+  return b.build('saltglass_shore', 'Saltglass Shore', 'desert', SOUTH_SPAWNS);
+}
+
+/**
+ * Frostfang Pass (16×16, 0.34.0): a pass climbing north into the mountains, walled by cliffs.
+ * The squad starts in the snowfield at the foot; the road climbs in terraces to the Court's fort
+ * at the top. A ledge path on the west climbs faster, pines stand in the drifts, and a frozen
+ * pool lies on the east side. Deep snow costs 2 to cross.
+ */
+export function createFrostfangMap(): MapData {
+  const b = new MapBuilder(16, 16, 1, 'snow');
+  // The cliffs either side
+  b.rect(0, 0, 1, 11, 7.0, 'stone', false);
+  b.rect(14, 0, 15, 11, 7.0, 'stone', false);
+  // Terraces of the road, climbing north
+  b.rect(2, 9, 13, 11, 1.6);
+  b.rect(2, 6, 13, 8, 2.6);
+  b.rect(2, 3, 13, 5, 3.6);
+  b.rect(2, 0, 13, 2, 4.6);
+  // The beaten road up the middle (packed: normal going)
+  b.rect(7, 3, 8, 15, undefined, 'dirt');
+  // The west ledge: a steep shortcut along the cliff
+  b.rect(2, 2, 3, 11, undefined, 'stone');
+  for (let z = 2; z <= 11; z++) b.set(2, z, 1.2 + (11 - z) * 0.5);
+  // The Court's fort at the top
+  b.rect(4, 0, 11, 1, 5.2, 'parapet');
+  b.rect(7, 1, 8, 1, 4.8, 'parapet');
+  // A frozen pool and the pines
+  b.rect(11, 7, 12, 8, 2.4, 'water');
+  for (const [x, z] of [[4, 10], [12, 10], [5, 6], [10, 4], [4, 3], [12, 13], [3, 14]]) b.set(x, z, 4.2, 'wood', false);
+  return b.build('frostfang_pass', 'Frostfang Pass', 'snow', SOUTH_SPAWNS);
+}
+
 /** The squad's deployment tiles on a map (map-defined, else the southern rows). */
 export function spawnsFor(map: MapData): { x: number; z: number }[] {
   if (map.playerSpawns && map.playerSpawns.length > 0) return map.playerSpawns;
@@ -330,5 +395,7 @@ export const MAPS: Record<string, () => MapData> = {
   zodiac_summit: createZodiacSummitMap,
   ember_harbor: createHarborMap,
   greywatch_isle: createGreywatchMap,
-  stormbreak_cape: createCapeMap
+  stormbreak_cape: createCapeMap,
+  saltglass_shore: createSaltglassMap,
+  frostfang_pass: createFrostfangMap
 };

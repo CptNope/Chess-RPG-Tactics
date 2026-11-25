@@ -37,7 +37,7 @@ export const RECRUIT_NAMES = [
   'Alden', 'Brisa', 'Caspar', 'Delia', 'Edric', 'Fenna', 'Garrick', 'Hesper', 'Ivo', 'Jessamy',
   'Kael', 'Liesl', 'Merrit', 'Nessa', 'Orrin', 'Petra', 'Quill', 'Rosalind', 'Silas', 'Tamsin',
   'Ulric', 'Vesna', 'Wren', 'Ysolde', 'Ansel', 'Briar', 'Cordelia', 'Dacey', 'Emrys', 'Fallon',
-  'Gideon', 'Hollis', 'Ilse', 'Jory', 'Kestrel', 'Linnet', 'Mabry', 'Niall', 'Odile', 'Perrin'
+  'Gideon', 'Hollis', 'Ilse', 'Jory', 'Kellan', 'Linnet', 'Mabry', 'Niall', 'Odile', 'Perrin'
 ];
 
 /** What each job's hopeful says for themselves. */

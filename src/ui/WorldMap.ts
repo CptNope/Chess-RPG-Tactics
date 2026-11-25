@@ -7,7 +7,7 @@
  */
 import { CAMPAIGN_CHAPTERS } from '../data/campaign';
 import { drawSprite } from '../graphics/CharacterArt';
-import { Mission, WORLD_NODES, WORLD_ROADS, WorldNode, nodeState, openMissions, route, worldNode } from '../core/World';
+import { Mission, Region, SEA_PORTS, WORLD_NODES, WORLD_ROADS, WorldNode, nodeState, openMissions, regionOf, route, worldNode } from '../core/World';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus, skirmishLevel } from '../core/Skirmish';
 import { MERCHANT_NAME, MerchantVisit } from '../core/Merchant';
 import { ITEMS } from '../data/items';
@@ -42,6 +42,8 @@ export interface WorldState {
   recruits: RecruitOffer[];
   /** How many units the squad has. */
   squadSize: number;
+  /** Ships sail for the Far Shore (0.34.0). */
+  farShore: boolean;
 }
 
 export interface WorldHost {
@@ -85,7 +87,9 @@ export class WorldMap {
   private panelEl = document.getElementById('wm-panel')!;
   private gilEl = document.getElementById('wm-gil')!;
   private party = document.getElementById('wm-party')!;
-  private painted = false;
+  /** The region painted on the canvas (0.34.0): the realm or the Far Shore. */
+  private paintedRegion: Region | null = null;
+  private titleEl = document.querySelector<HTMLElement>('#world-map h2');
   private walking = false;
   private partyJob = '';
 
@@ -99,11 +103,8 @@ export class WorldMap {
   public open(location?: string): void {
     if (location && worldNode(location)) this.location = location;
     if (!worldNode(this.location)) this.location = 'ruins';
-    if (!this.painted) {
-      paintWorld(document.getElementById('wm-canvas') as HTMLCanvasElement);
-      this.painted = true;
-    }
     this.isOpen = true;
+    this.paintRegion();
     this.walking = false;
     this.root.inert = false; // a camp scene cut short (by loading a save) must not leave the map frozen
     this.root.classList.remove('hidden');
@@ -111,6 +112,25 @@ export class WorldMap {
     this.refresh();
     this.placeParty(false);
     this.host.focus(this.panelEl.querySelector<HTMLElement>('.wm-action') || this.nodesEl.querySelector<HTMLElement>(`[data-node="${this.location}"]`));
+  }
+
+  /** Paints the region the party is in, if it isn't already showing. */
+  private paintRegion(): void {
+    const region = regionOf(this.location);
+    if (region === this.paintedRegion) return;
+    paintWorld(document.getElementById('wm-canvas') as HTMLCanvasElement, region);
+    this.paintedRegion = region;
+    if (this.titleEl) this.titleEl.textContent = region === 'shore' ? 'THE FAR SHORE' : 'THE REALM';
+  }
+
+  /** Takes ship to the other region's harbour (0.34.0). */
+  private sail(to: Region): void {
+    if (this.walking || !this.isOpen) return;
+    this.location = SEA_PORTS[to];
+    this.paintRegion();
+    this.refresh();
+    this.placeParty(false);
+    this.focusDefault();
   }
 
   /** Puts focus where opening the map does: the first action here, or the party's pin. */
@@ -140,8 +160,10 @@ export class WorldMap {
       this.party.appendChild(drawSprite(st.leaderJob, 'S', false));
     }
 
+    this.paintRegion();
+    const region = regionOf(this.location);
     this.nodesEl.innerHTML = '';
-    for (const node of WORLD_NODES) {
+    for (const node of WORLD_NODES.filter((n) => (n.region || 'realm') === region)) {
       const state = nodeState(node, st.current, st.cleared, st.trialsOpen);
       const btn = document.createElement('button');
       const merchantHere = st.merchant?.nodeId === node.id;
@@ -149,8 +171,8 @@ export class WorldMap {
       btn.dataset.node = node.id;
       btn.style.left = `${node.x * 100}%`;
       btn.style.top = `${node.y * 100}%`;
-      const mark = node.kind === 'market' ? '◆' : state === 'cleared' ? '✓' : state === 'locked' ? '🔒' : node.kind === 'trials' ? '★' : node.kind === 'skirmish' ? '⚑' : '⚔';
-      const what = node.kind === 'market' ? 'market' : state === 'cleared' ? 'cleared' : state === 'locked' ? 'locked' : node.kind === 'trials' ? 'the Trials' : node.kind === 'skirmish' ? 'side battle' : 'battle';
+      const mark = node.kind === 'port' ? '⛵' : node.kind === 'market' ? '◆' : state === 'cleared' ? '✓' : state === 'locked' ? '🔒' : node.kind === 'trials' ? '★' : node.kind === 'skirmish' ? '⚑' : '⚔';
+      const what = node.kind === 'port' ? 'harbour' : node.kind === 'market' ? 'market' : state === 'cleared' ? 'cleared' : state === 'locked' ? 'locked' : node.kind === 'trials' ? 'the Trials' : node.kind === 'skirmish' ? 'side battle' : 'battle';
       btn.setAttribute('aria-label', `${node.name}: ${what}${merchantHere ? ', travelling merchant' : ''}${node.id === this.location ? ', you are here' : ''}`);
       btn.innerHTML = `<span class="wm-pin" aria-hidden="true">${mark}</span><span class="wm-label">${node.name}</span>${merchantHere ? '<span class="wm-merchant-badge" aria-hidden="true" title="Travelling merchant">🎒</span>' : ''}`;
       btn.addEventListener('click', () => void this.travel(node.id));
@@ -231,7 +253,10 @@ export class WorldMap {
     add('h3', 'wm-place', node.name);
     add('p', 'wm-blurb', node.blurb);
 
-    if (node.kind === 'market') {
+    if (node.kind === 'port') {
+      add('p', 'wm-status', 'The ship from Emberwick waits here. The market is back across the sea.');
+      action('⛵ Sail home to Emberwick Harbor', () => this.sail('realm'), true);
+    } else if (node.kind === 'market') {
       add('p', 'wm-status', 'The market is open. Stock up on potions before the next battle.');
       action('◆ Buy & sell', () => this.host.openShop(), true);
       this.renderRecruits(st);
@@ -276,12 +301,21 @@ export class WorldMap {
       }
     }
 
+    // Ships for the Far Shore leave from Emberwick once the Regent is beaten (0.34.0)
+    if (node.id === SEA_PORTS.realm && st.farShore) action('⛵ Sail to the Far Shore', () => this.sail('shore'), !p.querySelector('.wm-action.primary'));
+
     this.renderMerchant(st);
 
     // Where to go next, when there's nothing to do here
     if (!p.querySelector('.wm-action.primary')) {
-      const next = missions.map((m) => WORLD_NODES.find((n) => n.chapterId === m.chapterId)?.name).filter(Boolean);
-      if (next.length) add('p', 'wm-hint', `Next battle: ${next.join(' or ')}. Select it on the map.`);
+      const here = regionOf(this.location);
+      const nextNodes = missions.map((m) => WORLD_NODES.find((n) => n.chapterId === m.chapterId)).filter((n): n is WorldNode => !!n);
+      const away = nextNodes.filter((n) => (n.region || 'realm') !== here);
+      if (nextNodes.length && away.length === nextNodes.length) {
+        add('p', 'wm-hint', here === 'realm'
+          ? `Next battle: ${away.map((n) => n.name).join(' or ')}, across the sea. Take ship at Emberwick Harbor.`
+          : `Next battle: ${away.map((n) => n.name).join(' or ')}, back in the realm. Sail home from the Anchorage.`);
+      } else if (nextNodes.length) add('p', 'wm-hint', `Next battle: ${nextNodes.map((n) => n.name).join(' or ')}. Select it on the map.`);
       else if (st.trialsOpen) add('p', 'wm-hint', 'The story is told. The Gate of Trials stands open.');
     }
   }
@@ -341,7 +375,7 @@ export class WorldMap {
       const where = worldNode(m.nodeId)?.name;
       const hint = document.createElement('p');
       hint.className = 'wm-hint';
-      hint.textContent = `🎒 ${MERCHANT_NAME} has set up at ${where}.`;
+      hint.textContent = `🎒 ${MERCHANT_NAME} has set up at ${where}${regionOf(this.location) === 'shore' ? ', back in the realm' : ''}.`;
       p.appendChild(hint);
       return;
     }
@@ -406,13 +440,15 @@ function segDist(px: number, py: number, ax: number, ay: number, bx: number, by:
 
 const RIVER: [number, number][] = [[0.8, 0.5], [0.66, 0.58], [0.5, 0.6], [0.38, 0.66], [0.3, 0.78], [0.2, 0.88], [0.13, 0.99]];
 
-export function paintWorld(canvas: HTMLCanvasElement): void {
+export function paintWorld(canvas: HTMLCanvasElement, region: Region = 'realm'): void {
+  if (region === 'shore') return paintShore(canvas);
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
   const img = ctx.createImageData(W, H);
   const pos = (id: string) => { const n = worldNode(id)!; return [n.x * W, n.y * H] as const; };
-  const roads = WORLD_ROADS.map(([a, b]) => [...pos(a), ...pos(b)] as [number, number, number, number]);
+  const REALM_NODES = WORLD_NODES.filter((n) => !n.region);
+  const roads = WORLD_ROADS.filter(([a, b]) => regionOf(a) === 'realm' && regionOf(b) === 'realm').map(([a, b]) => [...pos(a), ...pos(b)] as [number, number, number, number]);
   const [sx, sy] = pos('summit'), [tx, ty] = pos('trials'), [mx, my] = pos('mire'), [bx, by] = pos('battlement');
 
   const landAt = (x: number, y: number): number => {
@@ -420,7 +456,7 @@ export function paintWorld(canvas: HTMLCanvasElement): void {
     const ellipse = 1 - ((nx - 0.5) / 0.55) ** 2 - ((ny - 0.54) / 0.52) ** 2;
     let v = ellipse * 0.5 + fbm(nx * 5.5, ny * 3.4, 7) * 0.75 - 0.38;
     // The locations and the roads between them are always on dry land
-    for (const n of WORLD_NODES) v += Math.max(0, 0.5 - Math.hypot(x - n.x * W, y - n.y * H) / 34);
+    for (const n of REALM_NODES) v += Math.max(0, 0.5 - Math.hypot(x - n.x * W, y - n.y * H) / 34);
     for (const r of roads) v += Math.max(0, 0.3 - segDist(x, y, ...r) / 30);
     return v;
   };
@@ -534,5 +570,91 @@ export function paintWorld(canvas: HTMLCanvasElement): void {
     r(x + 4, y - 9, 1, 10, '#3b2a17'); r(x + 5, y - 9, 4, 3, '#d97706'); r(x + 5, y - 8, 3, 1, '#fbbf24');
     r(x + 1, y + 1, 2, 1, '#f97316'); r(x + 1, y, 1, 1, '#fde68a');
   };
-  for (const n of WORLD_NODES) (icon[n.id] || (n.kind === 'skirmish' ? camp : undefined))?.(n.x * W, n.y * H - 4);
+  for (const n of REALM_NODES) (icon[n.id] || (n.kind === 'skirmish' ? camp : undefined))?.(n.x * W, n.y * H - 4);
+}
+
+/**
+ * The Far Shore (0.34.0): a desert coast in the south, scrub inland, and snowy mountains in the
+ * north where the pass climbs. Out in the eastern bay, pale towers are rising from the sea.
+ */
+function paintShore(canvas: HTMLCanvasElement): void {
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+  const img = ctx.createImageData(W, H);
+  const SHORE = WORLD_NODES.filter((n) => n.region === 'shore');
+  const pos = (id: string) => { const n = worldNode(id)!; return [n.x * W, n.y * H] as const; };
+  const roads = WORLD_ROADS.filter(([a, b]) => regionOf(a) === 'shore' && regionOf(b) === 'shore').map(([a, b]) => [...pos(a), ...pos(b)] as [number, number, number, number]);
+  const [fx, fy] = pos('frostfang');
+  const city = [0.86 * W, 0.7 * H] as const;
+
+  const landAt = (x: number, y: number): number => {
+    const nx = x / W, ny = y / H;
+    const ellipse = 1 - ((nx - 0.6) / 0.62) ** 2 - ((ny - 0.32) / 0.6) ** 2;
+    let v = ellipse * 0.55 + fbm(nx * 5, ny * 3.2, 41) * 0.7 - 0.36;
+    v -= Math.max(0, 0.9 - Math.hypot(x - city[0], (y - city[1]) * 1.2) / 40); // the bay of the drowned city
+    for (const n of SHORE) v += Math.max(0, 0.5 - Math.hypot(x - n.x * W, y - n.y * H) / 30);
+    for (const r of roads) v += Math.max(0, 0.3 - segDist(x, y, ...r) / 26);
+    return v;
+  };
+  const put = (i: number, c: number) => { img.data[i] = c >> 16; img.data[i + 1] = (c >> 8) & 255; img.data[i + 2] = c & 255; img.data[i + 3] = 255; };
+
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      const v = landAt(x, y);
+      const n = fbm(x / 16, y / 16, 51);
+      const d = (x + y) % 2 === 0;
+      let c: number;
+      if (v < 0.2) {
+        const wave = (y + Math.floor(vnoise(x / 9, y / 5, 43) * 6)) % 7 === 0 && hash(x >> 1, y, 45) < 0.5;
+        c = v > 0.12 ? (d ? 0x2f8aa6 : 0x2a7f9a) : v > 0.0 ? (wave ? 0x3f94b8 : 0x1f6080) : wave ? 0x2a6c96 : d ? 0x154565 : 0x133f5d;
+      } else if (v < 0.27) {
+        c = hash(x, y, 47) < 0.05 ? 0x7fe0d0 : d ? 0xead7a2 : 0xdcc690; // sea-glass beach
+      } else {
+        const mountain = 1 - Math.hypot(x - fx, (y - fy) * 1.4) / 80 + n * 0.35 + (1 - y / H) * 0.25;
+        const desert = y / H + n * 0.2;
+        if (mountain > 0.95) c = d ? 0xf2f6fb : 0xdde5ef; // snow
+        else if (mountain > 0.72) c = hash(x, y, 49) < 0.2 ? 0x5b5f6c : d ? 0x7d7f8a : 0x707280; // rock
+        else if (desert > 0.55) c = (y + Math.floor(fbm(x / 7, y / 3, 53) * 5)) % 4 === 0 ? 0xc9a865 : d ? 0xd8b978 : 0xd2b272; // dunes
+        else c = hash(x, y, 55) < 0.12 ? 0x6b7a3a : d ? 0xa89a5c : 0x9c8f54; // dry scrub
+      }
+      put(i, c);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  for (const [ax, ay, bx2, by2] of roads) {
+    const steps = Math.ceil(Math.hypot(bx2 - ax, by2 - ay));
+    for (let k = 0; k <= steps; k++) {
+      if (k % 4 > 1) continue;
+      const x = Math.round(ax + ((bx2 - ax) * k) / steps), y = Math.round(ay + ((by2 - ay) * k) / steps);
+      ctx.fillStyle = '#5a3d22';
+      ctx.fillRect(x, y + 1, 1, 1);
+      ctx.fillStyle = '#f4e8c4';
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  const r = (x: number, y: number, w: number, h: number, c: string) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+  const icon: Record<string, (x: number, y: number) => void> = {
+    anchorage: (x, y) => {
+      r(x - 6, y - 2, 12, 3, '#3b2a17'); r(x - 5, y - 1, 10, 1, '#8b5a2b'); r(x - 1, y - 11, 1, 9, '#3b2a17'); // hull and mast
+      r(x, y - 10, 6, 5, '#f4efe2'); r(x, y - 10, 6, 1, '#d9d0bc'); r(x - 6, y - 9, 5, 4, '#e8e1d0'); // white sails
+      r(x - 8, y + 2, 16, 1, '#7fc8e8'); // wake
+    },
+    saltglass: (x, y) => {
+      r(x - 7, y - 7, 3, 10, '#e6dcc2'); r(x - 7, y - 7, 3, 1, '#fffaf0'); r(x + 3, y - 4, 3, 7, '#d6cbb0'); r(x + 3, y - 4, 3, 1, '#fffaf0');
+      r(x - 9, y + 3, 18, 1, '#b8995a'); r(x - 2, y + 1, 2, 2, '#c9b48a'); r(x + 1, y - 1, 1, 1, '#7fe0d0'); r(x - 4, y + 2, 1, 1, '#7fe0d0');
+    },
+    frostfang: (x, y) => {
+      for (let k = 0; k < 11; k++) r(x - k, y - 10 + k, k * 2 + 1, 1, k < 4 ? '#f4f7fb' : k % 2 ? '#8b909c' : '#7a7f8c');
+      r(x - 3, y - 2, 7, 4, '#565b6b'); r(x - 3, y - 3, 1, 1, '#565b6b'); r(x + 3, y - 3, 1, 1, '#565b6b'); r(x, y, 1, 2, '#1b1f2b'); r(x, y - 7, 1, 2, '#ef4444');
+    }
+  };
+  for (const n of SHORE) icon[n.id]?.(n.x * W, n.y * H - 4);
+  // The drowned city: pale towers rising out of the bay, the sea pulling back around them
+  const [cx, cy] = city;
+  for (const [dx, h] of [[-8, 9], [-3, 14], [2, 11], [7, 7]]) { r(cx + dx, cy - h, 3, h, '#eef2f7'); r(cx + dx, cy - h, 3, 1, '#ffffff'); r(cx + dx + 1, cy - h - 2, 1, 2, '#c7d2e0'); }
+  r(cx - 11, cy, 22, 1, '#a9d8ee'); r(cx - 9, cy + 2, 18, 1, '#7fc8e8');
 }

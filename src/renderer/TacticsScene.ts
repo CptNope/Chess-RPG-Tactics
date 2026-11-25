@@ -8,7 +8,7 @@ import {
   createStoneTexture,
   createWaterTexture,
   createCastleParapetTexture,
-  createSwampTexture,
+  createSwampTexture, createSandTexture, createSnowTexture,
   createUnitSpriteTexture
 } from '../graphics/PixelTextures';
 import { VFXManager } from './VFXManager';
@@ -112,6 +112,8 @@ export class TacticsScene {
   private waterTex = createWaterTexture();
   private parapetTex = createCastleParapetTexture();
   private swampTex = createSwampTexture();
+  private sandTex = createSandTexture();
+  private snowTex = createSnowTexture();
 
   // Shared Tile Materials (Avoid instantiating hundreds of material instances)
 
@@ -231,7 +233,9 @@ export class TacticsScene {
       stone: this.stoneTex,
       parapet: this.parapetTex,
       water: this.waterTex,
-      swamp: this.swampTex
+      swamp: this.swampTex,
+      sand: this.sandTex,
+      snow: this.snowTex
     });
   }
 

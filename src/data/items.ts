@@ -451,6 +451,28 @@ export const ITEMS: Record<string, Item> = {
     price: 440,
     stats: { hp: 25, mp: 60, magic: 6 }
   },
+  // Act III rewards (0.34.0)
+  saltglass_blade: {
+    id: 'saltglass_blade',
+    name: 'Saltglass Blade',
+    slot: 'weapon',
+    weaponType: 'sword',
+    description: 'A sword of the drowned kingdom, its edge set with sea glass that never dulls. Ice spells from its bearer are 25% stronger.',
+    price: 820,
+    stats: { attack: 12, magic: 4, speed: 1 },
+    range: 1,
+    traits: { boost: ['ice'] }
+  },
+  frostfang_mail: {
+    id: 'frostfang_mail',
+    armor: 'heavy',
+    name: 'Frostfang Mail',
+    slot: 'body',
+    description: 'Mail of the pass wardens, lined with white fur. Heavy, warm, and no ice gets through it: Slow can\'t take hold.',
+    price: 880,
+    stats: { hp: 90, attack: 2 },
+    traits: { guard: ['slow'] }
+  },
   templar_mail: {
     id: 'templar_mail',
     armor: 'heavy',

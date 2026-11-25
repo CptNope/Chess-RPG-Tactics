@@ -92,6 +92,29 @@ export const CAMP_SCENES: Record<string, CampScene> = {
       L('Sable', 'I have a very bad feeling and twelve knives.'),
       L('Rowan', 'Then between the two of you, we have enough. Rest. Tomorrow we finish it, together.', 'right')
     ]
+  },
+  // Act III (0.34.0)
+  chapter_6: {
+    chapterId: 'chapter_6',
+    title: 'The Last Night Ashore',
+    lines: [
+      L('Tobin', 'A month at sea. I get sick on the river ferry, Rowan.', 'right'),
+      L('Sable', 'Then stand at the rail and look at the horizon. And do not stand upwind of me.'),
+      L('Maren', 'My grandmother\'s stories said the Far Shore is all salt and mountains. And that the people there remember the old kingdom kindly.', 'right'),
+      L('Bria', 'The court remembers it too. That is what worries me.'),
+      L('Rowan', 'We go, we find the Regent\'s heir, we stop whatever she means to raise. Then we come home. All of us.', 'right')
+    ]
+  },
+  chapter_7: {
+    chapterId: 'chapter_7',
+    title: 'Fire in the Dunes',
+    lines: [
+      L('Kestrel', 'The basilisk you fought was old. Older than my grandmother. It was only there because the Court burned its hollow for their road.'),
+      L('Tobin', 'You talk about it like it was a neighbour.', 'right'),
+      L('Kestrel', 'It was. Out here, the wild things are neighbours. Treat them well and some will walk with you.'),
+      L('Corvin', 'And the Pale Heir? Is she a neighbour too?', 'right'),
+      L('Kestrel', 'She is the one who makes the neighbours run. Sleep. The pass is cold, and the Marshal does not sleep at all.')
+    ]
   }
 };
 

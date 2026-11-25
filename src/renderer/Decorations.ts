@@ -97,7 +97,7 @@ export class Decorations {
 
     for (const t of map.tiles) {
       const top = Math.max(0.2, t.height);
-      const count = t.terrain === 'grass' ? 4 : t.terrain === 'swamp' ? 3 : t.terrain === 'stone' || t.terrain === 'dirt' || t.terrain === 'parapet' ? 2 : 0;
+      const count = t.terrain === 'grass' ? 4 : t.terrain === 'swamp' ? 3 : t.terrain === 'stone' || t.terrain === 'dirt' || t.terrain === 'parapet' ? 2 : t.terrain === 'sand' || t.terrain === 'snow' ? 1 : 0;
       for (let i = 0; i < count; i++) {
         if (hash(t.x, t.z, i + 9) > density) continue;
         const [cx, cz] = corners[Math.floor(hash(t.x, t.z, i) * corners.length)];

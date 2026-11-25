@@ -25,7 +25,7 @@ export type ShopProgress = 0 | 1 | 2 | 3;
 /** The dearest item the shop stocks at each stage of the campaign. */
 export const SHOP_PRICE_CAP: Record<ShopProgress, number> = { 0: 380, 1: 480, 2: 580, 3: Infinity };
 
-const CHAPTER_PROGRESS: Record<string, ShopProgress> = { chapter_1: 0, chapter_2a: 1, chapter_2b: 1, chapter_3: 2, chapter_4: 3, chapter_5: 3, chapter_6: 3 };
+const CHAPTER_PROGRESS: Record<string, ShopProgress> = { chapter_1: 0, chapter_2a: 1, chapter_2b: 1, chapter_3: 2, chapter_4: 3, chapter_5: 3, chapter_6: 3, chapter_7: 3, chapter_8: 3 };
 
 /**
  * @param chapterWon the chapter the campaign is at has been won (the squad is on the world map,
