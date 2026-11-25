@@ -69,6 +69,17 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     opensAfter: ['chapter_1'],
     intro: 'Something has driven the beasts down from the high pass. Wolves first, by the sound of it. Stay together.',
     trophy: 'wolfpelt_mantle'
+  },
+  // Added in 0.32.0: more monsters
+  barrow: {
+    id: 'barrow',
+    name: 'Briar Barrow',
+    mapId: 'gloomy_swamp',
+    foe: 'Barrow Things',
+    jobs: [['bone_knight', 'Barrow Guard'], ['basilisk', 'Basilisk'], ['thornling', 'Thornling'], ['bone_knight', 'Bone Knight'], ['thornling', 'Briar Thornling'], ['wisp', 'Barrow Wisp']],
+    opensAfter: ['chapter_3'],
+    intro: 'The old kings\' barrow has gone to briars, and something in there is still standing guard. Watch for the lizard: don\'t meet its eyes.',
+    trophy: 'basilisk_eye'
   }
 };
 

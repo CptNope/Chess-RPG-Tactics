@@ -92,5 +92,52 @@ export const MONSTERS: Record<string, Job> = {
       act({ id: 'mon_ground_pound', name: 'Ground Pound', description: 'Hits every foe next to it: damage and Immobilize.', range: 0, aoe: 1, power: 0.8, element: 'physical', centered: true, appliesStatus: 'immobilize' }),
       act({ id: 'mon_hurl_boulder', name: 'Hurl Boulder', description: 'Throws a rock at a foe up to 4 tiles away.', range: 4, heightTolerance: 3, power: 0.95, element: 'physical', mpCost: 4 })
     ]
+  }),
+
+  // Added in 0.32.0: the Briar Barrow
+  basilisk: monster({
+    id: 'basilisk',
+    name: 'Basilisk',
+    description: 'A long, low lizard in plates of olive scale. Slow to move, hard to hurt, and its stare roots you where you stand.',
+    role: 'Beast',
+    baseMove: 4,
+    baseJump: 2,
+    statMultipliers: { hp: 1.45, mp: 0.6, attack: 1.45, magic: 0.6, speed: 1.0 },
+    innate: { immune: ['immobilize', 'blind'], stats: { attack: 8, hp: 45 } },
+    abilities: [
+      act({ id: 'mon_tail_lash', name: 'Tail Lash', description: 'A heavy sweep of the tail.', range: 1, power: 1.3, element: 'physical' }),
+      act({ id: 'mon_stone_gaze', name: 'Stone Gaze', description: 'Its stare roots a foe up to 4 tiles away: Immobilize.', range: 4, heightTolerance: 3, power: 0, element: 'dark', appliesStatus: 'immobilize', accuracy: -10, mpCost: 8 }),
+      act({ id: 'mon_dread_stare', name: 'Dread Stare', description: 'A long, heavy look at a foe up to 3 tiles away: damage and Slow.', range: 3, heightTolerance: 3, power: 0.8, element: 'dark', appliesStatus: 'slow', mpCost: 10 })
+    ]
+  }),
+  bone_knight: monster({
+    id: 'bone_knight',
+    name: 'Bone Knight',
+    description: 'A knight long dead, still on guard in a rusted helm. It feels no poison, never sleeps, and fights on with a notched sword and a dented shield.',
+    role: 'Undead',
+    baseMove: 4,
+    baseJump: 3,
+    statMultipliers: { hp: 1.3, mp: 0.6, attack: 1.5, magic: 0.5, speed: 1.2 },
+    innate: { immune: ['poison', 'sleep', 'blind'], stats: { attack: 8, hp: 40, evasion: 6 } },
+    abilities: [
+      act({ id: 'mon_rusted_blade', name: 'Rusted Blade', description: 'A notched, rusty cut.', range: 1, power: 1.3, element: 'physical' }),
+      act({ id: 'mon_shield_bash', name: 'Shield Bash', description: 'Slams its shield into a foe: damage and Slow.', range: 1, power: 0.7, element: 'physical', appliesStatus: 'slow' }),
+      act({ id: 'mon_grave_chill', name: 'Grave Chill', description: 'A breath from the grave over a small area up to 3 tiles away: dark damage.', range: 3, heightTolerance: 3, aoe: 1, power: 0.8, element: 'dark', mpCost: 8 })
+    ]
+  }),
+  thornling: monster({
+    id: 'thornling',
+    name: 'Thornling',
+    description: 'A knot of briars that walked off on its roots. It mends itself, lashes with poisoned thorns and blinds with clouds of pollen.',
+    role: 'Plant',
+    baseMove: 3,
+    baseJump: 1,
+    statMultipliers: { hp: 1.35, mp: 0.7, attack: 1.35, magic: 0.9, speed: 1.0 },
+    innate: { startStatus: ['regen'], immune: ['sleep', 'blind'], stats: { attack: 6, hp: 40 } },
+    abilities: [
+      act({ id: 'mon_thorn_lash', name: 'Thorn Lash', description: 'A thorny vine lashes a foe up to 3 tiles away: damage and Poison.', range: 3, power: 1.0, element: 'physical', appliesStatus: 'poison' }),
+      act({ id: 'mon_bramble_burst', name: 'Bramble Burst', description: 'Briars burst out at every foe next to it: damage and Immobilize.', range: 0, aoe: 1, power: 0.75, element: 'physical', centered: true, appliesStatus: 'immobilize', mpCost: 6 }),
+      act({ id: 'mon_pollen', name: 'Pollen Cloud', description: 'A puff of pollen over a small area up to 3 tiles away: light damage and Blind.', range: 3, heightTolerance: 3, aoe: 1, power: 0.3, element: 'physical', appliesStatus: 'blind', mpCost: 8 })
+    ]
   })
 };

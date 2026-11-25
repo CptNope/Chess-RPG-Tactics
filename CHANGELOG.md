@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.32.0] - 2026-11-24
+
+### Added — new beasts
+- **Three new monsters**, each with its own sprite and portrait:
+  - **Basilisk**: a long, low lizard in olive scales. Tail Lash; **Stone Gaze** roots a foe from 4 tiles away; **Dread Stare** damages and Slows. Can't be Immobilized or Blinded.
+  - **Bone Knight**: a dead knight in a rusted helm. Rusted Blade; **Shield Bash** damages and Slows; **Grave Chill** hits a small area with dark damage. No Poison, Sleep or Blind.
+  - **Thornling**: a walking knot of briars. Regenerates; **Thorn Lash** poisons from 3 tiles; **Bramble Burst** roots everyone next to it; **Pollen Cloud** Blinds a small area. No Sleep or Blind.
+- **The Briar Barrow**, a new side battle on the world map between Riverside Ruins and the Night Battlement, open after Chapter III: bone knights, a basilisk and thornlings in an old kings' grave-mound. First win: the **Basilisk Eye** (HP +15, MAG +4, Speed +1, no Immobilize or Slow), a relic.
+- **The Trials** meet the new monsters from floor 8. Floors 1–7 are unchanged.
+- **Tame them**: a Beast Tamer can win any of the three over. They join with names of their own (Glare the Basilisk, Sir Rattles the Bone Knight, Bramble the Thornling…).
+
+### Balance
+- Simulated first visits to the Barrow win about 63–73% of the time, like the Drowned Shrine; with two earlier wins there, about 40%.
+
+### Developer
+- `MonsterArt`: `basilisk`, `boneKnight`, `thornling` painters. Roles `Undead` and `Plant`. `TRIAL_DEEP_MONSTERS_FROM`.
+- 5 new tests (275 total) in `tests/new-monsters.test.ts`. [ADR 0040](docs/adr/0040-more-monsters.md).
+
 ## [0.31.0] - 2026-11-24
 
 ### Added — smarter enemies

@@ -594,6 +594,15 @@ export const ITEMS: Record<string, Item> = {
     stats: { hp: 25, evasion: 6, move: 1 },
     traits: { guard: ['poison'] }
   },
+  basilisk_eye: {
+    id: 'basilisk_eye',
+    name: 'Basilisk Eye',
+    slot: 'accessory',
+    description: 'A cold yellow stone from the Briar Barrow. Whoever carries it can\'t be rooted or slowed, and sees a little further into magic.',
+    price: 600,
+    stats: { hp: 15, magic: 4, speed: 1 },
+    traits: { guard: ['immobilize', 'slow'] }
+  },
 
   // BEAST GEAR (0.29.0): only a tamed beast wears these, and a beast wears nothing else
   leather_collar: {

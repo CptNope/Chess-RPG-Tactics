@@ -129,6 +129,7 @@ flowchart LR
     G --- DS["⚑ Drowned Shrine"]
     Z --- WR["⚑ Watchfire Ridge"]
     B --- HH["⚑ Howling Hollow"]
+    R --- BB["⚑ Briar Barrow"] --- B
 ```
 
 | On the map | Means |
@@ -150,6 +151,7 @@ flowchart LR
   | Drowned Shrine | After Chapter II | Cultists: mages, oracles, summoners | Defeat them all | Chanting Censer (MAG +4, MP +20, no Silence) |
   | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja | Hold out for 6 rounds | Watchfire Helm (HP +40, no Sleep or Blind) |
   | Howling Hollow | After Chapter I | Monsters: wolves, a wyvern, oozes, wisps, a stone brute | Defeat them all | Wolfpelt Mantle (HP +25, Evasion +6, Move +1, no Poison) |
+  | Briar Barrow (0.32) | After Chapter III | Monsters: bone knights, a basilisk, thornlings, a wisp | Defeat them all | Basilisk Eye (HP +15, MAG +4, Speed +1, no Immobilize or Slow) |
 
   Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after. The first win also brings the place's **trophy**, a piece of gear found nowhere else (it can't be sold).
 * **Monsters** (0.26) fight differently from people. They wear no gear and know all their tricks from the start ([full table](CONTENT_REFERENCE.md#monsters)):
@@ -161,8 +163,11 @@ flowchart LR
   | Bog Ooze | Tough, regenerates, its Acid Touch opens armor (Breach) and Engulf holds you in place | Burst it down; spells |
   | Marsh Wisp | Frail at range but sends you to Sleep (Lure) and drains life | Rush it; it can't be poisoned or slept |
   | Stonehide Brute | Slow, starts behind Protect; Ground Pound hits everyone next to it | Don't crowd it; fight it from range |
+  | Basilisk (0.32) | Heavy and hard to hurt; Stone Gaze roots you from 4 tiles, Dread Stare Slows; can't be Immobilized or Blinded | Spread out; Remedies; gang up on it |
+  | Bone Knight (0.32) | Hits hard, Shield Bash Slows, Grave Chill hits a small area; no Poison, Sleep or Blind | Plain damage, and lots of it |
+  | Thornling (0.32) | Regenerates; Thorn Lash poisons from 3 tiles, Pollen Cloud Blinds, Bramble Burst roots everyone next to it | Burst it down before it mends; don't crowd it |
 
-  They live at the Howling Hollow, turn up on Trials floors from 3 on, and from Chapter II every story battle has one or two (the squad warns you about them before the fight).
+  They live at the Howling Hollow (the last three at the Briar Barrow), turn up on Trials floors from 3 on (the Barrow's from 8), and from Chapter II every story battle has one or two (the squad warns you about them before the fight).
 * **Tame them** (0.28). A **Beast Tamer** (Archer Lv 2 and Chemist Lv 2) can win a monster over with **Tame**, 2 tiles away. Wear it down first: an unhurt monster gives in 15% of the time, one nearly down up to 90%, and more if it's asleep (**Soothe** puts beasts to sleep easily) or you're behind it. Bosses can't be tamed. A tamed monster fights for you at once, under your orders. If it's still standing when you win, it **joins the squad** with a name of its own. Beasts know all their moves and never change jobs, but they level up like anyone; release one at the Barracks if you need the room. They wear only **beast gear** (0.29): barding on the body and a collar or charm, sold on the market's last shelf. Each new beast arrives in a Leather Collar. **Beast Lore** (+25% damage to monsters) is worth learning for anyone.
 * **Wenna the Pedlar** follows the squad around the realm. Once the first battle is won she sets up beside a won battlefield or a side-battle camp, and moves on after every win. She sells two things: a piece the market won't stock until after the next chapter (early, for a quarter more), and one of her own goods that nobody else sells. Walk to her pin to buy.
 * **Camp.** After each story battle the squad makes camp, and the panel offers **Sit by the fire**: a short talk between the squad, once per playthrough, worth 30 JP to everyone.
