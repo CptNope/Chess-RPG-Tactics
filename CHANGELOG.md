@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.44.0] - 2026-11-25
+
+Groundwork for online versus, part 2. Nothing looks or plays differently.
+
+### Changed
+- **The turn loop lives in the engine** (`core/Battle.ts`): turn starts (Poison, Regen, sleep, a summon landing, an encore), rounds, applying a turn's move, action and facing, and who has won. Every step goes into an event log.
+- **A whole battle can be replayed** from its seed and the choices made in it, and comes out the same, event for event.
+- **One victory check** (`battleOutcome`) for the game and the engine: last side standing (alliances included), a fallen boss, holding out. A tamed beast still can't win alone.
+- **The balance sim plays whole battles in the engine**: encores, objectives, and the game's CT refunds for a turn spent only moving or waiting.
+
+### Found
+- With those CT refunds, the sim puts **Chapter IV** well below its old figure: 9% against 51% before, at squad level 7 (Normal). An enemy holding its ground gets its next turn sooner, and the old sim missed that. It's noted for the balance pass.
+
+### Developer
+- `Battle` (`nextTurn`, `check`, `apply`, `events`), `runBattle`, `replay`, `battleOutcome`, `noteTurn`. ADR 0049. 8 new tests (325 total).
+
 ## [0.43.0] - 2026-11-25
 
 ### Added
