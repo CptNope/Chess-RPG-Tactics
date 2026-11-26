@@ -26,10 +26,10 @@ What's on [cptnope.itch.io/chess-rpg-tactics](https://cptnope.itch.io/chess-rpg-
 | Pricing | No payments required, donations welcome ($0 or donate, suggested $3) |
 | Genre | Strategy |
 | Tags | Tactical RPG, Turn-based Strategy, Isometric, Pixel Art, Strategy RPG, Level Editor, Fantasy, Singleplayer, Retro, Medieval |
-| Inputs | Keyboard, Mouse, Touchscreen, Xbox controller, PlayStation controller |
+| Inputs | Keyboard, Mouse, Touchscreen, Xbox controller, PlayStation controller, Gamepad (any) |
 | Average session | About an hour |
 | Languages | English |
-| Accessibility | Leave unticked for now: controls aren't remappable yet and there's no colour-blind mode (on the Roadmap) |
+| Accessibility | Configurable controls (every key and button can be changed, since 0.40). No colour-blind mode yet |
 | Links | Source on GitHub, jeremyanderson.tech, the web version on GitHub Pages |
 | AI disclosure | Code and text written with Claude (Anthropic). No AI image, audio or voice generation: all art and sound is drawn and synthesized by the game's own code |
 | Cover | 1260 × 1000 (shown at 630 × 500) |
@@ -55,22 +55,23 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 
 ### Features
 - **Real tactics.** Speed decides who moves next, not teams. Hit from behind for big damage, take the high ground for range, mind water and swamp. Enemies fight smart too: they path around cliffs, turn to face you, go for your healers first and respect a knight's parry.
-- **Twenty jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Chemist, Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin, Spellblade, Bard, Dancer, Beast Tamer and Gunner as your units level their jobs. Bards and Dancers perform: a song or dance that plays again every turn they hold their ground. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
-- **Steal their gear.** Thieves lift weapons and trinkets straight off enemies into your armory. Over 50 pieces of gear, some with traits: start battles with Regen, boost an element, or ward off Sleep and Silence.
-- **A world map between battles.** Walk the realm, choose which road the story takes, and fall back to regroup after a defeat. Win optional side battles for trophies found nowhere else, buy early gear and one-of-a-kind goods from a travelling merchant, and make camp after each chapter to hear what your squad has to say.
+- **Twenty jobs on a job tree.** Squire, Knight, Archer, White and Black Mage, Geomancer, then Chemist, Dragoon, Ninja, Thief, Monk, Time Weaver, Summoner, Oracle, Paladin, Spellblade, Bard, Dancer, Beast Tamer and Gunner as your units level their jobs. Bards and Dancers perform: a song or dance that plays again every turn they hold their ground. Summoners call down a creature that lands a turn later. Mix a second job's skills, a reaction, a support and a movement ability on every unit.
+- **Monsters.** Dire Wolves, Wyverns, Bog Oozes, Basilisks, Bone Knights and more, each with its own traits and immunities. A Beast Tamer can wear one down and win it over to fight for you.
+- **Steal their gear.** Thieves lift weapons and trinkets straight off enemies into your armory. Over 70 pieces of gear, some with traits: start battles with Regen, boost an element, or ward off Sleep and Silence.
+- **A world map between battles.** Walk the realm, choose which road the story takes, and fall back to regroup after a defeat. Win optional side battles for trophies found nowhere else, buy early gear and one-of-a-kind goods from a travelling merchant, and make camp after each chapter to hear what your squad has to say (and watch those nights again later).
 - **A market that grows with the story.** Bounties and wins pay gil. Buy gear that outfits the whole squad, sell what you don't need, and stock up on supplies.
 - **Master your jobs.** Jobs level up, unlock advanced jobs, and pay permanent bonuses a unit keeps in every job. A mastered job also brings its signature move, usable once a battle in any job.
 - **Easy to pick up.** Easy, Normal and Hard; tips the first time each thing comes up; undo for a misplaced move; a Fast battle speed; a larger text size.
 - **Install it.** On the web version, add the game to your home screen or apps; it then plays offline.
 - **Items in battle.** Potions, Ethers, Remedies, Blast and Frost Flasks, Elixirs, and Phoenix Feathers to raise fallen allies. The Chemist makes every one of them stronger.
-- **A two-act campaign** across seven 16×16 battlefields (a harbor fought along its piers, a lighthouse rock, a cliff-top altar…), with a branch, two recruits, and bosses that enrage at half health.
+- **A three-act campaign** across ten 16×16 battlefields and two world maps (a harbor fought along its piers, a lighthouse rock, a snowbound pass, a drowned city…), with a branch, three story recruits, more to hire at the market, and bosses that enrage at half health.
 - **Trials of the Zodiac:** endless seeded floors with rare gear and a Warden boss every fifth floor, plus New Game+.
 - **The Workshop:** sculpt terrain, place enemies and bosses, write the dialogue, pick a goal (rout them, defeat the boss, or survive N rounds), then play it or share it as a link.
 - **Hand-made pixel art** in a 3D world: animated units, drawn portraits, and pixel spell effects that wrap the actual characters.
 - **AUTO** lets the AI play a turn for you when you just want to watch it go.
 
 ### Play anywhere
-Phone, tablet or desktop, in portrait or landscape. Mouse, keyboard, touch, pen or a controller all work, and you can switch mid-fight. Press **H** (or the **?** button) in game for every control.
+Phone, tablet or desktop, in portrait or landscape. Mouse, keyboard, touch, pen or a controller all work, and you can switch mid-fight. Press **H** (or the **?** button) in game for every control, and change any key or controller button there.
 
 | | Keyboard | Controller | Touch |
 | :--- | :--- | :--- | :--- |
