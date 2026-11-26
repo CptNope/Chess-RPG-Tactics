@@ -22,6 +22,7 @@ import { gearKind, jobGearText, whoCanUse } from '../src/data/gear-rules';
 import { JOB_LEVEL_JP, JOB_MASTERY, VETERAN_JOB_LEVEL, MAX_JOB_LEVEL, masteryLabel } from '../src/core/JobSystem';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../src/core/Difficulty';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus } from '../src/core/Skirmish';
+import { SIDE_STORIES } from '../src/core/SideStory';
 import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress, resaleValue } from '../src/core/Economy';
 import { CONSUMABLES, MAX_STACK, STARTING_INVENTORY, consumableStock } from '../src/data/consumables';
 import { SEA_PORTS, WORLD_NODES, WORLD_ROADS, worldNode } from '../src/core/World';
@@ -57,7 +58,7 @@ w('> **Generated file — do not edit by hand.** Run `npm run docs:gen` after ch
 w();
 w('Every number here is read straight from the game data, so it always matches what ships.');
 w();
-w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Monsters](#monsters) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
+w('**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Monsters](#monsters) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Side stories](#side-stories) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)');
 w();
 
 // ---------------------------------------------------------------- Jobs
@@ -230,6 +231,8 @@ const source = (id: string) => {
   if (MERCHANT_ITEMS.includes(id)) parts.push(`${MERCHANT_NAME} only`);
   const trophy = Object.values(SKIRMISHES).find((d) => d.trophy === id);
   if (trophy) parts.push(`First win at ${trophy.name}`);
+  const story = Object.values(SIDE_STORIES).find((d) => d.relic === id);
+  if (story) parts.push(`${story.hero.name}'s side story at ${story.place}`);
   return parts.join(' · ') || 'Starting gear of a job';
 };
 const items = Object.values(ITEMS);
@@ -289,7 +292,7 @@ w('Where the squad stands between missions. Roads join the places; the squad wal
 w();
 w('```mermaid');
 w('flowchart LR');
-const nodeLabel = (n: (typeof WORLD_NODES)[number]) => `${n.id}["${n.name}${n.chapterId ? `<br/><i>${CAMPAIGN_CHAPTERS[n.chapterId].title}</i>` : n.kind === 'market' ? '<br/><i>buy and sell</i>' : n.kind === 'skirmish' ? '<br/><i>side battle</i>' : n.kind === 'port' ? '<br/><i>ship to the realm</i>' : '<br/><i>post-game</i>'}"]`;
+const nodeLabel = (n: (typeof WORLD_NODES)[number]) => `${n.id}["${n.name}${n.chapterId ? `<br/><i>${CAMPAIGN_CHAPTERS[n.chapterId].title}</i>` : n.kind === 'market' ? '<br/><i>buy and sell</i>' : n.kind === 'skirmish' ? '<br/><i>side battle</i>' : n.kind === 'story' ? `<br/><i>${SIDE_STORIES[n.storyId!].hero.name}'s story</i>` : n.kind === 'port' ? '<br/><i>ship to the realm</i>' : '<br/><i>post-game</i>'}"]`;
 for (const n of WORLD_NODES.filter((x) => !x.region)) w(`  ${nodeLabel(n)}`);
 w('  subgraph far_shore["The Far Shore"]');
 for (const n of WORLD_NODES.filter((x) => x.region === 'shore')) w(`    ${nodeLabel(n)}`);
@@ -302,7 +305,7 @@ w('| Place | Kind | What happens there | Roads to |');
 w('| :--- | :--- | :--- | :--- |');
 for (const n of WORLD_NODES) {
   const roads = WORLD_ROADS.filter(([a, b]) => a === n.id || b === n.id).map(([a, b]) => worldNode(a === n.id ? b : a)!.name).join(', ');
-  const what = n.kind === 'port' ? 'Take ship back to Emberwick Harbor' : n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : n.kind === 'skirmish' ? `Side battle: ${SKIRMISHES[n.skirmishId!].foe}` : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
+  const what = n.kind === 'port' ? 'Take ship back to Emberwick Harbor' : n.kind === 'market' ? 'Buy and sell gear and supplies' : n.kind === 'trials' ? 'Enter the Trials of the Zodiac (after the story)' : n.kind === 'skirmish' ? `Side battle: ${SKIRMISHES[n.skirmishId!].foe}` : n.kind === 'story' ? `Side story: ${SIDE_STORIES[n.storyId!].hero.name}, "${SIDE_STORIES[n.storyId!].title}"` : `${CAMPAIGN_CHAPTERS[n.chapterId!].title}: ${CAMPAIGN_CHAPTERS[n.chapterId!].subtitle}`;
   w(`| **${n.name}** | ${n.kind} | ${what} | ${roads} |`);
 }
 w();
@@ -340,6 +343,19 @@ w('| :--- | :--- | :--- | :--- | :--- | :--- |');
 for (const d of Object.values(SKIRMISHES)) {
   const goal = d.objective?.type === 'survive' ? `Survive ${d.objective.rounds} rounds` : 'Defeat every enemy';
   w(`| **${d.name}** | ${MAPS[d.mapId]().name} | ${d.foe} | ${d.jobs.map(([job, title]) => `${title} (${jobName(job)})`).join(', ')} | ${goal} | ${d.opensAfter.map((c) => CAMPAIGN_CHAPTERS[c].title).join(' or ')} |`);
+}
+w();
+
+// ---------------------------------------------------------------- Side stories (0.43.0)
+w('## Side stories');
+w();
+w("Each story recruit's own chapter, at their home village on the world map (✦). It shows once the recruit is in the squad and its chapter is won, is told once per playthrough, and the recruit always fights it. Enemies are the squad's average level (rounded down) or the story's floor, whichever is higher; the boss is one level above. Winning means defeating the boss.");
+w();
+w('| Place | Recruit | Chapter | Battlefield | Enemies | Floor | Opens after | Relic |');
+w('| :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- |');
+for (const d of Object.values(SIDE_STORIES)) {
+  const foes = d.foes.map((f) => `${f.isBoss ? '★ ' : ''}${f.name} (${jobName(f.jobId)})`).join(', ');
+  w(`| **${d.place}** | ${d.hero.name} | ${d.title} | ${d.fieldName} (${MAPS[d.mapId]().name}) | ${foes} | ${d.minLevel} | ${d.opensAfter.map((c) => CAMPAIGN_CHAPTERS[c].title).join(' or ')} | ${itemName(d.relic)} |`);
 }
 w();
 

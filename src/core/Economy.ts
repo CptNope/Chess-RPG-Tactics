@@ -14,7 +14,7 @@ export const STARTING_GIL = 300;
  * Relics that are only ever won, never sold: the story's relics and, since 0.21.0, the trophy
  * each side-battle place gives the first time it is cleared.
  */
-export const UNIQUE_ITEMS = ['zodiac_blade', 'ribbon', 'dragon_mail', 'fordwarden_bow', 'chanting_censer', 'watchfire_helm', 'wolfpelt_mantle', 'basilisk_eye', 'tidecrown', 'glasswing_lance'];
+export const UNIQUE_ITEMS = ['zodiac_blade', 'ribbon', 'dragon_mail', 'fordwarden_bow', 'chanting_censer', 'watchfire_helm', 'wolfpelt_mantle', 'basilisk_eye', 'tidecrown', 'glasswing_lance', 'fenhollow_stone', 'saltmere_coin', 'dunehome_whistle'];
 
 /**
  * How far the campaign has come: 0 = Chapter I, 1 = Chapter II, 2 = Chapter III,
@@ -54,7 +54,7 @@ export function nextShopCap(progress: ShopProgress): number | null {
 }
 
 /** What kind of battle is being fought. */
-export type BattleMode = 'campaign' | 'trials' | 'custom' | 'skirmish';
+export type BattleMode = 'campaign' | 'trials' | 'custom' | 'skirmish' | 'story';
 
 /** Gil for defeating one enemy: 20 + 10 per level, tripled for a boss. */
 export function bountyFor(enemy: Unit): number {

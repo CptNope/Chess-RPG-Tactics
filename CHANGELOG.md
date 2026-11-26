@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.43.0] - 2026-11-25
+
+### Added
+- **Recruit side stories.** Each story recruit gets a chapter of their own, at their home village on the world map (✦):
+
+  | Recruit | Chapter | Opens after | The fight | Relic |
+  | :--- | :--- | :--- | :--- | :--- |
+  | Bria | *The Spring at Fenhollow* | Chapter III | Clear her village's spring of the Mire Mother, an armour-eating ooze | Fenhollow Spring-Stone |
+  | Sable | *What Was Owed*, at Saltmere | Chapter V | She gives back what Varrow stole from the village he burned, past his old first mate and crew | Saltmere Coin |
+  | Kestrel | *The Empty Cages*, at Dunehome on the Far Shore | Chapter VII | Free the wild things the Court's trappers have caged. Their wolf can be tamed | Dunehome Whistle |
+
+- **How they work.** A story appears once its recruit is in your squad and its chapter is won, and it's told once per playthrough. The recruit always fights (the party screen shows them as FIGHTS). Enemies are about your squad's level, with the boss a level above, so one left for later is still a fight. Each pays bounties and its own **relic**, which can't be sold.
+- **World-map tip:** a ✦ marks a recruit's own story.
+
+### Developer
+- `core/SideStory.ts`; world-node kind `story`; battle mode `story`; save field `sideStories`; three relics. ADR 0048. 5 new tests (317 total).
+
 ## [0.42.0] - 2026-11-25
 
 ### Added

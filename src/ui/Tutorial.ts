@@ -56,7 +56,7 @@ export const TIPS: Record<TipId, { title: string; text: string }> = {
   },
   worldMap: {
     title: 'THE WORLD MAP',
-    text: 'Select a place to walk there. Buy supplies at the market (◆), then march on a battle marked ⚔. Places marked ⚑ are side battles: optional, and good practice.'
+    text: 'Select a place to walk there. Buy supplies at the market (◆), then march on a battle marked ⚔. Places marked ⚑ are side battles: optional, and good practice. A ✦ is one of your recruits\' own stories.'
   }
 };
 

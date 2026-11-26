@@ -75,6 +75,7 @@ flowchart TB
 | **Text size** | `src/ui/TextSize.ts` | Normal / Large / Larger, saved per device; sets `data-text-size` on `<html>`, which picks the `--ts` multiplier every UI font size uses (0.20) | — |
 | **consumables** | `src/data/consumables.ts` | The eight supplies; turns one into an `Ability` for the engine; clamps saved inventories | types |
 | **Scenario** | `src/core/Scenario.ts` | Workshop scenario format: create, copy, sanitise untrusted input, validate, turn into a chapter, share-link encoding, library | data |
+| **SideStory** | `src/core/SideStory.ts` | Recruit side stories (0.43): Bria's, Sable's and Kestrel's chapters, when each opens (`sideStoryOpen`, `sideStoryStates`), and `buildSideStory` (a chapter with the place's field renamed and foes at the squad's level) | Skirmish, data |
 | **Chain** | `src/core/Chain.ts` | Scenario chains (0.42): the format, `sanitizeChain`, `validateChain`, editing helpers, `chainStep` (next / retry / complete), `#c=` links, the chain library and saved progress | Scenario |
 | **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor; the summon dim, call markers and summon camera (0.24) | Grid, VFX, PixelTextures |
 | **Atmosphere** | `src/renderer/Atmosphere.ts` | Per-map presets: sky gradient, fog, hemisphere/sun/rim lights, exposure, bloom, torch colour | — |
@@ -353,7 +354,7 @@ flowchart LR
 
 | Key | Contents |
 | :--- | :--- |
-| `chess_rpg_tactics_save_v1`, `…_slot2`, `…_slot3` | Save slots 1–3 (slot 1 is the key every earlier version used): `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared, gil, inventory, clearedChapters, onWorldMap, worldLocation, skirmishWins, difficulty }`. Every field after `units` is optional and filled in on load, so saves from any earlier version still open |
+| `chess_rpg_tactics_save_v1`, `…_slot2`, `…_slot3` | Save slots 1–3 (slot 1 is the key every earlier version used): `{ version, timestamp, currentChapterId, units, armory, mode, trialsFloor, campaignCleared, gil, inventory, clearedChapters, onWorldMap, worldLocation, skirmishWins, difficulty }`. Every field after `units` is optional and filled in on load, so saves from any earlier version still open. `sideStories` (0.43) lists the recruit side stories won this playthrough |
 | `chess_rpg_tactics_tips_v1` | First-battle tips seen, and whether tips are off (per device) |
 | `chess_rpg_tactics_speed_v1` | `fast` when the Fast battle speed is on (per device) |
 | `chess_rpg_tactics_best_trial_v1` | Highest Trial floor cleared |
@@ -467,7 +468,8 @@ src/
 │   ├── Rng.ts              The seeded dice every battle rolls with
 │   ├── Rules.ts            BattleRules: what a battle is played under
 │   ├── Scenario.ts         Workshop format, sanitising, share links, library
-│   └── Chain.ts            Scenario chains: format, checks, links, library, progress
+│   ├── Chain.ts            Scenario chains: format, checks, links, library, progress
+│   └── SideStory.ts        Recruit side stories: when they open, their battles
 ├── data/                   Content: jobs, monsters, items, consumables, maps, campaign, camp scenes, Master signatures
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
 │                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality,

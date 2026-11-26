@@ -61,6 +61,7 @@ timeline
         0.40.0 : Remappable controls
         0.41.0 : Battle-engine groundwork
         0.42.0 : Scenario chains
+        0.43.0 : Recruit side stories
 ```
 
 | Version | Theme | Highlights |
@@ -73,6 +74,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.43 | Recruit side stories | Bria, Sable and Kestrel each get a chapter at their home village: written scenes, a boss, foes at the squad's level, a relic each |
 | 0.42 | Scenario chains | Mini campaigns from Workshop scenarios: the Chains tab, play in order with progress kept, `#c=` links and chain files |
 | 0.41 | Battle-engine groundwork | No visible change: sides and alliances, one seeded RNG per battle, battle rules, and the action resolver moved into `src/core` and shared with the balance sim; the first step toward [online versus](ONLINE_VERSUS.md) |
 | 0.40 | Remappable controls | Every key and controller button on the Controls screen can be changed (the cursor keys, Enter, Space, Esc, d-pad, sticks and triggers stay fixed); clashes swap rather than unbind; kept per browser |
@@ -112,7 +114,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.42.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.43.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -123,9 +125,8 @@ flowchart LR
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.43 –): story, then groundwork"]
+    subgraph NEXT["Next (0.44 –): groundwork, then jobs"]
         direction TB
-        X3["0.43 More story"]
         X4["Engine groundwork 2:<br/>turn loop, events, replays"]
         X5["Balance pass on the 20 jobs,<br/>then new jobs"]
         X1["AI: simulate foe turns"]
@@ -148,13 +149,12 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.43 –): story, then groundwork
+### Next (0.44 –): groundwork, then jobs
 
 New jobs are paused until the engine groundwork is done and the balance sim runs the whole battle with the game's rules: then a balance pass on the 20 jobs, then new ones.
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **0.43 More story** | An epilogue chapter or a new act after the Pale Heir (direction to settle) | M |
 | **Engine groundwork, part 2** | Turn start, end of turn and victory move to `src/core`; the engine emits events; a whole battle replays from its seed and choices ([plan](ONLINE_VERSUS.md#5-releases)) | L |
 | **Balance pass, then new jobs** | With the sim playing the real turn loop (encores included), retune the 20 jobs; new jobs after that | M |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |

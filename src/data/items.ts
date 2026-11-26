@@ -657,6 +657,34 @@ export const ITEMS: Record<string, Item> = {
     traits: { guard: ['sleep', 'blind'] }
   },
   // Added in 0.26.0: the Howling Hollow's trophy
+  // Recruit side stories (0.43.0): one relic each, never sold
+  fenhollow_stone: {
+    id: 'fenhollow_stone',
+    name: 'Fenhollow Spring-Stone',
+    slot: 'accessory',
+    description: "A smooth green stone from the well-house at Fenhollow, given by the village for clearing its spring. Clear-headed and clean-blooded: no poison, no sleep.",
+    price: 560,
+    stats: { magic: 5, mp: 20, hp: 10 },
+    traits: { guard: ['poison', 'sleep'] }
+  },
+  saltmere_coin: {
+    id: 'saltmere_coin',
+    name: 'Saltmere Coin',
+    slot: 'accessory',
+    description: "The first coin Sable ever stole, off a Saltmere fisherman. Kept for years, then put to use. Quick hands and sharp eyes: blindness won't take.",
+    price: 560,
+    stats: { attack: 4, speed: 1, evasion: 8 },
+    traits: { guard: ['blind'] }
+  },
+  dunehome_whistle: {
+    id: 'dunehome_whistle',
+    name: 'Dunehome Whistle',
+    slot: 'accessory',
+    description: "Kestrel's mother's bone whistle. Every beast in the dunes knew its call. Its bearer moves like one of them, and won't be pinned or slowed.",
+    price: 560,
+    stats: { hp: 20, move: 1, jump: 1 },
+    traits: { guard: ['immobilize', 'slow'] }
+  },
   wolfpelt_mantle: {
     id: 'wolfpelt_mantle',
     name: 'Wolfpelt Mantle',

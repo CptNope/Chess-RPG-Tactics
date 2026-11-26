@@ -145,10 +145,13 @@ flowchart LR
     Z --- WR["⚑ Watchfire Ridge"]
     B --- HH["⚑ Howling Hollow"]
     R --- BB["⚑ Briar Barrow"] --- B
+    G --- FH["✦ Fenhollow<br/>Bria's story"]
+    H --- SM["✦ Saltmere<br/>Sable's story"] --- M
     H -. "⛵ after Chapter VI" .- A
     subgraph FS["The Far Shore (Act III)"]
         A["⛵ The Anchorage<br/>ship's stores"] --- SG["Saltglass Shore<br/>Chapter VII"] --- FP["Frostfang Pass<br/>Chapter VIII"] --- DC["The Drowned City<br/>Chapter IX"]
         A --- GD["⚑ Glasswing Dunes"] --- SG
+        A --- DH["✦ Dunehome<br/>Kestrel's story"] --- SG
     end
 ```
 
@@ -159,6 +162,7 @@ flowchart LR
 | 🔒 grey pin | Not open: the road you didn't take, or a place the story hasn't reached |
 | ◆ Larkmoor Market | The only place to buy and sell |
 | ⚑ orange pin | A **side battle**: optional, and it can be fought again |
+| ✦ blue pin | A recruit's **side story** (0.43): appears once it opens, told once |
 | ★ Gate of Trials | Sealed until Chapter III is won |
 | 🎒 beside a pin | Wenna the Pedlar, the travelling merchant, is there |
 | ⛵ harbour | Ships between Emberwick Harbor and the Anchorage on the Far Shore, once Chapter VI is won. The Anchorage also trades (0.35) |
@@ -176,6 +180,15 @@ flowchart LR
   | Glasswing Dunes (0.35, Far Shore) | After Chapter VII | Monsters: a wyvern, a basilisk, thornlings, jackals, a golem, a drowned sentry (five of them, not four) | Defeat them all | Glasswing Lance (ATK +14, Speed +1, Jump +1, range 2) |
 
   Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after. The first win also brings the place's **trophy**, a piece of gear found nowhere else (it can't be sold).
+* **Side stories** (0.43) are your story recruits' own chapters, at their home villages. One appears on the map once its recruit is in your squad and the story has moved on far enough. The recruit always fights it, taking a place in the party. It's told once per playthrough: a written battle with its own scenes, enemies at about your squad's level (never below a floor, the boss one level up), the usual bounties, and a **relic** of its own.
+
+  | Place | Whose | Opens | Fight | Relic |
+  | :--- | :--- | :--- | :--- | :--- |
+  | Fenhollow | Bria | After Chapter III | The Mire Mother, an armour-eating ooze, with oozes, wisps and a thornling, on the spring | Fenhollow Spring-Stone (MAG +5, MP +20, HP +10, no Poison or Sleep) |
+  | Saltmere | Sable | After Chapter V | First Mate Grell, a gunner, and the rest of Varrow's old crew, on the quay | Saltmere Coin (ATK +4, Speed +1, Evasion +8, no Blind) |
+  | Dunehome (Far Shore) | Kestrel | After Chapter VII | Huntmaster Corra, a beast tamer, with trappers and a starved wolf Kestrel can win over | Dunehome Whistle (HP +20, Move +1, Jump +1, no Immobilize or Slow) |
+
+  Each is won by defeating its boss; the rest flee. New Game+ tells them again.
 * **Monsters** (0.26) fight differently from people. They wear no gear and know all their tricks from the start ([full table](CONTENT_REFERENCE.md#monsters)):
 
   | Monster | What to expect | Answer |
