@@ -9,6 +9,8 @@ import { CAMPAIGN_CHAPTERS } from '../data/campaign';
 import { drawSprite } from '../graphics/CharacterArt';
 import { Mission, Region, SEA_PORTS, WORLD_NODES, WORLD_ROADS, WorldNode, nodeState, openMissions, regionOf, route, worldNode } from '../core/World';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, skirmishBonus, skirmishLevel } from '../core/Skirmish';
+import { SIDE_STORIES, sideFoeLevel } from '../core/SideStory';
+import type { NodeState } from '../core/World';
 import { MERCHANT_NAME, MerchantVisit } from '../core/Merchant';
 import { ITEMS } from '../data/items';
 import { itemStatText } from '../core/Economy';
@@ -46,6 +48,8 @@ export interface WorldState {
   squadSize: number;
   /** Ships sail for the Far Shore (0.34.0). */
   farShore: boolean;
+  /** How each recruit side story's place shows (0.43.0): locked ones aren't shown. */
+  sideStories: Record<string, NodeState>;
 }
 
 export interface WorldHost {
@@ -54,6 +58,8 @@ export interface WorldHost {
   enterTrials(): void;
   /** Starts the side battle at a place. */
   skirmish(id: string): void;
+  /** Starts a recruit's side story (0.43.0). */
+  sideStory(id: string): void;
   /** Buys a piece from the travelling merchant. False when the purse is short. */
   buyFromMerchant(id: string): boolean;
   /** Plays the waiting camp scene. */
@@ -168,15 +174,17 @@ export class WorldMap {
     const region = regionOf(this.location);
     this.nodesEl.innerHTML = '';
     for (const node of WORLD_NODES.filter((n) => (n.region || 'realm') === region)) {
-      const state = nodeState(node, st.current, st.cleared, st.trialsOpen);
+      const state = nodeState(node, st.current, st.cleared, st.trialsOpen, st.sideStories);
+      // A side story's place appears once its story opens (0.43.0)
+      if (node.kind === 'story' && state === 'locked' && node.id !== this.location) continue;
       const btn = document.createElement('button');
       const merchantHere = st.merchant?.nodeId === node.id;
       btn.className = `wm-node ${node.kind} ${state} ${node.id === this.location ? 'here' : ''} ${merchantHere ? 'has-merchant' : ''}`;
       btn.dataset.node = node.id;
       btn.style.left = `${node.x * 100}%`;
       btn.style.top = `${node.y * 100}%`;
-      const mark = node.kind === 'port' ? '⛵' : node.kind === 'market' ? '◆' : state === 'cleared' ? '✓' : state === 'locked' ? '🔒' : node.kind === 'trials' ? '★' : node.kind === 'skirmish' ? '⚑' : '⚔';
-      const what = node.kind === 'port' ? 'harbour' : node.kind === 'market' ? 'market' : state === 'cleared' ? 'cleared' : state === 'locked' ? 'locked' : node.kind === 'trials' ? 'the Trials' : node.kind === 'skirmish' ? 'side battle' : 'battle';
+      const mark = node.kind === 'port' ? '⛵' : node.kind === 'market' ? '◆' : state === 'cleared' ? '✓' : state === 'locked' ? '🔒' : node.kind === 'trials' ? '★' : node.kind === 'skirmish' ? '⚑' : node.kind === 'story' ? '✦' : '⚔';
+      const what = node.kind === 'port' ? 'harbour' : node.kind === 'market' ? 'market' : state === 'cleared' ? 'cleared' : state === 'locked' ? 'locked' : node.kind === 'trials' ? 'the Trials' : node.kind === 'skirmish' ? 'side battle' : node.kind === 'story' ? 'side story' : 'battle';
       btn.setAttribute('aria-label', `${node.name}: ${what}${merchantHere ? ', travelling merchant' : ''}${node.id === this.location ? ', you are here' : ''}`);
       btn.innerHTML = `<span class="wm-pin" aria-hidden="true">${mark}</span><span class="wm-label">${node.name}</span>${merchantHere ? '<span class="wm-merchant-badge" aria-hidden="true" title="Travelling merchant">🎒</span>' : ''}`;
       btn.addEventListener('click', () => void this.travel(node.id));
@@ -215,7 +223,7 @@ export class WorldMap {
 
   private renderPanel(st: WorldState): void {
     const node = worldNode(this.location) as WorldNode;
-    const state = nodeState(node, st.current, st.cleared, st.trialsOpen);
+    const state = nodeState(node, st.current, st.cleared, st.trialsOpen, st.sideStories);
     const missions = openMissions(st.current, st.cleared);
     const p = this.panelEl;
     p.innerHTML = '';
@@ -294,6 +302,23 @@ export class WorldMap {
         const trophy = ITEMS[def.trophy];
         if (trophy) add('p', st.armory.includes(def.trophy) ? 'wm-status won' : 'wm-reward', st.armory.includes(def.trophy) ? `✓ Trophy won: ${trophy.name}` : `First win: ${trophy.name} (${itemStatText(trophy)})`);
         action('⚑ Fight', () => this.host.skirmish(def.id), true);
+      }
+    } else if (node.kind === 'story') {
+      // A recruit's side story (0.43.0)
+      const def = SIDE_STORIES[node.storyId!];
+      const relic = ITEMS[def.relic];
+      add('p', 'wm-chapter', `SIDE STORY: ${def.hero.name} · ${def.title}`);
+      if (state === 'cleared') {
+        add('p', 'wm-status won', `✓ Told.${relic ? ` ${relic.name} won.` : ''}`);
+      } else if (state === 'locked') {
+        add('p', 'wm-status locked', 'Nothing calls you here yet.');
+      } else {
+        const boss = def.foes.find((f) => f.isBoss);
+        const goal = def.objective?.type === 'boss' && boss ? `Defeat ${boss.name}; the rest will flee.` : 'Defeat every enemy.';
+        add('p', 'wm-orders', `${def.orders} ${goal}`);
+        add('p', 'wm-status', `${def.hero.name} fights this one. Enemies around Lv ${sideFoeLevel(def, st.squadLevels)}. Told once.`);
+        if (relic) add('p', 'wm-reward', `Reward: ${relic.name} (${itemStatText(relic)}), a relic.`);
+        action(`✦ Go with ${def.hero.name}`, () => this.host.sideStory(def.id), true);
       }
     } else {
       const chapter = CAMPAIGN_CHAPTERS[node.chapterId!];
@@ -582,7 +607,16 @@ export function paintWorld(canvas: HTMLCanvasElement, region: Region = 'realm'):
     r(x + 4, y - 9, 1, 10, '#3b2a17'); r(x + 5, y - 9, 4, 3, '#d97706'); r(x + 5, y - 8, 3, 1, '#fbbf24');
     r(x + 1, y + 1, 2, 1, '#f97316'); r(x + 1, y, 1, 1, '#fde68a');
   };
-  for (const n of REALM_NODES) (icon[n.id] || (n.kind === 'skirmish' ? camp : undefined))?.(n.x * W, n.y * H - 4);
+  // A recruit's village (0.43.0): two little houses with lit windows
+  const cottage = (x: number, y: number) => {
+    for (const [dx, w, h, roof] of [[-7, 7, 5, '#9a3412'], [1, 6, 4, '#7c2d12']] as [number, number, number, string][]) {
+      r(x + dx, y - h, w, h, '#d6c2a0'); r(x + dx, y - h, w, 1, '#efe2c8');
+      for (let k = 0; k < 3; k++) r(x + dx - 1 + k, y - h - 1 - k, w + 2 - k * 2, 1, roof);
+      r(x + dx + 2, y - h + 2, 2, 1, '#fbbf24');
+    }
+    r(x - 8, y + 1, 16, 1, '#5b4a2a');
+  };
+  for (const n of REALM_NODES) (icon[n.id] || (n.kind === 'skirmish' ? camp : n.kind === 'story' ? cottage : undefined))?.(n.x * W, n.y * H - 4);
 }
 
 /**
@@ -674,5 +708,14 @@ function paintShore(canvas: HTMLCanvasElement): void {
     for (let k = 0; k < 5; k++) r(x - 6 + (4 - k), y - 4 + k, k * 2 + 1, 1, k % 2 ? '#8a6a3a' : '#a8834a');
     r(x + 4, y - 9, 1, 10, '#3b2a17'); r(x + 5, y - 9, 4, 3, '#d97706'); r(x + 5, y - 8, 3, 1, '#fbbf24');
   };
-  for (const n of SHORE) (icon[n.id] || (n.kind === 'skirmish' ? camp : undefined))?.(n.x * W, n.y * H - 4);
+  // A recruit's village (0.43.0): two little houses with lit windows
+  const cottage = (x: number, y: number) => {
+    for (const [dx, w, h, roof] of [[-7, 7, 5, '#9a3412'], [1, 6, 4, '#7c2d12']] as [number, number, number, string][]) {
+      r(x + dx, y - h, w, h, '#d6c2a0'); r(x + dx, y - h, w, 1, '#efe2c8');
+      for (let k = 0; k < 3; k++) r(x + dx - 1 + k, y - h - 1 - k, w + 2 - k * 2, 1, roof);
+      r(x + dx + 2, y - h + 2, 2, 1, '#fbbf24');
+    }
+    r(x - 8, y + 1, 16, 1, '#5b4a2a');
+  };
+  for (const n of SHORE) (icon[n.id] || (n.kind === 'skirmish' ? camp : n.kind === 'story' ? cottage : undefined))?.(n.x * W, n.y * H - 4);
 }

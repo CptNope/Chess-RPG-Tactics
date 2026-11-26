@@ -4,7 +4,7 @@
 
 Every number here is read straight from the game data, so it always matches what ships.
 
-**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Monsters](#monsters) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
+**Contents:** [Jobs](#jobs) · [Job levels](#job-levels--requirements) · [Job mastery](#job-mastery) · [Abilities](#abilities) · [Monsters](#monsters) · [Status effects](#status-effects) · [Geomancy](#geomancy-terrain-spells) · [Items](#items) · [Supplies](#supplies) · [Shop](#shop--gil) · [World map](#world-map) · [Side battles](#side-battles) · [Side stories](#side-stories) · [Difficulty](#difficulty) · [Armory](#armory--drops) · [Battlefields](#battlefields) · [Campaign](#campaign) · [Trials of the Zodiac](#trials-of-the-zodiac)
 
 ## Jobs
 
@@ -538,7 +538,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-77 items across five gear slots.
+80 items across five gear slots.
 
 ### Weapon (29)
 
@@ -617,7 +617,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Chain Barding** `chain_barding` | beast | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job | Tamed beasts |
 | **Runed Barding** `runed_barding` | beast | HP +40, MP +15 | guards sleep, silence | 560 | Starting gear of a job | Tamed beasts |
 
-### Accessory (20)
+### Accessory (23)
 
 | Item | Kind | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
@@ -637,6 +637,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Lucky Coin** `lucky_coin` | light | HP +10, EVASION +10 | guards blind | 380 | Wenna the Pedlar only | Anyone |
 | **Wayfarer Boots** `wayfarer_boots` | light | MOVE +1, SPEED +1 | — | 760 | Wenna the Pedlar only | Anyone |
 | **Chanting Censer** `chanting_censer` | light | MAGIC +4, MP +20 | guards silence | 540 | First win at Drowned Shrine | Anyone |
+| **Fenhollow Spring-Stone** `fenhollow_stone` | light | MAGIC +5, MP +20, HP +10 | guards poison, sleep | 560 | Bria's side story at Fenhollow | Anyone |
+| **Saltmere Coin** `saltmere_coin` | light | ATTACK +4, SPEED +1, EVASION +8 | guards blind | 560 | Sable's side story at Saltmere | Anyone |
+| **Dunehome Whistle** `dunehome_whistle` | light | HP +20, MOVE +1, JUMP +1 | guards immobilize, slow | 560 | Kestrel's side story at Dunehome | Anyone |
 | **Basilisk Eye** `basilisk_eye` | light | HP +15, MAGIC +4, SPEED +1 | guards immobilize, slow | 600 | First win at Briar Barrow | Anyone |
 | **Leather Collar** `leather_collar` | beast | HP +20, EVASION +4 | — | 160 | Starting gear of a job | Tamed beasts |
 | **Spiked Collar** `spiked_collar` | beast | ATTACK +5 | — | 320 | Starting gear of a job | Tamed beasts |
@@ -668,7 +671,7 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 | Chapter II won | 580 | 57 |
 | Campaign cleared / Trials | none | 64 |
 
-Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye, Tidecrown, Glasswing Lance.
+Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye, Tidecrown, Glasswing Lance, Fenhollow Spring-Stone, Saltmere Coin, Dunehome Whistle.
 
 Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the relics and trophies above can't be sold.
 
@@ -694,11 +697,14 @@ flowchart LR
   ridge["Watchfire Ridge<br/><i>side battle</i>"]
   hollow["Howling Hollow<br/><i>side battle</i>"]
   barrow["Briar Barrow<br/><i>side battle</i>"]
+  fenhollow["Fenhollow<br/><i>Bria's story</i>"]
+  saltmere["Saltmere<br/><i>Sable's story</i>"]
   subgraph far_shore["The Far Shore"]
     anchorage["The Anchorage<br/><i>ship to the realm</i>"]
     saltglass["Saltglass Shore<br/><i>CHAPTER VII</i>"]
     frostfang["Frostfang Pass<br/><i>CHAPTER VIII</i>"]
     drowned_city["The Drowned City<br/><i>CHAPTER IX</i>"]
+    dunehome["Dunehome<br/><i>Kestrel's story</i>"]
     glasswing["Glasswing Dunes<br/><i>side battle</i>"]
   end
   market --- ruins
@@ -719,23 +725,28 @@ flowchart LR
   battlement --- hollow
   ruins --- barrow
   barrow --- battlement
+  mire --- fenhollow
+  harbor --- saltmere
+  market --- saltmere
   anchorage --- saltglass
   saltglass --- frostfang
   frostfang --- drowned_city
   anchorage --- glasswing
   glasswing --- saltglass
+  anchorage --- dunehome
+  dunehome --- saltglass
   harbor -. "⛵ by sea" .- anchorage
 ```
 
 | Place | Kind | What happens there | Roads to |
 | :--- | :--- | :--- | :--- |
-| **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement, Thornwood Ford, Emberwick Harbor, Greywatch Isle |
+| **Larkmoor Market** | market | Buy and sell gear and supplies | Riverside Ruins, Night Battlement, Thornwood Ford, Emberwick Harbor, Greywatch Isle, Saltmere |
 | **Riverside Ruins** | mission | CHAPTER I: Ambush at Riverside Ruins | Larkmoor Market, Gloomy Mire, Night Battlement, Emberwick Harbor, Briar Barrow |
-| **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit, Drowned Shrine |
+| **Gloomy Mire** | mission | CHAPTER II-A: The Sunken Crypts (Gloomy Mire) | Riverside Ruins, Zodiac Summit, Drowned Shrine, Fenhollow |
 | **Night Battlement** | mission | CHAPTER II-B: The Siege of Night Battlement | Larkmoor Market, Riverside Ruins, Zodiac Summit, Thornwood Ford, Howling Hollow, Briar Barrow |
 | **Zodiac Summit** | mission | CHAPTER III: The Awakening at the Summit | Gloomy Mire, Night Battlement, Gate of Trials, Watchfire Ridge |
 | **Gate of Trials** | trials | Enter the Trials of the Zodiac (after the story) | Zodiac Summit |
-| **Emberwick Harbor** | mission | CHAPTER IV: Fire on the Water | Riverside Ruins, Larkmoor Market |
+| **Emberwick Harbor** | mission | CHAPTER IV: Fire on the Water | Riverside Ruins, Larkmoor Market, Saltmere |
 | **Greywatch Isle** | mission | CHAPTER V: The Greywatch Light | Larkmoor Market |
 | **Stormbreak Cape** | mission | CHAPTER VI: The Drowned Regent | Thornwood Ford |
 | **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement, Stormbreak Cape |
@@ -743,10 +754,13 @@ flowchart LR
 | **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
 | **Howling Hollow** | skirmish | Side battle: Wild Beasts | Night Battlement |
 | **Briar Barrow** | skirmish | Side battle: Barrow Things | Riverside Ruins, Night Battlement |
-| **The Anchorage** | port | Take ship back to Emberwick Harbor | Saltglass Shore, Glasswing Dunes |
-| **Saltglass Shore** | mission | CHAPTER VII: The Saltglass Shore | The Anchorage, Frostfang Pass, Glasswing Dunes |
+| **Fenhollow** | story | Side story: Bria, "The Spring at Fenhollow" | Gloomy Mire |
+| **Saltmere** | story | Side story: Sable, "What Was Owed" | Emberwick Harbor, Larkmoor Market |
+| **The Anchorage** | port | Take ship back to Emberwick Harbor | Saltglass Shore, Glasswing Dunes, Dunehome |
+| **Saltglass Shore** | mission | CHAPTER VII: The Saltglass Shore | The Anchorage, Frostfang Pass, Glasswing Dunes, Dunehome |
 | **Frostfang Pass** | mission | CHAPTER VIII: Frostfang Pass | Saltglass Shore, The Drowned City |
 | **The Drowned City** | mission | CHAPTER IX: The Pale Heir | Frostfang Pass |
+| **Dunehome** | story | Side story: Kestrel, "The Empty Cages" | The Anchorage, Saltglass Shore |
 | **Glasswing Dunes** | skirmish | Side battle: Dune Beasts | The Anchorage, Saltglass Shore |
 
 ### Camp scenes
@@ -797,6 +811,16 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Howling Hollow** | Zodiac Summit | Wild Beasts | Pack Leader (Dire Wolf), Dire Wolf (Dire Wolf), Wyvern (Wyvern), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Stonehide Brute (Stonehide Brute) | Defeat every enemy | CHAPTER I |
 | **Briar Barrow** | Gloomy Mire | Barrow Things | Barrow Guard (Bone Knight), Basilisk (Basilisk), Thornling (Thornling), Bone Knight (Bone Knight), Briar Thornling (Thornling), Barrow Wisp (Marsh Wisp) | Defeat every enemy | CHAPTER III |
 | **Glasswing Dunes** | Saltglass Shore | Dune Beasts | Glasswing Wyvern (Wyvern), Dune Basilisk (Basilisk), Sea Thornling (Thornling), Dune Jackal (Dire Wolf), Glass Golem (Stonehide Brute), Drowned Sentry (Bone Knight) | Defeat every enemy | CHAPTER VII |
+
+## Side stories
+
+Each story recruit's own chapter, at their home village on the world map (✦). It shows once the recruit is in the squad and its chapter is won, is told once per playthrough, and the recruit always fights it. Enemies are the squad's average level (rounded down) or the story's floor, whichever is higher; the boss is one level above. Winning means defeating the boss.
+
+| Place | Recruit | Chapter | Battlefield | Enemies | Floor | Opens after | Relic |
+| :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- |
+| **Fenhollow** | Bria | The Spring at Fenhollow | Fenhollow Spring (Gloomy Mire) | ★ Mire Mother (Bog Ooze), Bog Ooze (Bog Ooze), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Marsh Wisp (Marsh Wisp), Reed Thornling (Thornling) | 6 | CHAPTER III | Fenhollow Spring-Stone |
+| **Saltmere** | Sable | What Was Owed | Saltmere Quay (Emberwick Harbor) | ★ First Mate Grell (Gunner), Corsair Cutthroat (Thief), Deck Gunner (Gunner), Corsair Brawler (Monk), Bilge Ooze (Bog Ooze), Ship Chanter (White Mage) | 8 | CHAPTER V | Saltmere Coin |
+| **Dunehome** | Kestrel | The Empty Cages | Dunehome Ruins (Saltglass Shore) | ★ Huntmaster Corra (Beast Tamer), Court Trapper (Archer), Court Trapper (Archer), Cage Warden (Knight), Court Chaplain (White Mage), Broken Wolf (Dire Wolf) | 10 | CHAPTER VII | Dunehome Whistle |
 
 ## Armory & drops
 

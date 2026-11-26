@@ -11,6 +11,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, Difficulty, enemyLevel, sanitizeDifficu
 import { Tutorial, TipId, TIPS } from './ui/Tutorial';
 import { TEXT_SIZE_LABEL, TextSize, applyTextSize, nextTextSize, savedTextSize } from './ui/TextSize';
 import { SKIRMISHES, SKIRMISH_MAX_HEAT, buildSkirmish, missingTrophies, sanitizeSkirmishWins, skirmishBonus } from './core/Skirmish';
+import { SIDE_STORIES, buildSideStory, sanitizeSideStories, sideStoryOpen, sideStoryStates } from './core/SideStory';
 import { MERCHANT_NAME, MerchantSales, merchantVisit, merchantVisitIndex, sanitizeMerchantSales } from './core/Merchant';
 import { beastFromTamed, isBeast } from './core/Taming';
 import { PARTY_EXP, PARTY_JP, RESERVE_EXP, RESERVE_JP, trainReserve } from './core/Reserve';
@@ -107,6 +108,9 @@ class TacticsGame {
   /** Supplies as the battle began: a lost battle gives back what was used in it. */
   private battleStartInventory: Record<string, number> | null = null;
   private skirmishWins: Record<string, number> = {};
+  /** Recruit side stories won this playthrough, and the one being fought (0.43.0). */
+  private sideStoriesWon: string[] = [];
+  private currentSideStory: string | null = null;
   /** Camp scenes already played this playthrough (0.21.0). */
   private campSeen: string[] = [];
   /** Camp scenes seen in any playthrough of this save, to watch again (0.39.0). */
@@ -191,11 +195,13 @@ class TacticsGame {
         memories: this.campMemories.length,
         recruits: this.recruitBoard(),
         squadSize: this.squad.length,
-        farShore: farShoreOpen(this.clearedChapters)
+        farShore: farShoreOpen(this.clearedChapters),
+        sideStories: sideStoryStates(this.clearedChapters, this.squad.map((u) => u.id), this.sideStoriesWon)
       }),
       hire: (slot) => this.hire(slot),
       barracks: () => this.openParty(null),
       skirmish: (id) => this.withParty(() => this.startSkirmish(id)),
+      sideStory: (id) => this.withParty(() => this.startSideStory(id), SIDE_STORIES[id]?.hero, true),
       buyFromMerchant: (id) => this.buyFromMerchant(id),
       makeCamp: () => this.makeCamp(),
       memories: () => this.openMemories(),
@@ -427,6 +433,27 @@ class TacticsGame {
     this.setupBattle(buildSkirmish(id, this.squad.map((u) => u.level), this.skirmishWins[id] || 0));
     this.playChapterIntro();
     this.saveGame(false); // a save made here resumes on the map, at this place
+  }
+
+  /** A recruit's side story from the world map (0.43.0): told once, never moves the story on. */
+  private startSideStory(id: string): void {
+    if (!sideStoryOpen(id, this.clearedChapters, this.squad.map((u) => u.id), this.sideStoriesWon)) return;
+    this.world.close();
+    this.mode = 'story';
+    this.currentSideStory = id;
+    this.customScenario = null;
+    this.setupBattle(buildSideStory(id, this.squad.map((u) => u.level)));
+    this.playChapterIntro();
+    this.saveGame(false); // a save made here resumes on the map, at this place
+  }
+
+  /** A side story is won: it's marked told, and the squad is back on the map beside it. */
+  private finishSideStory(): void {
+    const id = this.currentSideStory;
+    if (id && !this.sideStoriesWon.includes(id)) this.sideStoriesWon.push(id);
+    this.ui.addLogEntry(`[STORY] ${SIDE_STORIES[id || '']?.hero.name || 'The'} side story is told.`, 'system');
+    this.openWorldMap(id || undefined);
+    this.saveGame(false);
   }
 
   private startTrial(floor: number): void {
@@ -846,10 +873,11 @@ class TacticsGame {
       inventory: this.inventory,
       clearedChapters: this.clearedChapters,
       // A side battle isn't resumed: loading puts the squad back on the map beside it
-      onWorldMap: this.world.isOpen || this.mode === 'skirmish',
+      onWorldMap: this.world.isOpen || this.mode === 'skirmish' || this.mode === 'story',
       skirmishWins: this.skirmishWins,
       campSeen: this.campSeen,
       campMemories: this.campMemories,
+      sideStories: this.sideStoriesWon,
       merchantSales: this.merchantSales,
       party: this.party,
       recruitHires: this.recruitHires,
@@ -917,6 +945,7 @@ class TacticsGame {
     this.gil = typeof data.gil === 'number' && data.gil >= 0 ? Math.floor(data.gil) : STARTING_GIL;
     this.inventory = sanitizeInventory(data.inventory);
     this.skirmishWins = sanitizeSkirmishWins(data.skirmishWins);
+    this.sideStoriesWon = sanitizeSideStories(data.sideStories);
     // Side battles won before 0.21.0 pay their trophy now
     for (const id of missingTrophies(this.skirmishWins, this.armory)) this.armory.push(id);
     let chapterId = CAMPAIGN_CHAPTERS[data.currentChapterId] ? data.currentChapterId : 'chapter_1';
@@ -2166,6 +2195,7 @@ class TacticsGame {
     const retry = () => {
       if (this.mode === 'trials') this.startTrial(this.trialsFloor);
       else if (this.mode === 'skirmish' && this.currentSkirmish) this.startSkirmish(this.currentSkirmish);
+      else if (this.mode === 'story' && this.currentSideStory) this.startSideStory(this.currentSideStory);
       else {
         this.setupBattle(this.currentChapter);
         this.startBattle();
@@ -2174,7 +2204,7 @@ class TacticsGame {
     const buttons: { label: string; primary?: boolean; onClick: () => void }[] = [
       { label: 'Retry Battle', primary: true, onClick: retry }
     ];
-    buttons.push({ label: 'World Map', onClick: () => this.openWorldMap(this.mode === 'trials' ? 'trials' : undefined) });
+    buttons.push({ label: 'World Map', onClick: () => this.openWorldMap(this.mode === 'trials' ? 'trials' : this.mode === 'story' ? this.currentSideStory || undefined : undefined) });
     if (SaveManager.hasSave(this.saveSlot)) buttons.push({ label: 'Load Save', onClick: () => this.loadGame() });
     // Supplies used in a lost battle come back, whatever you do next (EXP and JP are kept too)
     const refunded = this.refundSupplies();
@@ -2222,7 +2252,7 @@ class TacticsGame {
     }
 
     const newItems: string[] = [];
-    if (this.mode === 'campaign' || this.mode === 'custom') {
+    if (this.mode === 'campaign' || this.mode === 'custom' || this.mode === 'story') {
       for (const id of this.currentChapter.rewardItemIds || []) {
         if (!this.armory.includes(id)) newItems.push(id);
       }
@@ -2305,7 +2335,7 @@ class TacticsGame {
     }
 
     this.ui.showResultModal({
-      title: this.mode === 'custom' ? 'SCENARIO CLEARED' : 'VICTORY — SPOILS OF WAR',
+      title: this.mode === 'custom' ? 'SCENARIO CLEARED' : this.mode === 'story' ? 'SIDE STORY WON' : 'VICTORY — SPOILS OF WAR',
       subtitle,
       bodyHtml: rows.join(''),
       buttons: [{ label: 'Continue', primary: true, onClick: () => this.afterSpoils() }]
@@ -2313,7 +2343,7 @@ class TacticsGame {
   }
 
   private afterSpoils(): void {
-    const next = () => (this.mode === 'custom' ? this.showCustomEnd(true) : this.handleChapterVictoryChoices());
+    const next = () => (this.mode === 'custom' ? this.showCustomEnd(true) : this.mode === 'story' ? this.finishSideStory() : this.handleChapterVictoryChoices());
     if (this.currentChapter.victoryDialogue.length > 0) {
       this.playDialogueSequence(this.currentChapter.victoryDialogue, next);
     } else {
@@ -2338,7 +2368,7 @@ class TacticsGame {
 
   /** Shows the world map (and autosaves there): the squad's home between missions. */
   private openWorldMap(location?: string): void {
-    if (this.mode === 'custom' || this.mode === 'skirmish') { this.mode = 'campaign'; this.customScenario = null; this.chainRun = null; this.currentSkirmish = null; }
+    if (this.mode === 'custom' || this.mode === 'skirmish' || this.mode === 'story') { this.mode = 'campaign'; this.customScenario = null; this.chainRun = null; this.currentSkirmish = null; this.currentSideStory = null; }
     this.currentMode = 'menu';
     this.battleOver = true;
     this.scene.clearHighlights();
@@ -2411,6 +2441,7 @@ class TacticsGame {
     this.campaignCleared = false;
     this.clearedChapters = [];
     this.skirmishWins = {};
+    this.sideStoriesWon = [];
     this.campSeen = [];
     this.campMemories = [];
     this.merchantSales = undefined;
@@ -2461,9 +2492,11 @@ class TacticsGame {
    * Runs `go` once the party is settled (0.25.0): straight away when the squad fits, else after the
    * player picks who fights. `joining` is a story recruit who joins in that battle and takes a place.
    */
-  private withParty(go: () => void, joining?: { id: string; name: string }): void {
-    const newcomer = joining && !this.squad.some((u) => u.id === joining.id) ? joining : undefined;
-    if (this.squad.length + (newcomer ? 1 : 0) <= PARTY_SIZE) return go();
+  private withParty(go: () => void, joining?: { id: string; name: string }, mustFight = false): void {
+    // A newcomer takes a seat; so does a squad member whose own story this is (0.43.0)
+    const newcomer = joining && (mustFight || !this.squad.some((u) => u.id === joining.id)) ? joining : undefined;
+    const extra = newcomer && !this.squad.some((u) => u.id === newcomer.id) ? 1 : 0;
+    if (this.squad.length + extra <= PARTY_SIZE) return go();
     this.openParty(go, newcomer);
   }
 
@@ -2473,29 +2506,30 @@ class TacticsGame {
    */
   private openParty(go: (() => void) | null, newcomer?: { id: string; name: string }, pickIn?: string[]): void {
     const seats = PARTY_SIZE - (newcomer ? 1 : 0);
-    let pick = (pickIn || chooseParty(this.squad, this.party)).filter((id) => this.squad.some((u) => u.id === id)).slice(0, seats);
+    let pick = (pickIn || chooseParty(this.squad, this.party)).filter((id) => id !== newcomer?.id && this.squad.some((u) => u.id === id)).slice(0, seats);
     if (!pick.includes(LEADER_ID) && this.squad.some((u) => u.id === LEADER_ID)) pick = [LEADER_ID, ...pick].slice(0, seats);
     const render = () => {
       const cards = this.squad.map((u) => {
-        const on = pick.includes(u.id);
+        const fights = !!go && u.id === newcomer?.id; // in their own story (0.43.0)
+        const on = pick.includes(u.id) || fights;
         const lead = u.id === LEADER_ID;
         return `<div class="party-card${on ? ' in' : ''}" data-id="${esc(u.id)}">
           <canvas width="48" height="48" aria-hidden="true"></canvas>
           <div class="party-info"><b>${esc(u.name)}</b><small>${esc(JOBS[u.jobId]?.name || u.jobId)} Lv ${u.level} · HP ${u.maxHp} · MP ${u.maxMp}</small></div>
           <div class="party-buttons">
-            ${lead ? '<span class="party-lock">LEADS</span>' : `<button data-act="toggle" class="${on ? 'primary' : ''}" aria-pressed="${on}">${on ? 'In party' : 'Reserve'}</button>`}
+            ${lead ? '<span class="party-lock">LEADS</span>' : fights ? '<span class="party-lock">FIGHTS</span>' : `<button data-act="toggle" class="${on ? 'primary' : ''}" aria-pressed="${on}">${on ? 'In party' : 'Reserve'}</button>`}
             ${!go && isHired(u) ? '<button data-act="dismiss">Dismiss</button>' : ''}
             ${!go && isBeast(u) ? '<button data-act="dismiss">Release</button>' : ''}
           </div>
         </div>`;
       }).join('');
-      const joinNote = newcomer ? `<p class="party-count">${esc(newcomer.name)} joins you in this battle and takes a place.</p>` : '';
+      const joinNote = newcomer ? `<p class="party-count">${esc(newcomer.name)} ${this.squad.some((u) => u.id === newcomer.id) ? 'fights in this battle' : 'joins you in this battle'} and takes a place.</p>` : '';
       this.ui.showResultModal({
         title: go ? 'CHOOSE YOUR PARTY' : 'BARRACKS',
         subtitle: `${PARTY_SIZE} fight at a time. Rowan leads and always goes. Units in reserve keep their levels, jobs and gear, and train at camp: half a share of each win's EXP and JP.`,
         bodyHtml: `${joinNote}<p class="party-count">In the party: ${pick.length + (newcomer ? 1 : 0)} / ${PARTY_SIZE} · Barracks ${this.squad.length} / ${MAX_SQUAD}</p><div class="party-list">${cards}</div>`,
         buttons: go
-          ? [{ label: `March with ${pick.length + (newcomer ? 1 : 0)}`, primary: true, onClick: () => { this.party = [...pick]; this.ui.hideResultModal(); go(); } },
+          ? [{ label: `March with ${pick.length + (newcomer ? 1 : 0)}`, primary: true, onClick: () => { this.party = [...pick, ...(newcomer && this.squad.some((u) => u.id === newcomer.id) ? [newcomer.id] : [])]; this.ui.hideResultModal(); go(); } },
              { label: 'Back', onClick: () => { this.party = [...pick]; this.ui.hideResultModal(); this.world.refresh(); } }]
           : [{ label: 'Done', primary: true, onClick: () => { this.party = [...pick]; this.ui.hideResultModal(); this.saveGame(false); this.world.refresh(); } }]
       });
@@ -2844,6 +2878,7 @@ class TacticsGame {
     this.ui.addLogEntry('[SYSTEM] New Game+ : your squad keeps its levels, jobs and gear.', 'system');
     this.clearedChapters = [];
     this.campSeen = []; // the story is told again, and so are its evenings
+    this.sideStoriesWon = []; // and the recruits' own stories
     this.world.close();
     this.world.location = 'ruins';
     this.ui.hideResultModal();

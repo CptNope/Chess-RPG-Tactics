@@ -6,7 +6,7 @@ import { CAMPAIGN_CHAPTERS } from '../data/campaign';
 import { StoryChoice } from './types';
 import { SKIRMISHES, skirmishOpen } from './Skirmish';
 
-export type WorldNodeKind = 'mission' | 'market' | 'trials' | 'skirmish' | 'port';
+export type WorldNodeKind = 'mission' | 'market' | 'trials' | 'skirmish' | 'port' | 'story';
 
 /**
  * The map has two regions (0.34.0): the realm, and the Far Shore across the sea, where Act III is
@@ -25,6 +25,8 @@ export interface WorldNode {
   chapterId?: string;
   /** The side battle fought here (skirmish nodes): optional and replayable. */
   skirmishId?: string;
+  /** The recruit's side story told here (story nodes, 0.43.0): optional, won once. */
+  storyId?: string;
   blurb: string;
   /** Which map it's on (0.34.0). The realm when unset. */
   region?: Region;
@@ -45,11 +47,15 @@ export const WORLD_NODES: WorldNode[] = [
   { id: 'ridge', name: SKIRMISHES.ridge.name, kind: 'skirmish', skirmishId: 'ridge', x: 0.88, y: 0.78, blurb: 'An old watch-fort on the cliffs below the summit, its signal fire still kept.' },
   { id: 'hollow', name: SKIRMISHES.hollow.name, kind: 'skirmish', skirmishId: 'hollow', x: 0.7, y: 0.38, blurb: 'A wooded hollow under the high pass, where the howling carries for miles.' },
   { id: 'barrow', name: SKIRMISHES.barrow.name, kind: 'skirmish', skirmishId: 'barrow', x: 0.42, y: 0.52, blurb: 'An old kings\' grave-mound gone to briars, between the ruins and the battlement.' },
+  // Recruit side stories (0.43.0): shown once they open
+  { id: 'fenhollow', name: 'Fenhollow', kind: 'story', storyId: 'fenhollow', x: 0.42, y: 0.9, blurb: "Bria's village on the edge of the mire, built on stilts around a spring." },
+  { id: 'saltmere', name: 'Saltmere', kind: 'story', storyId: 'saltmere', x: 0.1, y: 0.6, blurb: 'A fishing village on the western shore. Half its houses are new timber, built over ash.' },
   // The Far Shore (0.34.0)
   { id: 'anchorage', name: 'The Anchorage', kind: 'port', region: 'shore', x: 0.2, y: 0.78, blurb: 'Where the ship from Emberwick rides at anchor, in the lee of a sea-glass spit.' },
   { id: 'saltglass', name: 'Saltglass Shore', kind: 'mission', chapterId: 'chapter_7', region: 'shore', x: 0.46, y: 0.62, blurb: 'The drowned kingdom\'s old harbour, half buried in glittering dunes.' },
   { id: 'frostfang', name: 'Frostfang Pass', kind: 'mission', chapterId: 'chapter_8', region: 'shore', x: 0.64, y: 0.24, blurb: 'The one road over the mountains, with the Court\'s fort at the top.' },
   { id: 'drowned_city', name: 'The Drowned City', kind: 'mission', chapterId: 'chapter_9', region: 'shore', x: 0.86, y: 0.66, blurb: 'The drowned kingdom\'s capital, standing up out of the bay with the sea still running off it.' },
+  { id: 'dunehome', name: 'Dunehome', kind: 'story', storyId: 'dunehome', region: 'shore', x: 0.36, y: 0.88, blurb: "Kestrel's village in the dunes, burned for the Court's road." },
   { id: 'glasswing', name: SKIRMISHES.glasswing.name, kind: 'skirmish', skirmishId: 'glasswing', region: 'shore', x: 0.28, y: 0.4, blurb: 'Dunes of wind-polished glass where a wyvern nests, and the jackals that follow it.' }
 ];
 
@@ -73,12 +79,17 @@ export const WORLD_ROADS: [string, string][] = [
   ['battlement', 'hollow'],
   ['ruins', 'barrow'],
   ['barrow', 'battlement'],
+  ['mire', 'fenhollow'],
+  ['harbor', 'saltmere'],
+  ['market', 'saltmere'],
   // The Far Shore (0.34.0): no road crosses the sea; ships sail between the two harbours
   ['anchorage', 'saltglass'],
   ['saltglass', 'frostfang'],
   ['frostfang', 'drowned_city'],
   ['anchorage', 'glasswing'],
-  ['glasswing', 'saltglass']
+  ['glasswing', 'saltglass'],
+  ['anchorage', 'dunehome'],
+  ['dunehome', 'saltglass']
 ];
 
 /** The region a location is in. */
@@ -144,8 +155,10 @@ export const FIRST_ACT_FINALE = 'chapter_3';
 export type NodeState = 'open' | 'cleared' | 'locked';
 
 /** How a location shows on the map. */
-export function nodeState(node: WorldNode, currentChapterId: string, cleared: string[], trialsOpen: boolean): NodeState {
+export function nodeState(node: WorldNode, currentChapterId: string, cleared: string[], trialsOpen: boolean, sideStories: Record<string, NodeState> = {}): NodeState {
   if (node.kind === 'market' || node.kind === 'port') return 'open';
+  // A side story shows as worked out from the squad and the save (SideStory.sideStoryStates)
+  if (node.kind === 'story') return sideStories[node.storyId!] || 'locked';
   if (node.kind === 'trials') return trialsOpen ? 'open' : 'locked';
   // Side battles never show as cleared: they can always be fought again
   if (node.kind === 'skirmish') return skirmishOpen(node.skirmishId!, cleared) ? 'open' : 'locked';
