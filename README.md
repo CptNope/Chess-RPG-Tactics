@@ -5,7 +5,7 @@
 [![Support the game](https://img.shields.io/badge/support-donate%20on%20itch-ff69b4?logo=githubsponsors&logoColor=white)](https://cptnope.itch.io/chess-rpg-tactics/donate)
 <br />
 [![Deploy to GitHub Pages](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml/badge.svg)](https://github.com/CptNope/Chess-RPG-Tactics/actions/workflows/deploy.yml)
-![Version](https://img.shields.io/badge/version-0.41.0-f4c430)
+![Version](https://img.shields.io/badge/version-0.42.0-f4c430)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
 ![Three.js](https://img.shields.io/badge/Three.js-0.170-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -35,7 +35,7 @@ A turn-based tactics RPG for the browser in the spirit of *Final Fantasy Tactics
 | **Enemy AI** | Plans every move: finishes wounded units, heals allies, aims area spells at clusters, thinks a turn ahead to stay out of reach, and uses Potions and other items. **AUTO** lets it play your turn |
 | **Play anywhere** | Phone (portrait and landscape), tablet and desktop layouts; mouse, keyboard, touch, pen and controller, with remappable keys and buttons |
 | **Graphics** | Per-map skies, fog and lighting, soft shadows, flowing water, torches, bloom; Auto / High / Medium / Low quality that adapts to your device |
-| **Workshop** | Build your own battles: sculpt terrain, place enemies and bosses, write dialogue, pick an objective (rout, defeat the boss, survive N rounds), then play it or share it as a link |
+| **Workshop** | Build your own battles: sculpt terrain, place enemies and bosses, write dialogue, pick an objective (rout, defeat the boss, survive N rounds), then play it or share it as a link. Chain battles into a mini campaign and share the whole thing (0.42) |
 | **Art & sound** | Animated 48px pixel-art units (walk, strike, flinch), drawn character portraits, hand-animated pixel-art spell and hit effects, synthesized music and SFX; no image files |
 
 <p>
@@ -108,7 +108,7 @@ Keyboard shortcuts: `1` Move · `2` Act · `3` Wait · `4`/`T` Auto · `5`/`I` I
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 306 rule tests
+npm test             # 312 rule tests
 npm run build        # type-check + production build
 npm run build:itch   # build + release/chess-rpg-tactics-<version>-html5.zip for itch.io
 npm run balance      # headless AUTO battles: win rate per chapter

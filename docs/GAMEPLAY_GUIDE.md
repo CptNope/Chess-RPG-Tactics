@@ -331,6 +331,7 @@ flowchart LR
     End --> Terrain
     End --> Camp(["Back to the campaign"])
     Rules --> Share["Export .json<br/>or copy a share link"]
+    Check -- yes --> Chain["Chains<br/>string scenarios into<br/>a mini campaign"]
 ```
 
 | Tab | What you do there |
@@ -339,7 +340,8 @@ flowchart LR
 | **Units** | **Squad** tiles are where your squad deploys, in squad order (up to 6). **Enemy** places an enemy with the name, job, level, facing and boss flag set below; tap an existing enemy to select and edit it. **Erase** removes either. |
 | **Story** | Title, subtitle, author, and the dialogue before the battle and after victory. Each line has a speaker, a side, a portrait (Auto uses the hero's portrait when the speaker is Rowan, Maren, Tobin, Corvin or Bria) and text. |
 | **Rules** | **Rout all** enemies; **Defeat the boss** (the rest flee when it falls); or **Survive** N rounds (a round ends once every unit has had a turn). Pick the look (daylight, night, swamp, summit) and up to six reward items. |
-| **File** | The check, your library, new blank fields (8–24 tiles a side), copies of campaign maps and chapters, export/import `.json`, and **share links**: anyone who opens the link gets the scenario in their Workshop. |
+| **File** | The check, your library, new blank fields (8–24 tiles a side), copies of campaign maps and chapters, export/import `.json`, and **share links**: anyone who opens the link gets the scenario in their Workshop. Import and paste take chain files too. |
+| **Chains** | String up to 8 scenarios into a **mini campaign**. Give it a title and opening words (shown before battle 1); add the scenario you're editing or any from your library; reorder or remove battles. A chain keeps its own copy of each battle, so later edits don't change it until you press *Update battles from the library*. Play it from the start or **continue** where you stopped: after each win the chain moves on and remembers where you are; a loss lets you retry that battle. Export it as one `.json`, or **copy a chain link** that carries every battle. |
 
 **Rules of thumb for good scenarios:** keep 4–6 tiles of open ground between the squad and the first enemies; give archers and mages high ground to fight over; make at least one route melee units can walk (the check warns you otherwise); a single boss with 3–4 escorts at the squad's level is a fair fight.
 
@@ -350,7 +352,7 @@ flowchart LR
   <img src="images/workshop-phone.webp" alt="The Workshop on a phone" width="190">
 </p>
 
-Workshop battles use your real squad, which keeps any EXP, JP and reward gear, but they never change your campaign progress or save slot.
+Workshop battles, chains included, use your real squad, which keeps any EXP, JP and reward gear, but they never change your campaign progress or save slot.
 
 ---
 

@@ -341,7 +341,7 @@ export function parseScenario(json: string): Scenario {
 // ---------------------------------------------------------------------------
 
 /** Compact form for links: tiles become one string per row (height*10, terrain letter, ! for blocked). */
-function packForShare(s: Scenario): unknown {
+export function packForShare(s: Scenario): unknown {
   const letter: Record<TerrainType, string> = { grass: 'g', stone: 's', dirt: 'd', water: 'w', wood: 'o', swamp: 'm', parapet: 'p', sand: 'a', snow: 'n' };
   const rows: string[] = [];
   for (let z = 0; z < s.map.depth; z++) {
@@ -355,7 +355,7 @@ function packForShare(s: Scenario): unknown {
   return { ...s, map: { ...s.map, tiles: undefined, rows } };
 }
 
-function unpackShare(raw: unknown): unknown {
+export function unpackShare(raw: unknown): unknown {
   if (!isObj(raw) || !isObj(raw.map) || !Array.isArray(raw.map.rows)) return raw;
   const byLetter: Record<string, TerrainType> = { g: 'grass', s: 'stone', d: 'dirt', w: 'water', o: 'wood', m: 'swamp', p: 'parapet', a: 'sand', n: 'snow' };
   const tiles: unknown[] = [];
@@ -386,27 +386,35 @@ async function pipe(bytes: Uint8Array<ArrayBuffer>, stream: CompressionStream | 
   return new Uint8Array(await new Response(out).arrayBuffer());
 }
 
-/** Encodes a scenario for the `#s=` share link. */
-export async function encodeShare(s: Scenario): Promise<string> {
-  const json: Uint8Array<ArrayBuffer> = new TextEncoder().encode(JSON.stringify(packForShare(s)));
+/** Compresses any JSON value into link-safe text: `z` + base64url(deflate), or `j` + base64url(json). */
+export async function encodePayload(value: unknown): Promise<string> {
+  const json: Uint8Array<ArrayBuffer> = new TextEncoder().encode(JSON.stringify(value));
   if (typeof CompressionStream === 'undefined') return 'j' + toB64Url(json);
   return 'z' + toB64Url(await pipe(json, new CompressionStream('deflate-raw')));
 }
 
-/** Decodes a `#s=` value back into a clean scenario (throws on garbage). */
-export async function decodeShare(code: string): Promise<Scenario> {
-  if (code.length > 200_000) throw new Error('Share link is too long.');
-  let raw: unknown;
+/** The reverse of `encodePayload` (throws a readable error on garbage). */
+export async function decodePayload(code: string, maxLength = 200_000): Promise<unknown> {
+  if (code.length > maxLength) throw new Error('Share link is too long.');
   try {
     const kind = code[0];
     let bytes = fromB64Url(code.slice(1));
     if (kind === 'z') bytes = await pipe(bytes, new DecompressionStream('deflate-raw'));
     else if (kind !== 'j') throw new Error('bad prefix');
-    raw = JSON.parse(new TextDecoder().decode(bytes));
+    return JSON.parse(new TextDecoder().decode(bytes));
   } catch {
     throw new Error('That share link is damaged.');
   }
-  return sanitizeScenario(unpackShare(raw));
+}
+
+/** Encodes a scenario for the `#s=` share link. */
+export async function encodeShare(s: Scenario): Promise<string> {
+  return encodePayload(packForShare(s));
+}
+
+/** Decodes a `#s=` value back into a clean scenario (throws on garbage). */
+export async function decodeShare(code: string): Promise<Scenario> {
+  return sanitizeScenario(unpackShare(await decodePayload(code)));
 }
 
 // ---------------------------------------------------------------------------

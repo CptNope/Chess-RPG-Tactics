@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.42.0] - 2026-11-25
+
+### Added
+- **Scenario chains: mini campaigns from the Workshop.** A new **Chains** tab strings up to 8 scenarios into a chain with a title, an author and opening words.
+  - Add the scenario you're editing or any from your library, then reorder or remove battles.
+  - Play it with your squad: each battle says where it sits ("battle 2 of 5"). A win moves on, a loss lets you retry, and the chain remembers where you stopped, so you can **continue** later.
+  - A chain keeps its own copy of each battle. *Update battles from the library* brings in your later edits.
+  - Export a chain as one `.json`, or **copy a chain link** that carries every battle. Import and paste on the File tab take chain files too.
+- As with single scenarios, the squad keeps its EXP, JP and reward gear, and the campaign isn't touched.
+
+### Changed
+- On phones the six Workshop tabs size to their labels, so none is cut off.
+
+### Developer
+- `core/Chain.ts`; `encodePayload` / `decodePayload` / `packForShare` exported from `Scenario.ts`; `#c=` links read at startup. ADR 0047. 6 new tests (312 total).
+
 ## [0.41.0] - 2026-11-25
 
 Groundwork for online versus (planned for later; see [docs/ONLINE_VERSUS.md](docs/ONLINE_VERSUS.md)). Nothing looks or plays differently.

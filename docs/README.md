@@ -90,6 +90,7 @@ timeline
     0.37.0 : 0044 Reserve training
     0.38.0 : 0045 Effects per ability
     0.41.0 : 0046 Battle-engine groundwork
+    0.42.0 : 0047 Scenario chains
 ```
 
 | # | Decision | Release |
@@ -132,6 +133,7 @@ timeline
 | [0044](adr/0044-reserve-training.md) | The reserve trains at camp: half a share of each win, the same as a party member who fell | 0.37.0 |
 | [0045](adr/0045-per-ability-effects.md) | Arrows and shots in flight, swings per weapon, area bursts; the AI teamwork experiment that changed nothing, shelved | 0.38.0 |
 | [0046](adr/0046-battle-engine-groundwork.md) | Groundwork for versus: sides and alliances (`isFoe`), one seeded RNG per battle, `BattleRules`, and the action resolver in `src/core`, shared by the game and the balance sim | 0.41.0 |
+| [0047](adr/0047-scenario-chains.md) | Scenario chains: Workshop scenarios strung into mini campaigns, carried as copies, shared as `#c=` links, with progress kept per chain | 0.42.0 |
 | [0039](adr/0039-smarter-enemies.md) | A threat map lets the planner think a turn ahead (light on Normal, full on Hard and AUTO); enemies carry item pouches by role; leftovers are salvaged | 0.31.0 |
 | [0038](adr/0038-equipment-rules.md) | Each job has weapon types and armor weights it can use; starting gear complies, so balance holds; job changes swap gear; old saves fixed on load | 0.30.0 |
 | [0034](adr/0034-monsters.md) | Monsters are jobs flagged `monster`, with innate statuses and immunities instead of gear, their own art, and player job lists filtered | 0.26.0 |
