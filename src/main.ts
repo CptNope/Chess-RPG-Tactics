@@ -45,6 +45,7 @@ import { moveFocus, focusablesIn, Dir } from './input/FocusNav';
 import { Workshop } from './ui/Workshop';
 import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
+import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
@@ -136,6 +137,8 @@ class TacticsGame {
   private workshop!: Workshop;
   private fx!: BattleFx;
   private customScenario: Scenario | null = null;
+  /** The scenario chain being played, and which battle of it (0.42.0). */
+  private chainRun: { chain: Chain; index: number } | null = null;
   /** The battle that was in progress when the Workshop opened, restored when it closes. */
   private suspended: {
     grid: BattleGrid; units: Unit[]; turnManager: TurnManager; chapter: CampaignChapter;
@@ -260,6 +263,7 @@ class TacticsGame {
       chapters: () => Object.values(CAMPAIGN_CHAPTERS),
       currentChapter: () => CAMPAIGN_CHAPTERS[this.campaignChapterId] || CAMPAIGN_CHAPTERS.chapter_1,
       play: (s) => this.playScenario(s),
+      playChain: (c, index) => this.playChain(c, index),
       closed: () => this.workshopClosed()
     });
 
@@ -268,9 +272,10 @@ class TacticsGame {
     this.gameLoop();
     // Automated play-tests (?fast) and share links skip the title screen
     const params = new URLSearchParams(location.search);
-    if (params.has('fast') || params.has('notitle') || /^#s=/.test(location.hash)) {
+    const shared = /^#[sc]=/.test(location.hash); // a scenario or a chain (0.42.0)
+    if (params.has('fast') || params.has('notitle') || shared) {
       this.hideTitle();
-      if (!/^#s=/.test(location.hash)) this.playChapterIntro();
+      if (!shared) this.playChapterIntro();
       this.openShareLink();
     } else {
       this.showTitle();
@@ -1914,7 +1919,7 @@ class TacticsGame {
   // Workshop
   // ---------------------------------------------------------------------------
 
-  private openWorkshop(scenario?: Scenario): void {
+  private openWorkshop(scenario?: Scenario, chain?: Chain): void {
     if (this.workshop.isOpen) return;
     if (!this.battleOver && this.currentMode !== 'idle' && this.currentMode !== 'dialogue') {
       this.ui.showBanner('OPEN THE WORKSHOP ON YOUR TURN');
@@ -1936,7 +1941,8 @@ class TacticsGame {
     this.units = [];
     this.scene.setActiveUnit(null);
     Music.playTrack('dialogue');
-    this.workshop.open(scenario);
+    if (chain) this.workshop.openChain(chain);
+    else this.workshop.open(scenario);
   }
 
   private workshopClosed(): void {
@@ -1968,13 +1974,68 @@ class TacticsGame {
     }
   }
 
-  private playScenario(s: Scenario): void {
+  private playScenario(s: Scenario, inChain = false): void {
+    if (!inChain) this.chainRun = null;
     this.suspended = null;
     this.customScenario = s;
     this.mode = 'custom';
-    this.setupBattle(scenarioToChapter(s));
-    this.ui.addLogEntry(`[WORKSHOP] Playing "${s.title}"${s.author ? ` by ${s.author}` : ''}.`, 'system');
+    const chapter = scenarioToChapter(s);
+    const run = this.chainRun;
+    if (run) {
+      // A chain battle says where it sits in the chain; the first opens with the chain's blurb
+      const n = run.chain.scenarios.length;
+      chapter.subtitle = `${run.chain.title}, battle ${run.index + 1} of ${n}${s.subtitle ? ` · ${s.subtitle}` : ''}`;
+      if (run.index === 0 && run.chain.blurb) {
+        chapter.introDialogue.unshift({ speaker: run.chain.title, portraitClass: '📜', side: 'left', text: run.chain.blurb });
+      }
+    }
+    this.setupBattle(chapter);
+    this.ui.addLogEntry(run
+      ? `[WORKSHOP] "${run.chain.title}"${run.chain.author ? ` by ${run.chain.author}` : ''}: battle ${run.index + 1} of ${run.chain.scenarios.length}, "${s.title}".`
+      : `[WORKSHOP] Playing "${s.title}"${s.author ? ` by ${s.author}` : ''}.`, 'system');
     this.playChapterIntro();
+  }
+
+  /** Plays battle `index` of a scenario chain, and remembers it as the place to pick up (0.42.0). */
+  private playChain(c: Chain, index: number): void {
+    const i = Math.max(0, Math.min(index, c.scenarios.length - 1));
+    this.chainRun = { chain: c, index: i };
+    ChainProgress.set(c.id, i);
+    this.playScenario(c.scenarios[i], true);
+  }
+
+  /** End of a chain battle: on to the next, retry, or the chain is done. */
+  private showChainEnd(won: boolean): void {
+    const run = this.chainRun;
+    if (!run) return;
+    const { chain, index } = run;
+    const n = chain.scenarios.length;
+    const step = chainStep(chain, index, won);
+    const toWorkshop = { label: 'Back to Workshop', onClick: () => { this.chainRun = null; this.openWorkshop(undefined, chain); } };
+    const toCampaign = { label: 'Return to campaign', onClick: () => { this.chainRun = null; this.returnToCampaign(); } };
+    this.currentMode = 'menu';
+    if (step.kind === 'next') {
+      ChainProgress.set(chain.id, step.index);
+      this.ui.showResultModal({
+        title: `BATTLE ${index + 1} OF ${n} WON`,
+        subtitle: `Next: "${chain.scenarios[step.index].title}". Your squad keeps its EXP, JP and any reward gear, and the chain remembers where you are if you stop here.`,
+        buttons: [{ label: 'Next battle', primary: true, onClick: () => this.playChain(chain, step.index) }, toWorkshop, toCampaign]
+      });
+    } else if (step.kind === 'complete') {
+      ChainProgress.clear(chain.id);
+      SoundFX.playVictoryFanfare();
+      this.ui.showResultModal({
+        title: 'CHAIN COMPLETE',
+        subtitle: `You won all ${n} battles of "${chain.title}"${chain.author ? ` by ${chain.author}` : ''}.`,
+        buttons: [{ label: 'Play it again', primary: true, onClick: () => this.playChain(chain, 0) }, toWorkshop, toCampaign]
+      });
+    } else {
+      this.ui.showResultModal({
+        title: 'DEFEAT',
+        subtitle: `Battle ${index + 1} of ${n}, "${chain.scenarios[index].title}". Your squad keeps the EXP and JP it earned, and the chain picks up from this battle.`,
+        buttons: [{ label: 'Retry', primary: true, onClick: () => this.playChain(chain, index) }, toWorkshop, toCampaign]
+      });
+    }
   }
 
   private returnToCampaign(): void {
@@ -1991,6 +2052,7 @@ class TacticsGame {
 
   /** End of a Workshop battle: replay, edit, or go back to the campaign. */
   private showCustomEnd(won: boolean): void {
+    if (this.chainRun) return this.showChainEnd(won);
     const s = this.customScenario;
     this.currentMode = 'menu';
     this.ui.showResultModal({
@@ -2004,8 +2066,20 @@ class TacticsGame {
     });
   }
 
-  /** Opens a scenario shared as a link (#s=…) in the Workshop. */
+  /** Opens a scenario (#s=…) or a chain (#c=…, 0.42.0) shared as a link in the Workshop. */
   private openShareLink(): void {
+    const c = /^#c=([\w-]+)$/.exec(location.hash);
+    if (c) {
+      history.replaceState(null, '', location.pathname + location.search);
+      decodeChainShare(c[1])
+        .then((chain) => {
+          ChainLibrary.save(chain);
+          this.openWorkshop(undefined, chain);
+          this.ui.showBanner(`SHARED CHAIN: ${chain.title.toUpperCase()}`);
+        })
+        .catch((e: Error) => this.ui.showBanner(e.message.toUpperCase()));
+      return;
+    }
     const m = /^#s=([\w-]+)$/.exec(location.hash);
     if (!m) return;
     history.replaceState(null, '', location.pathname + location.search);
@@ -2264,7 +2338,7 @@ class TacticsGame {
 
   /** Shows the world map (and autosaves there): the squad's home between missions. */
   private openWorldMap(location?: string): void {
-    if (this.mode === 'custom' || this.mode === 'skirmish') { this.mode = 'campaign'; this.customScenario = null; this.currentSkirmish = null; }
+    if (this.mode === 'custom' || this.mode === 'skirmish') { this.mode = 'campaign'; this.customScenario = null; this.chainRun = null; this.currentSkirmish = null; }
     this.currentMode = 'menu';
     this.battleOver = true;
     this.scene.clearHighlights();

@@ -2,7 +2,8 @@
  * The Workshop: a map and scenario editor that runs on top of the live 3D battlefield.
  *
  * Tabs: Terrain (sculpt and paint), Units (squad deploy tiles and enemies), Story (title and
- * dialogue), Rules (objective, look, rewards) and File (library, new, import/export, share).
+ * dialogue), Rules (objective, look, rewards), File (library, new, import/export, share) and
+ * Chains (scenarios strung into a mini campaign, 0.42.0).
  * Every control is a real button or field, so it works with mouse, touch, pen, keyboard
  * (Tab / arrows / Enter) and a controller (d-pad + A, B backs out to the map, X jumps back in).
  * Steppers (◀ value ▶) replace number inputs and dropdowns so nothing needs a text cursor.
@@ -21,6 +22,10 @@ import {
   Scenario, TERRAINS, LOOKS, NAMED_PORTRAITS, MAX_ENEMIES, MAX_SPAWNS, MAX_HEIGHT, MIN_SIZE, MAX_SIZE, MAX_LINES,
   blankScenario, scenarioFromMap, scenarioFromChapter, validateScenario, Library, parseScenario, encodeShare
 } from '../core/Scenario';
+import {
+  Chain, ChainLibrary, ChainProgress, MAX_CHAIN, addBattle, blankChain, encodeChainShare, isChainLike, moveBattle,
+  refreshFromLibrary, removeBattle, sanitizeChain, validateChain, packChain
+} from '../core/Chain';
 
 export interface WorkshopHost {
   scene: TacticsScene;
@@ -30,10 +35,12 @@ export interface WorkshopHost {
   chapters(): CampaignChapter[];
   currentChapter(): CampaignChapter;
   play(s: Scenario): void;
+  /** Plays a chain from battle `index` (0.42.0). */
+  playChain(c: Chain, index: number): void;
   closed(): void;
 }
 
-type Tab = 'terrain' | 'units' | 'story' | 'rules' | 'file';
+type Tab = 'terrain' | 'units' | 'story' | 'rules' | 'file' | 'chains';
 type Tool = 'raise' | 'lower' | 'level' | 'paint' | 'block' | 'fill' | 'spawn' | 'enemy' | 'erase';
 
 const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
@@ -98,6 +105,10 @@ export class Workshop {
   private dragMode: 'paint' | 'pan' = 'paint';
   private stroke: { visited: Set<string>; block: boolean; dirty: boolean; timer: number; changed: boolean } | null = null;
   private confirmDelete = '';
+  // Chains-tab state (0.42.0)
+  private chain: Chain | null = null;
+  private chainPick = 0;
+  private chainSaveTimer = 0;
   // File-tab form state
   private newForm = { width: 16, depth: 16, look: 0, terrain: 0 };
   private copyMapIdx = 0;
@@ -128,7 +139,7 @@ export class Workshop {
     const closeBtn = h('button', { class: 'ws-btn', title: 'Close the Workshop (Esc)', 'aria-label': 'Close Workshop', onclick: () => this.close() }, '×');
 
     this.tabBar = h('div', { class: 'ws-tabs', role: 'tablist' });
-    const tabs: [Tab, string][] = [['terrain', 'Terrain'], ['units', 'Units'], ['story', 'Story'], ['rules', 'Rules'], ['file', 'File']];
+    const tabs: [Tab, string][] = [['terrain', 'Terrain'], ['units', 'Units'], ['story', 'Story'], ['rules', 'Rules'], ['file', 'File'], ['chains', 'Chains']];
     for (const [id, label] of tabs) {
       this.tabBar.append(h('button', { class: 'ws-tab', role: 'tab', 'data-tab': id, onclick: () => this.setTab(id) }, label));
     }
@@ -205,9 +216,17 @@ export class Workshop {
     this.focusPanel();
   }
 
+  /** Opens the Workshop on the Chains tab with this chain (from a share link or a chain battle). */
+  public openChain(c: Chain): void {
+    this.chain = c;
+    this.tab = 'chains';
+    this.open();
+  }
+
   public close(): void {
     if (!this.isOpen) return;
     this.saveNow();
+    this.saveChainNow();
     this.isOpen = false;
     this.root.classList.add('hidden');
     document.body.classList.remove('workshop-open');
@@ -489,13 +508,32 @@ export class Workshop {
       this.setTab('file');
       return;
     }
+    this.leaveForBattle();
+    this.host.play(JSON.parse(JSON.stringify(this.scenario)));
+  }
+
+  /** Saves everything and steps out of the Workshop for a battle. */
+  private leaveForBattle(): void {
     this.saveNow();
+    this.saveChainNow();
     this.isOpen = false;
     this.root.classList.add('hidden');
     document.body.classList.remove('workshop-open');
     this.fitCamera();
     this.host.scene.clearHighlights();
-    this.host.play(JSON.parse(JSON.stringify(this.scenario)));
+  }
+
+  /** Plays the chain from battle `index`, if every battle in it is playable. */
+  private tryPlayChain(index: number): void {
+    const c = this.currentChain();
+    const errors = validateChain(c).filter((i) => i.level === 'error');
+    if (errors.length) {
+      SoundFX.playCrit();
+      this.say(errors[0].text);
+      return;
+    }
+    this.leaveForBattle();
+    this.host.playChain(sanitizeChain(JSON.parse(JSON.stringify(packChain(c)))), index);
   }
 
   // ---------------------------------------------------------------------------
@@ -552,6 +590,7 @@ export class Workshop {
       case 'story': return this.storyTab();
       case 'rules': return this.rulesTab();
       case 'file': return this.fileTab();
+      case 'chains': return this.chainsTab();
     }
   }
 
@@ -750,7 +789,7 @@ export class Workshop {
     const mapIds = Object.keys(MAPS);
     const chapters = this.host.chapters();
     const nf = this.newForm;
-    const pasteBox = h('textarea', { class: 'ws-input', rows: '3', 'data-k': 'paste', 'aria-label': 'Paste scenario JSON', placeholder: 'Paste scenario or map JSON here' });
+    const pasteBox = h('textarea', { class: 'ws-input', rows: '3', 'data-k': 'paste', 'aria-label': 'Paste scenario JSON', placeholder: 'Paste scenario, chain or map JSON here' });
     const fileInput = h('input', { type: 'file', accept: '.json,application/json', class: 'ws-hidden-file', tabindex: '-1', 'aria-hidden': 'true' });
     fileInput.addEventListener('change', async () => {
       const file = fileInput.files?.[0];
@@ -821,6 +860,131 @@ export class Workshop {
     ];
   }
 
+  // ---------------------------------------------------------------------------
+  // Chains (0.42.0)
+  // ---------------------------------------------------------------------------
+
+  private currentChain(): Chain {
+    if (!this.chain) this.chain = ChainLibrary.list()[0] || blankChain();
+    return this.chain;
+  }
+
+  private saveChainSoon(): void {
+    clearTimeout(this.chainSaveTimer);
+    this.chainSaveTimer = window.setTimeout(() => this.saveChainNow(), 600);
+  }
+
+  private saveChainNow(): void {
+    clearTimeout(this.chainSaveTimer);
+    if (!this.chain) return;
+    if (!ChainLibrary.save(this.chain)) this.say('Browser storage is full or unavailable: export the chain to keep it.');
+  }
+
+  /** A change to the chain's battles: save, re-render, and say what happened. */
+  private chainChanged(msg: string): void {
+    this.saveChainNow();
+    SoundFX.playMenuBlip();
+    this.say(msg);
+    this.render();
+  }
+
+  private chainsTab(): Node[] {
+    const c = this.currentChain();
+    const lib = Library.list();
+    const chains = ChainLibrary.list();
+    if (!chains.some((x) => x.id === c.id)) chains.unshift(c);
+    const issues = validateChain(c);
+    const full = c.scenarios.length >= MAX_CHAIN;
+    this.chainPick = Math.min(this.chainPick, Math.max(0, lib.length - 1));
+    const pick = lib[this.chainPick];
+    const resume = ChainProgress.get(c);
+    const shareOut = h('input', { class: 'ws-input', readonly: true, 'data-k': 'chain-share-out', 'aria-label': 'Chain share link', placeholder: 'Press "Copy chain link"' });
+    const field = (key: string, label: string, value: string, max: number, set: (v: string) => void, multiline = false) =>
+      this.textField(key, label, value, max, (v) => { set(v); this.saveChainSoon(); }, multiline);
+
+    return [
+      h('p', { class: 'ws-note' }, 'String scenarios into a mini campaign: they play in order with your squad, which keeps what it earns. A chain keeps its own copy of each battle.'),
+      h('fieldset', { class: 'ws-group' },
+        h('legend', {}, 'This chain'),
+        field('ch-title', 'Title', c.title, 48, (v) => (c.title = v || 'Untitled Chain')),
+        field('ch-author', 'Author (optional)', c.author, 32, (v) => (c.author = v)),
+        field('ch-blurb', 'Opening words (shown before battle 1)', c.blurb, 240, (v) => (c.blurb = v), true)),
+      h('fieldset', { class: 'ws-group' },
+        h('legend', {}, `Battles (${c.scenarios.length}/${MAX_CHAIN})`),
+        c.scenarios.length === 0 ? h('p', { class: 'ws-note' }, 'No battles yet. Add the scenario you are editing, or pick one from your library.') : null,
+        h('ol', { class: 'ws-list ws-chain' }, ...c.scenarios.map((x, i) => h('li', {},
+          h('span', { class: 'ws-chain-name' }, `${i + 1}. ${x.title}`, h('small', {}, ` ${x.map.width}×${x.map.depth} · ${x.enemies.length} enemies`)),
+          h('button', { class: 'ws-btn', 'data-k': `ch-up-${i}`, 'aria-label': `Move ${x.title} earlier`, disabled: i === 0, onclick: () => { moveBattle(c, i, -1); this.chainChanged(`Moved "${x.title}" to battle ${i}.`); } }, '▲'),
+          h('button', { class: 'ws-btn', 'data-k': `ch-dn-${i}`, 'aria-label': `Move ${x.title} later`, disabled: i === c.scenarios.length - 1, onclick: () => { moveBattle(c, i, 1); this.chainChanged(`Moved "${x.title}" to battle ${i + 2}.`); } }, '▼'),
+          h('button', { class: 'ws-btn ws-danger', 'data-k': `ch-rm-${i}`, 'aria-label': `Remove ${x.title} from the chain`, onclick: () => { removeBattle(c, i); this.chainChanged(`Removed "${x.title}" from the chain.`); } }, '✕')))),
+        h('button', {
+          class: 'ws-btn ws-wide', 'data-k': 'ch-add-current', disabled: full,
+          onclick: () => { this.saveNow(); addBattle(c, this.scenario); this.chainChanged(`Added "${this.scenario.title}" as battle ${c.scenarios.length}.`); }
+        }, `+ Add "${this.scenario.title}" (editing now)`),
+        lib.length ? this.stepper('ch-pick', 'From your library', pick ? pick.title : '-', (d) => (this.chainPick = (this.chainPick + d + lib.length) % lib.length)) : null,
+        lib.length ? h('button', {
+          class: 'ws-btn ws-wide', 'data-k': 'ch-add-pick', disabled: full || !pick,
+          onclick: () => { if (pick && addBattle(c, pick)) this.chainChanged(`Added "${pick.title}" as battle ${c.scenarios.length}.`); }
+        }, '+ Add from library') : null,
+        c.scenarios.length ? h('button', {
+          class: 'ws-btn ws-wide', 'data-k': 'ch-refresh',
+          onclick: () => { this.saveNow(); const n = refreshFromLibrary(c, Library.list()); this.chainChanged(n ? `Updated ${n} battle${n === 1 ? '' : 's'} to the library's latest version.` : 'Every battle already matches your library.'); }
+        }, '⟳ Update battles from the library') : null,
+        full ? h('p', { class: 'ws-note' }, `A chain holds up to ${MAX_CHAIN} battles.`) : null),
+      h('fieldset', { class: 'ws-group' },
+        h('legend', {}, 'Check and play'),
+        issues.length === 0
+          ? h('p', { class: 'ws-ok' }, '✓ Ready to play.')
+          : h('ul', { class: 'ws-issues' }, ...issues.map((i) => h('li', { class: i.level }, `${i.level === 'error' ? '✕' : '!'} ${i.text}`))),
+        resume > 0 ? h('button', { class: 'ws-btn ws-primary ws-wide', 'data-k': 'ch-resume', onclick: () => this.tryPlayChain(resume) }, `▶ Continue from battle ${resume + 1}`) : null,
+        h('button', { class: 'ws-btn ws-wide' + (resume > 0 ? '' : ' ws-primary'), 'data-k': 'ch-play', onclick: () => this.tryPlayChain(0) }, resume > 0 ? '▶ Start over from battle 1' : '▶ Play the chain')),
+      h('fieldset', { class: 'ws-group' },
+        h('legend', {}, `Your chains (${chains.length})`),
+        h('ul', { class: 'ws-list' }, ...chains.map((x) => h('li', { class: x.id === c.id ? 'current' : '' },
+          h('button', {
+            class: 'ws-list-btn', 'data-k': `chl-${x.id}`, disabled: x.id === c.id,
+            onclick: () => { this.saveChainNow(); this.chain = x; this.say(`Opened the chain "${x.title}".`); this.render(); }
+          }, x.title, h('small', {}, ` ${x.scenarios.length} battle${x.scenarios.length === 1 ? '' : 's'}${x.id === c.id ? ' · editing' : ''}`)),
+          h('button', {
+            class: 'ws-btn ws-danger', 'data-k': `chd-${x.id}`, 'aria-label': `Delete ${x.title}`,
+            onclick: () => {
+              if (this.confirmDelete !== x.id) { this.confirmDelete = x.id; this.say(`Press Delete again to remove the chain "${x.title}" (its scenarios stay in your library).`); this.render(); return; }
+              this.confirmDelete = '';
+              ChainLibrary.remove(x.id);
+              if (x.id === c.id) this.chain = ChainLibrary.list()[0] || blankChain();
+              this.say(`Deleted the chain "${x.title}".`);
+              this.render();
+            }
+          }, this.confirmDelete === x.id ? 'Sure?' : 'Delete')))),
+        h('button', { class: 'ws-btn ws-wide', 'data-k': 'ch-new', onclick: () => { this.saveChainNow(); this.chain = blankChain(); this.saveChainNow(); this.chainChanged('New chain. Give it a title, then add battles.'); } }, '+ New chain')),
+      h('fieldset', { class: 'ws-group' },
+        h('legend', {}, 'Share'),
+        h('button', { class: 'ws-btn ws-wide', 'data-k': 'ch-export', onclick: () => this.exportChain() }, '⭳ Export chain .json'),
+        h('button', {
+          class: 'ws-btn ws-wide', 'data-k': 'ch-share',
+          onclick: async () => {
+            const url = `${location.origin}${location.pathname}#c=${await encodeChainShare(c)}`;
+            shareOut.value = url;
+            try { await navigator.clipboard.writeText(url); this.say(`Chain link copied (${url.length} characters).`); }
+            catch { shareOut.select(); this.say('Copy the link from the box below.'); }
+          }
+        }, '🔗 Copy chain link'),
+        shareOut,
+        h('p', { class: 'ws-note' }, 'To load a chain file, use Import or paste it on the File tab.'))
+    ].filter(Boolean) as Node[];
+  }
+
+  private exportChain(): void {
+    const c = this.currentChain();
+    const blob = new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' });
+    const a = h('a', { href: URL.createObjectURL(blob), download: `${c.title.replace(/[^\w-]+/g, '_').slice(0, 40) || 'chain'}.chain.json` });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    this.say('Exported the chain with all its battles.');
+  }
+
   private replaceWith(s: Scenario, msg: string): void {
     this.saveNow();
     this.load(s);
@@ -832,6 +996,20 @@ export class Workshop {
 
   private importText(text: string): void {
     try {
+      // A chain file opens on the Chains tab (0.42.0)
+      let raw: unknown = null;
+      try { raw = JSON.parse(text); } catch { /* parseScenario reports it */ }
+      if (isChainLike(raw)) {
+        const c = sanitizeChain(raw);
+        c.id = blankChain().id; // a new entry, never overwriting your own chain
+        this.chain = c;
+        this.saveChainNow();
+        SoundFX.playTurnChime();
+        this.tab = 'chains';
+        this.say(`Imported the chain "${c.title}" (${c.scenarios.length} battle${c.scenarios.length === 1 ? '' : 's'}).`);
+        this.render();
+        return;
+      }
       const s = parseScenario(text);
       // Imports always become a new library entry so they never overwrite your own work
       s.id = blankScenario().id;

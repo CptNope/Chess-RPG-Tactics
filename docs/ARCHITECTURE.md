@@ -75,6 +75,7 @@ flowchart TB
 | **Text size** | `src/ui/TextSize.ts` | Normal / Large / Larger, saved per device; sets `data-text-size` on `<html>`, which picks the `--ts` multiplier every UI font size uses (0.20) | — |
 | **consumables** | `src/data/consumables.ts` | The eight supplies; turns one into an `Ability` for the engine; clamps saved inventories | types |
 | **Scenario** | `src/core/Scenario.ts` | Workshop scenario format: create, copy, sanitise untrusted input, validate, turn into a chapter, share-link encoding, library | data |
+| **Chain** | `src/core/Chain.ts` | Scenario chains (0.42): the format, `sanitizeChain`, `validateChain`, editing helpers, `chainStep` (next / retry / complete), `#c=` links, the chain library and saved progress | Scenario |
 | **TacticsScene** | `src/renderer/TacticsScene.ts` | Three.js scene, camera, tiles, sprites, highlights, gestures, cursor; the summon dim, call markers and summon camera (0.24) | Grid, VFX, PixelTextures |
 | **Atmosphere** | `src/renderer/Atmosphere.ts` | Per-map presets: sky gradient, fog, hemisphere/sun/rim lights, exposure, bloom, torch colour | — |
 | **TileShading** | `src/renderer/TileShading.ts` | Terrain materials with injected shader tweaks (bevels, cliff AO, water, swamp); merged terrain meshes | — |
@@ -88,7 +89,7 @@ flowchart TB
 | **CharacterArt** | `src/graphics/CharacterArt.ts` | Pixel painter + outline pass: 48×48 unit sprites (3 views × 6 frames) and 64×64 portraits | — |
 | **PixelTextures** | `src/graphics/PixelTextures.ts` | Procedural tile textures; wraps CharacterArt sprites as cached textures | CharacterArt |
 | **UIManager** | `src/ui/UIManager.ts` | HUD, menus, Team screen, modals, focus management, input-aware hints | JobSystem, FocusNav |
-| **Workshop** | `src/ui/Workshop.ts` | Map & scenario editor panel; edits a scenario and its preview on the live scene; talks to the game through a host interface | Scenario, TacticsScene |
+| **Workshop** | `src/ui/Workshop.ts` | Map & scenario editor panel; edits a scenario and its preview on the live scene; the Chains tab strings scenarios into mini campaigns (0.42); talks to the game through a host interface | Scenario, Chain, TacticsScene |
 | **GamepadInput** | `src/input/GamepadInput.ts` | Standard-mapping polling, repeat, rumble | — |
 | **FocusNav** | `src/input/FocusNav.ts` | Arrow / d-pad focus movement between visible controls | — |
 | **Audio** | `src/audio/*.ts` | SFX and three procedural music tracks | — |
@@ -120,7 +121,7 @@ stateDiagram-v2
     idle --> editor: Workshop (battle suspended)
     dialogue --> editor: Workshop / share link
     editor --> idle: close (battle restored)
-    editor --> dialogue: Play scenario
+    editor --> dialogue: Play scenario or chain
     menu --> editor: Back to Workshop
     busy --> menu: victory / defeat
     menu --> menu: spoils → world map
@@ -357,8 +358,11 @@ flowchart LR
 | `chess_rpg_tactics_speed_v1` | `fast` when the Fast battle speed is on (per device) |
 | `chess_rpg_tactics_best_trial_v1` | Highest Trial floor cleared |
 | `chess_rpg_tactics_workshop_v1` | Workshop library: up to 50 scenarios, newest first, each re-sanitised on load |
+| `chess_rpg_tactics_chains_v1` | Scenario chains: up to 20, newest first, each battle stored with packed tiles and re-sanitised on load (0.42) |
+| `chess_rpg_tactics_chain_progress_v1` | `{ chainId: next battle }`: where each chain picks up. Cleared when a chain is finished or deleted (0.42) |
 | `chess_rpg_tactics_graphics_v1` | Graphics setting (auto / high / medium / low) |
 | URL `#s=…` | A shared scenario: packed tiles, deflate-raw, base64url. Read once on load, then removed from the address bar |
+| URL `#c=…` | A shared chain, encoded the same way with every battle inside. Saved to the chain library and opened on the Chains tab (0.42) |
 
 Workshop battles save the campaign chapter you'll return to (`mode: 'campaign'`), never the custom scenario. All storage calls are wrapped in `try/catch`, so private browsing or an embedded iframe without storage degrades to "save failed" instead of crashing.
 
@@ -458,7 +462,12 @@ src/
 │   ├── Performance.ts      Songs and dances that play again each turn
 │   ├── Summons.ts          Grand summons that land on the caller's next turn
 │   ├── Recruits.ts         The recruiting board, hiring and the party of six
-│   └── Scenario.ts         Workshop format, sanitising, share links, library
+│   ├── Action.ts           Resolving an action step by step, shared with the balance sim
+│   ├── Sides.ts            Friend or foe (isFoe / isAlly), alliances
+│   ├── Rng.ts              The seeded dice every battle rolls with
+│   ├── Rules.ts            BattleRules: what a battle is played under
+│   ├── Scenario.ts         Workshop format, sanitising, share links, library
+│   └── Chain.ts            Scenario chains: format, checks, links, library, progress
 ├── data/                   Content: jobs, monsters, items, consumables, maps, campaign, camp scenes, Master signatures
 ├── renderer/               TacticsScene (Three.js + gestures), VFXManager, PixelEffects,
 │                           BattleFx, Atmosphere, TileShading, Decorations, GraphicsQuality,

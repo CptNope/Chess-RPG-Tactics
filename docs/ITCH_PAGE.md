@@ -66,7 +66,7 @@ The game's own page on [jeremyanderson.tech](https://jeremyanderson.tech/project
 - **Items in battle.** Potions, Ethers, Remedies, Blast and Frost Flasks, Elixirs, and Phoenix Feathers to raise fallen allies. The Chemist makes every one of them stronger.
 - **A three-act campaign** across ten 16×16 battlefields and two world maps (a harbor fought along its piers, a lighthouse rock, a snowbound pass, a drowned city…), with a branch, three story recruits, more to hire at the market, and bosses that enrage at half health.
 - **Trials of the Zodiac:** endless seeded floors with rare gear and a Warden boss every fifth floor, plus New Game+.
-- **The Workshop:** sculpt terrain, place enemies and bosses, write the dialogue, pick a goal (rout them, defeat the boss, or survive N rounds), then play it or share it as a link.
+- **The Workshop:** sculpt terrain, place enemies and bosses, write the dialogue, pick a goal (rout them, defeat the boss, or survive N rounds), then play it or share it as a link. String your battles into a chain and share a whole mini campaign.
 - **Hand-made pixel art** in a 3D world: animated units, drawn portraits, and pixel spell effects that wrap the actual characters.
 - **AUTO** lets the AI play a turn for you when you just want to watch it go.
 

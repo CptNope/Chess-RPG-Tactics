@@ -1933,6 +1933,8 @@ body.workshop-open #tile-info-card { display: none !important; }
 
 .ws-tabs { display: flex; gap: 2px; padding: 6px 8px 0; overflow-x: auto; flex-shrink: 0; }
 .ws-tab { flex: 1; border-bottom-left-radius: 0; border-bottom-right-radius: 0; font-family: var(--font-pixel); font-size: calc(8px * var(--ts)); padding: 8px 6px; }
+/* Six tabs since 0.42: on a phone they share the width with less padding */
+@media (max-width: 480px) { .ws-tabs { padding: 6px 4px 0; } .ws-tab { flex: 1 1 auto; padding: 8px 2px; min-width: 0 !important; } }
 
 .ws-body {
   flex: 1;
@@ -1997,6 +1999,11 @@ body.workshop-open #tile-info-card { display: none !important; }
 .ws-list-btn { flex: 1; text-align: left; font-size: calc(16px * var(--ts)); overflow: hidden; text-overflow: ellipsis; }
 .ws-list-btn small { color: var(--text-muted); font-size: calc(14px * var(--ts)); }
 .ws-list li.current .ws-list-btn { border-color: var(--gold); opacity: 1; }
+/* Chains (0.42.0): a battle per row, its name then move / remove buttons */
+.ws-chain li { align-items: center; }
+.ws-chain-name { flex: 1; min-width: 0; font-size: calc(16px * var(--ts)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-chain-name small { color: var(--text-muted); font-size: calc(14px * var(--ts)); }
+.ws-chain .ws-btn { padding: 4px 8px; }
 .ws-rewards { display: flex; flex-wrap: wrap; gap: 4px; }
 .ws-reward { font-size: calc(14px * var(--ts)); padding: 4px 7px; min-height: 28px; }
 .ws-line { border-top: 1px dashed var(--panel-border-inner); padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
