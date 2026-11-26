@@ -1803,7 +1803,8 @@ class TacticsGame {
     const plan = planTurn(enemy, this.units, this.grid, {
       noRevive: foe && this.enemyRaises >= (this.mode === 'custom' ? ENEMY_RAISE_CAP : DIFFICULTIES[this.difficulty].raiseCap),
       caution: foe ? enemyCaution(this.mode === 'custom' ? 'normal' : this.difficulty) : 'full',
-      pouch: foe ? enemy.pouch : undefined
+      pouch: foe ? enemy.pouch : undefined,
+      holdBack: !foe
     });
     if ((plan.ability?.revive || plan.ability?.rebirth) && enemy.team === 'enemy') this.enemyRaises++;
 

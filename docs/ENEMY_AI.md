@@ -1,6 +1,6 @@
 # Enemy AI (and AUTO)
 
-`planTurn(unit, units, grid, opts)` in `src/core/EnemyAI.ts` decides a whole turn (options: `noRevive`, `caution`, `pouch`, see 0.31 below): where to stand, what to use, what to aim at, and which way to face. It's team-agnostic, so the same planner plays enemy turns and the player's **AUTO** command.
+`planTurn(unit, units, grid, opts)` in `src/core/EnemyAI.ts` decides a whole turn (options: `noRevive`, `caution`, `pouch`, see 0.31 below, and `holdBack`, 0.45): where to stand, what to use, what to aim at, and which way to face. It's team-agnostic, so the same planner plays enemy turns and the player's **AUTO** command.
 
 ---
 
@@ -110,6 +110,15 @@ Every plan ends **facing the closest foe** (0.20), the one most likely to strike
 
 A foe that can't be reached at all (on a cliff top) falls back to straight-line distance plus 100, so it is only chosen when nothing else is reachable.
 
+### AUTO holds back (0.45)
+
+The squad's AUTO plans with `holdBack`:
+
+- **On the walk,** a spot where the unit would likely fall counts in full, even for a healthy unit. Without `holdBack`, a healthy unit with nothing in reach weighs danger at a tenth on the walk. So a deadly tile cost about the same as three tiles of progress, and AUTO walked lone squad members into the enemy to be cut down before their next turn. In the balance sim, Sable did this first in every Chapter IV battle.
+- **"Likely fall"** means the average threat, times `LETHAL_MARGIN` (1.3), reaches the unit's HP. The threat map weighs each blow by its hit chance and leaves out crits and blows from behind, so a spot where the average is 97% of the unit's HP almost always kills.
+
+Enemies don't use `holdBack`: their caution stays as the difficulty sets it, and they keep pressing forward.
+
 
 ---
 
@@ -131,6 +140,7 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | Walks out of the area a foe's grand summon is about to land on; a veteran Summoner calls a grand summon on a crowd; never raises past the cap | `tests/summons.test.ts` |
 | Threat map: marks a foe's reach, ignores sleepers, spares foes about to fall; a hurt archer shoots from out of reach (light and full caution); light caution leaves a healthy unit's plan unchanged | `tests/smarter-enemies.test.ts` |
 | Drinks a Potion when hurt with nothing to hit, keeps it when healthy; a Phoenix Feather respects the raise cap; salvage stops at the stack limit | `tests/smarter-enemies.test.ts` |
+| AUTO (`holdBack`) won't walk a healthy unit into a deadly spot with nothing to hit; without it, it walks on | `tests/hold-back.test.ts` |
 
 ---
 
@@ -156,6 +166,6 @@ A foe that can't be reached at all (on a cliff top) falls back to straight-line 
 | Raises the fallen whenever it can (0.16) | A revive scores 110 + 2 × the fallen unit's level, about the same as a likely kill, so a healer with MP nearly always does it | Weigh the fallen unit's job and how exposed the tile is |
 | AUTO never uses your items (0.31) | Enemies use their pouches, but AUTO won't spend the squad's supplies | An opt-in setting |
 | Faces the closest foe, not the most dangerous one (0.20) | An archer two tiles further away may still get the back | Weigh each foe's damage, not just distance |
-| The threat map is an estimate (0.31) | It ignores heights, facing and that foes rarely all converge on one unit | Count only the two strongest threats, or simulate their turns |
+| The threat map is an estimate (0.31) | It ignores heights, facing and that foes rarely all converge on one unit. For AUTO a 1.3 margin covers crits and back attacks (0.45) | Count only the two strongest threats, or simulate their turns |
 
 These are tracked on the [roadmap](ROADMAP.md).

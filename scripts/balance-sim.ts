@@ -13,6 +13,8 @@
  * as absolute difficulty.
  *
  * The dice are seeded (SEED=n, default 1), so the same command gives the same numbers.
+ *
+ * Comparing jobs (0.45.0): TOBIN_JOB=<job> FULLKIT=1 puts Tobin in that job, knowing all its actions.
  */
 import { BattleGrid } from '../src/core/Grid';
 import { JobSystem } from '../src/core/JobSystem';
@@ -44,7 +46,7 @@ function squad(level: number, bria: boolean, sable = false, kestrel = false): Un
   const s = [
     JobSystem.createUnit('p1', 'Rowan', 'player', 'squire', 0, 0, 'N', level),
     JobSystem.createUnit('p2', 'Maren', 'player', 'knight', 0, 0, 'N', level),
-    JobSystem.createUnit('p3', 'Tobin', 'player', process.env.GUNNER === '1' ? 'gunner' : 'archer', 0, 0, 'N', level), // GUNNER=1: Tobin as a Gunner (0.36.0)
+    JobSystem.createUnit('p3', 'Tobin', 'player', process.env.TOBIN_JOB || (process.env.GUNNER === '1' ? 'gunner' : 'archer'), 0, 0, 'N', level), // GUNNER=1: Tobin as a Gunner (0.36.0); TOBIN_JOB=<job> for any job (0.45.0)
     JobSystem.createUnit('p4', 'Corvin', 'player', 'dragoon', 0, 0, 'N', level)
   ];
   JobSystem.setSecondarySkillset(s[0], 'knight'); s[0].unlockedAbilities['kn_rend_armor'] = true;
@@ -93,7 +95,8 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     const plan = planTurn(u, units, grid, {
       noRevive: foe && enemyRaises >= DIFFICULTIES[DIFF].raiseCap,
       caution: OLD_AI ? false : foe ? (CAUTION === 'both' || CAUTION === 'enemy' ? enemyCaution(DIFF) : false) : (CAUTION === 'both' || CAUTION === 'player' ? 'full' : false),
-      pouch: foe ? u.pouch : undefined
+      pouch: foe ? u.pouch : undefined,
+      holdBack: !foe // the squad on AUTO, as in the game
     });
     if ((plan.ability?.revive || plan.ability?.rebirth) && foe) enemyRaises++;
     return { moveTo: plan.moveTo, ability: plan.ability, target: plan.targetTile, facing: plan.facing };

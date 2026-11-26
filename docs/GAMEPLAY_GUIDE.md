@@ -167,7 +167,7 @@ flowchart LR
 | 🎒 beside a pin | Wenna the Pedlar, the travelling merchant, is there |
 | ⛵ harbour | Ships between Emberwick Harbor and the Anchorage on the Far Shore, once Chapter VI is won. The Anchorage also trades (0.35) |
 
-* **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough.
+* **The branch is a march.** After Chapter I both the Mire and the Battlement are open. Each shows its orders and the gear it brings. Marching down one closes the other for this playthrough. The Mire is the harder road (its orders say so): bog that slows you, poison, and wisps that put you to sleep. Bring Remedies.
 * **Side battles** are for gil, EXP and JP, and for practice when the story gets hard. They never move the story on.
 
   | Place | Opens | Enemies | Goal | Trophy (first win) |

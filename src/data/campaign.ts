@@ -20,7 +20,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     ],
     choices: [
       {
-        text: 'Pursue the fleeing sorcerer into the Gloomy Mire!',
+        text: 'Pursue the fleeing sorcerer into the Gloomy Mire! The harder road: bog, poison, and lights that put you to sleep.',
         nextChapterId: 'chapter_2a',
         rewardText: 'Armory: Ring of Arcana & Twin Shadow Daggers',
         rewardItemIds: ['mage_ring', 'assassin_daggers']
@@ -72,8 +72,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     ],
     enemyRoster: [
       { name: 'Arch-Warlock', jobId: 'time_mage', level: 4, x: 2, z: 0, isBoss: true },
-      { name: 'Bog Poisoner', jobId: 'black_mage', level: 4, x: 3, z: 1 },
-      { name: 'Swamp Shinobi', jobId: 'ninja', level: 4, x: 7, z: 4 },
+      { name: 'Bog Poisoner', jobId: 'black_mage', level: 3, x: 3, z: 1 },
+      { name: 'Swamp Shinobi', jobId: 'ninja', level: 3, x: 7, z: 4 },
       { name: 'Mire Skirmisher', jobId: 'ninja', level: 4, x: 12, z: 2 },
       { name: 'Bog Ooze', jobId: 'ooze', level: 4, x: 9, z: 2 },
       { name: 'Marsh Wisp', jobId: 'wisp', level: 3, x: 6, z: 7 }
@@ -225,7 +225,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { name: 'Tower Acolyte', jobId: 'white_mage', level: 6, x: 9, z: 1 },
       { name: 'Tide Augur', jobId: 'oracle', level: 6, x: 5, z: 3 },
       { name: 'Greywatch Sentinel', jobId: 'knight', level: 6, x: 7, z: 5 },
-      { name: 'Storm Wyvern', jobId: 'wyvern', level: 6, x: 10, z: 4 },
+      { name: 'Storm Wyvern', jobId: 'wyvern', level: 5, x: 10, z: 4 },
       { name: 'Cliff Basilisk', jobId: 'basilisk', level: 6, x: 6, z: 1 }
     ]
   },
