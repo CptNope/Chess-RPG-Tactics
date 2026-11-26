@@ -6,21 +6,20 @@
  *   npm run balance                      # 30 battles per chapter at L3, L4, L5
  *   npm run balance -- 100 chapter_2b 3,4
  *
- * Actions go through the game's own resolver (core/Action.ts, 0.41.0): costs, signatures,
- * songs and dances, calls, reactions and steals happen as in the game. It's still a yardstick,
- * not the real game: no gear upgrades, no encores, no player cleverness. Compare numbers between
- * versions rather than reading them as absolute difficulty.
+ * Whole battles run in the game's engine (core/Battle.ts, 0.44.0): turn order and CT refunds,
+ * Poison and Regen, calls landing, encores, rounds and each chapter's objective; actions go
+ * through the game's resolver (core/Action.ts). It's still a yardstick, not the real game: no
+ * gear upgrades, no player cleverness. Compare numbers between versions rather than reading them
+ * as absolute difficulty.
  *
  * The dice are seeded (SEED=n, default 1), so the same command gives the same numbers.
  */
 import { BattleGrid } from '../src/core/Grid';
-import { TurnManager } from '../src/core/TurnManager';
 import { JobSystem } from '../src/core/JobSystem';
-import { runAction, ActionContext } from '../src/core/Action';
+import { Battle, Decide, runBattle } from '../src/core/Battle';
 import { seededRng } from '../src/core/Rng';
 import type { BattleRules } from '../src/core/Rules';
 import { planTurn } from '../src/core/EnemyAI';
-import { callDue } from '../src/core/Summons';
 import { DIFFICULTIES, enemyLevel, sanitizeDifficulty, scaleBoss } from '../src/core/Difficulty';
 
 /** DIFFICULTY=easy|normal|hard npm run balance */
@@ -81,38 +80,26 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
   const spawns = spawnsFor(map);
   sq.forEach((m, i) => JobSystem.resetForBattle(m, spawns[i % spawns.length].x, spawns[i % spawns.length].z));
   const units = [...sq, ...enemies];
-  const tm = new TurnManager(units);
   const squadPouch: Record<string, number> = {};
-  const ctx: ActionContext = {
-    units, grid, rng: seededRng(Math.floor(dice() * 4294967296)), rules: SIM_RULES,
+  // The whole battle runs in the engine (core/Battle.ts, 0.44.0): turn starts, calls, encores,
+  // rounds and the chapter's objective, as in the game
+  const b = new Battle({
+    units, grid, seed: Math.floor(dice() * 4294967296), rules: SIM_RULES, objective: ch.objective,
     pouchOf: (c) => (c.team === 'enemy' ? c.pouch : squadPouch)
-  };
+  });
   let enemyRaises = 0;
-  for (let turn = 0; turn < 400; turn++) {
-    if (!units.some((u) => !u.isDead && u.team === 'player')) return 'loss';
-    if (!units.some((u) => !u.isDead && u.team === 'enemy')) return 'win';
-    const r = tm.advanceToNextActiveTurn();
-    if (!r) return 'timeout';
-    const u = r.activeUnit;
-    if (u.isDead) { tm.endTurn(u); continue; }
-    // A grand summon called last turn lands before the unit acts (0.24.0)
-    const call = callDue(u);
-    if (call && call !== 'broken') runAction(ctx, u, call.ability, call.x, call.z, { called: true });
-    if (u.isDead) { tm.endTurn(u); continue; }
+  const decide: Decide = (_b, u) => {
     const foe = u.team === 'enemy';
     const plan = planTurn(u, units, grid, {
       noRevive: foe && enemyRaises >= DIFFICULTIES[DIFF].raiseCap,
       caution: OLD_AI ? false : foe ? (CAUTION === 'both' || CAUTION === 'enemy' ? enemyCaution(DIFF) : false) : (CAUTION === 'both' || CAUTION === 'player' ? 'full' : false),
       pouch: foe ? u.pouch : undefined
     });
-    if (plan.ability?.revive && u.team === 'enemy') enemyRaises++;
-    u.x = plan.moveTo.x; u.z = plan.moveTo.z; u.hasMoved = true;
-    if (plan.ability && plan.targetTile) runAction(ctx, u, plan.ability, plan.targetTile.x, plan.targetTile.z);
-    u.hasActed = true;
-    if (!u.isDead) u.facing = plan.facing;
-    tm.endTurn(u);
-  }
-  return 'timeout';
+    if ((plan.ability?.revive || plan.ability?.rebirth) && foe) enemyRaises++;
+    return { moveTo: plan.moveTo, ability: plan.ability, target: plan.targetTile, facing: plan.facing };
+  };
+  const { outcome } = runBattle(b, decide);
+  return !outcome ? 'timeout' : outcome.winner === 'player' ? 'win' : 'loss';
 }
 
 const N = Number(process.argv[2] || 30);

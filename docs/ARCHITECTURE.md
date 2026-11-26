@@ -48,6 +48,7 @@ flowchart TB
 | :--- | :--- | :--- | :--- |
 | **platform** | `src/platform.ts` | Where the game runs (itch.io, embedded, web): store links, share-link base, fullscreen, page-scroll guard | — |
 | **TacticsGame** | `src/main.ts` | Owns all state; turn flow, action pipeline, input dispatch, spoils, chapters, Trials, save/load | everything |
+| **Battle** | `src/core/Battle.ts` | The turn loop (0.44): `Battle` (`nextTurn`, `check`, `apply`, an event log), `runBattle` / `replay`, the one victory check `battleOutcome`, and `noteTurn` for rounds. The balance sim plays whole battles with it; the game asks it who has won | TurnManager, Action, Summons, Performance, Sides |
 | **Action** | `src/core/Action.ts` | Resolves an ability step by step with no drawing or waiting: costs, the caster's facing, a call begun, one roll per target, JP and EXP under the rules (`resolveAction`, `runAction`, `victimsFor`, `forecastFor`). Shared by the game and the balance sim (0.41) | CombatEngine, JobSystem, EnemyAI, Sides, Rules |
 | **Sides** | `src/core/Sides.ts` | Friend or foe: `isFoe`, `isAlly`, `allianceOf` (a unit's alliance, else its team), `joinSide` (Tame), `sidesStanding` (0.41) | types |
 | **Rng** | `src/core/Rng.ts` | The seeded generator every battle rolls with, and new seeds (0.41) | — |
@@ -189,7 +190,7 @@ sequenceDiagram
     CE-->>P: hit, damage, crit, status, reaction, enrage
     P-->>G: EXP / JP / level-ups for player units
     G->>TM: endTurn() — CT refund, statuses tick
-    G->>G: checkBattleStatus() → spoils / defeat / next turn
+    G->>G: checkBattleStatus() → battleOutcome() → spoils / defeat / next turn
 ```
 
 ---
@@ -463,6 +464,7 @@ src/
 │   ├── Performance.ts      Songs and dances that play again each turn
 │   ├── Summons.ts          Grand summons that land on the caller's next turn
 │   ├── Recruits.ts         The recruiting board, hiring and the party of six
+│   ├── Battle.ts           The turn loop, events, replays and who has won
 │   ├── Action.ts           Resolving an action step by step, shared with the balance sim
 │   ├── Sides.ts            Friend or foe (isFoe / isAlly), alliances
 │   ├── Rng.ts              The seeded dice every battle rolls with

@@ -207,10 +207,12 @@ The first two are worth doing even if online play never ships: the game gets rep
 - A `BattleRules` object (campaign rules today; the rule set above later).
 - Action resolution (`resolveAction`) moves into `src/core`, used by both the game and the balance sim.
 
-**Part 2 (later):**
-- The turn loop (turn start, end of turn, victory) moves into `src/core` too.
-- The engine emits events.
-- Whole-battle replay tests.
+**Part 2 (0.44, done, [ADR 0049](adr/0049-battle-engine-turn-loop.md)):**
+- The turn loop (turn start, end of turn, victory) lives in `core/Battle.ts`: `nextTurn()`, `check(intent)`, `apply(intent)`.
+- The engine writes every step to an event log.
+- A whole battle replays from its seed and intents, event for event.
+
+**Part 3 (with V1):** the game drives its turns from the engine's events instead of its own loop.
 
 ---
 
@@ -220,7 +222,7 @@ Groundwork comes first and ships as ordinary releases between the game's other w
 
 ```mermaid
 flowchart LR
-    G1["0.41<br/>Groundwork 1<br/>sides · seeded dice · rules · actions"] --> G2["Groundwork 2<br/>turn loop · events · replays"]
+    G1["0.41<br/>Groundwork 1<br/>sides · seeded dice · rules · actions"] --> G2["0.44<br/>Groundwork 2<br/>turn loop · events · replays"]
     G2 -.-> V1["V1<br/>Hot-seat versus<br/>2–4 on one device"]
     V1 --> V2["V2<br/>Team Builder · rule sets<br/>JP budget · codes"]
     V2 --> V3["V3<br/>Online duels<br/>Cloudflare room"]
@@ -231,8 +233,8 @@ flowchart LR
 | Step | Release | What ships | Size |
 | :---: | :--- | :--- | :---: |
 | **0.41** | **Groundwork 1** | `isFoe` / `isAlly`; a seeded RNG per battle; `BattleRules`; `resolveAction` in `src/core`, used by `main.ts` (which only presents) and by the balance sim. No visible change. **Test:** the same seed resolves an action the same way | M |
-| **G2** | **Groundwork 2** | Turn start (calls, encores, poison), end of turn and victory move to `src/core/Battle.ts`; `apply(intent) → events`; the AI can play any side. **Test:** a recorded battle replayed from its seed and intents gives the same events | L |
-| **V1** | **Hot-seat versus** | "Versus" on the title screen: 2–4 players on one device or controller, preset teams, preset rule sets. Side colours (ring + banner), "Player 2's turn" handover screen, every victory condition, AI seats. Two or three versus maps with corner zones | M |
+| **0.44** | **Groundwork 2** | Turn start (calls, encores, poison), end of turn and victory in `src/core/Battle.ts`; `apply(intent)` with `check`, and an event log; the balance sim on the engine. **Test:** a recorded battle replayed from its seed and intents gives the same events | L |
+| **V1** | **Hot-seat versus** | The game drives its turns from the engine's events (groundwork part 3). "Versus" on the title screen: 2–4 players on one device or controller, preset teams, preset rule sets. Side colours (ring + banner), "Player 2's turn" handover screen, every victory condition, AI seats. Two or three versus maps with corner zones | M |
 | **V2** | **Team Builder and rule sets** | Build teams to a budget; preset teams in the same format; export a campaign squad; the rule-set editor; team and rule codes to save and share; `validateTeam` and `validateRules` with tests for every rule | M |
 | **V3** | **Online duels** | `server/` folder: Worker + Room Durable Object (`wrangler`), deployed by a GitHub Action. Create/join by code, lobby, ready check, turn timer by alarm, rejoin by token, version check. Two players | L |
 | **V4** | **Up to four online** | Free-for-all, alliances and AI seats online; AUTO on timeout and disconnect; forfeits | M |

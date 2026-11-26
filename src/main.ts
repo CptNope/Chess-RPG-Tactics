@@ -25,6 +25,7 @@ import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleV
 import { CombatEngine, AttackResult } from './core/CombatEngine';
 import { ActionContext, ActionHit, forecastFor, resolveAction, victimsFor } from './core/Action';
 import { newSeed, seededRng } from './core/Rng';
+import { battleOutcome, noteTurn } from './core/Battle';
 import { CAMPAIGN_RULES } from './core/Rules';
 import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
@@ -2129,10 +2130,11 @@ class TacticsGame {
    * squad held out long enough.
    */
   private trackRound(unit: Unit): boolean {
-    const alive = this.units.filter((u) => !u.isDead);
-    if (alive.every((u) => this.roundActed.has(u.id))) {
-      this.round++;
-      this.roundActed.clear();
+    // The count lives in core/Battle.ts (0.44.0); this shows it
+    const state = { round: this.round, acted: this.roundActed };
+    const fresh = noteTurn(state, unit, this.units);
+    this.round = state.round;
+    if (fresh) {
       const obj = this.currentChapter.objective;
       if (obj?.type === 'survive') {
         const goal = obj.rounds || 6;
@@ -2141,28 +2143,19 @@ class TacticsGame {
         if (this.round === goal) this.ui.showBanner('FINAL ROUND!');
       }
     }
-    this.roundActed.add(unit.id);
     return false;
   }
 
   private checkBattleStatus(): boolean {
     if (this.battleOver) return true;
-    // A tamed beast fights on, but can't win the battle alone (0.28.0)
-    const playersAlive = this.units.some((u) => !u.isDead && u.team === 'player' && !u.tamed);
-    let enemiesAlive = this.units.some((u) => !u.isDead && u.team === 'enemy');
-    const obj = this.currentChapter.objective;
-    let winText = 'VICTORY! BATTLEFIELD SECURED';
-    if (playersAlive && obj?.type === 'boss' && this.units.some((u) => u.isBoss && u.team === 'enemy') && !this.units.some((u) => u.isBoss && u.team === 'enemy' && !u.isDead)) {
-      enemiesAlive = false;
-      winText = 'VICTORY! THE BOSS HAS FALLEN';
-      this.ui.addLogEntry('[OBJECTIVE] Their leader is down. The rest of the enemy flees!', 'system');
-    }
-    if (playersAlive && obj?.type === 'survive' && this.round > (obj.rounds || 6)) {
-      enemiesAlive = false;
-      winText = 'VICTORY! YOU HELD THE LINE';
-    }
+    // Who has won is decided in core/Battle.ts (0.44.0): a tamed beast can't win alone, a fallen
+    // boss sends the rest fleeing, holding out wins a survive battle
+    const outcome = battleOutcome(this.units, this.currentChapter.objective, this.round);
+    if (!outcome) return false;
+    const winText = outcome.reason === 'boss' ? 'VICTORY! THE BOSS HAS FALLEN' : outcome.reason === 'survive' ? 'VICTORY! YOU HELD THE LINE' : 'VICTORY! BATTLEFIELD SECURED';
+    if (outcome.reason === 'boss') this.ui.addLogEntry('[OBJECTIVE] Their leader is down. The rest of the enemy flees!', 'system');
 
-    if (!playersAlive) {
+    if (outcome.winner !== 'player') {
       this.battleOver = true;
       this.currentMode = 'menu';
       this.ui.toggleSubMenu(false);
@@ -2174,20 +2167,17 @@ class TacticsGame {
       later(() => this.showDefeat(), 1600);
       return true;
     }
-    if (!enemiesAlive) {
-      this.battleOver = true;
-      this.currentMode = 'menu';
-      this.ui.toggleSubMenu(false);
-      this.tutor.hide();
-      this.moveUndo = null;
-      Music.playTrack('victory');
-      SoundFX.playVictoryFanfare();
-      this.ui.showBanner(winText);
-      this.ui.addLogEntry('=== VICTORY! All hostiles defeated. ===', 'system');
-      later(() => this.showSpoils(), 1500);
-      return true;
-    }
-    return false;
+    this.battleOver = true;
+    this.currentMode = 'menu';
+    this.ui.toggleSubMenu(false);
+    this.tutor.hide();
+    this.moveUndo = null;
+    Music.playTrack('victory');
+    SoundFX.playVictoryFanfare();
+    this.ui.showBanner(winText);
+    this.ui.addLogEntry('=== VICTORY! All hostiles defeated. ===', 'system');
+    later(() => this.showSpoils(), 1500);
+    return true;
   }
 
   private showDefeat(): void {

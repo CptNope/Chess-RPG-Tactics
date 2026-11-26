@@ -62,6 +62,7 @@ timeline
         0.41.0 : Battle-engine groundwork
         0.42.0 : Scenario chains
         0.43.0 : Recruit side stories
+        0.44.0 : Engine groundwork 2
 ```
 
 | Version | Theme | Highlights |
@@ -74,6 +75,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.44 | Engine groundwork 2 | No visible change: the turn loop and victory check in `core/Battle.ts`, events, whole-battle replays; the balance sim on the engine (and Chapter IV flagged) |
 | 0.43 | Recruit side stories | Bria, Sable and Kestrel each get a chapter at their home village: written scenes, a boss, foes at the squad's level, a relic each |
 | 0.42 | Scenario chains | Mini campaigns from Workshop scenarios: the Chains tab, play in order with progress kept, `#c=` links and chain files |
 | 0.41 | Battle-engine groundwork | No visible change: sides and alliances, one seeded RNG per battle, battle rules, and the action resolver moved into `src/core` and shared with the balance sim; the first step toward [online versus](ONLINE_VERSUS.md) |
@@ -114,7 +116,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.43.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.44.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -125,9 +127,8 @@ flowchart LR
         N3["Install the app on a phone;<br/>play offline"]
         N4["Devlog + store update"]
     end
-    subgraph NEXT["Next (0.44 –): groundwork, then jobs"]
+    subgraph NEXT["Next (0.45 –): balance, then jobs"]
         direction TB
-        X4["Engine groundwork 2:<br/>turn loop, events, replays"]
         X5["Balance pass on the 20 jobs,<br/>then new jobs"]
         X1["AI: simulate foe turns"]
     end
@@ -149,14 +150,13 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.44 –): groundwork, then jobs
+### Next (0.45 –): balance, then jobs
 
-New jobs are paused until the engine groundwork is done and the balance sim runs the whole battle with the game's rules: then a balance pass on the 20 jobs, then new ones.
+The engine groundwork is done (0.41, 0.44) and the balance sim now plays whole battles with the game's rules. Next is a balance pass on the 20 jobs and the chapters, then new jobs.
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **Engine groundwork, part 2** | Turn start, end of turn and victory move to `src/core`; the engine emits events; a whole battle replays from its seed and choices ([plan](ONLINE_VERSUS.md#5-releases)) | L |
-| **Balance pass, then new jobs** | With the sim playing the real turn loop (encores included), retune the 20 jobs; new jobs after that | M |
+| **Balance pass, then new jobs** | With the sim playing the real turn loop (encores, objectives, CT refunds), retune the chapters (Chapter IV first: see Known issues) and the 20 jobs; new jobs after that | M |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |
 
 ### Later (1.0+): breadth
@@ -196,7 +196,7 @@ quadrantChart
 | Area | Issue | Impact | Plan |
 | :--- | :--- | :---: | :--- |
 | Progression | Master takes 1,900 lifetime JP in one job (about 20 battles in it), so signatures are a late-game reward; whether that pace feels right needs a hand play-through | Low | Now (play it by hand) |
-| Balance | The balance sim doesn't play encores, so Bards and Dancers (Trials only, on the enemy side) count for less there than in play | Low | Engine groundwork part 2 (the turn loop moves to `src/core`) |
+| Balance | Since the sim plays the game's CT refunds (0.44), Chapter IV is far lower than before: 9% at squad level 7 on Normal (was 51%). Enemies holding the piers get their turns sooner | Medium | Next: the balance pass |
 | Balance | Act II and the difficulty settings are tuned by simulation only (AI against AI, starter gear, no items) | Medium | Now (play it by hand) |
 | Balance | Chapter V is the lowest chapter in the simulation (under 15% at squad level 7–9 on Normal). The sim is pessimistic (no gear upgrades, no items), so a hand play-through decides whether it needs the Chapter III treatment | Medium | Now |
 | QA | Input verified only in Chromium with synthetic events | Medium | Now (device QA) |
