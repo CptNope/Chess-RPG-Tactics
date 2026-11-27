@@ -427,6 +427,11 @@ body, html {
   color: var(--mp-blue);
 }
 
+/* A Dark Knight's price is paid in HP (0.46.0) */
+.action-mp.hp-cost {
+  color: #f87171;
+}
+
 .action-desc {
   font-size: calc(13px * var(--ts));
   color: var(--text-muted);

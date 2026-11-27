@@ -765,17 +765,18 @@ export class UIManager {
       const btn = document.createElement('button');
       btn.className = 'action-item-btn';
 
-      const mpText = ability.mpCost > 0 ? `${ability.mpCost} MP` : ability.signature ? 'ONCE' : 'FREE';
+      // Dark Knight techniques show their price in HP (0.46.0)
+      const mpText = ability.hpCost ? `${JobSystem.hpCostFor(unit, ability)} HP` : ability.mpCost > 0 ? `${ability.mpCost} MP` : ability.signature ? 'ONCE' : 'FREE';
       if (ability.signature) btn.classList.add('signature');
       btn.innerHTML = `
         <div class="action-name-row">
           <span>${ability.signature ? '★ ' : ability.charge ? '✦ ' : ''}${ability.name}</span>
-          <span class="action-mp">${mpText}</span>
+          <span class="action-mp${ability.hpCost ? ' hp-cost' : ''}">${mpText}</span>
         </div>
         <div class="action-desc">${ability.signature ? `Master · once per battle · ${ability.centered ? `Around you · Area ${ability.aoe}` : `Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`}` : ability.centered ? `Around you · Area ${ability.aoe}` : ability.performance ? `${unit.performing === ability.id ? '♪ Playing · ' : ''}Around you · Area ${ability.aoe} · repeats ${encoreTurns(unit)} turns` : `${ability.charge ? 'Lands next turn · ' : ''}Rng: ${ability.range}${ability.aoe > 0 ? ` · Area ${ability.aoe}` : ''}`} | ${ability.description}</div>
       `;
 
-      btn.disabled = unit.currentMp < ability.mpCost;
+      btn.disabled = !JobSystem.canAfford(unit, ability);
       btn.addEventListener('click', () => {
         SoundFX.playMenuBlip();
         this.toggleSubMenu(false);

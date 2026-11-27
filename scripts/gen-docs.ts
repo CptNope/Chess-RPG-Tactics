@@ -49,7 +49,7 @@ function abilityRow(a: Ability): string {
     a.charge ? '**lands next turn**, full force over the area, +30 hit' : '',
     a.rebirth ? `raises the fallen at ${Math.round(a.rebirth * 100)}% HP` : ''
   ].filter(Boolean).join(', ');
-  return `| **${a.name}** \`${a.id}\` | ${kind} | ${a.jpCost} | ${isAction ? a.mpCost : '—'} | ${isAction ? a.range : '—'} | ${isAction ? a.heightTolerance : '—'} | ${isAction && a.aoe ? a.aoe : '—'} | ${isAction ? power : '—'} | ${isAction ? a.element : '—'} | ${extras || '—'} | ${a.description.replace(/\|/g, '/')} |`;
+  return `| **${a.name}** \`${a.id}\` | ${kind} | ${a.jpCost} | ${isAction ? (a.hpCost ? `${Math.round(a.hpCost * 100)}% HP` : a.mpCost) : '—'} | ${isAction ? a.range : '—'} | ${isAction ? a.heightTolerance : '—'} | ${isAction && a.aoe ? a.aoe : '—'} | ${isAction ? power : '—'} | ${isAction ? a.element : '—'} | ${extras || '—'} | ${a.description.replace(/\|/g, '/')} |`;
 }
 
 w('# Content Reference');
@@ -145,7 +145,7 @@ for (const j of jobs) {
   w();
   w(`*${j.description}*`);
   w();
-  w('| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |');
+  w('| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |');
   w('| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |');
   for (const a of j.abilities) w(abilityRow(a));
   w();
@@ -168,7 +168,7 @@ for (const j of monsters) {
   w();
   w(`*${j.description}*`);
   w();
-  w('| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |');
+  w('| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |');
   w('| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |');
   for (const a of j.abilities) w(abilityRow(a));
   w();

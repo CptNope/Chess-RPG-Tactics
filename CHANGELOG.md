@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.46.0] - 2026-11-27
+
+### Added
+- **The Dark Knight**, a new advanced job (Knight Lv 3 and Black Mage Lv 2). Its techniques cost HP instead of MP, so Silence can't stop them, and they never take its last HP.
+  - **Shadow Blade:** a heavy dark blow. **Soul Rend:** dark damage that drinks back 60% of it. **Dread:** roots a foe up to 3 tiles away (Immobilize). **Night Ring:** darkness bursts out at every foe next to it. **Black Oath:** Haste on itself.
+  - **Vengeance** (reaction): below half HP, strikes back at anyone who attacks it from next to it. **Blood Pact** (support): HP prices are halved.
+  - Master signature: **Eclipse**, a wide dark blast that drinks back a quarter of what it deals.
+  - Sword or spear, heavy armor, no shield. A Dark Knight may turn up among the recruits from Chapter IV on, and it has a Trial.
+- The action menu shows a technique's price in HP, in red; one that would cost too much is greyed out. Battle text shows the HP paid.
+
+### Developer
+- `Ability.hpCost`, `JobSystem.hpCostFor` / `canAfford`, `hpPaid` on the action's start step; the AI weighs the price. ADR 0051.
+- `SWAP=<id>:<job>` in the balance sim compares jobs in a slot doing the same work (melee with melee).
+- 6 new tests (333 total).
+
 ## [0.45.0] - 2026-11-25
 
 ### Changed
