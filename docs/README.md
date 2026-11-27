@@ -94,6 +94,7 @@ timeline
     0.43.0 : 0048 Recruit side stories
     0.44.0 : 0049 Battle-engine turn loop
     0.45.0 : 0050 Balance pass, AUTO holds back
+    0.46.0 : 0051 The Dark Knight, HP costs
 ```
 
 | # | Decision | Release |
