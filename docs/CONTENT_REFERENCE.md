@@ -8,7 +8,7 @@ Every number here is read straight from the game data, so it always matches what
 
 ## Jobs
 
-20 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+21 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -32,14 +32,15 @@ Every number here is read straight from the game data, so it always matches what
 | **Dancer** `dancer` | Performer | 4 | 3 | 0.90× | 0.90× | 1.00× | 0.85× | 1.15× | 6 |
 | **Beast Tamer** `tamer` | Tamer | 4 | 3 | 1.05× | 0.80× | 1.05× | 0.80× | 1.00× | 6 |
 | **Gunner** `gunner` | Marksman | 3 | 3 | 0.95× | 0.75× | 1.10× | 0.70× | 1.05× | 7 |
+| **Dark Knight** `dark_knight` | Bruiser | 3 | 2 | 1.15× | 0.60× | 1.20× | 0.85× | 0.95× | 7 |
 
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer", "Beast Tamer", "Gunner"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer", "Beast Tamer", "Gunner", "Dark Knight"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1, 1.05, 1.1]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85, 0.8, 0.7]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1, 1.05, 1.1, 1.2]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85, 0.8, 0.7, 0.85]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
@@ -74,6 +75,7 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 | **Dancer** | Thief Lv 2 + Monk Lv 2 |
 | **Beast Tamer** | Archer Lv 2 + Chemist Lv 2 |
 | **Gunner** | Archer Lv 3 + Thief Lv 2 |
+| **Dark Knight** | Knight Lv 3 + Black Mage Lv 2 |
 
 Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
 
@@ -103,6 +105,7 @@ Each job uses its own weapon types (0.30.0). Shields, heavy armor and helms, and
 | **Dancer** | Daggers, Whips |
 | **Beast Tamer** | Whips, Daggers, Bows |
 | **Gunner** | Guns, Daggers |
+| **Dark Knight** | Swords, Spears · Heavy armor & helms |
 
 ## Job mastery
 
@@ -130,16 +133,17 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 | **Dancer** | +1 Speed | +2 Speed | **Last Dance** `sig_last_dance` | One dance nobody forgets: damage (ATK) and Slow to every foe within 2 tiles of you. | around the user, area 2 |
 | **Beast Tamer** | +10 HP | +25 HP | **Stampede** `sig_stampede` | One call and the wild answers: a charging herd tramples a wide area up to 4 tiles away. Heavy damage (ATK) and Immobilize; beasts take more. | range 4, area 2 |
 | **Gunner** | +1 ATK | +2 ATK | **Thunder Volley** `sig_thunder_volley` | Every barrel at once: a roaring volley up to 7 tiles away, at any height. Heavy damage (ATK) to every foe within 1 tile of the aim, and Breach. | range 7, area 1 |
+| **Dark Knight** | +12 HP | +30 HP | **Eclipse** `sig_eclipse` | Tears a hole in the light, up to 4 tiles away: heavy dark damage (ATK) to every foe within 2 tiles of the aim, and the knight drinks back a quarter of it. Costs no HP. | range 4, area 2 |
 
 ## Abilities
 
-121 learnable abilities: 76 actions, 20 reactions, 16 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+128 learnable abilities: 81 actions, 21 reactions, 17 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 76
-  "Reaction" : 20
-  "Support" : 16
+  "Action" : 81
+  "Reaction" : 21
+  "Support" : 17
   "Movement" : 9
 ```
 
@@ -147,7 +151,7 @@ pie showData title Abilities by slot type
 
 *The foundational warrior discipline. Balanced and versatile with basic survival techniques.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Throw Stone** `sq_stone` | Action | 50 | 0 | 4 | 2 | — | 0.6 | physical | — | Hurls a loose rock at a distant target to chip damage. |
 | **Focus** `sq_focus` | Action | 100 | 0 | 0 | 0 | — | — | physical | inflicts **focus**, self only | Channel concentration: physical damage +25% for 4 turns. |
@@ -160,7 +164,7 @@ pie showData title Abilities by slot type
 
 *Heavily armored protector proficient in breaking opponent equipment and holding defensive lines.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Rend Armor** `kn_rend_armor` | Action | 150 | 5 | 1 | 1.5 | — | 1.1 | physical | inflicts **breach** | Shatters foe armor plating: Breach (+25% physical damage taken) for 3 turns. |
 | **Shield Bash** `kn_shield_bash` | Action | 180 | 8 | 1 | 1.5 | — | 1.3 | physical | — | Slams shield into target, knocking them back and dealing physical shock. |
@@ -172,7 +176,7 @@ pie showData title Abilities by slot type
 
 *Long-range marksman capitalizing on elevation advantages and calculated trick shots.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Aim +2** `ar_aim` | Action | 100 | 0 | 5 | 3 | — | 1.4 | physical | — | Takes extra time to line up shot for devastating critical puncture. |
 | **Leg Shot** `ar_leg_shot` | Action | 160 | 6 | 4 | 2.5 | — | 0.9 | physical | inflicts **immobilize** | Pinpoints tendon to immobilize enemy movement for 2 turns. |
@@ -184,7 +188,7 @@ pie showData title Abilities by slot type
 
 *Master of destructive elemental incantations spanning fire, frost, and lightning.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Fire** `bm_fire` | Action | 80 | 10 | 4 | 2 | 1 | 1.3 | fire | — | Engulfs target tile and surrounding foes in searing flame. |
 | **Blizzard** `bm_blizzard` | Action | 80 | 10 | 4 | 2 | 1 | 1.3 | ice | — | Summons chilling shards of ice to impale enemy formation. |
@@ -198,7 +202,7 @@ pie showData title Abilities by slot type
 
 *Devoted healer using sanctified incantations to mend wounds, cure status, and protect allies.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Cure** `wm_cure` | Action | 70 | 8 | 4 | 2 | — | Heal 1.4 | holy | — | Restores health to an injured ally with warm holy light. |
 | **Protect** `wm_protect` | Action | 120 | 12 | 3 | 2 | — | — | holy | inflicts **protect** | Erects an arcane barrier, softening physical blows by 30% for 3 turns. |
@@ -213,7 +217,7 @@ pie showData title Abilities by slot type
 
 *Skyward knight wielding polearms. Masters of crushing vertical plunge attacks and draconic arts.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Dragon Plunge** `dr_jump` | Action | 120 | 6 | 3 | 4 | — | 1.6 | physical | — | Leaps high into the skies and crashes down on target with crushing kinetic force. |
 | **Dragon Breath** `dr_fire_breath` | Action | 180 | 14 | 2 | 2 | 1 | 1.3 | fire | — | Channels dragon wyrm spirit to spew cones of searing fire. |
@@ -224,7 +228,7 @@ pie showData title Abilities by slot type
 
 *Lethal shadow operative boasting immense speed, evasion, shuriken throwing, and dual-wielding.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Throw Shuriken** `ni_shuriken` | Action | 100 | 0 | 4 | 2.5 | — | 1.1 | physical | — | Flicks sharp four-pointed steel stars across distance to lacerate opponents. |
 | **Reflexes / Vanish** `ni_shadow_clone` | Reaction | 220 | — | — | — | — | — | — | — | Splits into smoke decoys upon being targeted, granting 40% evasion against attacks. |
@@ -236,7 +240,7 @@ pie showData title Abilities by slot type
 
 *Terramancer who draws power from the ground underfoot. The same spell becomes fire, ice or venom depending on where they stand.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Elemental** `geo_elemental` | Action | 0 | 0 | 3 | 2.5 | — | 1.15 | physical | changes with terrain | Channels the terrain you stand on: grass = Hell Ivy (immobilize), stone = Rockslide, dirt = Sandstorm (slow), water = Torrent (ice), swamp = Quicksand (poison), wood = Wildfire (fire). |
 | **Earth Slash** `geo_earth_slash` | Action | 160 | 8 | 2 | 2 | 1 | 1.1 | physical | — | Splits the ground in a shockwave that strikes the target and every foe beside it. |
@@ -248,7 +252,7 @@ pie showData title Abilities by slot type
 
 *Chronomancer manipulating space-time fabric to accelerate allies, slow foes, and bend gravity.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Haste** `tm_haste` | Action | 120 | 12 | 4 | 2 | — | — | time | inflicts **haste** | Accelerates personal time flux, boosting Speed by +50% for 3 turns. |
 | **Slow** `tm_slow` | Action | 120 | 12 | 4 | 2 | — | — | time | inflicts **slow** | Weaves temporal drag around foe, cutting their Speed by 33% for 3 turns. |
@@ -261,7 +265,7 @@ pie showData title Abilities by slot type
 
 *Field medic and bomb-maker. Patches allies up for free, burns armour with acid and blinds foes with smoke, and makes every supply go further.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Salve** `ch_salve` | Action | 60 | 0 | 3 | 2 | — | Heal 0.9 | physical | scales with ATK | Throws a herbal salve to an ally up to 3 tiles away: heals HP (from ATK). Free. |
 | **Purge** `ch_purge` | Action | 90 | 4 | 3 | 2 | — | — | physical | cleanses ailments | A bitter tonic: lifts every ailment from an ally up to 3 tiles away. |
@@ -274,7 +278,7 @@ pie showData title Abilities by slot type
 
 *Bare-knuckle martial artist. Hits hard up close, throws chi at range, and heals the party without spending MP.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Aura Wave** `mo_aura_wave` | Action | 60 | 0 | 3 | 2 | — | 0.85 | physical | — | Throws a blast of chi at a foe up to 3 tiles away. |
 | **Chakra** `mo_chakra` | Action | 150 | 0 | 0 | 0 | 1 | Heal 0.7 | physical | cleanses ailments, scales with ATK | Breath and focus: you and adjacent allies recover HP (from ATK) and shake off ailments. Free. |
@@ -287,7 +291,7 @@ pie showData title Abilities by slot type
 
 *Fast and slippery. Steals gear straight off enemies, blinds and hobbles them, and strikes hardest from behind.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Steal** `th_steal` | Action | 50 | 0 | 1 | 1.5 | — | — | physical | steals gear | Lifts a piece of gear off an adjacent foe and adds it to your armory. Easier from the side or behind. |
 | **Sand Toss** `th_sand_toss` | Action | 120 | 0 | 2 | 2 | — | 0.35 | physical | inflicts **blind** | A handful of grit in the eyes: light damage and Blind (-40% physical accuracy). |
@@ -300,7 +304,7 @@ pie showData title Abilities by slot type
 
 *Calls elemental spirits that strike or mend a wide area. The biggest spells in the game, paid for with a deep MP pool.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Salamander** `su_salamander` | Action | 120 | 24 | 4 | 3 | 2 | 1 | fire | — | Calls a fire spirit that scorches a wide area (radius 2). |
 | **Undine** `su_undine` | Action | 160 | 24 | 4 | 3 | 2 | 1 | ice | — | Calls a water spirit whose freezing tide floods a wide area (radius 2). |
@@ -317,7 +321,7 @@ pie showData title Abilities by slot type
 
 *Reader of omens who wins fights before they start: blinds, silences and lulls foes to sleep, and drains their life.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Dim Sight** `or_dim_sight` | Action | 60 | 6 | 4 | 2.5 | — | — | dark | inflicts **blind** | Clouds the eyes: Blind (-40% physical accuracy) for 3 turns. |
 | **Hush** `or_hush` | Action | 120 | 8 | 4 | 2.5 | — | — | dark | inflicts **silence** | Steals the voice: Silence (no MP abilities) for 3 turns. |
@@ -330,7 +334,7 @@ pie showData title Abilities by slot type
 
 *An advanced job. A knight sworn to the light: strikes with holy steel, heals by touch and wards the line against spells.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Holy Blade** `pa_holy_blade` | Action | 80 | 6 | 1 | 1.5 | — | 1.05 | holy | scales with ATK | A consecrated strike: holy damage from ATK that Protect and facing do not change. |
 | **Lay on Hands** `pa_lay_on_hands` | Action | 120 | 8 | 1 | 1.5 | — | Heal 1.3 | holy | scales with ATK | Heals an adjacent ally (or yourself) with strength of arm rather than magic. |
@@ -343,7 +347,7 @@ pie showData title Abilities by slot type
 
 *An advanced job. A duelist who channels spells through a sword: elemental strikes that hit with weapon strength.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Flame Edge** `sb_flame_edge` | Action | 60 | 6 | 1 | 1.5 | — | 1.1 | fire | scales with ATK | Wreathes the blade in fire: fire damage from ATK. |
 | **Frost Edge** `sb_frost_edge` | Action | 150 | 8 | 1 | 1.5 | — | 0.9 | ice | inflicts **slow**, scales with ATK | A freezing cut: ice damage from ATK, and Slow. |
@@ -355,7 +359,7 @@ pie showData title Abilities by slot type
 
 *A travelling singer whose songs carry over the din of battle. Holds a spot and keeps the squad hasted, healed and fierce for as long as the song lasts.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Battle Hymn** `bd_battle_hymn` | Action | 80 | 6 | 0 | 2 | 2 | — | holy | inflicts **focus** | Song: you and allies within 2 tiles gain Focus (+25% physical damage). Plays again at the start of your next 3 turns while you hold your ground. |
 | **Mending Air** `bd_mending_air` | Action | 140 | 10 | 0 | 2 | 2 | Heal 0.45 | holy | — | Song: heals you and allies within 2 tiles (from MAG), and again at the start of each of your next 3 turns while you hold your ground. |
@@ -368,7 +372,7 @@ pie showData title Abilities by slot type
 
 *A blade-dancer in flowing silks. Dances in the thick of the enemy, cutting, blinding and slowing everyone around her each turn she keeps dancing.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Blade Waltz** `dn_blade_waltz` | Action | 90 | 0 | 0 | 2 | 2 | 0.45 | physical | scales with ATK | Dance: every foe within 2 tiles takes a light cut (ATK), and again at the start of each of your next 3 turns while you hold your ground. Free. |
 | **Feint** `dn_feint` | Action | 120 | 0 | 1 | 1.5 | — | 1 | physical | inflicts **breach** | A false step, then a real cut: damage to an adjacent foe and Breach (+25% physical damage taken). |
@@ -381,7 +385,7 @@ pie showData title Abilities by slot type
 
 *An advanced job. A drover of wild things: wears a beast down, then wins it over. A tamed monster fights for you, and joins your squad if it lives to see the victory.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Tame** `ta_tame` | Action | 80 | 8 | 2 | 2 | — | — | physical | — | Win over a monster up to 2 tiles away (never a boss). The more hurt it is, the likelier it gives in; easier asleep. It fights for you, and joins your squad if it lives to see the victory. |
 | **Snare** `ta_snare` | Action | 110 | 0 | 3 | 3 | — | 0.6 | physical | inflicts **immobilize** | Throws a weighted net up to 3 tiles away: light damage (ATK) and Immobilize. Beasts get tangled more often. |
@@ -394,7 +398,7 @@ pie showData title Abilities by slot type
 
 *An advanced job. A marksman with powder and shot: a gun reaches any tile in range however high or low it is, and hits just as hard uphill as down. Weaker at close quarters.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Steady Shot** `gu_steady_shot` | Action | 80 | 0 | 5 | 99 | — | 1.4 | physical | — | Braces, breathes out and fires: heavy damage (ATK) up to 5 tiles away, at any height. |
 | **Hobble Shot** `gu_hobble_shot` | Action | 120 | 6 | 5 | 99 | — | 0.8 | physical | inflicts **slow** | A low shot at the knee, up to 5 tiles away at any height: light damage (ATK) and Slow. |
@@ -403,6 +407,20 @@ pie showData title Abilities by slot type
 | **Scattershot** `gu_scattershot` | Action | 260 | 12 | 4 | 99 | 1 | 0.85 | physical | — | A blast of grapeshot up to 4 tiles away: damage (ATK) to everyone within 1 tile of the aim, friend or foe. |
 | **Return Fire** `gu_return_fire` | Reaction | 220 | — | — | — | — | — | — | — | When struck from 2 or more tiles away with a gun in hand, 50% chance to shoot back if the attacker is in range. |
 | **Long Barrel** `gu_long_barrel` | Support | 260 | — | — | — | — | — | — | — | A longer barrel and a steadier eye: a gun's Attack reaches 2 tiles further. |
+
+### Dark Knight
+
+*An advanced job. A knight who took up the black arts and pays for them in blood: its techniques cost HP, not MP, so silence can't stop them. Strikes hard with dark steel, drinks life back, and is most dangerous when hurt.*
+
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Shadow Blade** `dk_shadow_blade` | Action | 80 | 6% HP | 1 | 1.5 | — | 1.5 | dark | scales with ATK | Pays 6% of max HP: a blow wreathed in darkness, heavy dark damage (ATK). |
+| **Soul Rend** `dk_soul_rend` | Action | 140 | 5% HP | 1 | 1.5 | — | 1 | dark | drains 60%, scales with ATK | Pays 5% of max HP: tears at the target's spirit for dark damage (ATK), and drinks back 60% of it. |
+| **Dread** `dk_dread` | Action | 180 | 5% HP | 3 | 3 | — | — | dark | inflicts **immobilize** | Pays 5% of max HP: a stare full of the dark, up to 3 tiles away. The target is rooted to the spot (Immobilize). |
+| **Night Ring** `dk_night_ring` | Action | 240 | 10% HP | 0 | 1.5 | 1 | 1.1 | dark | scales with ATK | Pays 10% of max HP: darkness bursts out from the knight, dealing dark damage (ATK) to every foe within 1 tile. |
+| **Black Oath** `dk_black_oath` | Action | 300 | 12% HP | 0 | 0 | — | — | dark | inflicts **haste**, self only | Pays 12% of max HP to swear on the dark: Haste. |
+| **Vengeance** `dk_vengeance` | Reaction | 240 | — | — | — | — | — | — | — | Below half HP, strikes back at any adjacent attacker with a dark blow (ATK). |
+| **Blood Pact** `dk_blood_pact` | Support | 280 | — | — | — | — | — | — | — | Techniques that cost HP cost half as much. |
 
 ## Monsters
 
@@ -423,7 +441,7 @@ pie showData title Abilities by slot type
 
 *Hunts in packs. Fast on its feet, it closes in from the flank and bites hard; its howl spurs the pack on.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Bite** `mon_bite` | Action | 0 | 0 | 1 | 2 | — | 1.1 | physical | — | Sinks its fangs in. |
 | **Lunge** `mon_lunge` | Action | 0 | 0 | 2 | 2 | — | 0.9 | physical | — | Leaps at a foe two tiles away. |
@@ -433,7 +451,7 @@ pie showData title Abilities by slot type
 
 *A winged drake. It flies over walls and cliffs, swoops from above and stings with a venomous tail.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Tail Sting** `mon_tail_sting` | Action | 0 | 0 | 1 | 2 | — | 0.9 | physical | inflicts **poison** | A venomous sting: damage and Poison. |
 | **Swoop** `mon_swoop` | Action | 0 | 0 | 3 | 8 | — | 1.1 | physical | — | Dives on a foe up to 3 tiles away, from any height. |
@@ -443,7 +461,7 @@ pie showData title Abilities by slot type
 
 *A slow, sticky mass from the mire. It seals its own wounds, eats through armor and holds what it touches.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Acid Touch** `mon_acid` | Action | 0 | 0 | 1 | 2 | — | 0.85 | physical | inflicts **breach** | Burns through armor: damage and Breach. |
 | **Engulf** `mon_engulf` | Action | 0 | 0 | 1 | 2 | — | 0.7 | physical | inflicts **immobilize** | Swallows a foe's legs: damage and Immobilize. |
@@ -453,7 +471,7 @@ pie showData title Abilities by slot type
 
 *A drifting light that leads travellers astray. Frail, but it burns from afar, lulls the unwary to sleep and feeds on life.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Wisp Flame** `mon_wisp_flame` | Action | 0 | 4 | 4 | 3 | — | 1.25 | fire | — | Cold fire from up to 4 tiles away. |
 | **Lure** `mon_lure` | Action | 0 | 14 | 2 | 3 | — | — | dark | inflicts **sleep** | A dancing light that may lull a foe up to 2 tiles away to Sleep. Easy to resist. |
@@ -463,7 +481,7 @@ pie showData title Abilities by slot type
 
 *A hulking thing of living rock. Slow, but it shrugs off blows, pounds the ground around it and hurls boulders.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Smash** `mon_smash` | Action | 0 | 0 | 1 | 2 | — | 1.2 | physical | — | A crushing blow. |
 | **Ground Pound** `mon_ground_pound` | Action | 0 | 0 | 0 | 2 | 1 | 0.8 | physical | inflicts **immobilize** | Hits every foe next to it: damage and Immobilize. |
@@ -473,7 +491,7 @@ pie showData title Abilities by slot type
 
 *A long, low lizard in plates of olive scale. Slow to move, hard to hurt, and its stare roots you where you stand.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Tail Lash** `mon_tail_lash` | Action | 0 | 0 | 1 | 2 | — | 1.3 | physical | — | A heavy sweep of the tail. |
 | **Stone Gaze** `mon_stone_gaze` | Action | 0 | 8 | 4 | 3 | — | — | dark | inflicts **immobilize** | Its stare roots a foe up to 4 tiles away: Immobilize. |
@@ -483,7 +501,7 @@ pie showData title Abilities by slot type
 
 *A knight long dead, still on guard in a rusted helm. It feels no poison, never sleeps, and fights on with a notched sword and a dented shield.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Rusted Blade** `mon_rusted_blade` | Action | 0 | 0 | 1 | 2 | — | 1.3 | physical | — | A notched, rusty cut. |
 | **Shield Bash** `mon_shield_bash` | Action | 0 | 0 | 1 | 2 | — | 0.7 | physical | inflicts **slow** | Slams its shield into a foe: damage and Slow. |
@@ -493,7 +511,7 @@ pie showData title Abilities by slot type
 
 *A knot of briars that walked off on its roots. It mends itself, lashes with poisoned thorns and blinds with clouds of pollen.*
 
-| Ability | Slot | JP | MP | Range | Height | Area | Power | Element | Effect | Description |
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
 | :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **Thorn Lash** `mon_thorn_lash` | Action | 0 | 0 | 3 | 2 | — | 1 | physical | inflicts **poison** | A thorny vine lashes a foe up to 3 tiles away: damage and Poison. |
 | **Bramble Burst** `mon_bramble_burst` | Action | 0 | 6 | 0 | 2 | 1 | 0.75 | physical | inflicts **immobilize** | Briars burst out at every foe next to it: damage and Immobilize. |
@@ -544,22 +562,22 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 | Item | Type | Range | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :---: | :--- | :--- | ---: | :--- | :--- |
-| **Iron Broadsword** `iron_sword` | sword | 1 | ATTACK +4 | — | 100 | Starting gear | Squire, Knight, Geomancer, Paladin, Spellblade |
-| **Platinum Blade** `platinum_blade` | sword | 1 | ATTACK +9, HP +15 | — | 350 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
-| **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear | Knight, Dragoon |
+| **Iron Broadsword** `iron_sword` | sword | 1 | ATTACK +4 | — | 100 | Starting gear | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
+| **Platinum Blade** `platinum_blade` | sword | 1 | ATTACK +9, HP +15 | — | 350 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
+| **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear | Knight, Dragoon, Dark Knight |
 | **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | — | 250 | Starting gear | Archer, Bard, Beast Tamer |
 | **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire! The harder road: bog, poison, and lights that put you to sleep." · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
 | **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop | Archer, Bard, Beast Tamer |
-| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
 | **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear | Monk, Thief |
 | **Tiger Claws** `tiger_claws` | knuckles | 1 | ATTACK +10, SPEED +1 | — | 480 | Trials drop | Monk, Thief |
 | **Cutpurse Knife** `thief_knife` | dagger | 1 | ATTACK +5, SPEED +1, EVASION +5 | — | 140 | Starting gear | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
 | **Drover's Whip** `drovers_whip` | whip | 2 | ATTACK +5, SPEED +1 | — | 260 | Starting gear | Dancer, Beast Tamer |
 | **Moonfang** `moonfang` | dagger | 1 | ATTACK +9, SPEED +1, EVASION +12 | — | 520 | Choose "Ride for Emberwick Harbor and find out who is hunting the second seal!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
-| **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop | Knight, Dragoon |
-| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win CHAPTER VI · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
+| **Halberd** `halberd` | spear | 2 | ATTACK +11 | — | 460 | Trials drop | Knight, Dragoon, Dark Knight |
+| **Dawnbringer** `dawn_blade` | sword | 1 | ATTACK +10, HP +10 | holy +25% | 640 | Win CHAPTER VI · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
 | **Flintlock Pistol** `flintlock` | gun | 4 | ATTACK +7 | — | 300 | Starting gear of a job | Gunner |
 | **Long Musket** `long_musket` | gun | 6 | ATTACK +10, SPEED -1 | — | 540 | Starting gear of a job | Gunner |
 | **Thunderlock Rifle** `thunderlock` | gun | 6 | ATTACK +13, SPEED +1 | — | 880 | Starting gear of a job | Gunner |
@@ -568,11 +586,11 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
-| **Saltglass Blade** `saltglass_blade` | sword | 1 | ATTACK +12, MAGIC +4, SPEED +1 | ice +25% | 820 | Win CHAPTER VII | Squire, Knight, Geomancer, Paladin, Spellblade |
-| **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade |
-| **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only | Knight, Dragoon |
+| **Saltglass Blade** `saltglass_blade` | sword | 1 | ATTACK +12, MAGIC +4, SPEED +1 | ice +25% | 820 | Win CHAPTER VII | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
+| **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
+| **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only | Knight, Dragoon, Dark Knight |
 | **Fordwarden's Bow** `fordwarden_bow` | bow | 5 | ATTACK +8, SPEED +1, EVASION +5 | — | 520 | First win at Thornwood Ford | Archer, Bard, Beast Tamer |
-| **Glasswing Lance** `glasswing_lance` | spear | 2 | ATTACK +14, SPEED +1, JUMP +1 | — | 900 | First win at Glasswing Dunes | Knight, Dragoon |
+| **Glasswing Lance** `glasswing_lance` | spear | 2 | ATTACK +14, SPEED +1, JUMP +1 | — | 900 | First win at Glasswing Dunes | Knight, Dragoon, Dark Knight |
 
 ### Shield (5)
 
@@ -588,30 +606,30 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 | Item | Kind | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
-| **Steel Bascinet** `iron_helm` | heavy | HP +30 | — | 120 | Starting gear | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Steel Bascinet** `iron_helm` | heavy | HP +30 | — | 120 | Starting gear | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Pointed Wizard Hat** `wizard_hat` | light | HP +15, MP +25, MAGIC +3 | — | 150 | Starting gear | Anyone |
 | **Shadow Headband** `shinobi_band` | light | HP +20, SPEED +1, EVASION +5 | — | 180 | Starting gear | Anyone |
-| **Crystal Helm** `crystal_helm` | heavy | HP +30, MP +10, EVASION +3 | — | 380 | Win CHAPTER II-B · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Crystal Helm** `crystal_helm` | heavy | HP +30, MP +10, EVASION +3 | — | 380 | Win CHAPTER II-B · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Leather Cap** `leather_cap` | light | HP +15 | — | 60 | Starting gear | Anyone |
-| **Barbute** `barbute` | heavy | HP +45, ATTACK +2 | — | 340 | Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Barbute** `barbute` | heavy | HP +45, ATTACK +2 | — | 340 | Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Sage's Circlet** `sage_circlet` | light | HP +10, MP +15, MAGIC +5 | — | 360 | Trials drop | Anyone |
 | **Circlet of Clarity** `clarity_circlet` | light | HP +15, MP +10 | guards blind, silence, sleep | 440 | Trials drop | Anyone |
-| **Watchfire Helm** `watchfire_helm` | heavy | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Watchfire Helm** `watchfire_helm` | heavy | HP +40 | guards sleep, blind | 480 | First win at Watchfire Ridge | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 
 ### Body (14)
 
 | Item | Kind | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
-| **Reinforced Hauberk** `chainmail` | heavy | HP +50 | — | 180 | Starting gear | Squire, Knight, Dragoon, Geomancer, Paladin |
-| **Platinum Plate Mail** `platinum_armor` | heavy | HP +90, SPEED -1 | — | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Reinforced Hauberk** `chainmail` | heavy | HP +50 | — | 180 | Starting gear | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
+| **Platinum Plate Mail** `platinum_armor` | heavy | HP +90, SPEED -1 | — | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Astral Silk Robe** `silk_robe` | robe | HP +30, MP +45, MAGIC +5 | — | 260 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard |
 | **Nightwalker Tunic** `shinobi_garb` | light | HP +35, SPEED +1, EVASION +12 | — | 300 | Starting gear | Anyone |
-| **Wyrmscale Mail** `dragon_mail` | heavy | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win CHAPTER III · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Wyrmscale Mail** `dragon_mail` | heavy | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win CHAPTER III · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Leather Vest** `leather_vest` | light | HP +25, EVASION +3 | — | 90 | Starting gear | Anyone |
 | **Brawler's Gi** `brawler_gi` | light | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop | Anyone |
 | **Summoner's Robe** `summoner_robe` | robe | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard |
-| **Frostfang Mail** `frostfang_mail` | heavy | HP +90, ATTACK +2 | guards slow | 880 | Choose "Climb Frostfang Pass and break the Court's fort before the Pale Heir reaches the sea." | Squire, Knight, Dragoon, Geomancer, Paladin |
-| **Templar Mail** `templar_mail` | heavy | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin |
+| **Frostfang Mail** `frostfang_mail` | heavy | HP +90, ATTACK +2 | guards slow | 880 | Choose "Climb Frostfang Pass and break the Court's fort before the Pale Heir reaches the sea." | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
+| **Templar Mail** `templar_mail` | heavy | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Wolfpelt Mantle** `wolfpelt_mantle` | light | HP +25, EVASION +6, MOVE +1 | guards poison | 560 | First win at Howling Hollow | Anyone |
 | **Hide Barding** `hide_barding` | beast | HP +30, ATTACK +1 | — | 200 | Starting gear of a job | Tamed beasts |
 | **Chain Barding** `chain_barding` | beast | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job | Tamed beasts |
@@ -1020,19 +1038,19 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
 | 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Archer, Black Mage, Geomancer |
-| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Gunner, Summoner |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Chemist, Stonehide Brute, Archer, Oracle |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Gunner, Dancer, Bog Ooze |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Gunner, Bog Ooze, Time Weaver, Bard |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Dancer, Paladin, Spellblade, Dire Wolf, Geomancer |
-| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Spellblade, Dancer, Geomancer |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Gunner, Thief, Stonehide Brute, Dire Wolf |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Spellblade, Oracle, Bone Knight, Chemist, Marsh Wisp, Basilisk |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Geomancer, Summoner, Stonehide Brute, Basilisk, Ninja |
-| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Basilisk, Bone Knight, Ninja, Dire Wolf, Bog Ooze |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Thief, Paladin, Dragoon, Knight, Wyvern |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Spellblade, Gunner, Dire Wolf, White Mage, Wyvern, Time Weaver |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Thornling, Time Weaver, Monk, Marsh Wisp, Stonehide Brute, Basilisk |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Gunner, Ninja, Monk, Paladin, Stonehide Brute |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Dark Knight, Oracle |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Chemist, Stonehide Brute, Archer, Paladin |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Dark Knight, Gunner, Bog Ooze |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Dark Knight, Bog Ooze, Time Weaver, Dancer |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Gunner, Spellblade, Dire Wolf, Geomancer |
+| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Chemist, Gunner, Geomancer |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dark Knight, Summoner, Stonehide Brute, Dire Wolf |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Spellblade, Paladin, Bone Knight, Bard, Marsh Wisp, Basilisk |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Geomancer, Oracle, Stonehide Brute, Basilisk, Ninja |
+| 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Basilisk, Bone Knight, Time Weaver, Dire Wolf, Bog Ooze |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Summoner, Spellblade, Ninja, Knight, Dragoon, Wyvern |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Chemist, Gunner, Dire Wolf, White Mage, Wyvern, Time Weaver |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Thornling, Time Weaver, Thief, Marsh Wisp, Stonehide Brute, Basilisk |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dark Knight, Ninja, Monk, Spellblade, Stonehide Brute |
 
 *Floors continue forever; the table shows the first 15.*

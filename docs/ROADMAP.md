@@ -64,6 +64,7 @@ timeline
         0.43.0 : Recruit side stories
         0.44.0 : Engine groundwork 2
         0.45.0 : Balance pass
+        0.46.0 : The Dark Knight (21 jobs)
 ```
 
 | Version | Theme | Highlights |
@@ -76,6 +77,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.46 | The Dark Knight | A new advanced job (Knight 3 + Black Mage 2; 21 jobs): techniques paid in HP, which Silence can't stop; Shadow Blade, Soul Rend, Dread, Night Ring, Black Oath, Vengeance, Blood Pact, the Eclipse signature; a like-for-like job sweep (`SWAP`) |
 | 0.45 | Balance pass | AUTO holds back (Chapter IV's drop was AUTO walking lone units into deadly spots); Chapter V's wyvern and two Mire enemies down a level; a job sweep and why it doesn't rank jobs yet |
 | 0.44 | Engine groundwork 2 | No visible change: the turn loop and victory check in `core/Battle.ts`, events, whole-battle replays; the balance sim on the engine (and Chapter IV flagged) |
 | 0.43 | Recruit side stories | Bria, Sable and Kestrel each get a chapter at their home village: written scenes, a boss, foes at the squad's level, a relic each |
@@ -118,7 +120,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.45.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.46.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -153,14 +155,14 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.46 –): new jobs
+### Next (0.47 –): new jobs
 
-The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). New jobs can go ahead; a fair way to compare jobs (the 0.45 sweep ranks squad shape, not job strength) would help tune them.
+The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) was the first new job since, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for ranged).
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **New jobs** | Unpaused: the engine is in place and the chapters were rebalanced on it (0.45) | M |
-| **A fair job comparison** | The 0.45 sweep (one job in Tobin's slot) measures whether the squad has a ranged unit, not job strength. Swap like for like (ranged for ranged, melee for melee), or mirror duels on flat ground | S |
+| **More new jobs** | The Dark Knight (0.46) added HP costs to the engine; a support or caster job is next, to balance the roster | M |
+| **Mirror duels** | `SWAP` (0.46) compares jobs like for like, but each chapter rewards different things (ADR 0051). Duels on flat ground would rank raw strength | S |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |
 
 ### Later (1.0+): breadth

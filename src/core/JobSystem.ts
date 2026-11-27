@@ -25,7 +25,8 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   bard: { reaction: 'bd_refrain' },
   dancer: { reaction: 'dn_captivate' },
   tamer: { reaction: 'ta_snarl' },
-  gunner: { reaction: 'gu_return_fire' }
+  gunner: { reaction: 'gu_return_fire' },
+  dark_knight: { reaction: 'dk_vengeance', support: 'dk_blood_pact' }
 };
 
 /** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
@@ -59,7 +60,8 @@ export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; m
   bard: { stat: 'mp', veteran: 8, master: 20 },
   dancer: { stat: 'speed', veteran: 1, master: 2 },
   tamer: { stat: 'hp', veteran: 10, master: 25 },
-  gunner: { stat: 'attack', veteran: 1, master: 2 }
+  gunner: { stat: 'attack', veteran: 1, master: 2 },
+  dark_knight: { stat: 'hp', veteran: 12, master: 30 }
 };
 const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
 /** "+10 HP", "+1 ATK"… */
@@ -194,6 +196,10 @@ export class JobSystem {
       initialGear.weapon = ITEMS.flintlock;
       initialGear.head = ITEMS.leather_cap;
       initialGear.body = ITEMS.leather_vest;
+    } else if (jobId === 'dark_knight') {
+      initialGear.weapon = ITEMS.iron_sword; // no shield: both hands on the blade
+      initialGear.head = ITEMS.iron_helm;
+      initialGear.body = ITEMS.chainmail;
     }
 
     const jobLevels: Record<string, number> = {};
@@ -671,6 +677,16 @@ export class JobSystem {
     if (unit.equippedAbilities.secondaryJobId) this.grantPrerequisites(unit, unit.equippedAbilities.secondaryJobId);
   }
 
+  /** HP an ability really costs this unit (0.46.0): its share of max HP, at least 1. */
+  public static hpCostFor(unit: Unit, ability: Ability): number {
+    return ability.hpCost ? Math.max(1, Math.round(unit.maxHp * ability.hpCost)) : 0;
+  }
+
+  /** True when the unit can pay for the ability now: its MP, and HP without falling to 0. */
+  public static canAfford(unit: Unit, ability: Ability): boolean {
+    return ability.mpCost <= unit.currentMp && (!ability.hpCost || unit.currentHp > this.hpCostFor(unit, ability));
+  }
+
   /** MP an ability really costs this unit (Conserve halves it, rounding up). */
   public static mpCostFor(unit: Unit, ability: Ability): number {
     if (ability.mpCost > 0 && unit.equippedAbilities.support === 'su_conserve') return Math.ceil(ability.mpCost / 2);
@@ -765,7 +781,9 @@ export class JobSystem {
       .filter((a) => !silenced || a.mpCost === 0)
       .map((a) => {
         const mp = this.mpCostFor(unit, a);
-        return mp === a.mpCost ? a : { ...a, mpCost: mp };
+        // Blood Pact halves HP costs (0.46.0)
+        const hp = a.hpCost && unit.equippedAbilities.support === 'dk_blood_pact' ? a.hpCost / 2 : a.hpCost;
+        return mp === a.mpCost && hp === a.hpCost ? a : { ...a, mpCost: mp, ...(hp ? { hpCost: hp } : {}) };
       });
   }
 }

@@ -46,6 +46,8 @@ export interface ActionStart {
   faced: boolean;
   /** Using something else ended the caster's song or dance. */
   performanceEnded: boolean;
+  /** HP the caster paid for a Dark Knight technique (0.46.0). */
+  hpPaid: number;
 }
 
 export interface ActionHit {
@@ -116,9 +118,15 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
   const called = !!opts.called;
   const calling = !encore && !called && !!ability.charge;
   let performanceEnded = false;
+  let hpPaid = 0;
 
   if (!encore && !called) {
     caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
+    // A Dark Knight pays in blood (0.46.0), never down to 0
+    if (ability.hpCost) {
+      hpPaid = Math.min(JobSystem.hpCostFor(caster, ability), caster.currentHp - 1);
+      caster.currentHp -= hpPaid;
+    }
     caster.hasActed = true;
     if (ability.item) {
       const pouch = ctx.pouchOf(caster);
@@ -135,7 +143,7 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
   if (calling) startCall(caster, ability, tx, tz);
   const summoning = !!ability.summon && !encore && !calling;
 
-  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded };
+  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded, hpPaid };
 
   let kills = 0;
   for (const target of calling ? [] : victims) {

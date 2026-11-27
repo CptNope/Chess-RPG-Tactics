@@ -94,6 +94,11 @@ export interface Ability {
   cleanse?: boolean;
   /** Share of the damage dealt that heals the caster. */
   drain?: number;
+  /**
+   * Dark Knight (0.46.0): paid in HP instead of MP, as a share of max HP (0.06 = 6%). It can't be
+   * used if it would bring the caster to 0; Silence doesn't seal it.
+   */
+  hpCost?: number;
   /** Thief: takes one piece of the target's gear instead of dealing damage. */
   steal?: boolean;
   /** Set on the action for using a consumable: the id of the item it spends (see data/consumables.ts). */
@@ -144,7 +149,7 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
+    | 'Brawler' | 'Bruiser' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
     // Monsters (0.26.0)
     | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer' | 'Undead' | 'Plant';
   spriteClass: string;

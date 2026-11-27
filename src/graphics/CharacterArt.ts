@@ -188,6 +188,9 @@ function lookFor(job: string, enemy: boolean): Look {
     case 'gunner':
       // A long coat with brass buttons and a three-cornered hat (0.36.0)
       return { ...base, weapon: 'musket', hair: '#3b2a1c', main: e ? '#6b1f1f' : '#33415c', sub: e ? '#3d1212' : '#1f2a40', trim: '#c9a227', pants: e ? '#3a2614' : '#5b4630', boots: '#2a1f17', cape: e ? '#4a1414' : '#26324a' };
+    case 'dark_knight':
+      // Black steel, crimson and a dark cape (0.46.0)
+      return { ...base, body: 'armor', weapon: 'broadsword', hair: '#d1d5db', main: e ? '#1c1418' : '#2b2d36', sub: e ? '#991b1b' : '#7f1d1d', trim: e ? '#ef4444' : '#a78bfa', metal: e ? '#3f3438' : '#4b5060', cape: e ? '#450a0a' : '#3b0d0d' };
     default: // squire
       return { ...base, weapon: 'sword', main: e ? '#b83232' : '#2f6fd6', sub: e ? '#7a1f1f' : '#1d4aa8', trim: '#d9a441' };
   }
@@ -245,6 +248,18 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       }
       p.r(x + 5, hy - 5, 2, 5, L.sub);
       p.r(x + 4, hy - 4, 4, 2, shade(L.sub, 0.2));
+      p.r(x - 1, hy + 11, 14, 1, shade(L.metal, -0.3));
+      break;
+    }
+    case 'dark_knight': {
+      // A horned great helm with a red-lit visor (0.46.0)
+      p.b(x - 1, hy - 1, 14, 13, L.metal);
+      p.tri(x - 1, hy + 2, x - 4, hy - 6, x + 2, hy, shade(L.metal, 0.35));
+      p.tri(x + 13, hy + 2, x + 16, hy - 6, x + 10, hy, shade(L.metal, 0.35));
+      if (!back) {
+        p.r(x + 1, hy + 6, 10, 2, '#141826');
+        p.r(x + 2, hy + 6, 2, 1, '#ef4444'); p.r(x + 8, hy + 6, 2, 1, '#ef4444');
+      }
       p.r(x - 1, hy + 11, 14, 1, shade(L.metal, -0.3));
       break;
     }
@@ -775,6 +790,12 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.r(hx + 6, hy + 6, 7, 2, '#141826');
       p.r(hx + 4, hy - 5, 2, 5, L.sub); p.r(hx + 1, hy - 4, 4, 2, shade(L.sub, 0.2));
       break;
+    case 'dark_knight':
+      p.b(hx, hy - 1, 13, 13, L.metal);
+      p.tri(hx + 2, hy + 1, hx - 3, hy - 7, hx + 5, hy - 1, shade(L.metal, 0.35));
+      p.r(hx + 6, hy + 6, 7, 2, '#141826');
+      p.r(hx + 9, hy + 6, 2, 1, '#ef4444');
+      break;
     case 'dragoon':
       p.b(hx, hy - 1, 13, 13, L.main);
       p.tri(hx + 2, hy + 2, hx - 4, hy - 5, hx + 4, hy - 1, L.metal);
@@ -1139,6 +1160,14 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.r(hx + 12, ey + 2, 4, 9, '#141826');
         p.r(hx - 3, hy + 15, 34, 2, shade(metal, -0.3));
         p.r(hx + 12, hy - 10, 4, 9, L.sub); p.r(hx + 9, hy - 9, 10, 3, shade(L.sub, 0.2));
+        break;
+      case 'dark_knight':
+        p.b(hx - 3, hy - 2, 34, 18, metal);
+        p.tri(hx - 3, hy + 4, hx - 10, hy - 14, hx + 4, hy - 1, shade(metal, 0.35));
+        p.tri(hx + 31, hy + 4, hx + 38, hy - 14, hx + 24, hy - 1, shade(metal, 0.35));
+        p.r(hx + 1, ey - 1, 26, 4, '#141826');
+        p.r(hx + 5, ey, 5, 2, '#ef4444'); p.r(hx + 18, ey, 5, 2, '#ef4444');
+        p.r(hx - 3, hy + 15, 34, 2, shade(metal, -0.3));
         break;
       case 'dragoon':
         p.b(hx - 3, hy - 2, 34, 17, L.main);

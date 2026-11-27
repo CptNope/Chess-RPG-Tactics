@@ -19,6 +19,7 @@ import { allianceOf, isFoe } from './Sides';
 import { seededRng } from './Rng';
 import { BattleRules } from './Rules';
 import { CombatEngine } from './CombatEngine';
+import { JobSystem } from './JobSystem';
 
 // ---------------------------------------------------------------------------
 // Who has won
@@ -212,6 +213,7 @@ export class Battle {
     if (ability) {
       if (u.hasActed) return 'Already acted.';
       if (ability.mpCost > u.currentMp) return 'Not enough MP.';
+      if (!JobSystem.canAfford(u, ability)) return 'Not enough HP.';
       if (ability.item && !((this.ctx.pouchOf(u) || {})[ability.item] > 0)) return 'None left.';
       if (!target) return 'No target.';
       if (!ability.isSelfOnly && !isCentered(ability) &&
