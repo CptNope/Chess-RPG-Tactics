@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 325 tests"]
+        T2["Unit tests<br/>vitest · 327 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
         T5["Browser play-tests<br/>npm run playtest · 8 checks"]
@@ -41,9 +41,9 @@ flowchart TB
 
 ---
 
-## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`, `tests/engine.test.ts`, `tests/chain.test.ts`, `tests/side-story.test.ts`, `tests/battle.test.ts`, …)
+## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`, `tests/engine.test.ts`, `tests/chain.test.ts`, `tests/side-story.test.ts`, `tests/battle.test.ts`, `tests/hold-back.test.ts`, …)
 
-All 325 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 327 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -53,6 +53,7 @@ All 325 tests import `src/core` and `src/data` directly in Node. No browser is n
 | **Grid** | 7 | Range/height/self-target rule; water costs; enemies blocking and allies not standable; Teleport; walking paths are adjacent, climbable, within Move, avoid enemies, and none for teleporters |
 | **Geomancy** | 1 | Terrain → spell mapping |
 | **Enemy AI** | 4 | Never hitting its own team; finishing wounded foes; healing allies, never buffing players; never casting unaffordable spells |
+| **AUTO holds back (0.45)** | 2 | A healthy unit on AUTO with nothing to hit won't walk where it would likely fall; without `holdBack` it walks on |
 | **Battle engine loop (0.44)** | 8 | Who has won (rout, wiped, a tamed beast alone, a fallen boss, survive, allied teams); rounds; Chapter I played to the end the same way twice from one seed; replayed from its seed and recorded choices, event for event; illegal moves, targets and spells refused; JP only under rules that grant it |
 | **Side stories (0.43)** | 5 | One per story recruit with a real place, road, map, relic (never sold) and chapters; every built battle passes the Workshop check; levels follow the squad over a floor with the boss a level up; open only with the recruit and the chapter won, told once; save repair |
 | **Scenario chains (0.42)** | 6 | Adding copies, moving and removing battles, the 8-battle limit; checks (at least one battle, every battle playable); next / retry / complete; updating only from newer library versions; `#c=` link and file round trips with repairs; the library and saved progress |

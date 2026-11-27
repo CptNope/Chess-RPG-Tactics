@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.45.0] - 2026-11-25
+
+### Changed
+- **AUTO holds back.** A squad member on AUTO no longer walks alone into a spot where the enemy would likely cut it down before its next turn. Before, a healthy unit with nothing to hit would trade its life for a few tiles of progress. AUTO also reads danger more carefully, allowing for crits and blows from behind. Enemies are unchanged: their caution is still set by the difficulty.
+- **Chapter V:** the Storm Wyvern is a level lower (5).
+- **Chapter II-A, the Mire:** the Bog Poisoner and the Swamp Shinobi are a level lower (3). The march orders now say it's the harder road.
+
+### Balance (simulated, 150 battles a point, Normal)
+- **Chapter IV** is back near its old level: 21 / 30 / 67% at squad levels 6 / 7 / 8 (was 9 / 9 / 29%). That drop was AUTO, not the chapter.
+- **The Mire:** 5 / 9 / 27% at levels 3 / 4 / 5 (was 2 / 3 / 8%).
+- The other chapters are about where they were.
+
+### Developer
+- `PlanOptions.holdBack` and `LETHAL_MARGIN`.
+- `TOBIN_JOB=<job>` in the balance sim, for job sweeps. Why a sweep doesn't rank jobs yet is in ADR 0050.
+- 2 new tests (327 total).
+
 ## [0.44.0] - 2026-11-25
 
 Groundwork for online versus, part 2. Nothing looks or plays differently.

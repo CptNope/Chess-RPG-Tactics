@@ -21,6 +21,12 @@ export interface PlanOptions {
   caution?: false | 'light' | 'full';
   /** Items the unit carries (0.31.0): consumable id -> count. */
   pouch?: Record<string, number>;
+  /**
+   * Never walk into a spot where it would likely fall, even when healthy (0.45.0). For AUTO on
+   * the squad: before this, a fresh unit with nothing in reach would walk alone into the middle
+   * of the enemy for a few tiles of progress. Enemies keep pressing forward.
+   */
+  holdBack?: boolean;
 }
 
 export interface AiPlan {
@@ -259,6 +265,14 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
 /** How many fallen allies the enemy side may raise in one battle. Keeps a healer from undoing a whole fight. */
 export const ENEMY_RAISE_CAP = 1;
 
+/**
+ * How much more than the average threat a spot can turn out to deal, for the squad's AUTO
+ * (`holdBack`, 0.45.0). The threat map
+ * weighs each blow by its hit chance and leaves out crits and back attacks, so a unit waiting
+ * where the average is 97% of its HP almost always falls.
+ */
+export const LETHAL_MARGIN = 1.3;
+
 export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: PlanOptions = {}): AiPlan {
   const foes = foesOf(unit, units);
   const origin = { x: unit.x, z: unit.z };
@@ -281,7 +295,10 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
   const risk = (x: number, z: number, hpAfter: number, spared?: Set<string>) => {
     if (!threat) return 0;
     const danger = threat(x, z, spared);
-    if (danger >= hpAfter) return 30 + precious;
+    // The threat is an average: crits, blows from behind and a lucky roll go past it, so for the
+    // squad's AUTO a spot where the average comes near the unit's HP is already deadly (0.45.0).
+    // Enemies keep the plain average: their caution is set by the difficulty
+    if (danger * (opts.holdBack ? LETHAL_MARGIN : 1) >= hpAfter) return 30 + precious;
     return opts.caution === 'full' ? (danger / unit.maxHp) * 15 : 0;
   };
 
@@ -398,8 +415,15 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
   const distFrom = (t: { x: number; z: number }) => pick.d.get(key(t.x, t.z)) ?? manhattan(target, t) + 100;
   // ... and never into an area a foe's grand summon is about to land on (0.24.0)
   // With caution (0.31.0) a hurt unit with nothing to do hangs back rather than walking into reach
-  const walkScore = (t: { x: number; z: number }) => distFrom(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50
-    + (threat && opts.caution === 'full' ? risk(t.x, t.z, unit.currentHp) * (unit.currentHp < unit.maxHp * 0.4 ? 0.4 : 0.1) : 0);
+  // With `holdBack` (the squad's AUTO, 0.45.0) a spot where it would likely fall counts in full
+  // even for a healthy unit
+  const walkRisk = (t: { x: number; z: number }) => {
+    if (!threat || opts.caution !== 'full') return 0;
+    const r = risk(t.x, t.z, unit.currentHp);
+    if (r >= 30 && opts.holdBack) return r;
+    return r * (unit.currentHp < unit.maxHp * 0.4 ? 0.4 : 0.1);
+  };
+  const walkScore = (t: { x: number; z: number }) => distFrom(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50 + walkRisk(t);
   let moveTo = origin;
   let bestDist = walkScore(origin);
   for (const t of tiles) {

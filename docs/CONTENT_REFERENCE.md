@@ -549,7 +549,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear | Knight, Dragoon |
 | **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | — | 250 | Starting gear | Archer, Bard, Beast Tamer |
 | **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
-| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
+| **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire! The harder road: bog, poison, and lights that put you to sleep." · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
 | **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
 | **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop | Archer, Bard, Beast Tamer |
 | **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III | Squire, Knight, Geomancer, Paladin, Spellblade |
@@ -625,7 +625,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Featherlight Boots** `feather_boots` | light | MOVE +1 | — | 350 | Starting gear | Anyone |
 | **Hermes Slippers** `hermes_shoes` | light | SPEED +2 | — | 400 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop | Anyone |
 | **Gauntlet of Might** `power_wrist` | light | ATTACK +4 | — | 200 | Win CHAPTER I · Trials drop | Anyone |
-| **Ring of Arcana** `mage_ring` | light | MAGIC +4, MP +25 | — | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire!" · Trials drop | Anyone |
+| **Ring of Arcana** `mage_ring` | light | MAGIC +4, MP +25 | — | 220 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire! The harder road: bog, poison, and lights that put you to sleep." · Trials drop | Anyone |
 | **Zodiac Ribbon** `ribbon` | light | HP +20, MP +20, SPEED +1, EVASION +5 | guards poison, slow, immobilize, blind, silence, sleep, breach | 800 | Win CHAPTER III · Trials drop | Anyone |
 | **Pale Pearl** `pale_pearl` | light | MP +30, MAGIC +3, HP +20 | guards silence | 720 | Choose "Go down to the drowned city and stop the Pale Heir before the old kingdom rises with it." | Anyone |
 | **Tidecrown** `tidecrown` | light | HP +40, MAGIC +6, SPEED +1 | guards sleep, poison | 1200 | Win CHAPTER IX | Anyone |
@@ -859,7 +859,7 @@ flowchart LR
   chapter_8["CHAPTER VIII<br/>Frostfang Pass<br/><i>Frostfang Pass</i>"]
   chapter_9["CHAPTER IX<br/>The Pale Heir<br/><i>The Drowned City</i>"]
   epilogue(["Epilogue (to be continued)<br/>New Game+ / Trials"])
-  chapter_1 -->|"Pursue the fleeing sorcerer into the Gloomy Mire"| chapter_2a
+  chapter_1 -->|"Pursue the fleeing sorcerer into the Gloomy Mire! The harder road: bog, poison, and lights that put you to sleep."| chapter_2a
   chapter_1 -->|"Rush to reinforce the garrison at Night Battlement"| chapter_2b
   chapter_2a -->|"Ascend to the Zodiac Summit for the final battle"| chapter_3
   chapter_2b -->|"Storm the fortress inner sanctum for the final confrontation"| chapter_3
@@ -902,8 +902,8 @@ flowchart LR
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
 | Arch-Warlock | Time Weaver | 4 | (2, 0) | ★ |
-| Bog Poisoner | Black Mage | 4 | (3, 1) |  |
-| Swamp Shinobi | Ninja | 4 | (7, 4) |  |
+| Bog Poisoner | Black Mage | 3 | (3, 1) |  |
+| Swamp Shinobi | Ninja | 3 | (7, 4) |  |
 | Mire Skirmisher | Ninja | 4 | (12, 2) |  |
 | Bog Ooze | Bog Ooze | 4 | (9, 2) |  |
 | Marsh Wisp | Marsh Wisp | 3 | (6, 7) |  |
@@ -954,7 +954,7 @@ flowchart LR
 | Tower Acolyte | White Mage | 6 | (9, 1) |  |
 | Tide Augur | Oracle | 6 | (5, 3) |  |
 | Greywatch Sentinel | Knight | 6 | (7, 5) |  |
-| Storm Wyvern | Wyvern | 6 | (10, 4) |  |
+| Storm Wyvern | Wyvern | 5 | (10, 4) |  |
 | Cliff Basilisk | Basilisk | 6 | (6, 1) |  |
 
 </details>
