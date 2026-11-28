@@ -48,7 +48,21 @@ describe('ground in the story (0.53.0)', () => {
     // ... and the maps themselves stay bare, for the side battles, side stories and Trials fought there (0.54.0)
     for (const id of ['night_fortress', 'gloomy_swamp', 'ember_harbor']) expect(MAPS[id]().tiles.some((t) => t.hazard || t.zone || t.trap)).toBe(false);
     // ... and no other chapter's objective changed
-    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => c.objective?.type === 'hold').map((c) => c.id)).toEqual(['chapter_2b']);
+    expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => c.objective?.type === 'hold').map((c) => c.id).sort()).toEqual(['chapter_2b', 'chapter_5']); // V since 0.56.0
+  });
+
+  it('Act II and III have ground of their own (0.56.0), on walkable tiles, and leave their maps bare', () => {
+    expect(CAMPAIGN_CHAPTERS.chapter_5.objective).toEqual({ type: 'hold', rounds: 3 });
+    expect(tilesWith('chapter_5', (t) => !!t.zone)).toHaveLength(8);
+    expect(tilesWith('chapter_6', (t) => t.hazard === 'spring')).toHaveLength(2);
+    expect(tilesWith('chapter_7', (t) => t.hazard === 'embers')).toHaveLength(6);
+    expect(tilesWith('chapter_7', (t) => !!t.trap).map((t) => t.trap).sort()).toEqual(['smoke', 'snare']);
+    expect(tilesWith('chapter_8', (t) => t.hazard === 'spring')).toHaveLength(2);
+    expect(tilesWith('chapter_9', (t) => t.hazard === 'miasma')).toHaveLength(8);
+    for (const id of ['chapter_5', 'chapter_6', 'chapter_7', 'chapter_8', 'chapter_9']) {
+      for (const m of CAMPAIGN_CHAPTERS[id].ground!) expect(tilesWith(id, (t) => t.x === m.x && t.z === m.z)[0].walkable).toBe(true);
+      expect(MAPS[CAMPAIGN_CHAPTERS[id].mapId]().tiles.some((t) => t.hazard || t.zone || t.trap)).toBe(false);
+    }
   });
 
   it('the boss keeps the map\'s traps (else the first enemy), and the squad walks into them', () => {
