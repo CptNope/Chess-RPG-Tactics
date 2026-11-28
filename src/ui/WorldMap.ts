@@ -295,7 +295,8 @@ export class WorldMap {
       if (state === 'locked') {
         add('p', 'wm-status locked', 'Nothing stirs here yet. Win more of the story first.');
       } else {
-        const goal = def.objective?.type === 'survive' ? `Hold out for ${def.objective.rounds || 6} rounds.` : 'Defeat every enemy.';
+        const goal = def.objective?.type === 'survive' ? `Hold out for ${def.objective.rounds || 6} rounds.`
+          : def.objective?.type === 'hold' ? `Hold the marked ground for ${def.objective.rounds || 3} rounds, or defeat every enemy.` : 'Defeat every enemy.';
         add('p', 'wm-orders', `${def.intro} ${goal}`);
         add('p', 'wm-status', `Enemies around Lv ${skirmishLevel(st.squadLevels, wins)}. ${wins > 0 ? `Won ${wins} time${wins > 1 ? 's' : ''}${wins < SKIRMISH_MAX_HEAT ? '; they come back stronger' : ''}.` : 'Not fought yet.'}`);
         add('p', 'wm-reward', `Optional and repeatable: bounties, +${skirmishBonus(wins)} G, EXP and JP.`);

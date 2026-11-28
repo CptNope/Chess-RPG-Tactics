@@ -18,6 +18,7 @@
  * does the same work (p1, Rowan: melee; p3, Tobin: ranged). TOBIN_JOB=<job> FULLKIT=1 (0.45.0)
  * puts any job in Tobin's ranged slot, which mostly measures whether the squad has a ranged unit.
  */
+import { buildSkirmish } from '../src/core/Skirmish';
 import { BattleGrid } from '../src/core/Grid';
 import { JobSystem } from '../src/core/JobSystem';
 import { Battle, Decide, runBattle } from '../src/core/Battle';
@@ -80,7 +81,10 @@ function passives(u: Unit) {
 }
 
 function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
-  const ch = CAMPAIGN_CHAPTERS[chId];
+  // Side battles (0.48.0): skirmish_<place>[:wins], fought by the Act II party of six
+  const sk = chId.startsWith('skirmish_') ? chId.slice('skirmish_'.length).split(':') : null;
+  const ch = sk ? buildSkirmish(sk[0], [level, level, level, level], Number(sk[1] || 0)) : CAMPAIGN_CHAPTERS[chId];
+  if (sk) chId = 'chapter_5'; // the party that is out by then
   const map = MAPS[ch.mapId]();
   const grid = new BattleGrid(map);
   const enemies = ch.enemyRoster.map((e, i) => {
@@ -108,7 +112,8 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
       noRevive: foe && enemyRaises >= DIFFICULTIES[DIFF].raiseCap,
       caution: OLD_AI ? false : foe ? (CAUTION === 'both' || CAUTION === 'enemy' ? enemyCaution(DIFF) : false) : (CAUTION === 'both' || CAUTION === 'player' ? 'full' : false),
       pouch: foe ? u.pouch : undefined,
-      holdBack: !foe // the squad on AUTO, as in the game
+      holdBack: !foe, // the squad on AUTO, as in the game
+      zone: ch.objective?.type === 'hold' ? b.zone : undefined // both sides go for a hold objective's ground (0.48.0)
     });
     if ((plan.ability?.revive || plan.ability?.rebirth) && foe) enemyRaises++;
     return { moveTo: plan.moveTo, ability: plan.ability, target: plan.targetTile, facing: plan.facing };

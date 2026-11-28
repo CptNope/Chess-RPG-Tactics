@@ -217,7 +217,8 @@ const fmtTraits = (i: (typeof ITEMS)[string]) => {
   return [
     t.startStatus ? `starts with ${t.startStatus.join(' + ')}` : '',
     t.boost ? `${t.boost.join(', ')} +25%` : '',
-    t.guard ? `guards ${t.guard.join(', ')}` : ''
+    t.guard ? `guards ${t.guard.join(', ')}` : '',
+    t.hazardproof ? `unharmed by ${t.hazardproof.join(', ')}` : ''
   ].filter(Boolean).join('; ');
 };
 const source = (id: string) => {
@@ -341,7 +342,7 @@ w();
 w('| Place | Battlefield | Enemies | Drawn from | Goal | Opens after |');
 w('| :--- | :--- | :--- | :--- | :--- | :--- |');
 for (const d of Object.values(SKIRMISHES)) {
-  const goal = d.objective?.type === 'survive' ? `Survive ${d.objective.rounds} rounds` : 'Defeat every enemy';
+  const goal = d.objective?.type === 'survive' ? `Survive ${d.objective.rounds} rounds` : d.objective?.type === 'hold' ? `Hold the marked ground ${d.objective.rounds} rounds, or defeat every enemy` : 'Defeat every enemy';
   w(`| **${d.name}** | ${MAPS[d.mapId]().name} | ${d.foe} | ${d.jobs.map(([job, title]) => `${title} (${jobName(job)})`).join(', ')} | ${goal} | ${d.opensAfter.map((c) => CAMPAIGN_CHAPTERS[c].title).join(' or ')} |`);
 }
 w();
@@ -371,15 +372,18 @@ w();
 // ---------------------------------------------------------------- Maps
 w('## Battlefields');
 w();
-w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Squad deploys on |');
-w('| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- |');
+w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48) | Squad deploys on |');
+w('| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- | :--- |');
 for (const [id, make] of Object.entries(MAPS)) {
   const m = make();
   const hs = m.tiles.map((t) => t.height);
   const mix: Record<string, number> = {};
   for (const t of m.tiles) mix[t.terrain] = (mix[t.terrain] || 0) + 1;
   const mixText = Object.entries(mix).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${Math.round((n / m.tiles.length) * 100)}%`).join(', ');
-  w(`| **${m.name}** | \`${id}\` | ${m.width}×${m.depth} | ${m.theme} | ${Math.min(...hs)}–${Math.max(...hs)} | ${mixText} | ${m.tiles.filter((t) => !t.walkable).length} | ${spawnsFor(m).map((p) => `(${p.x}, ${p.z})`).join(' ')} |`);
+  const ground: Record<string, number> = {};
+  for (const t of m.tiles) { if (t.hazard) ground[t.hazard] = (ground[t.hazard] || 0) + 1; if (t.zone) ground['hold zone'] = (ground['hold zone'] || 0) + 1; }
+  const groundText = Object.entries(ground).map(([k, n]) => `${k} ${n}`).join(', ') || '—';
+  w(`| **${m.name}** | \`${id}\` | ${m.width}×${m.depth} | ${m.theme} | ${Math.min(...hs)}–${Math.max(...hs)} | ${mixText} | ${m.tiles.filter((t) => !t.walkable).length} | ${groundText} | ${spawnsFor(m).map((p) => `(${p.x}, ${p.z})`).join(' ')} |`);
 }
 w();
 

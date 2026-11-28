@@ -422,6 +422,54 @@ export function spawnsFor(map: MapData): { x: number; z: number }[] {
   return [-1, 1, 0, -2, 2, 0].map((dx, i) => ({ x: cx + dx, z: i < 2 ? z : i === 5 ? z - 1 : z + 1 }));
 }
 
+/**
+ * Cinder Caldera (16×16, 0.48.0): a volcanic bowl with a hot spring in the middle. The spring's
+ * basin is the ground a hold objective asks for, and it heals whoever starts a turn in it. Ember
+ * fields on both flanks burn anyone who lingers, so the straight roads north and south matter;
+ * sulphur vents in two corners poison, and the rims give archers high ground.
+ */
+export function createCalderaMap(): MapData {
+  const b = new MapBuilder(16, 16, 1, 'stone');
+
+  // Rims: high ground east and west, stepping down to the floor
+  b.rect(0, 0, 1, 15, 2.5, 'stone');
+  b.rect(14, 0, 15, 15, 2.5, 'stone');
+  b.rect(2, 2, 2, 13, 1.5, 'stone');
+  b.rect(13, 2, 13, 13, 1.5, 'stone');
+  // Ash roads in from the south (the squad) and the north (the zealots)
+  b.rect(6, 10, 9, 15, 1, 'dirt');
+  b.rect(6, 0, 9, 5, 1, 'dirt');
+
+  // The spring's basin: raised a step, the hold zone, every tile a spring
+  b.rect(6, 6, 9, 9, 1.4, 'stone');
+  b.each((t) => {
+    if (t.x >= 6 && t.x <= 9 && t.z >= 6 && t.z <= 9) {
+      t.zone = true;
+      if (t.x >= 7 && t.x <= 8 && t.z >= 7 && t.z <= 8) t.hazard = 'spring';
+    }
+  });
+
+  // Ember fields on the flanks of the basin
+  b.each((t) => {
+    if (((t.x >= 3 && t.x <= 5) || (t.x >= 10 && t.x <= 12)) && t.z >= 4 && t.z <= 11 && t.z !== 7) {
+      t.terrain = 'dirt';
+      t.hazard = 'embers';
+    }
+  });
+  // Sulphur vents: miasma in the north-east and south-west corners
+  for (const [x, z] of [[12, 1], [13, 1], [12, 2], [2, 14], [3, 14], [3, 13]]) {
+    const t = b.get(x, z);
+    if (t) t.hazard = 'miasma';
+  }
+  // Fumarole spires: cover, and a reason to step around
+  for (const [x, z] of [[4, 2], [11, 13], [5, 12], [10, 3]]) b.set(x, z, 2.6, 'stone', false);
+
+  const map = b.build('cinder_caldera', 'Cinder Caldera', 'night', [
+    { x: 7, z: 14 }, { x: 8, z: 14 }, { x: 6, z: 14 }, { x: 9, z: 14 }, { x: 7, z: 15 }, { x: 8, z: 15 }
+  ]);
+  return map;
+}
+
 export const MAPS: Record<string, () => MapData> = {
   river_ruins: createRuinsMap,
   night_fortress: createFortressNightMap,
@@ -432,5 +480,6 @@ export const MAPS: Record<string, () => MapData> = {
   stormbreak_cape: createCapeMap,
   saltglass_shore: createSaltglassMap,
   frostfang_pass: createFrostfangMap,
-  drowned_city: createDrownedCityMap
+  drowned_city: createDrownedCityMap,
+  cinder_caldera: createCalderaMap
 };

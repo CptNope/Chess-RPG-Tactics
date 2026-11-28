@@ -27,6 +27,8 @@ export interface SkirmishDef {
   trophy: string;
   /** Enemies on a first visit (default 4); one more once the place is at full heat (0.35.0). */
   size?: number;
+  /** How far south the enemy deploys, in rows from the north edge (default: the northern quarter). 0.48.0 */
+  deployRows?: number;
 }
 
 export const SKIRMISHES: Record<string, SkirmishDef> = {
@@ -94,6 +96,20 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     opensAfter: ['chapter_7'],
     intro: 'Kestrel says the wyvern that nests in the glass dunes has started taking goats from the coast. It has jackals following it for the scraps. Mind the wind: it dives with it.',
     trophy: 'glasswing_lance'
+  },
+  // Added in 0.48.0: hazards and a hold objective
+  cinder: {
+    id: 'cinder',
+    name: 'Cinder Spring',
+    mapId: 'cinder_caldera',
+    size: 5,
+    deployRows: 9, // they hold the spring when you arrive
+    foe: 'Ashen Zealots',
+    jobs: [['shaman', 'Ember Shaman'], ['black_mage', 'Pyromancer'], ['monk', 'Cinder Monk'], ['knight', 'Ash Guard'], ['archer', 'Smoke Archer'], ['geomancer', 'Lava Warden']],
+    opensAfter: ['chapter_4'],
+    objective: { type: 'hold', rounds: 3 },
+    intro: 'Zealots have taken the hot spring in the caldera and say the mountain speaks through it. Take the basin and hold it, three rounds with nobody of theirs in it. Stay off the embers.',
+    trophy: 'cinderwalk_charm'
   }
 };
 
@@ -130,8 +146,8 @@ export function buildSkirmish(id: string, squadLevels: number[], wins: number): 
   const count = (def.size ?? 4) + (wins >= SKIRMISH_MAX_HEAT ? 1 : 0);
 
   // Enemies deploy on the northern quarter of the map, on walkable tiles, never stacked
-  const zone = Math.max(3, Math.floor(map.depth / 4));
-  const spawnTiles = map.tiles.filter((t) => t.walkable && t.z <= zone);
+  const rows = def.deployRows ?? Math.max(3, Math.floor(map.depth / 4));
+  const spawnTiles = map.tiles.filter((t) => t.walkable && t.z <= rows && !t.hazard);
   const used = new Set<string>();
   const pickTile = () => {
     for (let tries = 0; tries < 200; tries++) {

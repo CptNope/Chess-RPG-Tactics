@@ -88,6 +88,10 @@ export class TacticsScene {
   /** A Shaman's totems standing on the field (0.47.0), redrawn when they change. */
   private totemGroup: THREE.Group = new THREE.Group();
   private totemKey = '';
+  /** Hazard tiles and the hold zone painted on the ground (0.48.0). */
+  private groundGroup: THREE.Group = new THREE.Group();
+  private groundMats: THREE.ShaderMaterial[] = [];
+  private zoneColor = { value: new THREE.Color(0xfacc15) };
   private callMats: THREE.ShaderMaterial[] = [];
   /** A full-screen shade drawn over the board (not the units or effects) while a summon plays. */
   private dimQuad!: THREE.Mesh;
@@ -210,6 +214,7 @@ export class TacticsScene {
     this.scene.add(this.highlightGroup);
     this.scene.add(this.callGroup);
     this.scene.add(this.totemGroup);
+    this.scene.add(this.groundGroup);
     this.dimQuad = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 2),
       new THREE.ShaderMaterial({
@@ -458,6 +463,7 @@ export class TacticsScene {
     this.pfx.clear();
     this.setCallMarkers([]);
     this.syncTotems([]);
+    this.setZoneHeld('empty');
     this.dim(0);
     this.buildMap();
     const md = newGrid.mapData;
@@ -497,6 +503,90 @@ export class TacticsScene {
   private buildTerrainMeshes(): void {
     this.tileMeshList = buildMergedTerrain(this.grid.mapData.tiles, this.tileMats);
     for (const m of this.tileMeshList) this.scene.add(m);
+    this.buildGround();
+  }
+
+  /**
+   * Hazards and the hold zone (0.48.0): flickering embers, drifting miasma, a rippling spring,
+   * and a bright rim around the zone (gold, green while the squad holds it, red while a foe does).
+   */
+  private buildGround(): void {
+    for (const c of [...this.groundGroup.children]) this.groundGroup.remove(c);
+    for (const m of this.groundMats) m.dispose();
+    this.groundMats = [];
+    const tiles = this.grid.mapData.tiles;
+    if (!tiles.some((t) => t.hazard || t.zone)) return;
+    const vert = 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }';
+    const frag: Record<string, string> = {
+      embers: `uniform float uTime; varying vec2 vUv; varying vec3 vW;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        void main(){
+          vec2 c = floor(vW.xz * 11.0 + vec2(0.0, uTime * 1.2));
+          float speck = step(0.94, h(c)) * (0.6 + 0.4 * sin(uTime * 9.0 + h(c) * 30.0));
+          float n = 0.5 + 0.5 * sin(vW.x * 6.0 + uTime * 2.2) * sin(vW.z * 5.0 - uTime * 1.7);
+          vec3 col = mix(vec3(0.45, 0.08, 0.02), vec3(0.98, 0.45, 0.08), n) + speck * vec3(1.0, 0.85, 0.4);
+          gl_FragColor = vec4(col, 0.42 + 0.25 * n + speck * 0.3);
+        }`,
+      miasma: `uniform float uTime; varying vec2 vUv; varying vec3 vW;
+        void main(){
+          float n = 0.5 + 0.5 * sin(vW.x * 3.1 + uTime * 0.9 + sin(vW.z * 2.7 - uTime * 0.6) * 2.0);
+          float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+          vec3 col = mix(vec3(0.30, 0.12, 0.42), vec3(0.62, 0.85, 0.25), n * 0.55);
+          gl_FragColor = vec4(col, (0.30 + 0.28 * n) * smoothstep(0.0, 0.18, e + 0.06));
+        }`,
+      spring: `uniform float uTime; varying vec2 vUv; varying vec3 vW;
+        void main(){
+          float r = length(vUv - 0.5);
+          float ripple = 0.5 + 0.5 * sin(r * 28.0 - uTime * 3.5);
+          vec3 col = mix(vec3(0.05, 0.45, 0.65), vec3(0.75, 0.98, 1.0), ripple * 0.7);
+          gl_FragColor = vec4(col, (0.38 + 0.3 * ripple) * (1.0 - smoothstep(0.42, 0.5, max(abs(vUv.x - 0.5), abs(vUv.y - 0.5)))));
+        }`,
+      zone: `uniform float uTime; uniform vec3 uColor; uniform vec4 uEdges; varying vec2 vUv;
+        void main(){
+          // A rim only on the sides that face out of the zone: left, right, near, far
+          float w = 0.09;
+          float rim = max(max(uEdges.x * (1.0 - step(w, vUv.x)), uEdges.y * step(1.0 - w, vUv.x)),
+                          max(uEdges.z * (1.0 - step(w, vUv.y)), uEdges.w * step(1.0 - w, vUv.y)));
+          float pulse = 0.65 + 0.35 * sin(uTime * 3.0);
+          gl_FragColor = vec4(uColor * (1.0 + rim * 0.6), 0.10 + rim * 0.75 * pulse);
+        }`,
+    };
+    const mats = new Map<string, THREE.ShaderMaterial>();
+    const matFor = (key: string, kind: string, extra: Record<string, THREE.IUniform> = {}) => {
+      let m = mats.get(key);
+      if (!m) {
+        m = new THREE.ShaderMaterial({ uniforms: { uTime: sharedTime, ...extra }, vertexShader: vert, fragmentShader: frag[kind], transparent: true, depthWrite: false });
+        mats.set(key, m);
+        this.groundMats.push(m);
+      }
+      return m;
+    };
+    const inZone = (x: number, z: number) => !!this.grid.getTile(x, z)?.zone;
+    for (const t of tiles) {
+      const y = this.grid.getHeight(t.x, t.z);
+      if (t.hazard) {
+        const mesh = new THREE.Mesh(this.sharedHighlightGeom, matFor(t.hazard, t.hazard));
+        mesh.position.set(t.x, y + 0.025, t.z);
+        mesh.renderOrder = 7;
+        mesh.userData.noPick = true;
+        this.groundGroup.add(mesh);
+      }
+      if (t.zone) {
+        // The plane's u runs along x, v along -z once laid flat
+        const edges = new THREE.Vector4(+!inZone(t.x - 1, t.z), +!inZone(t.x + 1, t.z), +!inZone(t.x, t.z + 1), +!inZone(t.x, t.z - 1));
+        const key = `zone${edges.toArray().join('')}`;
+        const mesh = new THREE.Mesh(this.sharedHighlightGeom, matFor(key, 'zone', { uColor: this.zoneColor, uEdges: { value: edges } }));
+        mesh.position.set(t.x, y + 0.03, t.z);
+        mesh.renderOrder = 7.5;
+        mesh.userData.noPick = true;
+        this.groundGroup.add(mesh);
+      }
+    }
+  }
+
+  /** Colours the hold zone's rim by who held it when the last round ended (0.48.0). */
+  public setZoneHeld(state: 'held' | 'lost' | 'empty'): void {
+    this.zoneColor.value.set(state === 'held' ? 0x4ade80 : state === 'lost' ? 0xef4444 : 0xfacc15);
   }
 
   private disposeTerrain(): void {

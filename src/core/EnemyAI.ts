@@ -1,4 +1,5 @@
 import { pulseFor, standingTotems, Totem, TOTEM_TURNS } from './Totems';
+import { hazardFor } from './Hazards';
 import { Ability, FacingDirection, Unit } from './types';
 import { isAlly, isFoe } from './Sides';
 import { BattleGrid } from './Grid';
@@ -28,6 +29,11 @@ export interface PlanOptions {
    * of the enemy for a few tiles of progress. Enemies keep pressing forward.
    */
   holdBack?: boolean;
+  /**
+   * The ground a "hold" objective is about (0.48.0), as "x,z" keys. Both sides want to stand on
+   * it: the squad to hold it, the enemy to contest it.
+   */
+  zone?: ReadonlySet<string>;
 }
 
 export interface AiPlan {
@@ -329,6 +335,33 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
   // approach below and the fallback walk
   const key = (x: number, z: number) => `${x},${z}`;
   const manhattan = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.abs(a.x - b.x) + Math.abs(a.z - b.z);
+  /**
+   * What the ground at a tile is worth to end the turn on (0.48.0): stay off embers and miasma,
+   * a hurt unit heads for a spring, and both sides want the zone a hold objective is about.
+   */
+  const groundScore = (x: number, z: number): number => {
+    let s = 0;
+    const tile = grid.getTile(x, z);
+    const sx = unit.x, sz = unit.z;
+    unit.x = x; unit.z = z;
+    const p = hazardFor(unit, tile);
+    unit.x = sx; unit.z = sz;
+    if (p?.damage) s -= (Math.min(p.damage, unit.currentHp) / unit.maxHp) * 100 * 1.2 + (p.damage >= unit.currentHp ? 40 : 0);
+    if (p?.status === 'poison') s -= 10;
+    if (p?.heal) s += (p.heal / unit.maxHp) * 100 * 0.7;
+    if (p?.cured) s += 8;
+    if (opts.zone?.has(key(x, z))) s += 20;
+    return s;
+  };
+  const zoneDist = (t: { x: number; z: number }): number => {
+    if (!opts.zone?.size) return 0;
+    let best = Infinity;
+    for (const k of opts.zone) {
+      const [zx, zz] = k.split(',').map(Number);
+      best = Math.min(best, Math.abs(zx - t.x) + Math.abs(zz - t.z));
+    }
+    return best;
+  };
   const fields = foes.map((f) => ({ f, d: walkingDistances(grid, f, unit) }));
   const walkToFoes = (t: { x: number; z: number }) =>
     Math.min(...fields.map((e) => e.d.get(key(t.x, t.z)) ?? manhattan(e.f, t) + 20));
@@ -355,6 +388,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
       if (holding && (tile.x !== origin.x || tile.z !== origin.z)) posScore -= 12;
       // A foe's grand summon lands here at the start of its caster's next turn (0.24.0): get clear
       posScore -= callsLandingOn(unit, tile.x, tile.z, units) * 30;
+      posScore += groundScore(tile.x, tile.z);
       // Totems standing here pulse at the start of its next turn (0.47.0): stay out of a foe's
       // Storm and Binding, lean into an ally's Mending and Warding
       for (const { owner, totem } of standingTotems(units)) {
@@ -479,7 +513,9 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
     if (r >= 30 && opts.holdBack) return r;
     return r * (unit.currentHp < unit.maxHp * 0.4 ? 0.4 : 0.1);
   };
-  const walkScore = (t: { x: number; z: number }) => distFrom(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50 + walkRisk(t);
+  // With a hold objective (0.48.0) the walk heads for the zone first, and the foes second
+  const towards = (t: { x: number; z: number }) => (opts.zone?.size ? zoneDist(t) + distFrom(t) * 0.25 : distFrom(t));
+  const walkScore = (t: { x: number; z: number }) => towards(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50 + walkRisk(t) - groundScore(t.x, t.z) / 8;
   let moveTo = origin;
   let bestDist = walkScore(origin);
   for (const t of tiles) {

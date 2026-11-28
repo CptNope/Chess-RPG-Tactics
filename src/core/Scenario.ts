@@ -5,6 +5,7 @@
  * goes through `sanitizeScenario`, which rebuilds the scenario field by field, clamps every
  * number, drops unknown ids and trims text, so a hostile file can't break or inject into the game.
  */
+import { HAZARD_KINDS, HazardKind, HOLD_ROUNDS } from './Hazards';
 import { MapData, MAPS, MapBuilder, spawnsFor } from '../data/maps';
 import { JOBS } from '../data/jobs';
 import { ITEMS } from '../data/items';
@@ -160,6 +161,11 @@ export function validateScenario(s: Scenario): Issue[] {
     if (spawnKeys.has(`${e.x},${e.z}`)) issues.push({ level: 'error', text: `${e.name} is on a squad deploy tile.` });
   }
 
+  if (s.objective.type === 'hold') {
+    const zone = s.map.tiles.filter((t) => t.zone);
+    if (zone.length === 0) issues.push({ level: 'error', text: 'The "Hold" objective needs a hold zone (Terrain → Ground → Hold zone).' });
+    else if (!zone.some((t) => t.walkable)) issues.push({ level: 'error', text: 'Every hold-zone tile is blocked: nobody can stand on it.' });
+  }
   if (s.objective.type === 'boss' && !s.enemies.some((e) => e.isBoss)) {
     issues.push({ level: 'error', text: 'The "Defeat the boss" objective needs an enemy marked as boss.' });
   }
@@ -255,12 +261,16 @@ export function sanitizeScenario(raw: unknown): Scenario {
     if (!isObj(t)) continue;
     const x = clampInt(t.x, -1, MAX_SIZE, -1), z = clampInt(t.z, -1, MAX_SIZE, -1);
     if (x < 0 || z < 0 || x >= width || z >= depth) continue;
-    tiles[z * width + x] = {
+    const tile: TileData = {
       x, z,
       height: clampNum(t.height, 0, MAX_HEIGHT, 1),
       terrain: TERRAINS.includes(t.terrain as TerrainType) ? (t.terrain as TerrainType) : 'grass',
       walkable: t.walkable !== false
     };
+    // Hazards and the hold zone (0.48.0)
+    if (HAZARD_KINDS.includes(t.hazard as HazardKind)) tile.hazard = t.hazard as HazardKind;
+    if (t.zone === true) tile.zone = true;
+    tiles[z * width + x] = tile;
   }
 
   const inside = (p: unknown): p is { x: number; z: number } =>
@@ -303,8 +313,9 @@ export function sanitizeScenario(raw: unknown): Scenario {
     });
 
   const o = isObj(raw.objective) ? raw.objective : {};
-  const type = o.type === 'boss' || o.type === 'survive' ? o.type : 'rout';
-  const objective: BattleObjective = type === 'survive' ? { type, rounds: clampInt(o.rounds, 2, 30, 6) } : { type };
+  const type = o.type === 'boss' || o.type === 'survive' || o.type === 'hold' ? o.type : 'rout';
+  const objective: BattleObjective = type === 'survive' ? { type, rounds: clampInt(o.rounds, 2, 30, 6) }
+    : type === 'hold' ? { type, rounds: clampInt(o.rounds, 1, 10, HOLD_ROUNDS) } : { type };
 
   const rewards = Array.isArray(raw.rewardItemIds) ? raw.rewardItemIds : [];
   return {
@@ -340,7 +351,13 @@ export function parseScenario(json: string): Scenario {
 // Compact share links: #s=<base64url(deflate(json))>
 // ---------------------------------------------------------------------------
 
-/** Compact form for links: tiles become one string per row (height*10, terrain letter, ! for blocked). */
+/**
+ * Compact form for links: tiles become one string per row (height*10, terrain letter, ! for
+ * blocked, then since 0.48.0 a hazard letter e/v/r and * for the hold zone).
+ */
+const HAZARD_LETTER: Record<HazardKind, string> = { embers: 'e', miasma: 'v', spring: 'r' };
+const HAZARD_BY_LETTER: Record<string, HazardKind> = { e: 'embers', v: 'miasma', r: 'spring' };
+
 export function packForShare(s: Scenario): unknown {
   const letter: Record<TerrainType, string> = { grass: 'g', stone: 's', dirt: 'd', water: 'w', wood: 'o', swamp: 'm', parapet: 'p', sand: 'a', snow: 'n' };
   const rows: string[] = [];
@@ -348,7 +365,7 @@ export function packForShare(s: Scenario): unknown {
     const row: string[] = [];
     for (let x = 0; x < s.map.width; x++) {
       const t = s.map.tiles[z * s.map.width + x];
-      row.push(`${Math.round(t.height * 10)}${letter[t.terrain]}${t.walkable ? '' : '!'}`);
+      row.push(`${Math.round(t.height * 10)}${letter[t.terrain]}${t.walkable ? '' : '!'}${t.hazard ? HAZARD_LETTER[t.hazard] : ''}${t.zone ? '*' : ''}`);
     }
     rows.push(row.join(','));
   }
@@ -362,8 +379,11 @@ export function unpackShare(raw: unknown): unknown {
   raw.map.rows.slice(0, MAX_SIZE).forEach((row, z) => {
     if (typeof row !== 'string') return;
     row.split(',').slice(0, MAX_SIZE).forEach((cell, x) => {
-      const m = /^(\d{1,3})([a-z])(!?)$/.exec(cell);
-      if (m) tiles.push({ x, z, height: Number(m[1]) / 10, terrain: byLetter[m[2]] || 'grass', walkable: m[3] !== '!' });
+      const m = /^(\d{1,3})([a-z])(!?)([evr]?)(\*?)$/.exec(cell);
+      if (m) tiles.push({
+        x, z, height: Number(m[1]) / 10, terrain: byLetter[m[2]] || 'grass', walkable: m[3] !== '!',
+        ...(m[4] ? { hazard: HAZARD_BY_LETTER[m[4]] } : {}), ...(m[5] ? { zone: true } : {})
+      });
     });
   });
   return { ...raw, map: { ...raw.map, tiles } };

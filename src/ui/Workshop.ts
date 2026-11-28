@@ -8,9 +8,10 @@
  * (Tab / arrows / Enter) and a controller (d-pad + A, B backs out to the map, X jumps back in).
  * Steppers (◀ value ▶) replace number inputs and dropdowns so nothing needs a text cursor.
  */
+import { HAZARDS, HazardKind, HAZARD_KINDS, HOLD_ROUNDS } from '../core/Hazards';
 import { BattleGrid } from '../core/Grid';
 import { JobSystem } from '../core/JobSystem';
-import { CampaignChapter, DialogueLine, EnemySpawn, FacingDirection, TerrainType, Unit } from '../core/types';
+import { CampaignChapter, DialogueLine, EnemySpawn, FacingDirection, TerrainType, TileData, Unit } from '../core/types';
 import { JOBS } from '../data/jobs';
 import { ITEMS } from '../data/items';
 import { MAPS } from '../data/maps';
@@ -41,7 +42,9 @@ export interface WorkshopHost {
 }
 
 type Tab = 'terrain' | 'units' | 'story' | 'rules' | 'file' | 'chains';
-type Tool = 'raise' | 'lower' | 'level' | 'paint' | 'block' | 'fill' | 'spawn' | 'enemy' | 'erase';
+type Tool = 'raise' | 'lower' | 'level' | 'paint' | 'block' | 'ground' | 'fill' | 'spawn' | 'enemy' | 'erase';
+/** What the Ground tool paints (0.48.0): a hazard, no hazard, or the hold zone on or off. */
+type Ground = HazardKind | 'clear' | 'zone' | 'unzone';
 
 const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
   raise: { label: 'Raise', icon: '▲', hint: 'Raise tiles by half a step.' },
@@ -49,6 +52,7 @@ const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
   level: { label: 'Level', icon: '═', hint: 'Set tiles to the chosen height.' },
   paint: { label: 'Paint', icon: '🖌', hint: 'Paint the chosen terrain.' },
   block: { label: 'Block', icon: '⛔', hint: 'Toggle whether units can stand here.' },
+  ground: { label: 'Ground', icon: '🔥', hint: 'Paint hazards (embers, miasma, a spring) or the area a Hold objective asks for.' },
   fill: { label: 'Fill', icon: '🪣', hint: 'Repaint a whole connected area of the same terrain and height.' },
   spawn: { label: 'Squad', icon: '🛡', hint: `Toggle a squad deploy tile (up to ${MAX_SPAWNS}, in squad order).` },
   enemy: { label: 'Enemy', icon: '☠', hint: 'Place an enemy, or tap one to select and edit it.' },
@@ -56,7 +60,15 @@ const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
 };
 
 /** Tools a drag can paint with (fill and the unit tools work per tap). */
-const STROKE_TOOLS: Tool[] = ['raise', 'lower', 'level', 'paint', 'block'];
+const STROKE_TOOLS: Tool[] = ['raise', 'lower', 'level', 'paint', 'block', 'ground'];
+const GROUND_INFO: Record<Ground, { label: string; color: string }> = {
+  embers: { label: 'Embers', color: '#f97316' },
+  miasma: { label: 'Miasma', color: '#8b5cf6' },
+  spring: { label: 'Spring', color: '#38bdf8' },
+  clear: { label: 'No hazard', color: '#64748b' },
+  zone: { label: 'Hold zone', color: '#facc15' },
+  unzone: { label: 'Not zone', color: '#334155' }
+};
 
 const TERRAIN_COLORS: Record<TerrainType, string> = {
   grass: '#4f9a3a', stone: '#8d95a3', dirt: '#8a5a32', water: '#2f6fd6', wood: '#a0703d', swamp: '#3f5a2c', parapet: '#5f6b84', sand: '#d9b97a', snow: '#e8eef6'
@@ -94,6 +106,7 @@ export class Workshop {
   private tool: Tool = 'raise';
   private brush = 1;
   private paintTerrain: TerrainType = 'stone';
+  private paintGround: Ground = 'embers';
   private levelHeight = 1;
   private enemyForm: Omit<EnemySpawn, 'x' | 'z'> = { name: 'Brigand', jobId: 'squire', level: 3, facing: 'S' };
   private selectedEnemy = -1;
@@ -282,7 +295,8 @@ export class Workshop {
       case 'lower':
       case 'level':
       case 'paint':
-      case 'block': {
+      case 'block':
+      case 'ground': {
         this.checkpoint();
         const block = !tile.walkable;
         for (const p of this.brushTiles(x, z)) {
@@ -291,6 +305,7 @@ export class Workshop {
           else if (this.tool === 'lower') t.height = Math.max(0, Math.round((t.height - 0.5) * 10) / 10);
           else if (this.tool === 'level') t.height = this.levelHeight;
           else if (this.tool === 'paint') t.terrain = this.paintTerrain;
+          else if (this.tool === 'ground') this.groundOn(t);
           else t.walkable = block;
         }
         SoundFX.playMoveStep();
@@ -362,13 +377,14 @@ export class Workshop {
       if (st.visited.has(k)) continue;
       st.visited.add(k);
       const t = this.grid.getTile(p.x, p.z)!;
-      const before = `${t.height}|${t.terrain}|${t.walkable}`;
+      const before = `${t.height}|${t.terrain}|${t.walkable}|${t.hazard}|${t.zone}`;
       if (this.tool === 'raise') t.height = Math.min(MAX_HEIGHT, Math.round((t.height + 0.5) * 10) / 10);
       else if (this.tool === 'lower') t.height = Math.max(0, Math.round((t.height - 0.5) * 10) / 10);
       else if (this.tool === 'level') t.height = this.levelHeight;
       else if (this.tool === 'paint') t.terrain = this.paintTerrain;
       else if (this.tool === 'block') t.walkable = st.block;
-      if (`${t.height}|${t.terrain}|${t.walkable}` !== before) any = true;
+      else if (this.tool === 'ground') this.groundOn(t);
+      if (`${t.height}|${t.terrain}|${t.walkable}|${t.hazard}|${t.zone}` !== before) any = true;
     }
     if (!any) return;
     st.changed = true;
@@ -382,6 +398,15 @@ export class Workshop {
         this.refreshMarkers();
       }, 80);
     }
+  }
+
+  /** Paints the chosen ground on a tile (0.48.0). */
+  private groundOn(t: TileData): void {
+    const g = this.paintGround;
+    if (g === 'zone') t.zone = true;
+    else if (g === 'unzone') delete t.zone;
+    else if (g === 'clear') delete t.hazard;
+    else t.hazard = g;
   }
 
   private floodFill(x: number, z: number): number {
@@ -547,7 +572,7 @@ export class Workshop {
   private setTab(tab: Tab): void {
     this.tab = tab;
     // Pick a sensible tool for the tab so a tap does what the tab is about
-    const terrainTools: Tool[] = ['raise', 'lower', 'level', 'paint', 'block', 'fill'];
+    const terrainTools: Tool[] = ['raise', 'lower', 'level', 'paint', 'block', 'ground', 'fill'];
     const unitTools: Tool[] = ['spawn', 'enemy', 'erase'];
     if (tab === 'terrain' && !terrainTools.includes(this.tool)) this.tool = 'raise';
     if (tab === 'units' && !unitTools.includes(this.tool)) this.tool = 'enemy';
@@ -633,7 +658,7 @@ export class Workshop {
   private terrainTab(): Node[] {
     const showTerrain = this.tool === 'paint' || this.tool === 'fill';
     return [
-      this.toolButtons(['raise', 'lower', 'level', 'paint', 'block', 'fill']),
+      this.toolButtons(['raise', 'lower', 'level', 'paint', 'block', 'ground', 'fill']),
       this.tool !== 'fill' ? this.segmented('brush', 'Brush', [[1, '1×1'], [2, '3×3'], [3, '5×5']], this.brush, (v) => (this.brush = v)) : null,
       this.tool !== 'fill' ? this.segmented('drag', 'Drag on the map', [['paint', 'Paints'], ['pan', 'Pans']], this.dragMode, (v) => (this.dragMode = v)) : null,
       this.tool === 'level' ? this.stepper('lvl', 'Height', this.levelHeight.toFixed(1), (d) => (this.levelHeight = Math.min(MAX_HEIGHT, Math.max(0, this.levelHeight + d * 0.5)))) : null,
@@ -644,6 +669,15 @@ export class Workshop {
             class: 'ws-swatch' + (this.paintTerrain === t ? ' active' : ''), 'data-k': `ter-${t}`, 'aria-pressed': String(this.paintTerrain === t),
             onclick: () => { this.paintTerrain = t; SoundFX.playMenuBlip(); this.render(); }
           }, h('span', { class: 'ws-chip', style: `background:${TERRAIN_COLORS[t]}` }), t)))) : null,
+      this.tool === 'ground' ? h('div', { class: 'ws-field' },
+        h('span', { class: 'ws-label' }, 'Ground'),
+        h('div', { class: 'ws-swatches', role: 'group', 'aria-label': 'Ground' }, ...(Object.keys(GROUND_INFO) as Ground[]).map((g) =>
+          h('button', {
+            class: 'ws-swatch' + (this.paintGround === g ? ' active' : ''), 'data-k': `gnd-${g}`, 'aria-pressed': String(this.paintGround === g),
+            title: HAZARD_KINDS.includes(g as HazardKind) ? HAZARDS[g as HazardKind].blurb : g === 'zone' ? 'Mark the area a Hold objective asks the squad to hold.' : undefined,
+            onclick: () => { this.paintGround = g; SoundFX.playMenuBlip(); this.render(); }
+          }, h('span', { class: 'ws-chip', style: `background:${GROUND_INFO[g].color}` }), GROUND_INFO[g].label)))) : null,
+      this.tool === 'ground' ? h('p', { class: 'ws-note' }, 'Hazards work on whoever starts a turn on them, on either side. The hold zone matters when the Rules tab sets the objective to Hold.') : null,
       h('p', { class: 'ws-note' }, this.dragMode === 'paint' ? 'Drag across tiles to paint a stroke (one undo step). Pan with two fingers, the right mouse button, WASD or the camera buttons.' : 'Tap tiles to edit them one at a time; dragging moves the camera.'),
       h('p', { class: 'ws-note' }, 'Water, swamp and snow cost 2 movement. Height differences above a unit\'s Jump block the step. Wood is a bridge or boardwalk; parapet is battlement stone.')
     ].filter(Boolean) as Node[];
@@ -750,13 +784,16 @@ export class Workshop {
     const o = s.objective;
     const lookIdx = Math.max(0, LOOKS.findIndex((l) => l.id === s.map.look));
     return [
-      this.segmented('obj', 'Objective', [['rout', 'Rout all'], ['boss', 'Defeat boss'], ['survive', 'Survive']], o.type, (v) => {
+      this.segmented('obj', 'Objective', [['rout', 'Rout all'], ['boss', 'Defeat boss'], ['survive', 'Survive'], ['hold', 'Hold']], o.type, (v) => {
         this.checkpoint();
-        s.objective = v === 'survive' ? { type: v, rounds: o.rounds || 6 } : { type: v };
+        s.objective = v === 'survive' ? { type: v, rounds: o.rounds || 6 } : v === 'hold' ? { type: v, rounds: HOLD_ROUNDS } : { type: v };
         this.scheduleSave();
       }),
       o.type === 'survive' ? this.stepper('rounds', 'Rounds to hold', String(o.rounds || 6), (d) => { o.rounds = Math.min(30, Math.max(2, (o.rounds || 6) + d)); this.scheduleSave(); }) : null,
-      h('p', { class: 'ws-note' }, o.type === 'rout' ? 'Win by defeating every enemy.' : o.type === 'boss' ? 'Win the moment the boss (★) falls; the rest of the enemy flees.' : 'Win if anyone in your squad is still standing after that many rounds. A round ends once every unit has had a turn.'),
+      o.type === 'hold' ? this.stepper('hrounds', 'Rounds held', String(o.rounds || HOLD_ROUNDS), (d) => { o.rounds = Math.min(10, Math.max(1, (o.rounds || HOLD_ROUNDS) + d)); this.scheduleSave(); }) : null,
+      h('p', { class: 'ws-note' }, o.type === 'rout' ? 'Win by defeating every enemy.' : o.type === 'boss' ? 'Win the moment the boss (★) falls; the rest of the enemy flees.'
+        : o.type === 'hold' ? 'Win when that many rounds have ended with your squad on the hold zone and no enemy on it (Terrain → Ground → Hold zone), or by defeating every enemy.'
+        : 'Win if anyone in your squad is still standing after that many rounds. A round ends once every unit has had a turn.'),
       this.stepper('look', 'Look', LOOKS[lookIdx].name, (d) => {
         const l = LOOKS[(lookIdx + d + LOOKS.length) % LOOKS.length];
         s.map.look = l.id;
@@ -1037,6 +1074,7 @@ export class Workshop {
     const e = this.scenario.enemies.find((en) => en.x === x && en.z === z);
     const sp = (this.scenario.map.playerSpawns || []).findIndex((p) => p.x === x && p.z === z);
     const what = e ? ` · ${e.isBoss ? '★ ' : ''}${e.name}` : sp >= 0 ? ` · Squad deploy #${sp + 1}` : '';
-    this.say(`(${x}, ${z}) ${t.terrain} h${t.height}${t.walkable ? '' : ' · blocked'}${what} — ${TOOL_INFO[this.tool].label}`);
+    const ground = `${t.hazard ? ` · ${HAZARDS[t.hazard].name}` : ''}${t.zone ? ' · hold zone' : ''}`;
+    this.say(`(${x}, ${z}) ${t.terrain} h${t.height}${t.walkable ? '' : ' · blocked'}${ground}${what} — ${TOOL_INFO[this.tool].label}`);
   }
 }
