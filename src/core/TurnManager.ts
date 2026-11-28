@@ -1,5 +1,6 @@
 import { TileData, Unit } from './types';
 import { applyHazard, HazardPulse } from './Hazards';
+import { settleThrall } from './Necromancy';
 import { JobSystem } from './JobSystem';
 import { CombatEngine } from './CombatEngine';
 import { pulsesOn, tickTotems, TotemPulse } from './Totems';
@@ -113,6 +114,7 @@ export class TurnManager {
       unit.statuses[i].duration--;
       if (unit.statuses[i].duration <= 0) unit.statuses.splice(i, 1);
     }
+    if (settleThrall(unit)) return; // a thrall's time ran out: it crumbles (0.52.0)
     JobSystem.recalculateDerivedStats(unit);
   }
 

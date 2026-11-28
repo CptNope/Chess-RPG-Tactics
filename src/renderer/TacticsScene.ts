@@ -81,6 +81,8 @@ export class TacticsScene {
   private overheadHpElements: Map<string, HTMLElement> = new Map();
   /** Markers where the player's fallen units lie, so they can be found and raised. */
   private fallenMarkers: Map<string, HTMLElement> = new Map();
+  /** Mark fallen foes' bodies too, while someone on the field can work them (0.52.0). */
+  private showBodies = false;
 
   // Highlight overlays (pooled)
   private highlightGroup: THREE.Group = new THREE.Group();
@@ -1099,17 +1101,24 @@ export class TacticsScene {
     }
   }
 
-  /** Keeps a small marker over each fallen player unit (a Phoenix Feather needs to know where they lie). */
+  /** Shows bodies of fallen foes while a Necromancer (or anyone who can work them) is on the field (0.52.0). */
+  public setBodyMarkers(show: boolean): void {
+    this.showBodies = show;
+  }
+
+  /** Keeps a small marker over each fallen player unit (a Phoenix Feather needs to know where they lie), and over workable bodies (0.52.0). */
   private updateFallenMarkers(): void {
     const fallen = new Set<string>();
     for (const unit of this.currentUnits) {
-      if (!unit.isDead || unit.team !== 'player') continue;
+      if (!unit.isDead) continue;
+      const body = unit.team !== 'player';
+      if (body && (!this.showBodies || unit.spent)) continue;
       fallen.add(unit.id);
       let el = this.fallenMarkers.get(unit.id);
       if (!el) {
         el = document.createElement('div');
-        el.className = 'unit-fallen-marker';
-        el.textContent = `✝ ${unit.name}`;
+        el.className = 'unit-fallen-marker' + (body ? ' body' : '');
+        el.textContent = body ? `☠ ${unit.name}` : `✝ ${unit.name}`;
         this.unitTagContainer.appendChild(el);
         this.fallenMarkers.set(unit.id, el);
       }
@@ -1213,7 +1222,8 @@ export class TacticsScene {
       }
 
       const relativeFacing = this.calculateRelativeFacing(walkFacing || unit.facing);
-      const isEnemy = unit.team === 'enemy';
+      // A thrall keeps the look of the side it fell on (0.52.0)
+      const isEnemy = (unit.thrall?.team ?? unit.team) === 'enemy';
       // Animation frame: strike while lunging, flinch on recoil, stride while walking, else breathe
       const frame: SpriteFrame = tween?.type === 'lunge' ? 'attack'
         : tween?.type === 'recoil' ? 'hurt'
@@ -1221,6 +1231,7 @@ export class TacticsScene {
         : Math.floor(now / 520 + unit.x * 0.7 + unit.z * 0.3) % 2 ? 'idle1' : 'idle0';
       const tex = createUnitSpriteTexture(unit.jobId, relativeFacing, isEnemy, frame);
       const mat = spriteMesh.material as THREE.MeshBasicMaterial;
+      mat.color.setHex(unit.thrall ? 0x9be7a6 : 0xffffff); // a thrall's sickly green
       if (mat.map !== tex) {
         mat.map = tex;
         mat.needsUpdate = true;
@@ -1362,7 +1373,7 @@ export class TacticsScene {
   /** The unit as it looks on screen right now, as an effect actor (for heals, poison, haste...). */
   public fxActorFor(unit: Unit): FxActor {
     const view = this.calculateRelativeFacing(unit.facing);
-    const team = unit.team === 'enemy';
+    const team = (unit.thrall?.team ?? unit.team) === 'enemy';
     return actorFromSprite(`${unit.jobId}|${view}|${team}`, drawSprite(unit.jobId, view, team, 'idle0'));
   }
 

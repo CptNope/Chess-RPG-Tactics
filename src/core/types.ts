@@ -20,7 +20,9 @@ export type StatusEffectType =
   // Added in 0.22.0: a Bard or Dancer holding a performance; it plays again each turn
   | 'encore'
   // Added in 0.24.0: a Summoner calling a grand summon; it arrives at the start of their next turn
-  | 'calling';
+  | 'calling'
+  // Added in 0.52.0: a fallen foe raised by a Necromancer; it crumbles when this runs out
+  | 'thrall';
 
 export interface ActiveStatus {
   type: StatusEffectType;
@@ -115,6 +117,10 @@ export interface Ability {
   totem?: TotemKind;
   /** Hides a trap of this kind on the aimed tile, or on every free tile within `aoe` (0.49.0). */
   trap?: TrapKind;
+  /** Raises the fallen foe on the aimed tile (or every one within `aoe`) as a thrall (0.52.0). */
+  thrall?: boolean;
+  /** Aimed at a body: it bursts, hurting those within `aoe` of it, and is spent (0.52.0). */
+  corpseBurst?: boolean;
   /** Thief: takes one piece of the target's gear instead of dealing damage. */
   steal?: boolean;
   /** Set on the action for using a consumable: the id of the item it spends (see data/consumables.ts). */
@@ -165,7 +171,7 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Bruiser' | 'Warden' | 'Trapper' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
+    | 'Brawler' | 'Bruiser' | 'Warden' | 'Trapper' | 'Necromancer' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
     // Monsters (0.26.0)
     | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer' | 'Undead' | 'Plant';
   spriteClass: string;
@@ -264,6 +270,10 @@ export interface Unit {
   totems?: Totem[];
   /** A Ranger's hidden traps (0.49.0). */
   traps?: Trap[];
+  /** A thrall's own side, while a Necromancer holds it (0.52.0). */
+  thrall?: { team: Team; alliance?: string };
+  /** A body already raised or burst: it can't be worked again (0.52.0). */
+  spent?: boolean;
   /** Iron Will can fire only once per battle. */
   usedIronWill?: boolean;
   /** A monster a Beast Tamer won over this battle (0.28.0): it fights for the squad and may join it. */

@@ -14,6 +14,7 @@ import type { BattleGrid } from './Grid';
 import { TurnManager } from './TurnManager';
 import { ActionContext, ActionEnd, ActionStep, runAction, walkInto } from './Action';
 import { trapAt } from './Traps';
+import { bodyAt, raisableAt, settleFallenThralls } from './Necromancy';
 import { callDue } from './Summons';
 import { sumPulses, TotemPulse } from './Totems';
 import { GroundChange, HazardPulse, holdGoal, tickGround, zoneHolder, zoneKeys } from './Hazards';
@@ -121,6 +122,8 @@ export type BattleEvent =
   | { t: 'hold'; round: number; held: number; holder: string | null }
   /** The ground changed: a spell's embers, miasma or dousing, or its mark running out (0.50.0). */
   | { t: 'ground'; tiles: GroundChange[] }
+  /** A Necromancer's thrall crumbled: its time ran out, or it fell (0.52.0). */
+  | { t: 'crumble'; unit: string }
   | { t: 'call' | 'encore' | 'act'; unit: string; ability: string; x: number; z: number; hits: HitRecord[] }
   | { t: 'move'; unit: string; x: number; z: number }
   /** A foe's trap stopped a walk (0.49.0): who set it, what it did, and the Ranger's Ambush shot. */
@@ -189,6 +192,8 @@ export class Battle {
   /** Checks for a winner, and logs the end once. */
   private settle(): BattleOutcome | null {
     if (this.over) return this.over;
+    // A thrall felled by anything crumbles back to its own side (0.52.0)
+    for (const u of settleFallenThralls(this.units)) this.events.push({ t: 'crumble', unit: u.id });
     const o = battleOutcome(this.units, this.objective, this.rounds.round, this.hero, this.rounds.held);
     if (o) {
       this.over = o;
@@ -259,8 +264,17 @@ export class Battle {
       if (ability.item && !((this.ctx.pouchOf(u) || {})[ability.item] > 0)) return 'None left.';
       if (!target) return 'No target.';
       if (!ability.isSelfOnly && !isCentered(ability) &&
-        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability) || !!ability.totem || !!ability.trap)) return 'Out of range.';
+        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability) || !!ability.totem || !!ability.trap || !!ability.thrall || !!ability.corpseBurst)) return 'Out of range.';
       // A single trap needs free ground: walkable, nobody on it, no trap there yet (0.49.0)
+      // A Necromancer's work needs a body (0.52.0): one it can raise, or any for a burst
+      // ...judged from where it will stand: stepping off a body uncovers it
+      if (ability.thrall || ability.corpseBurst) {
+        const [sx, sz] = [u.x, u.z];
+        u.x = moveTo.x; u.z = moveTo.z;
+        const ok = ability.thrall && !ability.aoe ? !!raisableAt(u, this.units, target.x, target.z) : !!bodyAt(this.units, target.x, target.z);
+        u.x = sx; u.z = sz;
+        if (!ok && (ability.corpseBurst || !ability.aoe)) return ability.thrall ? 'No body to raise there.' : 'No body there.';
+      }
       if (ability.trap && !ability.aoe && (!this.grid.getTile(target.x, target.z)?.walkable || trapAt(this.units, target.x, target.z) ||
         this.units.some((o) => !o.isDead && o !== u && o.x === target.x && o.z === target.z) || (target.x === moveTo.x && target.z === moveTo.z))) return 'No room for a trap there.';
     }
@@ -302,7 +316,9 @@ export class Battle {
         u.facing = intent.facing;
         this.events.push({ t: 'face', unit: u.id, facing: u.facing });
       }
+      const wasThrall = !!u.thrall;
       this.turns.endTurn(u);
+      if (wasThrall && !u.thrall) this.events.push({ t: 'crumble', unit: u.id });
     }
     return this.events.slice(from);
   }

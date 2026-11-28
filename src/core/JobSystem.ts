@@ -28,7 +28,8 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   gunner: { reaction: 'gu_return_fire' },
   dark_knight: { reaction: 'dk_vengeance', support: 'dk_blood_pact' },
   shaman: { reaction: 'sh_spirit_ward', support: 'sh_deep_roots' },
-  ranger: { reaction: 'rg_ambush', support: 'rg_trapsmith' }
+  ranger: { reaction: 'rg_ambush', support: 'rg_trapsmith' },
+  necromancer: { reaction: 'nc_soul_siphon', support: 'nc_dark_pact' }
 };
 
 /** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
@@ -65,7 +66,8 @@ export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; m
   gunner: { stat: 'attack', veteran: 1, master: 2 },
   dark_knight: { stat: 'hp', veteran: 12, master: 30 },
   shaman: { stat: 'mp', veteran: 8, master: 20 },
-  ranger: { stat: 'attack', veteran: 1, master: 2 }
+  ranger: { stat: 'attack', veteran: 1, master: 2 },
+  necromancer: { stat: 'magic', veteran: 1, master: 3 }
 };
 const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
 /** "+10 HP", "+1 ATK"… */
@@ -174,6 +176,10 @@ export class JobSystem {
       initialGear.shield = ITEMS.buckler;
       initialGear.head = ITEMS.iron_helm;
       initialGear.body = ITEMS.chainmail;
+    } else if (jobId === 'necromancer') {
+      initialGear.weapon = ITEMS.chrono_rod;
+      initialGear.body = ITEMS.silk_robe;
+      initialGear.accessory = ITEMS.mage_ring;
     } else if (jobId === 'ranger') {
       initialGear.weapon = ITEMS.hunting_bow;
       initialGear.head = ITEMS.leather_cap;
@@ -617,6 +623,14 @@ export class JobSystem {
     unit.calling = undefined;
     unit.totems = undefined;
     unit.traps = undefined;
+    // A unit still held as a thrall when the last battle ended goes home (0.52.0)
+    if (unit.thrall) {
+      unit.team = unit.thrall.team;
+      if (unit.thrall.alliance === undefined) delete unit.alliance;
+      else unit.alliance = unit.thrall.alliance;
+      unit.thrall = undefined;
+    }
+    unit.spent = undefined;
     unit.usedSignatures = [];
     unit.ct = 0;
     unit.hasMoved = false;

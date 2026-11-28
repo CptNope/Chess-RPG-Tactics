@@ -50,6 +50,7 @@ import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { inReach, sumPulses, TotemPulse } from './core/Totems';
 import { trapAt } from './core/Traps';
+import { bodyAt, raisableAt, settleFallenThralls, worksOnBodies } from './core/Necromancy';
 import { GroundChange, HAZARDS, HazardPulse, holdGoal, SCORCH_ROUNDS, tickGround, zoneHolder, zoneKeys } from './core/Hazards';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
@@ -173,6 +174,8 @@ class TacticsGame {
   private selectedAbility: Ability | null = null;
   private currentForecast: CombatForecast | null = null;
   private targetTile: { x: number; z: number } | null = null;
+  /** Thralls on the field, to tell when one crumbles (0.52.0). */
+  private thralls = new Set<string>();
   /** The tile a totem is aimed at, waiting for a second click to plant it (0.47.0). */
   private totemAim: { x: number; z: number } | null = null;
 
@@ -1075,6 +1078,8 @@ class TacticsGame {
 
   private advanceTurn(): void {
     if (this.battleOver || this.checkBattleStatus()) return;
+    // Show fallen foes' bodies while anyone standing can work them (0.52.0)
+    this.scene.setBodyMarkers(this.units.some((u) => !u.isDead && JobSystem.getCombatActionAbilities(u).some(worksOnBodies)));
 
     const result = this.turnManager.advanceToNextActiveTurn();
     if (!result) {
@@ -1260,10 +1265,13 @@ class TacticsGame {
     const supportive = CombatEngine.isSupportive(ability);
     this.totemAim = null;
     let tiles = this.grid.mapData.tiles.filter((t) =>
-      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive || !!ability.totem || !!ability.trap)
+      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive || !!ability.totem || !!ability.trap || worksOnBodies(ability))
     );
     // A trap goes on free ground (0.49.0)
     if (ability.trap && !ability.aoe) tiles = tiles.filter((t) => this.trapFree(t.x, t.z));
+    // A Necromancer's work needs a body there (0.52.0)
+    if (ability.corpseBurst) tiles = tiles.filter((t) => !!bodyAt(this.units, t.x, t.z));
+    if (ability.thrall && !ability.aoe) tiles = tiles.filter((t) => !!raisableAt(active, this.units, t.x, t.z));
     if (ability.revive) {
       // Only the tiles where a fallen ally can be raised
       tiles = tiles.filter((t) => this.victimsFor(active, ability, t.x, t.z).length > 0);
@@ -1276,7 +1284,7 @@ class TacticsGame {
     this.currentMode = 'targeting';
     this.tip('targeting');
     (document.activeElement as HTMLElement | null)?.blur();
-    this.scene.setHighlights(tiles, ability.trap ? 0xf59e0b : supportive || this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+    this.scene.setHighlights(tiles, ability.thrall ? 0xa78bfa : ability.trap ? 0xf59e0b : supportive || this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
   }
 
   /** Free ground for a trap: walkable, nobody on it, no trap there yet (0.49.0). */
@@ -1384,7 +1392,7 @@ class TacticsGame {
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
       const ability = this.selectedAbility;
       const supportive = CombatEngine.isSupportive(ability);
-      if (ability.totem || ability.trap) {
+      if (ability.totem || ability.trap || worksOnBodies(ability)) {
         // A totem (0.47.0) or a trap (0.49.0) goes on ground, not on someone: the first click shows
         // where it lands, the second sets it
         if (!this.grid.canTarget(active.x, active.z, tile.x, tile.z, ability.range, ability.heightTolerance, true)) {
@@ -1393,6 +1401,11 @@ class TacticsGame {
         }
         if (ability.trap && !ability.aoe && !this.trapFree(tile.x, tile.z)) {
           this.ui.showBanner('NO ROOM FOR A TRAP THERE');
+          return;
+        }
+        const body = ability.thrall ? raisableAt(active, this.units, tile.x, tile.z) : bodyAt(this.units, tile.x, tile.z);
+        if ((ability.corpseBurst && !body) || (ability.thrall && !ability.aoe && !body)) {
+          this.ui.showBanner(ability.thrall ? 'NO BODY TO RAISE THERE' : 'NO BODY THERE');
           return;
         }
         if (this.totemAim && this.totemAim.x === tile.x && this.totemAim.z === tile.z) {
@@ -1405,9 +1418,10 @@ class TacticsGame {
         SoundFX.playMenuBlip();
         const area = { x: tile.x, z: tile.z, radius: ability.aoe };
         const reach = this.grid.mapData.tiles.filter((t) => t.walkable && inReach({ kind: 'mending', turns: 0, ...area }, t.x, t.z) && (!ability.trap || this.trapFree(t.x, t.z)));
-        this.scene.setHighlights(reach, ability.trap ? 0xf59e0b : this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+        this.scene.setHighlights(reach, ability.thrall ? 0xa78bfa : ability.corpseBurst ? 0xdc2626 : ability.trap ? 0xf59e0b : this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
         this.scene.setCursor(tile.x, tile.z);
-        this.ui.showBanner(ability.trap ? 'SELECT AGAIN TO HIDE IT HERE' : 'ITS REACH · SELECT AGAIN TO PLANT');
+        this.ui.showBanner(ability.thrall ? (ability.aoe ? 'THESE BODIES RISE · SELECT AGAIN' : `RAISE ${body!.name.toUpperCase()} · SELECT AGAIN`)
+          : ability.corpseBurst ? 'THE BLAST · SELECT AGAIN TO BURST IT' : ability.trap ? 'SELECT AGAIN TO HIDE IT HERE' : 'ITS REACH · SELECT AGAIN TO PLANT');
         return;
       }
       if (isCentered(ability)) {
@@ -1634,7 +1648,7 @@ class TacticsGame {
     const run = resolveAction(this.actionContext(), caster, ability, tx, tz, opts);
     const first = run.next();
     if (first.done || first.value.kind !== 'start') return;
-    const { victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses, trapsSet } = first.value;
+    const { victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses, trapsSet, raised, burst } = first.value;
     if (performanceEnded) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} stops performing.`, 'system');
     if (hpPaid > 0) {
       // A Dark Knight's price, paid in blood (0.46.0)
@@ -1647,6 +1661,23 @@ class TacticsGame {
       this.scene.spawnFloatingDamage(totem.x, this.grid.getHeight(totem.x, totem.z) + 0.6, totem.z, `✦ ${ability.name.toUpperCase()}`, 'heal');
       this.ui.addLogEntry(`[TOTEM] ${caster.name} plants a ${ability.name}. It stands for ${totem.turns} of ${caster.name}'s turns.`, 'spell');
       for (const p of pulses ?? []) this.showPulses(p.unit, p.pulses);
+    }
+    if (raised?.length || ability.thrall) {
+      // A Necromancer raises the fallen (0.52.0)
+      SoundFX.playMagicCast();
+      for (const r of raised ?? []) {
+        this.thralls.add(r.id);
+        const turns = r.statuses.find((s) => s.type === 'thrall')?.duration ?? 0;
+        this.scene.spawnFloatingDamage(r.x, this.grid.getHeight(r.x, r.z) + 0.5, r.z, 'RISES!', 'miss');
+        this.ui.addLogEntry(`[NECRO] ${caster.name} raises ${r.name} as a thrall: it fights for ${caster.team === 'player' ? 'your squad' : 'the enemy'} for ${turns} of its turns.`, 'spell');
+      }
+      if (!raised?.length) this.ui.addLogEntry(`[NECRO] There was no body for ${caster.name} to raise.`, 'system');
+      this.scene.updateUnits(this.units);
+      this.updateTimeline();
+    }
+    if (burst) {
+      SoundFX.playCrit();
+      this.ui.addLogEntry(`[NECRO] ${burst.name}'s body bursts!`, 'spell');
     }
     if (trapsSet) {
       // A Ranger hides traps (0.49.0). The other side sees only that something was hidden
@@ -1673,7 +1704,7 @@ class TacticsGame {
 
     const verb = caster.team === 'player' ? 'executes' : 'uses';
     const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || (isCentered(ability) ? 'nobody in reach' : 'empty ground');
-    if (calling || totem || trapsSet) {
+    if (calling || totem || trapsSet || ability.thrall) {
       // logged above
     } else if (called) {
       this.ui.addLogEntry(`[SUMMON] ${ability.name} falls on ${targetText}.`, 'spell');
@@ -2369,8 +2400,23 @@ class TacticsGame {
     return false;
   }
 
+  /** Logs thralls that crumbled: their time ran out, or they fell (0.52.0). */
+  private noteCrumbles(): void {
+    for (const u of settleFallenThralls(this.units)) this.thralls.add(u.id);
+    for (const id of [...this.thralls]) {
+      const u = this.units.find((x) => x.id === id);
+      if (u?.thrall) continue;
+      this.thralls.delete(id);
+      if (u) {
+        this.ui.addLogEntry(`[NECRO] ${u.name} crumbles back into the dust.`, 'defeat');
+        this.scene.updateUnits(this.units);
+      }
+    }
+  }
+
   private checkBattleStatus(): boolean {
     if (this.battleOver) return true;
+    this.noteCrumbles();
     // Who has won is decided in core/Battle.ts (0.44.0): a tamed beast can't win alone, a fallen
     // boss sends the rest fleeing, holding out wins a survive battle
     const outcome = battleOutcome(this.units, this.currentChapter.objective, this.round, 'player', this.held);

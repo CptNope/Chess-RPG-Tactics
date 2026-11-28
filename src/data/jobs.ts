@@ -2566,6 +2566,115 @@ export const JOBS: Record<string, Job> = {
         element: 'physical'
       }
     ]
+  },
+  necromancer: {
+    id: 'necromancer',
+    name: 'Necromancer',
+    description: 'An advanced job. Works with the fallen: raises a fallen foe to fight for you for a few turns, makes bodies burst among the living, and withers what still stands. An enemy Necromancer can raise your fallen against you.',
+    role: 'Necromancer',
+    spriteClass: 'necromancer',
+    baseMove: 3,
+    baseJump: 2,
+    statMultipliers: {
+      hp: 0.9,
+      mp: 1.25,
+      attack: 0.6,
+      magic: 1.2,
+      speed: 0.95
+    },
+    prerequisites: [{ jobId: 'black_mage', level: 3 }, { jobId: 'oracle', level: 2 }],
+    abilities: [
+      {
+        id: 'nc_grave_bolt',
+        name: 'Grave Bolt',
+        jobId: 'necromancer',
+        type: 'action',
+        description: 'A bolt of grave-cold from up to 4 tiles: dark damage (MAG).',
+        jpCost: 60,
+        mpCost: 5,
+        range: 4,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 1.15,
+        element: 'dark',
+        scalesWith: 'magic'
+      },
+      {
+        id: 'nc_wither',
+        name: 'Wither',
+        jobId: 'necromancer',
+        type: 'action',
+        description: 'Withers a foe up to 4 tiles away: light dark damage and Slow.',
+        jpCost: 120,
+        mpCost: 8,
+        range: 4,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 0.6,
+        element: 'dark',
+        scalesWith: 'magic',
+        appliesStatus: 'slow'
+      },
+      {
+        id: 'nc_raise_thrall',
+        name: 'Raise Thrall',
+        jobId: 'necromancer',
+        type: 'action',
+        description: 'Raises a fallen foe within 3 tiles to fight on your side, with 40% of its HP, for 3 of its turns. Then it crumbles, and can\'t be raised again. Not a boss.',
+        jpCost: 160,
+        mpCost: 16,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 0,
+        element: 'dark',
+        thrall: true
+      },
+      {
+        id: 'nc_corpse_burst',
+        name: 'Corpse Burst',
+        jobId: 'necromancer',
+        type: 'action',
+        description: 'Makes a body within 4 tiles burst: dark damage to everyone within 1 of it (MAG). The body is spent.',
+        jpCost: 200,
+        mpCost: 12,
+        range: 4,
+        heightTolerance: 3,
+        aoe: 1,
+        power: 1.3,
+        element: 'dark',
+        scalesWith: 'magic',
+        corpseBurst: true
+      },
+      {
+        id: 'nc_soul_siphon',
+        name: 'Soul Siphon',
+        jobId: 'necromancer',
+        type: 'reaction',
+        description: 'When struck, drinks back a quarter of the damage as HP.',
+        jpCost: 220,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'dark'
+      },
+      {
+        id: 'nc_dark_pact',
+        name: 'Dark Pact',
+        jobId: 'necromancer',
+        type: 'support',
+        description: 'Your thralls rise with 60% of their HP and last 5 turns.',
+        jpCost: 260,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'dark'
+      }
+    ]
   }
 };
 
