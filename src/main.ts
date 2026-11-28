@@ -48,6 +48,7 @@ import { Workshop } from './ui/Workshop';
 import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
+import { inReach, sumPulses, TotemPulse } from './core/Totems';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
@@ -168,6 +169,8 @@ class TacticsGame {
   private selectedAbility: Ability | null = null;
   private currentForecast: CombatForecast | null = null;
   private targetTile: { x: number; z: number } | null = null;
+  /** The tile a totem is aimed at, waiting for a second click to plant it (0.47.0). */
+  private totemAim: { x: number; z: number } | null = null;
 
   // Campaign state
   private currentChapter: CampaignChapter = CAMPAIGN_CHAPTERS.chapter_1;
@@ -1052,7 +1055,8 @@ class TacticsGame {
         this.ui.addLogEntry(`[STATUS] ${u.name} takes ${t.poison} poison damage!`, 'spell');
       }
       if (t.regen) this.ui.addLogEntry(`[STATUS] ${u.name} regenerates ${t.regen} HP.`, 'heal');
-      if (u.isDead) this.ui.addLogEntry(`[DEFEAT] ${u.name} succumbs to poison!`, 'defeat');
+      if (t.totems) this.showPulses(u, t.totems);
+      if (u.isDead && t.poison) this.ui.addLogEntry(`[DEFEAT] ${u.name} succumbs to poison!`, 'defeat');
       else if (t.slept) {
         this.scene.spawnFloatingDamage(u.x, h + 0.3, u.z, 'Zzz', 'miss');
         this.ui.addLogEntry(`[STATUS] ${u.name} is fast asleep and loses the turn.`, 'spell');
@@ -1071,7 +1075,7 @@ class TacticsGame {
       return;
     }
 
-    const { activeUnit, poisonDamage, regenHeal } = result;
+    const { activeUnit, poisonDamage, regenHeal, totems } = result;
     this.logSkippedTurns();
     if (this.battleOver || this.checkBattleStatus()) return;
     if (!activeUnit.hasMoved && !activeUnit.hasActed && this.trackRound(activeUnit)) return;
@@ -1096,6 +1100,7 @@ class TacticsGame {
       this.ui.addLogEntry(`[STATUS] ${activeUnit.name} regenerates ${regenHeal} HP.`, 'heal');
       this.scene.updateUnits(this.units);
     }
+    this.showPulses(activeUnit, totems);
 
     // A grand summon called last turn lands before the unit acts (0.24.0)
     const call = callDue(activeUnit);
@@ -1245,8 +1250,9 @@ class TacticsGame {
     }
 
     const supportive = CombatEngine.isSupportive(ability);
+    this.totemAim = null;
     let tiles = this.grid.mapData.tiles.filter((t) =>
-      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive)
+      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive || !!ability.totem)
     );
     if (ability.revive) {
       // Only the tiles where a fallen ally can be raised
@@ -1260,7 +1266,12 @@ class TacticsGame {
     this.currentMode = 'targeting';
     this.tip('targeting');
     (document.activeElement as HTMLElement | null)?.blur();
-    this.scene.setHighlights(tiles, supportive ? 0x22c55e : 0xdc2626);
+    this.scene.setHighlights(tiles, supportive || this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+  }
+
+  /** True for a totem that works for its Shaman's side: Mending, Warding, Ancestral (0.47.0). */
+  private totemHelps(ability: Ability): boolean {
+    return ability.totem === 'mending' || ability.totem === 'warding' || ability.totem === 'ancestral';
   }
 
   private handleWaitCommand(): void {
@@ -1339,6 +1350,27 @@ class TacticsGame {
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
       const ability = this.selectedAbility;
       const supportive = CombatEngine.isSupportive(ability);
+      if (ability.totem) {
+        // A totem goes on ground, not on someone: the first click shows its reach, the second plants it (0.47.0)
+        if (!this.grid.canTarget(active.x, active.z, tile.x, tile.z, ability.range, ability.heightTolerance, true)) {
+          this.ui.showBanner('OUT OF RANGE');
+          return;
+        }
+        if (this.totemAim && this.totemAim.x === tile.x && this.totemAim.z === tile.z) {
+          this.totemAim = null;
+          SoundFX.playMenuBlip();
+          void this.executePlayerAction(active, ability, tile.x, tile.z);
+          return;
+        }
+        this.totemAim = { x: tile.x, z: tile.z };
+        SoundFX.playMenuBlip();
+        const totem = { kind: ability.totem, x: tile.x, z: tile.z, radius: ability.aoe, turns: 0 };
+        const reach = this.grid.mapData.tiles.filter((t) => t.walkable && inReach(totem, t.x, t.z));
+        this.scene.setHighlights(reach, this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+        this.scene.setCursor(tile.x, tile.z);
+        this.ui.showBanner('ITS REACH · SELECT AGAIN TO PLANT');
+        return;
+      }
       if (isCentered(ability)) {
         // Any tile of the area confirms: the performance is centred on the performer
         if (Math.abs(tile.x - active.x) + Math.abs(tile.z - active.z) > ability.aoe) {
@@ -1431,6 +1463,28 @@ class TacticsGame {
   // ---------------------------------------------------------------------------
 
   /** Units an ability aimed at (tx, tz) will affect. Single-target abilities hit whoever is on the tile. */
+  /** Floats and logs what totems did to a unit (0.47.0). */
+  private showPulses(u: Unit, pulses: TotemPulse[] | undefined): void {
+    if (!pulses?.length) return;
+    const t = sumPulses(pulses);
+    const h = this.grid.getHeight(u.x, u.z);
+    if (t.heal) {
+      this.scene.spawnFloatingDamage(u.x, h, u.z, `TOTEM +${t.heal}`, 'heal');
+      this.ui.addLogEntry(`[TOTEM] The spirits mend ${u.name}: +${t.heal} HP.`, 'heal');
+    }
+    if (t.damage) {
+      this.scene.spawnFloatingDamage(u.x, h, u.z, `STORM -${t.damage}`, 'damage');
+      this.ui.addLogEntry(`[TOTEM] Lightning strikes ${u.name} for ${t.damage}.`, 'spell');
+    }
+    for (const s of t.statuses) {
+      this.fx.status(u, s);
+      this.scene.spawnFloatingDamage(u.x, h + 0.35, u.z, s.toUpperCase(), s === 'slow' ? 'miss' : 'heal');
+      this.ui.addLogEntry(`[TOTEM] ${u.name} is ${s === 'slow' ? 'Slowed' : 'Protected'} by a totem.`, 'spell');
+    }
+    if (u.isDead) this.ui.addLogEntry(`[DEFEAT] ${u.name} falls to the storm!`, 'defeat');
+    this.scene.updateUnits(this.units);
+  }
+
   private victimsFor(caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
     return victimsFor(this.units, caster, ability, tx, tz);
   }
@@ -1463,12 +1517,19 @@ class TacticsGame {
     const run = resolveAction(this.actionContext(), caster, ability, tx, tz, opts);
     const first = run.next();
     if (first.done || first.value.kind !== 'start') return;
-    const { victims, calling, summoning, faced, performanceEnded, hpPaid } = first.value;
+    const { victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses } = first.value;
     if (performanceEnded) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} stops performing.`, 'system');
     if (hpPaid > 0) {
       // A Dark Knight's price, paid in blood (0.46.0)
       this.scene.spawnFloatingDamage(caster.x, this.grid.getHeight(caster.x, caster.z) + 0.3, caster.z, `-${hpPaid} HP`, 'damage');
       this.ui.addLogEntry(`[BLOOD] ${caster.name} pays ${hpPaid} HP.`, 'system');
+    }
+    if (totem) {
+      // A Shaman plants a totem (0.47.0): it pulses at once on everyone in reach
+      SoundFX.playMagicCast();
+      this.scene.spawnFloatingDamage(totem.x, this.grid.getHeight(totem.x, totem.z) + 0.6, totem.z, `✦ ${ability.name.toUpperCase()}`, 'heal');
+      this.ui.addLogEntry(`[TOTEM] ${caster.name} plants a ${ability.name}. It stands for ${totem.turns} of ${caster.name}'s turns.`, 'spell');
+      for (const p of pulses ?? []) this.showPulses(p.unit, p.pulses);
     }
 
     if (faced && !called) this.scene.triggerUnitLunge(caster.id, tx, tz);
@@ -1486,7 +1547,7 @@ class TacticsGame {
 
     const verb = caster.team === 'player' ? 'executes' : 'uses';
     const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || (isCentered(ability) ? 'nobody in reach' : 'empty ground');
-    if (calling) {
+    if (calling || totem) {
       // logged above
     } else if (called) {
       this.ui.addLogEntry(`[SUMMON] ${ability.name} falls on ${targetText}.`, 'spell');

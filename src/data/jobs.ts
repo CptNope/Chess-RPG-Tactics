@@ -2322,8 +2322,129 @@ export const JOBS: Record<string, Job> = {
         element: 'dark'
       }
     ]
+  },
+  shaman: {
+    id: 'shaman',
+    name: 'Shaman',
+    description: 'An advanced job. Speaks with the spirits of the land and plants them as totems: each one stands for a few turns and mends, wards, binds or strikes whoever starts a turn near it. Keeps two at once; place them well and the field works for you.',
+    role: 'Warden',
+    spriteClass: 'shaman',
+    baseMove: 3,
+    baseJump: 2,
+    statMultipliers: {
+      hp: 0.95,
+      mp: 1.15,
+      attack: 0.8,
+      magic: 1.1,
+      speed: 1.0
+    },
+    prerequisites: [{ jobId: 'white_mage', level: 3 }, { jobId: 'geomancer', level: 2 }],
+    abilities: [
+      {
+        id: 'sh_spirit_lash',
+        name: 'Spirit Lash',
+        jobId: 'shaman',
+        type: 'action',
+        description: 'A lash of restless spirits: lightning damage (MAG).',
+        jpCost: 50,
+        mpCost: 5,
+        range: 4,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 1.1,
+        element: 'lightning',
+        scalesWith: 'magic'
+      },
+      {
+        id: 'sh_mending_totem',
+        name: 'Mending Totem',
+        jobId: 'shaman',
+        type: 'action',
+        description: 'Plants a totem for 3 turns: allies within 2 tiles recover 8% of max HP when it is planted and at the start of their turns.',
+        jpCost: 100,
+        mpCost: 10,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 2,
+        power: 0,
+        element: 'holy',
+        totem: 'mending'
+      },
+      {
+        id: 'sh_warding_totem',
+        name: 'Warding Totem',
+        jobId: 'shaman',
+        type: 'action',
+        description: 'Plants a totem for 3 turns: allies within 2 tiles gain Protect when it is planted and at the start of their turns.',
+        jpCost: 150,
+        mpCost: 12,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 2,
+        power: 0,
+        element: 'holy',
+        totem: 'warding'
+      },
+      {
+        id: 'sh_binding_totem',
+        name: 'Binding Totem',
+        jobId: 'shaman',
+        type: 'action',
+        description: 'Plants a totem for 3 turns: foes within 2 tiles are Slowed when it is planted and at the start of their turns.',
+        jpCost: 200,
+        mpCost: 14,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 2,
+        power: 0,
+        element: 'time',
+        totem: 'binding'
+      },
+      {
+        id: 'sh_storm_totem',
+        name: 'Storm Totem',
+        jobId: 'shaman',
+        type: 'action',
+        description: 'Plants a totem for 3 turns: lightning strikes foes within 2 tiles (MAG) when it is planted and at the start of their turns.',
+        jpCost: 260,
+        mpCost: 18,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 2,
+        power: 0,
+        element: 'lightning',
+        totem: 'storm'
+      },
+      {
+        id: 'sh_spirit_ward',
+        name: 'Spirit Ward',
+        jobId: 'shaman',
+        type: 'reaction',
+        description: 'When struck within reach of one of your own totems, the spirits mend you: recover 15% of max HP.',
+        jpCost: 220,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'holy'
+      },
+      {
+        id: 'sh_deep_roots',
+        name: 'Deep Roots',
+        jobId: 'shaman',
+        type: 'support',
+        description: 'Your totems stand 2 turns longer.',
+        jpCost: 250,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'holy'
+      }
+    ]
   }
-
 };
 
 // Monsters (0.26.0) are jobs too, so every rule finds them, but only enemies are ever given one

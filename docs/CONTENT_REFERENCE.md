@@ -8,7 +8,7 @@ Every number here is read straight from the game data, so it always matches what
 
 ## Jobs
 
-21 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
+22 jobs. Stat multipliers scale a unit's base stats while it holds that job (base HP = 120 + 18 × level).
 
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -33,14 +33,15 @@ Every number here is read straight from the game data, so it always matches what
 | **Beast Tamer** `tamer` | Tamer | 4 | 3 | 1.05× | 0.80× | 1.05× | 0.80× | 1.00× | 6 |
 | **Gunner** `gunner` | Marksman | 3 | 3 | 0.95× | 0.75× | 1.10× | 0.70× | 1.05× | 7 |
 | **Dark Knight** `dark_knight` | Bruiser | 3 | 2 | 1.15× | 0.60× | 1.20× | 0.85× | 0.95× | 7 |
+| **Shaman** `shaman` | Warden | 3 | 2 | 0.95× | 1.15× | 0.80× | 1.10× | 1.00× | 7 |
 
 ```mermaid
 xychart-beta
   title "Job stat multipliers (ATK vs MAG)"
-  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer", "Beast Tamer", "Gunner", "Dark Knight"]
+  x-axis ["Squire", "Knight", "Archer", "Black Mage", "White Mage", "Dragoon", "Ninja", "Geomancer", "Time Weaver", "Chemist", "Monk", "Thief", "Summoner", "Oracle", "Paladin", "Spellblade", "Bard", "Dancer", "Beast Tamer", "Gunner", "Dark Knight", "Shaman"]
   y-axis "Multiplier" 0.6 --> 1.5
-  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1, 1.05, 1.1, 1.2]
-  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85, 0.8, 0.7, 0.85]
+  bar [1, 1.25, 1.1, 0.7, 0.7, 1.3, 1.2, 1.05, 0.7, 0.95, 1.2, 1, 0.6, 0.7, 1.15, 1.1, 0.8, 1, 1.05, 1.1, 1.2, 0.8]
+  line [0.8, 0.7, 0.8, 1.35, 1.25, 0.8, 0.9, 1.15, 1.25, 0.8, 0.6, 0.7, 1.3, 1.2, 0.95, 1.1, 1.05, 0.85, 0.8, 0.7, 0.85, 1.1]
 ```
 
 *Bars = ATK multiplier, line = MAG multiplier.*
@@ -76,6 +77,7 @@ A job levels up with the lifetime JP a unit earns in it (spending JP never lower
 | **Beast Tamer** | Archer Lv 2 + Chemist Lv 2 |
 | **Gunner** | Archer Lv 3 + Thief Lv 2 |
 | **Dark Knight** | Knight Lv 3 + Black Mage Lv 2 |
+| **Shaman** | White Mage Lv 3 + Geomancer Lv 2 |
 
 Every unit starts at Squire Lv 2. A unit created in an advanced job (a recruit, an enemy) is given the levels that job needs.
 
@@ -106,6 +108,7 @@ Each job uses its own weapon types (0.30.0). Shields, heavy armor and helms, and
 | **Beast Tamer** | Whips, Daggers, Bows |
 | **Gunner** | Guns, Daggers |
 | **Dark Knight** | Swords, Spears · Heavy armor & helms |
+| **Shaman** | Staves & rods · Robes |
 
 ## Job mastery
 
@@ -134,16 +137,17 @@ A permanent bonus for sticking with a job. A unit earns the first amount at job 
 | **Beast Tamer** | +10 HP | +25 HP | **Stampede** `sig_stampede` | One call and the wild answers: a charging herd tramples a wide area up to 4 tiles away. Heavy damage (ATK) and Immobilize; beasts take more. | range 4, area 2 |
 | **Gunner** | +1 ATK | +2 ATK | **Thunder Volley** `sig_thunder_volley` | Every barrel at once: a roaring volley up to 7 tiles away, at any height. Heavy damage (ATK) to every foe within 1 tile of the aim, and Breach. | range 7, area 1 |
 | **Dark Knight** | +12 HP | +30 HP | **Eclipse** `sig_eclipse` | Tears a hole in the light, up to 4 tiles away: heavy dark damage (ATK) to every foe within 2 tiles of the aim, and the knight drinks back a quarter of it. Costs no HP. | range 4, area 2 |
+| **Shaman** | +8 MP | +20 MP | **Ancestral Totem** `sig_ancestral_totem` | Calls the ancestors into a great totem for 3 turns: allies within 3 tiles recover 8% of max HP and gain Protect, foes are Slowed, when it is planted and at the start of their turns. | range 3, area 3 |
 
 ## Abilities
 
-128 learnable abilities: 81 actions, 21 reactions, 17 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
+135 learnable abilities: 86 actions, 22 reactions, 18 supports, 9 movement. Every unit also has **Attack** (range 1, power 1; spears and bows extend its range).
 
 ```mermaid
 pie showData title Abilities by slot type
-  "Action" : 81
-  "Reaction" : 21
-  "Support" : 17
+  "Action" : 86
+  "Reaction" : 22
+  "Support" : 18
   "Movement" : 9
 ```
 
@@ -422,6 +426,20 @@ pie showData title Abilities by slot type
 | **Vengeance** `dk_vengeance` | Reaction | 240 | — | — | — | — | — | — | — | Below half HP, strikes back at any adjacent attacker with a dark blow (ATK). |
 | **Blood Pact** `dk_blood_pact` | Support | 280 | — | — | — | — | — | — | — | Techniques that cost HP cost half as much. |
 
+### Shaman
+
+*An advanced job. Speaks with the spirits of the land and plants them as totems: each one stands for a few turns and mends, wards, binds or strikes whoever starts a turn near it. Keeps two at once; place them well and the field works for you.*
+
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Spirit Lash** `sh_spirit_lash` | Action | 50 | 5 | 4 | 3 | — | 1.1 | lightning | — | A lash of restless spirits: lightning damage (MAG). |
+| **Mending Totem** `sh_mending_totem` | Action | 100 | 10 | 3 | 3 | 2 | — | holy | — | Plants a totem for 3 turns: allies within 2 tiles recover 8% of max HP when it is planted and at the start of their turns. |
+| **Warding Totem** `sh_warding_totem` | Action | 150 | 12 | 3 | 3 | 2 | — | holy | — | Plants a totem for 3 turns: allies within 2 tiles gain Protect when it is planted and at the start of their turns. |
+| **Binding Totem** `sh_binding_totem` | Action | 200 | 14 | 3 | 3 | 2 | — | time | — | Plants a totem for 3 turns: foes within 2 tiles are Slowed when it is planted and at the start of their turns. |
+| **Storm Totem** `sh_storm_totem` | Action | 260 | 18 | 3 | 3 | 2 | — | lightning | — | Plants a totem for 3 turns: lightning strikes foes within 2 tiles (MAG) when it is planted and at the start of their turns. |
+| **Spirit Ward** `sh_spirit_ward` | Reaction | 220 | — | — | — | — | — | — | — | When struck within reach of one of your own totems, the spirits mend you: recover 15% of max HP. |
+| **Deep Roots** `sh_deep_roots` | Support | 250 | — | — | — | — | — | — | — | Your totems stand 2 turns longer. |
+
 ## Monsters
 
 8 monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow and Briar Barrow side battles, on Trials floors from 3 up (the Barrow's from 8), from Chapter II in the story, and in Workshop scenarios.
@@ -566,9 +584,9 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Platinum Blade** `platinum_blade` | sword | 1 | ATTACK +9, HP +15 | — | 350 | Choose "Storm the fortress inner sanctum for the final confrontation!" · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
 | **Holy Dragon Lance** `dragon_lance` | spear | 2 | ATTACK +8, JUMP +1 | — | 400 | Starting gear | Knight, Dragoon, Dark Knight |
 | **Longbow of the Gale** `hunting_bow` | bow | 5 | ATTACK +6 | — | 250 | Starting gear | Archer, Bard, Beast Tamer |
-| **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Chrono Scepter** `chrono_rod` | staff | 1 | ATTACK +3, MAGIC +7, MP +20 | — | 300 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard, Shaman |
 | **Twin Shadow Daggers** `assassin_daggers` | dagger | 1 | ATTACK +7, SPEED +1, EVASION +10 | — | 320 | Choose "Pursue the fleeing sorcerer into the Gloomy Mire! The harder road: bog, poison, and lights that put you to sleep." · Trials drop | Squire, Archer, Ninja, Chemist, Thief, Spellblade, Dancer, Beast Tamer, Gunner |
-| **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Gaia Staff** `gaia_staff` | staff | 1 | MAGIC +5, ATTACK +3, HP +10 | — | 300 | Win CHAPTER II-A · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard, Shaman |
 | **Windslayer Bow** `sniper_bow` | bow | 6 | ATTACK +7, SPEED +1 | — | 420 | Choose "Ascend to the Zodiac Summit for the final battle!" · Trials drop | Archer, Bard, Beast Tamer |
 | **Zodiac Blade** `zodiac_blade` | sword | 1 | ATTACK +13, MAGIC +4, SPEED +1 | — | 900 | Win CHAPTER III | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
 | **Iron Knuckles** `iron_knuckles` | knuckles | 1 | ATTACK +5 | — | 120 | Starting gear | Monk, Thief |
@@ -582,10 +600,10 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Long Musket** `long_musket` | gun | 6 | ATTACK +10, SPEED -1 | — | 540 | Starting gear of a job | Gunner |
 | **Thunderlock Rifle** `thunderlock` | gun | 6 | ATTACK +13, SPEED +1 | — | 880 | Starting gear of a job | Gunner |
 | **Siege Crossbow** `siege_crossbow` | bow | 4 | ATTACK +11, SPEED -1 | — | 480 | Trials drop | Archer, Bard, Beast Tamer |
-| **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
-| **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
-| **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
-| **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard |
+| **Flame Rod** `flame_rod` | staff | 1 | ATTACK +2, MAGIC +6 | fire +25% | 380 | Win CHAPTER I · Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard, Shaman |
+| **Frost Rod** `frost_rod` | staff | 1 | ATTACK +2, MAGIC +6 | ice +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard, Shaman |
+| **Storm Rod** `storm_rod` | staff | 1 | ATTACK +2, MAGIC +6 | lightning +25% | 380 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard, Shaman |
+| **Sage's Staff** `sage_staff` | staff | 1 | MAGIC +9, MP +30 | guards silence | 560 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Chemist, Summoner, Oracle, Bard, Shaman |
 | **Saltglass Blade** `saltglass_blade` | sword | 1 | ATTACK +12, MAGIC +4, SPEED +1 | ice +25% | 820 | Win CHAPTER VII | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
 | **Runeblade** `runeblade` | sword | 1 | ATTACK +8, MAGIC +6, MP +15 | — | 560 | Win CHAPTER V · Trials drop | Squire, Knight, Geomancer, Paladin, Spellblade, Dark Knight |
 | **Starsteel Pike** `starsteel_pike` | spear | 2 | ATTACK +12, JUMP +1 | — | 780 | Wenna the Pedlar only | Knight, Dragoon, Dark Knight |
@@ -622,12 +640,12 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
 | **Reinforced Hauberk** `chainmail` | heavy | HP +50 | — | 180 | Starting gear | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Platinum Plate Mail** `platinum_armor` | heavy | HP +90, SPEED -1 | — | 450 | Choose "Rush to reinforce the garrison at Night Battlement!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
-| **Astral Silk Robe** `silk_robe` | robe | HP +30, MP +45, MAGIC +5 | — | 260 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard |
+| **Astral Silk Robe** `silk_robe` | robe | HP +30, MP +45, MAGIC +5 | — | 260 | Starting gear | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard, Shaman |
 | **Nightwalker Tunic** `shinobi_garb` | light | HP +35, SPEED +1, EVASION +12 | — | 300 | Starting gear | Anyone |
 | **Wyrmscale Mail** `dragon_mail` | heavy | HP +55, ATTACK +2, EVASION +4 | — | 520 | Win CHAPTER III · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Leather Vest** `leather_vest` | light | HP +25, EVASION +3 | — | 90 | Starting gear | Anyone |
 | **Brawler's Gi** `brawler_gi` | light | HP +40, ATTACK +3, EVASION +6 | — | 380 | Trials drop | Anyone |
-| **Summoner's Robe** `summoner_robe` | robe | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard |
+| **Summoner's Robe** `summoner_robe` | robe | HP +25, MP +60, MAGIC +6 | — | 440 | Trials drop | Black Mage, White Mage, Geomancer, Time Weaver, Summoner, Oracle, Spellblade, Bard, Shaman |
 | **Frostfang Mail** `frostfang_mail` | heavy | HP +90, ATTACK +2 | guards slow | 880 | Choose "Climb Frostfang Pass and break the Court's fort before the Pale Heir reaches the sea." | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Templar Mail** `templar_mail` | heavy | HP +75, SPEED -1 | starts with shell | 560 | Choose "Make for Stormbreak Cape and stop the Drowned Regent at the water's edge!" · Trials drop | Squire, Knight, Dragoon, Geomancer, Paladin, Dark Knight |
 | **Wolfpelt Mantle** `wolfpelt_mantle` | light | HP +25, EVASION +6, MOVE +1 | guards poison | 560 | First win at Howling Hollow | Anyone |
@@ -1038,19 +1056,19 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 | Floor | Seal | Map | Enemies | Level | Boss | Jobs |
 | :---: | :--- | :--- | :---: | :---: | :---: | :--- |
 | 1 | Seal of Aries | Riverside Ruins | 4 | 4 |  | Archer, Black Mage, Geomancer |
-| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | Black Mage, Dark Knight, Oracle |
-| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Chemist, Stonehide Brute, Archer, Paladin |
-| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Dark Knight, Gunner, Bog Ooze |
-| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Dark Knight, Bog Ooze, Time Weaver, Dancer |
-| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Gunner, Spellblade, Dire Wolf, Geomancer |
-| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Chemist, Gunner, Geomancer |
-| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Dark Knight, Summoner, Stonehide Brute, Dire Wolf |
-| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Spellblade, Paladin, Bone Knight, Bard, Marsh Wisp, Basilisk |
-| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Geomancer, Oracle, Stonehide Brute, Basilisk, Ninja |
+| 2 | Seal of Taurus | Gloomy Mire | 4 | 5 |  | White Mage, Shaman, Oracle |
+| 3 | Seal of Gemini | Night Battlement | 4 | 6 |  | Bard, Stonehide Brute, Archer, Spellblade |
+| 4 | Seal of Cancer | Zodiac Summit | 4 | 7 |  | Shaman, Dark Knight, Bog Ooze |
+| 5 | Seal of Leo: The Warden Wakes | Riverside Ruins | 5 | 8 | ★ | Dragoon, Shaman, Bog Ooze, Time Weaver, Gunner |
+| 6 | Seal of Virgo | Gloomy Mire | 5 | 9 |  | Dark Knight, Chemist, Dire Wolf, Squire |
+| 7 | Seal of Libra | Night Battlement | 5 | 10 |  | Bard, Chemist, Dark Knight, Squire |
+| 8 | Seal of Scorpio | Zodiac Summit | 5 | 11 |  | Black Mage, Shaman, Summoner, Stonehide Brute, Dire Wolf |
+| 9 | Seal of Sagittarius | Riverside Ruins | 6 | 12 |  | Chemist, Paladin, Bone Knight, Dancer, Marsh Wisp, Basilisk |
+| 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Squire, Paladin, Stonehide Brute, Basilisk, Ninja |
 | 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Basilisk, Bone Knight, Time Weaver, Dire Wolf, Bog Ooze |
-| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Summoner, Spellblade, Ninja, Knight, Dragoon, Wyvern |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Chemist, Gunner, Dire Wolf, White Mage, Wyvern, Time Weaver |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Thornling, Time Weaver, Thief, Marsh Wisp, Stonehide Brute, Basilisk |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Dark Knight, Ninja, Monk, Spellblade, Stonehide Brute |
+| 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Summoner, Chemist, Ninja, Knight, Dragoon, Wyvern |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Bard, Dark Knight, Dire Wolf, Dragoon, Wyvern, Time Weaver |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Thornling, Geomancer, Thief, Marsh Wisp, Stonehide Brute, Basilisk |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Shaman, Ninja, Thief, Spellblade, Stonehide Brute |
 
 *Floors continue forever; the table shows the first 15.*
