@@ -65,6 +65,7 @@ timeline
         0.44.0 : Engine groundwork 2
         0.45.0 : Balance pass
         0.46.0 : The Dark Knight (21 jobs)
+        0.47.0 : The Shaman and totems (22 jobs)
 ```
 
 | Version | Theme | Highlights |
@@ -77,6 +78,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.47 | The Shaman | A new advanced job (White Mage 3 + Geomancer 2; 22 jobs) that plants totems: the first effects that stay on the field, pulsing on whoever starts a turn near them (Mending, Warding, Binding, Storm, the Ancestral signature); the AI plants them and steps around them |
 | 0.46 | The Dark Knight | A new advanced job (Knight 3 + Black Mage 2; 21 jobs): techniques paid in HP, which Silence can't stop; Shadow Blade, Soul Rend, Dread, Night Ring, Black Oath, Vengeance, Blood Pact, the Eclipse signature; a like-for-like job sweep (`SWAP`) |
 | 0.45 | Balance pass | AUTO holds back (Chapter IV's drop was AUTO walking lone units into deadly spots); Chapter V's wyvern and two Mire enemies down a level; a job sweep and why it doesn't rank jobs yet |
 | 0.44 | Engine groundwork 2 | No visible change: the turn loop and victory check in `core/Battle.ts`, events, whole-battle replays; the balance sim on the engine (and Chapter IV flagged) |
@@ -120,7 +122,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.46.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.47.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -155,13 +157,14 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.47 –): new jobs
+### Next (0.48 –): new jobs
 
-The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) was the first new job since, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for ranged).
+The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) and the Shaman (0.47) came next, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for the back line). Totems (0.47) let tiles carry effects, which traps, hazards or objective zones could build on.
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **More new jobs** | The Dark Knight (0.46) added HP costs to the engine; a support or caster job is next, to balance the roster | M |
+| **More new jobs** | The Dark Knight (0.46) added HP costs, the Shaman (0.47) totems on the field | M |
+| **Hazards and zones on maps** | Build on totems (owner, tile, reach, turns): traps, burning ground, or a hold-this-area objective | M |
 | **Mirror duels** | `SWAP` (0.46) compares jobs like for like, but each chapter rewards different things (ADR 0051). Duels on flat ground would rank raw strength | S |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |
 

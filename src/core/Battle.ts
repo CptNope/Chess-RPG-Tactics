@@ -14,6 +14,7 @@ import type { BattleGrid } from './Grid';
 import { TurnManager } from './TurnManager';
 import { ActionContext, ActionEnd, ActionStep, runAction } from './Action';
 import { callDue } from './Summons';
+import { sumPulses, TotemPulse } from './Totems';
 import { encoreDue, endPerformance, isCentered } from './Performance';
 import { allianceOf, isFoe } from './Sides';
 import { seededRng } from './Rng';
@@ -100,7 +101,7 @@ export interface HitRecord {
 
 export type BattleEvent =
   | { t: 'turn'; unit: string; round: number }
-  | { t: 'tick'; unit: string; poison?: number; regen?: number; slept?: boolean; down?: boolean }
+  | { t: 'tick'; unit: string; poison?: number; regen?: number; totem?: { heal: number; damage: number; statuses: string[] }; slept?: boolean; down?: boolean }
   | { t: 'call' | 'encore' | 'act'; unit: string; ability: string; x: number; z: number; hits: HitRecord[] }
   | { t: 'move'; unit: string; x: number; z: number }
   | { t: 'face'; unit: string; facing: FacingDirection }
@@ -119,10 +120,16 @@ export interface BattleSetup {
 }
 
 const record = (steps: ActionStep[]): HitRecord[] =>
-  steps.flatMap((s) => (s.kind === 'hit' ? [{
+  steps.flatMap((s): HitRecord[] => (s.kind === 'start' ? (s.pulses ?? []).map(({ unit, pulses }) => {
+    // a totem's first pulse (0.47.0): healing counts as negative damage
+    const t = sumPulses(pulses);
+    return { target: unit.id, hit: true, damage: t.damage - t.heal, crit: false, down: unit.isDead };
+  }) : s.kind === 'hit' ? [{
     target: s.target.id, hit: s.result.hit, damage: s.result.damageDealt, crit: s.result.isCrit,
     ...(s.result.reaction ? { reaction: s.result.reaction.type } : {}), down: s.killed
   }] : []));
+
+const totemNote = (p?: TotemPulse[]) => (p?.length ? sumPulses(p) : undefined);
 
 export class Battle {
   readonly units: Unit[];
@@ -180,11 +187,11 @@ export class Battle {
     for (let guard = 0; guard < 500; guard++) {
       if (this.settle()) return null;
       const r = this.turns.advanceToNextActiveTurn();
-      for (const t of this.turns.skipped) this.events.push({ t: 'tick', unit: t.unit.id, poison: t.poison, regen: t.regen, slept: t.slept, down: t.unit.isDead || undefined });
+      for (const t of this.turns.skipped) this.events.push({ t: 'tick', unit: t.unit.id, poison: t.poison, regen: t.regen, totem: totemNote(t.totems), slept: t.slept, down: t.unit.isDead || undefined });
       this.turns.skipped = [];
       if (!r) { this.settle(); return null; }
       const u = r.activeUnit;
-      if (r.poisonDamage || r.regenHeal) this.events.push({ t: 'tick', unit: u.id, poison: r.poisonDamage, regen: r.regenHeal, down: u.isDead || undefined });
+      if (r.poisonDamage || r.regenHeal || r.totems) this.events.push({ t: 'tick', unit: u.id, poison: r.poisonDamage, regen: r.regenHeal, totem: totemNote(r.totems), down: u.isDead || undefined });
       if (this.settle()) return null;
       if (noteTurn(this.rounds, u, this.units) && this.settle()) return null;
       this.events.push({ t: 'turn', unit: u.id, round: this.rounds.round });
@@ -217,7 +224,7 @@ export class Battle {
       if (ability.item && !((this.ctx.pouchOf(u) || {})[ability.item] > 0)) return 'None left.';
       if (!target) return 'No target.';
       if (!ability.isSelfOnly && !isCentered(ability) &&
-        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability))) return 'Out of range.';
+        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability) || !!ability.totem)) return 'Out of range.';
     }
     return null;
   }

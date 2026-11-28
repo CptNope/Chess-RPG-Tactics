@@ -1,3 +1,4 @@
+import { inReach } from './Totems';
 import { endPerformance } from './Performance';
 import { breakCall } from './Summons';
 import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainType, Item, EquipmentSlot } from './types';
@@ -359,6 +360,7 @@ export class CombatEngine {
     target.statuses = [];
     target.performing = undefined;
     target.calling = undefined;
+    target.totems = undefined; // the spirits left when it fell
     target.ct = 0;
     JobSystem.recalculateDerivedStats(target);
     target.currentHp = Math.max(1, Math.round(target.maxHp * share));
@@ -699,6 +701,20 @@ export class CombatEngine {
           target: attacker,
           damage: shot,
           description: `${target.name} returns fire at ${attacker.name} for ${shot} DMG!`
+        };
+      }
+      case 'sh_spirit_ward': {
+        // A Shaman struck within reach of its own totem is mended by the spirits (0.47.0)
+        if (target.isDead || target.currentHp >= target.maxHp || !(target.totems ?? []).some((t) => inReach(t, target.x, target.z))) return undefined;
+        const heal = Math.min(target.maxHp - target.currentHp, Math.max(1, Math.round(target.maxHp * 0.15)));
+        target.currentHp += heal;
+        return {
+          name: 'Spirit Ward',
+          type: 'divine_grace',
+          target,
+          heal,
+          label: `+${heal}`,
+          description: `The spirits mend ${target.name}: +${heal} HP!`
         };
       }
       case 'dk_vengeance': {

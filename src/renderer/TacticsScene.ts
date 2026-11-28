@@ -14,6 +14,7 @@ import {
 import { VFXManager } from './VFXManager';
 import { PixelEffects, FxActor, actorFromSprite } from './PixelEffects';
 import { drawSprite } from '../graphics/CharacterArt';
+import { drawTotem, TOTEM_COLOR, TOTEM_H, TOTEM_W } from '../graphics/TotemArt';
 import type { SpriteFrame } from '../graphics/CharacterArt';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -84,6 +85,9 @@ export class TacticsScene {
   private highlightGroup: THREE.Group = new THREE.Group();
   /** Tiles a grand summon will land on (0.24.0): pulsing, in the caster's team colour. */
   private callGroup: THREE.Group = new THREE.Group();
+  /** A Shaman's totems standing on the field (0.47.0), redrawn when they change. */
+  private totemGroup: THREE.Group = new THREE.Group();
+  private totemKey = '';
   private callMats: THREE.ShaderMaterial[] = [];
   /** A full-screen shade drawn over the board (not the units or effects) while a summon plays. */
   private dimQuad!: THREE.Mesh;
@@ -205,6 +209,7 @@ export class TacticsScene {
 
     this.scene.add(this.highlightGroup);
     this.scene.add(this.callGroup);
+    this.scene.add(this.totemGroup);
     this.dimQuad = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 2),
       new THREE.ShaderMaterial({
@@ -452,6 +457,7 @@ export class TacticsScene {
     this.queuedPaths.clear();
     this.pfx.clear();
     this.setCallMarkers([]);
+    this.syncTotems([]);
     this.dim(0);
     this.buildMap();
     const md = newGrid.mapData;
@@ -817,7 +823,47 @@ export class TacticsScene {
     });
   }
 
+  /** Draws every standing totem of a living Shaman: a carved pole and a ring on its tile (0.47.0). */
+  private syncTotems(units: Unit[]): void {
+    const list = units.flatMap((o) => (o.isDead ? [] : (o.totems ?? []).map((t) => ({ t, foe: o.team === 'enemy' }))));
+    const key = list.map(({ t, foe }) => `${t.kind}@${t.x},${t.z}${foe ? '!' : ''}`).join('|');
+    if (key === this.totemKey) return;
+    this.totemKey = key;
+    for (const child of [...this.totemGroup.children]) {
+      this.totemGroup.remove(child);
+      const m = child as THREE.Mesh | THREE.Sprite;
+      const mat = m.material as THREE.Material & { map?: THREE.Texture | null };
+      mat.map?.dispose();
+      mat.dispose();
+      if (child instanceof THREE.Mesh) child.geometry.dispose();
+    }
+    for (const { t, foe } of list) {
+      if (!this.grid.getTile(t.x, t.z)) continue;
+      const h = this.grid.getHeight(t.x, t.z);
+      const tex = new THREE.CanvasTexture(drawTotem(t.kind, foe));
+      tex.magFilter = THREE.NearestFilter;
+      tex.minFilter = THREE.NearestFilter;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, alphaTest: 0.5 }));
+      const w = 0.5;
+      sprite.scale.set(w, (w * TOTEM_H) / TOTEM_W, 1);
+      // Off the tile's centre a little, so a unit standing on the same tile doesn't hide it
+      sprite.position.set(t.x + 0.28, h + sprite.scale.y / 2, t.z + 0.28);
+      sprite.userData.noPick = true;
+      this.totemGroup.add(sprite);
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.34, 0.44, 28).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: TOTEM_COLOR[t.kind].ring, transparent: true, opacity: 0.6, depthWrite: false })
+      );
+      ring.position.set(t.x, h + 0.035, t.z);
+      ring.renderOrder = 8;
+      ring.userData.noPick = true;
+      this.totemGroup.add(ring);
+    }
+  }
+
   public updateUnits(units: Unit[]): void {
+    this.syncTotems(units);
     this.currentUnits = [...units];
 
     // Drop sprites and HP bars for units that are no longer in the battle (new chapter / Trial)

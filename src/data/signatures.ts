@@ -349,5 +349,21 @@ export const SIGNATURES: Record<string, Ability> = {
     scalesWith: 'attack',
     drain: 0.25,
     signature: true
+  },
+  shaman: {
+    id: 'sig_ancestral_totem',
+    name: 'Ancestral Totem',
+    jobId: 'shaman',
+    type: 'action',
+    description: 'Calls the ancestors into a great totem for 3 turns: allies within 3 tiles recover 8% of max HP and gain Protect, foes are Slowed, when it is planted and at the start of their turns.',
+    jpCost: 0,
+    mpCost: 0,
+    range: 3,
+    heightTolerance: 3.0,
+    aoe: 3,
+    power: 0,
+    element: 'holy',
+    totem: 'ancestral',
+    signature: true
   }
 };

@@ -7,6 +7,8 @@ export type Team = 'player' | 'enemy';
 
 export type AbilityType = 'action' | 'reaction' | 'support' | 'movement';
 
+import type { Totem, TotemKind } from './Totems';
+
 export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark' | 'time';
 
 export type StatusEffectType =
@@ -99,6 +101,8 @@ export interface Ability {
    * used if it would bring the caster to 0; Silence doesn't seal it.
    */
   hpCost?: number;
+  /** Plants a totem of this kind on the aimed tile, reaching `aoe` steps (0.47.0). */
+  totem?: TotemKind;
   /** Thief: takes one piece of the target's gear instead of dealing damage. */
   steal?: boolean;
   /** Set on the action for using a consumable: the id of the item it spends (see data/consumables.ts). */
@@ -149,7 +153,7 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Bruiser' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
+    | 'Brawler' | 'Bruiser' | 'Warden' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
     // Monsters (0.26.0)
     | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer' | 'Undead' | 'Plant';
   spriteClass: string;
@@ -244,6 +248,8 @@ export interface Unit {
   usedSignatures?: string[];
   /** A grand summon on its way, with the tile it was aimed at, while the unit has Calling (0.24.0). */
   calling?: { abilityId: string; x: number; z: number };
+  /** A Shaman's standing totems (0.47.0). */
+  totems?: Totem[];
   /** Iron Will can fire only once per battle. */
   usedIronWill?: boolean;
   /** A monster a Beast Tamer won over this battle (0.28.0): it fights for the squad and may join it. */

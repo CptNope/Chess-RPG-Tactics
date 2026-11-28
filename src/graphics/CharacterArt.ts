@@ -191,6 +191,9 @@ function lookFor(job: string, enemy: boolean): Look {
     case 'dark_knight':
       // Black steel, crimson and a dark cape (0.46.0)
       return { ...base, body: 'armor', weapon: 'broadsword', hair: '#d1d5db', main: e ? '#1c1418' : '#2b2d36', sub: e ? '#991b1b' : '#7f1d1d', trim: e ? '#ef4444' : '#a78bfa', metal: e ? '#3f3438' : '#4b5060', cape: e ? '#450a0a' : '#3b0d0d' };
+    case 'shaman':
+      // Hide robes with teal and bone, a feathered headdress, a spirit staff (0.47.0)
+      return { ...base, body: 'robe', weapon: 'gaia', hair: '#1f1a17', main: e ? '#5b2a14' : '#8a5a2b', sub: e ? '#7f1d1d' : '#0f766e', trim: '#f1e4c3' };
     default: // squire
       return { ...base, weapon: 'sword', main: e ? '#b83232' : '#2f6fd6', sub: e ? '#7a1f1f' : '#1d4aa8', trim: '#d9a441' };
   }
@@ -249,6 +252,22 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       p.r(x + 5, hy - 5, 2, 5, L.sub);
       p.r(x + 4, hy - 4, 4, 2, shade(L.sub, 0.2));
       p.r(x - 1, hy + 11, 14, 1, shade(L.metal, -0.3));
+      break;
+    }
+    case 'shaman': {
+      // A feathered headdress over long dark hair, and a stripe of paint under the eyes (0.47.0)
+      if (!back) {
+        p.r(x - 1, hy + 3, 3, 9, L.hair); p.r(x + 10, hy + 3, 3, 9, L.hair);
+        p.r(x + 2, hy + 9, 2, 1, L.sub); p.r(x + 8, hy + 9, 2, 1, L.sub);
+      } else {
+        p.b(x - 1, hy - 1, 14, 13, L.hair);
+      }
+      p.b(x - 1, hy - 1, 14, 4, L.hair);
+      p.r(x - 1, hy + 1, 14, 2, L.sub);
+      if (!back) p.r(x + 5, hy + 1, 2, 2, L.trim);
+      p.r(x + 1, hy - 6, 2, 6, L.trim); p.px(x + 1, hy - 4, L.sub);
+      p.r(x + 5, hy - 9, 2, 9, shade(L.sub, 0.3)); p.px(x + 5, hy - 9, L.trim);
+      p.r(x + 9, hy - 6, 2, 6, L.trim); p.px(x + 10, hy - 4, L.sub);
       break;
     }
     case 'dark_knight': {
@@ -790,6 +809,13 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.r(hx + 6, hy + 6, 7, 2, '#141826');
       p.r(hx + 4, hy - 5, 2, 5, L.sub); p.r(hx + 1, hy - 4, 4, 2, shade(L.sub, 0.2));
       break;
+    case 'shaman':
+      p.r(hx + 1, hy + 1, 6, 11, L.hair);
+      p.b(hx, hy - 1, 13, 4, L.hair);
+      p.r(hx, hy + 1, 13, 2, L.sub);
+      p.r(hx + 3, hy - 6, 2, 6, L.trim); p.r(hx + 7, hy - 9, 2, 9, shade(L.sub, 0.3)); p.px(hx + 7, hy - 9, L.trim);
+      p.r(hx + 9, hy + 9, 3, 1, L.sub);
+      break;
     case 'dark_knight':
       p.b(hx, hy - 1, 13, 13, L.metal);
       p.tri(hx + 2, hy + 1, hx - 3, hy - 7, hx + 5, hy - 1, shade(L.metal, 0.35));
@@ -1160,6 +1186,17 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.r(hx + 12, ey + 2, 4, 9, '#141826');
         p.r(hx - 3, hy + 15, 34, 2, shade(metal, -0.3));
         p.r(hx + 12, hy - 10, 4, 9, L.sub); p.r(hx + 9, hy - 9, 10, 3, shade(L.sub, 0.2));
+        break;
+      case 'shaman':
+        // Long dark hair, a teal headband with a bone bead, three feathers and face paint
+        p.b(hx - 3, hy - 2, 34, 8, L.hair);
+        p.r(hx - 3, hy + 6, 6, 26, L.hair); p.r(hx + 25, hy + 6, 6, 26, L.hair);
+        p.r(hx - 3, hy + 3, 34, 4, L.sub);
+        p.r(hx + 12, hy + 3, 4, 4, L.trim);
+        p.r(hx + 2, hy - 13, 4, 16, L.trim); p.r(hx + 2, hy - 8, 4, 2, L.sub);
+        p.r(hx + 12, hy - 20, 4, 23, shade(L.sub, 0.3)); p.r(hx + 12, hy - 20, 4, 3, L.trim);
+        p.r(hx + 22, hy - 13, 4, 16, L.trim); p.r(hx + 22, hy - 8, 4, 2, L.sub);
+        p.r(hx + 5, ey + 6, 6, 2, L.sub); p.r(hx + 17, ey + 6, 6, 2, L.sub);
         break;
       case 'dark_knight':
         p.b(hx - 3, hy - 2, 34, 18, metal);

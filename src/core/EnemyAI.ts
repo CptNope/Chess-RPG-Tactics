@@ -1,3 +1,4 @@
+import { pulseFor, standingTotems, Totem, TOTEM_TURNS } from './Totems';
 import { Ability, FacingDirection, Unit } from './types';
 import { isAlly, isFoe } from './Sides';
 import { BattleGrid } from './Grid';
@@ -273,6 +274,28 @@ export const ENEMY_RAISE_CAP = 1;
  */
 export const LETHAL_MARGIN = 1.3;
 
+/**
+ * What planting a totem at (ax, az) is worth (0.47.0): its first pulse on everyone in reach,
+ * and a share again for the turns it keeps standing (units move, so less than in full). Less
+ * when it replaces a totem of the same kind that still had turns left.
+ */
+export function scoreTotem(caster: Unit, ability: Ability, ax: number, az: number, units: Unit[]): number {
+  const totem: Totem = { kind: ability.totem!, x: ax, z: az, radius: ability.aoe, turns: TOTEM_TURNS };
+  let now = 0;
+  for (const u of units) {
+    const p = pulseFor(caster, totem, u);
+    if (!p) continue;
+    const near = foesNear(u, units, 4) ? 1.3 : 0.8;
+    if (p.heal) now += Math.min(p.heal, u.maxHp - u.currentHp) / u.maxHp * 100 * 0.8;
+    if (p.status === 'protect') now += 10 * near;
+    if (p.status === 'slow') now += (u.isBoss ? 22 : 14);
+    if (p.damage) now += Math.min(p.damage, u.currentHp) / u.maxHp * 100 + (p.damage >= u.currentHp ? 40 : 0);
+  }
+  if (now <= 0) return 0;
+  const replaced = (caster.totems ?? []).find((t) => t.kind === totem.kind);
+  return now * 1.6 - (replaced ? replaced.turns * 6 : 0);
+}
+
 export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: PlanOptions = {}): AiPlan {
   const foes = foesOf(unit, units);
   const origin = { x: unit.x, z: unit.z };
@@ -332,10 +355,40 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
       if (holding && (tile.x !== origin.x || tile.z !== origin.z)) posScore -= 12;
       // A foe's grand summon lands here at the start of its caster's next turn (0.24.0): get clear
       posScore -= callsLandingOn(unit, tile.x, tile.z, units) * 30;
+      // Totems standing here pulse at the start of its next turn (0.47.0): stay out of a foe's
+      // Storm and Binding, lean into an ally's Mending and Warding
+      for (const { owner, totem } of standingTotems(units)) {
+        const p = pulseFor(owner, totem, unit);
+        if (!p) continue;
+        if (p.damage) posScore -= (p.damage / unit.maxHp) * 100;
+        if (p.status === 'slow') posScore -= 8;
+        if (p.heal) posScore += 4;
+        if (p.status === 'protect') posScore += 3;
+      }
 
       for (const raw of baseAbilities) {
         const ability = performedBy(unit, resolveTerrainAbility(raw, terrain));
         const supportive = CombatEngine.isSupportive(ability);
+
+        // A Shaman's totem (0.47.0) goes on a tile: try every living unit's tile within reach
+        if (ability.totem) {
+          for (const aim of units) {
+            if (aim.isDead || !grid.canTarget(tile.x, tile.z, aim.x, aim.z, ability.range, ability.heightTolerance, true)) continue;
+            const ax = aim.id === unit.id ? tile.x : aim.x;
+            const az = aim.id === unit.id ? tile.z : aim.z;
+            let score = scoreTotem(unit, ability, ax, az, units);
+            if (score <= 0) continue;
+            if (threat) score -= risk(tile.x, tile.z, unit.currentHp);
+            if (ability.signature) score -= 30;
+            if (holding) score -= 12;
+            score += posScore - ability.mpCost * 0.15;
+            if (!best || score > best.score) {
+              const nearestFoe = foes.reduce((a, b) => manhattan(a, tile) <= manhattan(b, tile) ? a : b);
+              best = { moveTo: { ...tile }, ability, targetTile: { x: ax, z: az }, facing: faceTowards(tile.x, tile.z, nearestFoe.x, nearestFoe.z), score };
+            }
+          }
+          continue;
+        }
 
         // Candidate aim points: every unit on the relevant side within reach
         // A performance is centred on the performer, wherever it stands

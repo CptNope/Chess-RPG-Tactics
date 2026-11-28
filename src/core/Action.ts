@@ -14,6 +14,7 @@ import { JobSystem, JpGain } from './JobSystem';
 import { faceTowards, summonVictims, unitsInBlast } from './EnemyAI';
 import { endPerformance, isCentered, noFalloff, startPerformance } from './Performance';
 import { startCall } from './Summons';
+import { plantTotem, pulsesOn, Totem, TotemPulse } from './Totems';
 import { isAlly } from './Sides';
 import { BattleRules, earnsProgress } from './Rules';
 
@@ -48,6 +49,9 @@ export interface ActionStart {
   performanceEnded: boolean;
   /** HP the caster paid for a Dark Knight technique (0.46.0). */
   hpPaid: number;
+  /** The totem a Shaman planted, and what it did at once to those in reach (0.47.0). */
+  totem?: Totem;
+  pulses?: { unit: Unit; pulses: TotemPulse[] }[];
 }
 
 export interface ActionHit {
@@ -80,6 +84,7 @@ export interface ActionEnd {
 /** Everyone an ability aimed at (tx, tz) touches. */
 export function victimsFor(units: readonly Unit[], caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
   if (ability.isSelfOnly) return [caster];
+  if (ability.totem) return []; // a totem lands on the tile, not on anyone (0.47.0)
   if (isCentered(ability)) return unitsInBlast(caster, ability, caster.x, caster.z, units as Unit[]);
   if (ability.aoe > 0) return summonVictims(caster, ability, tx, tz, units as Unit[]).map((v) => v.unit);
   const living = units.find((v) => !v.isDead && v.x === tx && v.z === tz);
@@ -119,6 +124,7 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
   const calling = !encore && !called && !!ability.charge;
   let performanceEnded = false;
   let hpPaid = 0;
+  let kills = 0;
 
   if (!encore && !called) {
     caster.currentMp = Math.max(0, caster.currentMp - ability.mpCost);
@@ -142,10 +148,23 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
   if (faced) caster.facing = faceTowards(caster.x, caster.z, tx, tz);
   if (calling) startCall(caster, ability, tx, tz);
   const summoning = !!ability.summon && !encore && !calling;
+  let totem: Totem | undefined;
+  let pulses: { unit: Unit; pulses: TotemPulse[] }[] | undefined;
+  if (ability.totem) {
+    totem = plantTotem(caster, ability, tx, tz);
+    pulses = [];
+    for (const u of ctx.units) {
+      const p = pulsesOn(u, ctx.units, (v, s) => CombatEngine.applyStatus(v, s), totem);
+      if (p.length) {
+        pulses.push({ unit: u, pulses: p });
+        JobSystem.recalculateDerivedStats(u);
+      }
+    }
+    if (pulses.some((p) => p.unit.isDead)) kills += pulses.filter((p) => p.unit.isDead).length;
+  }
 
-  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded, hpPaid };
+  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses };
 
-  let kills = 0;
   for (const target of calling ? [] : victims) {
     const a = asFor(target);
     if (target.isDead && !a.revive) continue;

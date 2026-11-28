@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.47.0] - 2026-11-27
+
+### Added
+- **The Shaman**, a new advanced job (White Mage Lv 3 and Geomancer Lv 2). It plants **totems**: carved poles that stand on the field for 3 of its turns and work on whoever starts a turn within 2 tiles, and once on everyone in reach when planted.
+  - **Mending Totem:** allies recover 8% of max HP. **Warding Totem:** allies gain Protect. **Binding Totem:** foes are Slowed. **Storm Totem:** lightning strikes foes.
+  - **Spirit Lash:** lightning damage from 4 tiles away.
+  - A Shaman keeps two totems at once; planting a third kind replaces the oldest. Its totems fade if it falls.
+  - **Spirit Ward** (reaction): struck within reach of its own totem, it recovers 15% of max HP. **Deep Roots** (support): totems stand 2 turns longer.
+  - Master signature: **Ancestral Totem**, reaching 3 tiles: allies are mended and Protected, foes Slowed.
+  - Staff and robes. A Shaman may turn up among the recruits from Chapter IV on, and it has a Trial.
+- Aiming a totem: the first click shows its reach, the second plants it.
+- Every unit, on either side, now steps out of a foe's Storm and Binding totems and towards its own side's Mending and Warding ones.
+
+### Developer
+- `src/core/Totems.ts`: `Ability.totem`, `unit.totems`, pulses on the action's start step and at turn start (`TurnTick.totems`, the battle's `tick` event); `scoreTotem` in the AI. ADR 0052.
+- 7 new tests (340 total).
+
 ## [0.46.0] - 2026-11-27
 
 ### Added
