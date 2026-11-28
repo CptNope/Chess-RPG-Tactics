@@ -191,6 +191,9 @@ function lookFor(job: string, enemy: boolean): Look {
     case 'dark_knight':
       // Black steel, crimson and a dark cape (0.46.0)
       return { ...base, body: 'armor', weapon: 'broadsword', hair: '#d1d5db', main: e ? '#1c1418' : '#2b2d36', sub: e ? '#991b1b' : '#7f1d1d', trim: e ? '#ef4444' : '#a78bfa', metal: e ? '#3f3438' : '#4b5060', cape: e ? '#450a0a' : '#3b0d0d' };
+    case 'ranger':
+      // Olive hunting leathers under a hooded cloak, a face scarf, a bow (0.49.0)
+      return { ...base, weapon: 'bow', hair: '#5b3a1e', main: e ? '#4a2626' : '#55663a', sub: e ? '#2e1515' : '#7c5a34', trim: '#d6c08a', pants: e ? '#2e1a1a' : '#3b3326', boots: '#2a1e14', cape: e ? '#3a1414' : '#33402a' };
     case 'shaman':
       // Hide robes with teal and bone, a feathered headdress, a spirit staff (0.47.0)
       return { ...base, body: 'robe', weapon: 'gaia', hair: '#1f1a17', main: e ? '#5b2a14' : '#8a5a2b', sub: e ? '#7f1d1d' : '#0f766e', trim: '#f1e4c3' };
@@ -252,6 +255,20 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
       p.r(x + 5, hy - 5, 2, 5, L.sub);
       p.r(x + 4, hy - 4, 4, 2, shade(L.sub, 0.2));
       p.r(x - 1, hy + 11, 14, 1, shade(L.metal, -0.3));
+      break;
+    }
+    case 'ranger': {
+      // A deep hood, and a scarf over the lower face; only the eyes show (0.49.0)
+      const hood = L.cape ?? L.main;
+      p.b(x - 1, hy - 2, 14, 7, hood);
+      if (!back) {
+        p.r(x - 1, hy + 4, 2, 8, hood); p.r(x + 11, hy + 4, 2, 8, hood);
+        p.r(x + 1, hy + 9, 10, 3, L.main);
+        p.px(x + 6, hy - 2, shade(hood, 0.25));
+      } else {
+        p.b(x - 1, hy - 2, 14, 14, hood);
+        p.r(x + 5, hy + 11, 2, 2, shade(hood, 0.2));
+      }
       break;
     }
     case 'shaman': {
@@ -809,6 +826,13 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.r(hx + 6, hy + 6, 7, 2, '#141826');
       p.r(hx + 4, hy - 5, 2, 5, L.sub); p.r(hx + 1, hy - 4, 4, 2, shade(L.sub, 0.2));
       break;
+    case 'ranger': {
+      const hood = L.cape ?? L.main;
+      p.b(hx - 1, hy - 2, 14, 8, hood);
+      p.r(hx - 1, hy + 4, 5, 9, hood);
+      p.r(hx + 6, hy + 9, 7, 3, L.main);
+      break;
+    }
     case 'shaman':
       p.r(hx + 1, hy + 1, 6, 11, L.hair);
       p.b(hx, hy - 1, 13, 4, L.hair);
@@ -1187,6 +1211,17 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.r(hx - 3, hy + 15, 34, 2, shade(metal, -0.3));
         p.r(hx + 12, hy - 10, 4, 9, L.sub); p.r(hx + 9, hy - 9, 10, 3, shade(L.sub, 0.2));
         break;
+      case 'ranger': {
+        // A deep hood framing the face, and a scarf up to the nose
+        const hood = L.cape ?? L.main;
+        p.b(hx - 4, hy - 4, 36, 12, hood);
+        p.r(hx - 4, hy + 8, 7, 26, hood); p.r(hx + 25, hy + 8, 7, 26, hood);
+        p.r(hx + 12, hy - 4, 4, 3, shade(hood, 0.25));
+        p.r(hx + 2, ey + 9, 24, 10, L.main);
+        p.r(hx + 2, ey + 9, 24, 2, shade(L.main, -0.15));
+        p.r(hx + 4, ey + 14, 20, 1, shade(L.main, 0.25));
+        break;
+      }
       case 'shaman':
         // Long dark hair, a teal headband with a bone bead, three feathers and face paint
         p.b(hx - 3, hy - 2, 34, 8, L.hair);

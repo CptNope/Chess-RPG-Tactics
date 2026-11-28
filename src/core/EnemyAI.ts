@@ -1,5 +1,6 @@
 import { pulseFor, standingTotems, Totem, TOTEM_TURNS } from './Totems';
 import { hazardFor } from './Hazards';
+import { setTraps, trapAt, trapEffect, trapLimit, TRAP_STATUS } from './Traps';
 import { Ability, FacingDirection, Unit } from './types';
 import { isAlly, isFoe } from './Sides';
 import { BattleGrid } from './Grid';
@@ -302,6 +303,53 @@ export function scoreTotem(caster: Unit, ability: Ability, ax: number, az: numbe
   return now * 1.6 - (replaced ? replaced.turns * 6 : 0);
 }
 
+/**
+ * What hiding a trap at (x, z) is worth (0.49.0). A foe will likely walk over a tile it can reach
+ * next turn that lies on its way to the Ranger's side, so each foe for whom the tile is "on the
+ * way" counts, the best one fully and the rest a little; the whole is discounted because foes
+ * take other roads. A trap that pulls up an older one costs a little.
+ */
+export function scoreTrap(caster: Unit, ability: Ability, x: number, z: number, units: Unit[], grid: BattleGrid): number {
+  const free = (tx: number, tz: number) => !!grid.getTile(tx, tz)?.walkable && !units.some((u) => !u.isDead && u.x === tx && u.z === tz) && !trapAt(units, tx, tz);
+  const tiles: { x: number; z: number }[] = [];
+  for (let dz = -ability.aoe; dz <= ability.aoe; dz++) for (let dx = -ability.aoe; dx <= ability.aoe; dx++) {
+    if (Math.abs(dx) + Math.abs(dz) <= ability.aoe && free(x + dx, z + dz)) tiles.push({ x: x + dx, z: z + dz });
+  }
+  if (!tiles.length) return 0;
+  const steps = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.abs(a.x - b.x) + Math.abs(a.z - b.z);
+  const mine = units.filter((u) => !u.isDead && !u.tamed && !isFoe(caster, u));
+  const foes = units.filter((u) => !u.isDead && isFoe(caster, u));
+  const atk = JobSystem.getAttackPower(caster);
+  // A foe that fights from range has less reason to walk in than one that must close to hit
+  const walksIn = new Map(foes.map((f) => {
+    const reach = Math.max(1, ...JobSystem.getCombatActionAbilities(f).filter((a) => !a.isSelfOnly && a.power > 0).map((a) => a.range));
+    return [f.id, reach <= 1 ? 1.15 : reach <= 3 ? 0.8 : 0.5] as const;
+  }));
+  let total = 0;
+  for (const t of tiles) {
+    const values: number[] = [];
+    for (const f of foes) {
+      if (f.statuses.some((s) => s.type === 'immobilize' || s.type === 'sleep')) continue;
+      const goal = mine.reduce((a, b) => (steps(f, a) <= steps(f, b) ? a : b), caster);
+      const d = steps(f, t);
+      if (d < 1 || d > f.move + 1 || d + steps(t, goal) > steps(f, goal) + 1) continue;
+      const e = trapEffect({ kind: ability.trap!, x: t.x, z: t.z }, f, atk);
+      const status = TRAP_STATUS[ability.trap!];
+      let v = 0;
+      if (e.damage) v += (Math.min(e.damage, f.currentHp) / f.maxHp) * 100 + (e.damage >= f.currentHp ? 30 : 0);
+      if (status === 'immobilize') v += 12;
+      if (status === 'sleep') v += 18;
+      if (status === 'blind') v += JobSystem.getAttackPower(f) >= JobSystem.getMagicPower(f) ? 12 : 4;
+      if (status && guardsAgainst(f, status)) v = e.damage ? v : 0;
+      values.push(v * (walksIn.get(f.id) ?? 1));
+    }
+    values.sort((a, b) => b - a);
+    total += (values[0] ?? 0) + values.slice(1).reduce((s, v) => s + v * 0.25, 0);
+  }
+  const mineSet = setTraps(units).filter((t) => t.owner === caster).length;
+  return total * 0.55 - (mineSet >= trapLimit(caster) && !ability.signature ? 6 : 0);
+}
+
 export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: PlanOptions = {}): AiPlan {
   const foes = foesOf(unit, units);
   const origin = { x: unit.x, z: unit.z };
@@ -403,6 +451,25 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
       for (const raw of baseAbilities) {
         const ability = performedBy(unit, resolveTerrainAbility(raw, terrain));
         const supportive = CombatEngine.isSupportive(ability);
+
+        // A Ranger's trap (0.49.0) goes on free ground within reach: try each such tile
+        if (ability.trap) {
+          for (let dz = -ability.range; dz <= ability.range; dz++) for (let dx = -ability.range; dx <= ability.range; dx++) {
+            const ax = tile.x + dx, az = tile.z + dz;
+            if ((ax === tile.x && az === tile.z) || !grid.canTarget(tile.x, tile.z, ax, az, ability.range, ability.heightTolerance, true)) continue;
+            let score = scoreTrap(unit, ability, ax, az, units, grid);
+            if (score <= 4) continue;
+            if (threat) score -= risk(tile.x, tile.z, unit.currentHp);
+            if (ability.signature) score -= 30;
+            if (holding) score -= 12;
+            score += posScore - ability.mpCost * 0.15;
+            if (!best || score > best.score) {
+              const nearestFoe = foes.reduce((a, b) => manhattan(a, tile) <= manhattan(b, tile) ? a : b);
+              best = { moveTo: { ...tile }, ability, targetTile: { x: ax, z: az }, facing: faceTowards(tile.x, tile.z, nearestFoe.x, nearestFoe.z), score };
+            }
+          }
+          continue;
+        }
 
         // A Shaman's totem (0.47.0) goes on a tile: try every living unit's tile within reach
         if (ability.totem) {

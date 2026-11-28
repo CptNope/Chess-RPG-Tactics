@@ -15,6 +15,7 @@ import { VFXManager } from './VFXManager';
 import { PixelEffects, FxActor, actorFromSprite } from './PixelEffects';
 import { drawSprite } from '../graphics/CharacterArt';
 import { drawTotem, TOTEM_COLOR, TOTEM_H, TOTEM_W } from '../graphics/TotemArt';
+import { drawTrap } from '../graphics/TrapArt';
 import type { SpriteFrame } from '../graphics/CharacterArt';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -88,6 +89,9 @@ export class TacticsScene {
   /** A Shaman's totems standing on the field (0.47.0), redrawn when they change. */
   private totemGroup: THREE.Group = new THREE.Group();
   private totemKey = '';
+  /** The squad's own traps (0.49.0); the other side's are never drawn. */
+  private trapGroup: THREE.Group = new THREE.Group();
+  private trapKey = '';
   /** Hazard tiles and the hold zone painted on the ground (0.48.0). */
   private groundGroup: THREE.Group = new THREE.Group();
   private groundMats: THREE.ShaderMaterial[] = [];
@@ -214,6 +218,7 @@ export class TacticsScene {
     this.scene.add(this.highlightGroup);
     this.scene.add(this.callGroup);
     this.scene.add(this.totemGroup);
+    this.scene.add(this.trapGroup);
     this.scene.add(this.groundGroup);
     this.dimQuad = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 2),
@@ -463,6 +468,7 @@ export class TacticsScene {
     this.pfx.clear();
     this.setCallMarkers([]);
     this.syncTotems([]);
+    this.syncTraps([]);
     this.setZoneHeld('empty');
     this.dim(0);
     this.buildMap();
@@ -952,8 +958,36 @@ export class TacticsScene {
     }
   }
 
+  /** Draws the squad's own hidden traps, flat on their tiles (0.49.0). */
+  private syncTraps(units: Unit[]): void {
+    const list = units.filter((o) => o.team === 'player').flatMap((o) => o.traps ?? []);
+    const key = list.map((t) => `${t.kind}@${t.x},${t.z}`).join('|');
+    if (key === this.trapKey) return;
+    this.trapKey = key;
+    for (const child of [...this.trapGroup.children]) {
+      this.trapGroup.remove(child);
+      const m = child as THREE.Mesh;
+      const mat = m.material as THREE.MeshBasicMaterial;
+      mat.map?.dispose();
+      mat.dispose();
+    }
+    for (const t of list) {
+      if (!this.grid.getTile(t.x, t.z)) continue;
+      const tex = new THREE.CanvasTexture(drawTrap(t.kind));
+      tex.magFilter = THREE.NearestFilter;
+      tex.minFilter = THREE.NearestFilter;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mesh = new THREE.Mesh(this.sharedHighlightGeom, new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.9, depthWrite: false }));
+      mesh.position.set(t.x, this.grid.getHeight(t.x, t.z) + 0.04, t.z);
+      mesh.renderOrder = 8;
+      mesh.userData.noPick = true;
+      this.trapGroup.add(mesh);
+    }
+  }
+
   public updateUnits(units: Unit[]): void {
     this.syncTotems(units);
+    this.syncTraps(units);
     this.currentUnits = [...units];
 
     // Drop sprites and HP bars for units that are no longer in the battle (new chapter / Trial)

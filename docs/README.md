@@ -97,6 +97,7 @@ timeline
     0.46.0 : 0051 The Dark Knight, HP costs
     0.47.0 : 0052 The Shaman, totems
     0.48.0 : 0053 Hazards and hold zones
+    0.49.0 : 0054 The Ranger, hidden traps
 ```
 
 | # | Decision | Release |
@@ -146,6 +147,7 @@ timeline
 | [0051](adr/0051-dark-knight-and-hp-costs.md) | The Dark Knight: techniques paid in HP (`hpCost`, never fatal, Silence can't seal it, the AI weighs the price); a like-for-like job sweep (`SWAP`); Black Oath cut to 12% after tracing | 0.46.0 |
 | [0052](adr/0052-shaman-and-totems.md) | The Shaman: totems that stand on a tile and pulse on whoever starts a turn near them (`Totems.ts`, kept on the Shaman); the AI plants and avoids them; two-click aiming | 0.47.0 |
 | [0053](adr/0053-hazards-and-hold-zones.md) | Hazards on tiles (embers, miasma, springs) at turn start; hold zones and the Hold objective (`RoundState.held`); the AI weighs the ground; the Cinder Spring; Workshop Ground tool | 0.48.0 |
+| [0054](adr/0054-ranger-and-hidden-traps.md) | The Ranger: traps kept on the setter, hidden from the other side; a move stops at the first foe's trap on its path (`walkInto`); `scoreTrap`; the first hidden state for online versus | 0.49.0 |
 | [0039](adr/0039-smarter-enemies.md) | A threat map lets the planner think a turn ahead (light on Normal, full on Hard and AUTO); enemies carry item pouches by role; leftovers are salvaged | 0.31.0 |
 | [0038](adr/0038-equipment-rules.md) | Each job has weapon types and armor weights it can use; starting gear complies, so balance holds; job changes swap gear; old saves fixed on load | 0.30.0 |
 | [0034](adr/0034-monsters.md) | Monsters are jobs flagged `monster`, with innate statuses and immunities instead of gear, their own art, and player job lists filtered | 0.26.0 |

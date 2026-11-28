@@ -2444,6 +2444,128 @@ export const JOBS: Record<string, Job> = {
         element: 'holy'
       }
     ]
+  },
+  ranger: {
+    id: 'ranger',
+    name: 'Ranger',
+    description: 'An advanced job. A hunter who fights on ground of its own choosing: hides snares, spikes, smoke and sleeping gas where foes must walk, and shoots what they stumble into. Foes never see a Ranger\'s traps until they spring them.',
+    role: 'Trapper',
+    spriteClass: 'ranger',
+    baseMove: 4,
+    baseJump: 3,
+    statMultipliers: {
+      hp: 1.0,
+      mp: 0.8,
+      attack: 1.15,
+      magic: 0.7,
+      speed: 1.1
+    },
+    prerequisites: [{ jobId: 'archer', level: 3 }, { jobId: 'thief', level: 2 }],
+    abilities: [
+      {
+        id: 'rg_snare',
+        name: 'Snare Trap',
+        jobId: 'ranger',
+        type: 'action',
+        description: 'Hides a snare on an empty tile within 3: the first foe to walk into it stops there, Immobilized. Foes can\'t see your traps.',
+        jpCost: 60,
+        mpCost: 4,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 0,
+        element: 'physical',
+        trap: 'snare'
+      },
+      {
+        id: 'rg_pinning_shot',
+        name: 'Pinning Shot',
+        jobId: 'ranger',
+        type: 'action',
+        description: 'A shot through the foot: physical damage that Immobilizes for 2 turns.',
+        jpCost: 80,
+        mpCost: 5,
+        range: 5,
+        heightTolerance: 2.5,
+        aoe: 0,
+        power: 1.3,
+        element: 'physical',
+        appliesStatus: 'immobilize'
+      },
+      {
+        id: 'rg_spike_trap',
+        name: 'Spike Trap',
+        jobId: 'ranger',
+        type: 'action',
+        description: 'Hides spikes on an empty tile within 3: the first foe to walk into it stops there and takes heavy physical damage (ATK).',
+        jpCost: 140,
+        mpCost: 6,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 0,
+        element: 'physical',
+        trap: 'spikes'
+      },
+      {
+        id: 'rg_smoke_trap',
+        name: 'Smoke Trap',
+        jobId: 'ranger',
+        type: 'action',
+        description: 'Hides a smoke pot on an empty tile within 3: the first foe to walk into it stops there, Blinded.',
+        jpCost: 170,
+        mpCost: 6,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 0,
+        element: 'physical',
+        trap: 'smoke'
+      },
+      {
+        id: 'rg_slumber_trap',
+        name: 'Slumber Trap',
+        jobId: 'ranger',
+        type: 'action',
+        description: 'Hides sleeping gas on an empty tile within 3: the first foe to walk into it stops there and falls asleep.',
+        jpCost: 230,
+        mpCost: 9,
+        range: 3,
+        heightTolerance: 3,
+        aoe: 0,
+        power: 0,
+        element: 'physical',
+        trap: 'slumber'
+      },
+      {
+        id: 'rg_ambush',
+        name: 'Ambush',
+        jobId: 'ranger',
+        type: 'reaction',
+        description: 'When a foe springs one of your traps within reach of your weapon, you strike it at once.',
+        jpCost: 240,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      },
+      {
+        id: 'rg_trapsmith',
+        name: 'Trapsmith',
+        jobId: 'ranger',
+        type: 'support',
+        description: 'You can keep 5 traps hidden at once instead of 3.',
+        jpCost: 260,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'physical'
+      }
+    ]
   }
 };
 

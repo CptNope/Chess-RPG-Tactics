@@ -40,6 +40,8 @@ function abilityRow(a: Ability): string {
   const power = a.power < 0 ? `Heal ${Math.abs(a.power)}` : a.power > 0 ? String(a.power) : '—';
   const extras = [
     a.appliesStatus ? `inflicts **${a.appliesStatus}**` : '',
+    a.totem ? `plants a **${a.totem} totem** (reach ${a.aoe})` : '',
+    a.trap ? `hides a **${a.trap} trap**${a.aoe ? ` on every free tile within ${a.aoe}` : ''}` : '',
     a.isSelfOnly ? 'self only' : '',
     a.terrainDriven ? 'changes with terrain' : '',
     a.cleanse ? 'cleanses ailments' : '',

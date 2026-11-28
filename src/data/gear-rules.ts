@@ -43,7 +43,8 @@ export const JOB_GEAR: Record<string, JobGear> = {
   tamer: { weapons: ['whip', 'dagger', 'bow'] },
   gunner: { weapons: ['gun', 'dagger'] },
   dark_knight: { weapons: ['sword', 'spear'], heavy: true },
-  shaman: { weapons: ['staff'], robe: true }
+  shaman: { weapons: ['staff'], robe: true },
+  ranger: { weapons: ['bow', 'dagger'] }
 };
 
 /** What kind of gear an item is, as the rules see it. */
