@@ -776,6 +776,13 @@ export class CombatEngine {
           description: `${target.name}'s blade drinks in the spell: +${mp} MP.`
         };
       }
+      case 'sp_dig_in': {
+        // A Sapper digs in against a physical blow (0.54.0): Protect, on any ground
+        if (target.isDead || forecast.ability.scalesWith === 'magic' || forecast.ability.element !== 'physical') return undefined;
+        if (target.statuses.some((s) => s.type === 'protect')) return undefined;
+        this.applyStatus(target, 'protect');
+        return { name: 'Dig In', type: 'earthen_ward', target, status: 'protect', description: `${target.name} digs in: Protect!` };
+      }
       case 'geo_earthen_ward': {
         const t = forecast.targetTerrain;
         if (t !== 'stone' && t !== 'dirt' && t !== 'parapet') return undefined;

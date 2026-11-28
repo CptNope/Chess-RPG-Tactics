@@ -93,6 +93,8 @@ export class TacticsScene {
   private totemKey = '';
   /** The squad's own traps (0.49.0); the other side's are never drawn. */
   private trapGroup: THREE.Group = new THREE.Group();
+  /** Stakes on top of a Sapper's barricades (0.54.0). */
+  private worksGroup: THREE.Group = new THREE.Group();
   private trapKey = '';
   /** The Workshop shows the traps drawn on the map too (0.53.0); a battle never does. */
   private mapTraps = false;
@@ -223,6 +225,7 @@ export class TacticsScene {
     this.scene.add(this.callGroup);
     this.scene.add(this.totemGroup);
     this.scene.add(this.trapGroup);
+    this.scene.add(this.worksGroup);
     this.scene.add(this.groundGroup);
     this.dimQuad = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 2),
@@ -514,6 +517,34 @@ export class TacticsScene {
     this.tileMeshList = buildMergedTerrain(this.grid.mapData.tiles, this.tileMats);
     for (const m of this.tileMeshList) this.scene.add(m);
     this.buildGround();
+    this.buildWorks();
+  }
+
+  /** A row of sharpened stakes on each barricade, so it reads as built, not as ground (0.54.0). */
+  private buildWorks(): void {
+    for (const c of [...this.worksGroup.children]) {
+      this.worksGroup.remove(c);
+      (c as THREE.Mesh).geometry?.dispose();
+    }
+    const tiles = this.grid.mapData.tiles.filter((t) => t.works);
+    if (!tiles.length) return;
+    const wood = new THREE.MeshLambertMaterial({ color: 0x8a5a2b });
+    const tip = new THREE.MeshLambertMaterial({ color: 0xc9a46a });
+    for (const t of tiles) {
+      for (let i = 0; i < 4; i++) {
+        const ox = -0.33 + i * 0.22, oz = (i % 2 ? 0.12 : -0.12);
+        const h = 0.42 + (i % 2) * 0.1;
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, h, 0.14), wood);
+        post.position.set(t.x + ox, t.height + h / 2, t.z + oz);
+        const point = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.18, 4), tip);
+        point.position.set(t.x + ox, t.height + h + 0.09, t.z + oz);
+        for (const m of [post, point]) { m.userData.noPick = true; this.worksGroup.add(m); }
+      }
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.08, 0.08), wood);
+      rail.position.set(t.x, t.height + 0.26, t.z);
+      rail.userData.noPick = true;
+      this.worksGroup.add(rail);
+    }
   }
 
   /**

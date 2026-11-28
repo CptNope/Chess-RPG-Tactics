@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.54.0] - 2026-11-28
+
+### Added
+- **The Sapper**, a new advanced job (Chemist Lv 3 and Geomancer Lv 2; 25 jobs) who reshapes the battlefield:
+  - **Barricade:** a wooden wall nobody can pass, for 3 rounds.
+  - **Earthwork:** raises a tile a step for the rest of the battle, your own included (high ground on demand). It fills in water.
+  - **Undermine:** hurts a foe and sinks the ground under it.
+  - **Blasting Charge:** a fire blast that brings barricades down and leaves the ground burning.
+  - **Dig In** (reaction): Protect when a physical blow lands.
+  - **Fieldworks** (support): barricades stand 5 rounds and earth moves farther.
+  - Signature: **Siege Works**, a whole hill at once.
+- Barricades have stakes on top, and the tile panel shows how long they'll stand.
+- A Raider Sapper can join the Night Raiders at Watchfire Ridge, and Sappers can be recruited.
+
+### Fixed
+- 0.53's hazards, hold zone and traps belonged to Chapters II-A, II-B and IV, but they were drawn on the maps. Side battles, side stories and Trials floors on those maps had them too: Watchfire Ridge showed a hold zone, and its raiders got traps right by your squad. They now come only with their chapters.
+
+### Developer
+- `Earthworks.ts` (`TileData.works`, `doWorks`, `tickWorks`); `Ability.earthwork` and `demolish`; `ActionEnd.works` and the `works` event; `scoreWorks` in the AI; `CampaignChapter.ground` with `markGround`; Goal and Ground columns in the content reference's campaign table. ADR 0059.
+- 6 new tests (383 total).
+
 ## [0.53.0] - 2026-11-28
 
 ### Added

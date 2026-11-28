@@ -49,6 +49,11 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     mapId: 'gloomy_swamp',
     recruit: { id: 'p5', name: 'Bria', jobId: 'geomancer', level: 4 },
     rewardItemIds: ['gaia_staff', 'verdant_charm'],
+    // 0.53.0: the warlock's poison pools by his shrine; a clean spring still runs on the middle island
+    ground: [
+      ...[[5, 0], [5, 1], [6, 1], [9, 0], [10, 0], [10, 1]].map(([x, z]) => ({ x, z, hazard: 'miasma' as const })),
+      { x: 6, z: 7, hazard: 'spring' }, { x: 5, z: 7, hazard: 'spring' }
+    ],
     introDialogue: [
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'The fog is thick with venom... Tread carefully on the wooden boardwalks!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'You will drown out here without a guide, knight. I am Bria. This mire is my home, and that warlock has poisoned it. I fight with you.' },
@@ -88,8 +93,12 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     mapId: 'night_fortress',
     recruit: { id: 'p5', name: 'Bria', jobId: 'geomancer', level: 4 },
     rewardItemIds: ['crystal_helm', 'mirror_shield'],
-    // 0.53.0: hold the gate (the map marks it, and hides the defenders' traps on the approach)
+    // 0.53.0: hold the gate and the ground just outside it; the defenders hid traps on the approach
     objective: { type: 'hold', rounds: 3 },
+    ground: [
+      { x: 7, z: 8, zone: true }, { x: 8, z: 8, zone: true }, { x: 7, z: 9, zone: true }, { x: 8, z: 9, zone: true },
+      { x: 7, z: 11, trap: 'snare' }, { x: 9, z: 10, trap: 'spikes' }
+    ],
     introDialogue: [
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'We arrived in time! The fortress drawbridge has been breached, but the ramparts hold!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The garrison sent for anyone who could hold a staff. I am Bria, a Geomancer. Stone walls answer to me. Point me at the enemy.' },
@@ -168,6 +177,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     subtitle: 'Fire on the Water',
     mapId: 'ember_harbor',
     rewardItemIds: ['oath_shield'],
+    // 0.53.0: fire on the water. The end of the west pier and a warehouse on the quay are burning
+    ground: [[2, 6], [3, 6], [2, 7], [3, 7], [12, 13], [13, 13], [13, 14]].map(([x, z]) => ({ x, z, hazard: 'embers' as const })),
     recruit: { id: 'sable', name: 'Sable', jobId: 'thief', level: 6 },
     introDialogue: [
       { speaker: 'Captain Varrow', portrait: 'foe_ninja', portraitClass: '☠', side: 'right', text: 'Load the last of it! The Tidecaller pays in gold for every chart of these waters, and she pays double for speed.' },

@@ -27,7 +27,7 @@ import { ActionContext, TrapStep, walkInto, ActionHit, forecastFor, resolveActio
 import { newSeed, seededRng } from './core/Rng';
 import { battleOutcome, noteTurn } from './core/Battle';
 import { CAMPAIGN_RULES } from './core/Rules';
-import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter } from './core/types';
+import { Unit, Ability, CombatForecast, FacingDirection, DialogueLine, CampaignChapter, TileData } from './core/types';
 import { CAMPAIGN_CHAPTERS } from './data/campaign';
 import { ITEMS, STARTING_ARMORY } from './data/items';
 import { SoundFX } from './audio/SoundEffects';
@@ -50,8 +50,9 @@ import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { inReach, sumPulses, TotemPulse } from './core/Totems';
 import { layMapTraps, trapAt } from './core/Traps';
+import { BARRICADE_ROUNDS, canBuildAt, canShape, FIELDWORKS, FIELDWORKS_ROUNDS, tickWorks, WorkChange } from './core/Earthworks';
 import { bodyAt, raisableAt, settleFallenThralls, worksOnBodies } from './core/Necromancy';
-import { GroundChange, HAZARDS, HazardPulse, holdGoal, SCORCH_ROUNDS, tickGround, zoneHolder, zoneKeys } from './core/Hazards';
+import { GroundChange, HAZARDS, HazardPulse, holdGoal, markGround, SCORCH_ROUNDS, tickGround, zoneHolder, zoneKeys } from './core/Hazards';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
@@ -386,6 +387,7 @@ class TacticsGame {
     const mapId = mapOverride || chapter.mapId;
     // Workshop chapters carry their own battlefield (a copy, so replays start fresh)
     this.grid = new BattleGrid(chapter.mapData && !mapOverride ? JSON.parse(JSON.stringify(chapter.mapData)) : (MAPS[mapId] || MAPS.river_ruins)());
+    if (!mapOverride) markGround(this.grid.mapData.tiles, this.grid.mapData.width, chapter.ground); // the chapter's own ground (0.54.0)
 
     if (chapter.recruit && !this.squad.some((u) => u.id === chapter.recruit!.id)) {
       const r = chapter.recruit;
@@ -732,7 +734,7 @@ class TacticsGame {
     if (t) {
       SoundFX.playMoveStep();
       const tile = this.scene.grid.getTile(t.x, t.z);
-      if (tile) this.ui.updateTileInfo(t.x, t.z, tile.height, tile.terrain, tile.hazard ? HAZARDS[tile.hazard].name : undefined, tile.zone);
+      if (tile) this.ui.updateTileInfo(t.x, t.z, tile.height, tile.terrain, this.groundNote(tile), tile.zone);
       this.workshop.describeTile(t.x, t.z);
       const unit = this.units.find((u) => !u.isDead && u.x === t.x && u.z === t.z);
       if (unit && this.currentMode !== 'targeting') this.ui.updateUnitCard(unit, this.grid.getHeight(unit.x, unit.z));
@@ -1270,8 +1272,10 @@ class TacticsGame {
     const supportive = CombatEngine.isSupportive(ability);
     this.totemAim = null;
     let tiles = this.grid.mapData.tiles.filter((t) =>
-      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive || !!ability.totem || !!ability.trap || worksOnBodies(ability))
+      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive || !!ability.totem || !!ability.trap || worksOnBodies(ability) || !!ability.earthwork)
     );
+    // A Sapper builds on free ground and shapes walkable ground (0.54.0)
+    if (ability.earthwork && !ability.aoe) tiles = tiles.filter((t) => this.canWork(ability, t.x, t.z));
     // A trap goes on free ground (0.49.0)
     if (ability.trap && !ability.aoe) tiles = tiles.filter((t) => this.trapFree(t.x, t.z));
     // A Necromancer's work needs a body there (0.52.0)
@@ -1289,7 +1293,34 @@ class TacticsGame {
     this.currentMode = 'targeting';
     this.tip('targeting');
     (document.activeElement as HTMLElement | null)?.blur();
-    this.scene.setHighlights(tiles, ability.thrall ? 0xa78bfa : ability.trap ? 0xf59e0b : supportive || this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+    this.scene.setHighlights(tiles, ability.earthwork && ability.power <= 0 ? 0xd97706 : ability.thrall ? 0xa78bfa : ability.trap ? 0xf59e0b : supportive || this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+  }
+
+  /** What the tile panel says is on a tile: a barricade and its rounds left (0.54.0), or a hazard. */
+  private groundNote(tile: TileData): string | undefined {
+    if (tile.works) return `Barricade, ${tile.works.rounds} round${tile.works.rounds === 1 ? '' : 's'} left`;
+    return tile.hazard ? HAZARDS[tile.hazard].name : undefined;
+  }
+
+  /** Where a Sapper's single-tile work can go (0.54.0). */
+  private canWork(ability: Ability, x: number, z: number): boolean {
+    const tile = this.grid.getTile(x, z);
+    return ability.earthwork === 'barricade' ? canBuildAt(tile, this.units) : ability.earthwork ? canShape(tile, ability.earthwork) : false;
+  }
+
+  /** Redraws tiles a Sapper reshaped, or barricades that fell, and logs it (0.54.0). */
+  private showWorks(tiles: WorkChange[], caster?: Unit): void {
+    if (!tiles.length) return;
+    this.scene.refreshTerrain();
+    this.scene.refreshGround();
+    this.scene.updateUnits(this.units);
+    const n = (k: WorkChange['kind']) => tiles.filter((t) => t.kind === k).length;
+    const s = (c: number) => (c === 1 ? '' : 's');
+    const rounds = caster?.equippedAbilities.support === FIELDWORKS ? FIELDWORKS_ROUNDS : BARRICADE_ROUNDS;
+    if (n('barricade')) this.ui.addLogEntry(`[WORKS] ${caster?.name ?? 'A Sapper'} throws up a barricade (${rounds} rounds).`, 'spell');
+    if (n('raise')) this.ui.addLogEntry(`[WORKS] The ground rises on ${n('raise')} tile${s(n('raise'))}.`, 'spell');
+    if (n('lower')) this.ui.addLogEntry(`[WORKS] The ground sinks on ${n('lower')} tile${s(n('lower'))}.`, 'spell');
+    if (n('collapse')) this.ui.addLogEntry(`[WORKS] ${n('collapse') === 1 ? 'A barricade comes' : `${n('collapse')} barricades come`} down.`, 'system');
   }
 
   /** Free ground for a trap: walkable, nobody on it, no trap there yet (0.49.0). */
@@ -1397,7 +1428,10 @@ class TacticsGame {
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
       const ability = this.selectedAbility;
       const supportive = CombatEngine.isSupportive(ability);
-      if (ability.totem || ability.trap || worksOnBodies(ability)) {
+      // A demolition charge aimed where nobody stands still brings barricades down (0.54.0)
+      const blastsWalls = !!ability.demolish && !this.victimsFor(active, ability, tile.x, tile.z).length &&
+        this.grid.mapData.tiles.some((t) => t.works && Math.abs(t.x - tile.x) + Math.abs(t.z - tile.z) <= ability.aoe);
+      if (ability.totem || ability.trap || worksOnBodies(ability) || ability.earthwork || blastsWalls) {
         // A totem (0.47.0) or a trap (0.49.0) goes on ground, not on someone: the first click shows
         // where it lands, the second sets it
         if (!this.grid.canTarget(active.x, active.z, tile.x, tile.z, ability.range, ability.heightTolerance, true)) {
@@ -1406,6 +1440,10 @@ class TacticsGame {
         }
         if (ability.trap && !ability.aoe && !this.trapFree(tile.x, tile.z)) {
           this.ui.showBanner('NO ROOM FOR A TRAP THERE');
+          return;
+        }
+        if (ability.earthwork && !ability.aoe && !this.canWork(ability, tile.x, tile.z)) {
+          this.ui.showBanner(ability.earthwork === 'barricade' ? 'NO ROOM FOR A BARRICADE THERE' : ability.earthwork === 'raise' ? 'THE GROUND CAN\'T GO HIGHER' : 'THE GROUND CAN\'T GO LOWER');
           return;
         }
         const body = ability.thrall ? raisableAt(active, this.units, tile.x, tile.z) : bodyAt(this.units, tile.x, tile.z);
@@ -1422,9 +1460,15 @@ class TacticsGame {
         this.totemAim = { x: tile.x, z: tile.z };
         SoundFX.playMenuBlip();
         const area = { x: tile.x, z: tile.z, radius: ability.aoe };
-        const reach = this.grid.mapData.tiles.filter((t) => t.walkable && inReach({ kind: 'mending', turns: 0, ...area }, t.x, t.z) && (!ability.trap || this.trapFree(t.x, t.z)));
-        this.scene.setHighlights(reach, ability.thrall ? 0xa78bfa : ability.corpseBurst ? 0xdc2626 : ability.trap ? 0xf59e0b : this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+        const reach = this.grid.mapData.tiles.filter((t) => (t.walkable || (blastsWalls && t.works)) && inReach({ kind: 'mending', turns: 0, ...area }, t.x, t.z) && (!ability.trap || this.trapFree(t.x, t.z)) &&
+          (!ability.earthwork || this.canWork(ability, t.x, t.z)));
+        this.scene.setHighlights(reach, ability.earthwork && ability.power <= 0 ? 0xd97706 : ability.thrall ? 0xa78bfa : ability.corpseBurst ? 0xdc2626 : ability.trap ? 0xf59e0b : this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
         this.scene.setCursor(tile.x, tile.z);
+        if (ability.earthwork || blastsWalls) {
+          this.ui.showBanner(blastsWalls ? 'THE BLAST · SELECT AGAIN TO BRING IT DOWN' : ability.earthwork === 'barricade' ? 'SELECT AGAIN TO BUILD IT HERE'
+            : ability.earthwork === 'raise' ? 'SELECT AGAIN TO RAISE THE GROUND' : 'SELECT AGAIN TO DIG IT OUT');
+          return;
+        }
         this.ui.showBanner(ability.thrall ? (ability.aoe ? 'THESE BODIES RISE · SELECT AGAIN' : `RAISE ${body!.name.toUpperCase()} · SELECT AGAIN`)
           : ability.corpseBurst ? 'THE BLAST · SELECT AGAIN TO BURST IT' : ability.trap ? 'SELECT AGAIN TO HIDE IT HERE' : 'ITS REACH · SELECT AGAIN TO PLANT');
         return;
@@ -1566,7 +1610,7 @@ class TacticsGame {
     else if (miasma) this.ui.addLogEntry(`[GROUND] The poison cloud lingers as miasma for ${SCORCH_ROUNDS} rounds.`, 'spell');
     const ht = this.scene.hoveredTile;
     const tile = ht ? this.grid.getTile(ht.x, ht.z) : undefined;
-    if (tile) this.ui.updateTileInfo(tile.x, tile.z, tile.height, tile.terrain, tile.hazard ? HAZARDS[tile.hazard].name : undefined, tile.zone);
+    if (tile) this.ui.updateTileInfo(tile.x, tile.z, tile.height, tile.terrain, this.groundNote(tile), tile.zone);
   }
 
   /** Floats and logs what the ground did to a unit starting its turn (0.48.0). */
@@ -1764,6 +1808,7 @@ class TacticsGame {
     // Player progression: JP for the current job, EXP for acting and for kills
     const end = step.value;
     if (end.ground) this.showGround(end.ground, ability.element === 'ice' ? 'douse' : 'spell');
+    if (end.works) this.showWorks(end.works, caster);
     if (end.summonLevels > 0) this.ui.addLogEntry(`[LEVEL] ${caster.name} reached level ${caster.level}!`, 'system');
     if (end.jp) this.announceJobGain(caster, end.jp);
     if (end.levels > 0) {
@@ -2064,7 +2109,7 @@ class TacticsGame {
     }
     // Stopped short by a trap, it acts only if it still can from where it stands
     const stillCan = !trapped || (!enemy.isDead && !enemy.statuses.some((s) => s.type === 'sleep') && !!plan.ability && !!plan.targetTile &&
-      (!!plan.ability.isSelfOnly || isCentered(plan.ability) || this.grid.canTarget(enemy.x, enemy.z, plan.targetTile.x, plan.targetTile.z, plan.ability.range, plan.ability.heightTolerance, CombatEngine.isSupportive(plan.ability) || !!plan.ability.totem || !!plan.ability.trap)));
+      (!!plan.ability.isSelfOnly || isCentered(plan.ability) || this.grid.canTarget(enemy.x, enemy.z, plan.targetTile.x, plan.targetTile.z, plan.ability.range, plan.ability.heightTolerance, CombatEngine.isSupportive(plan.ability) || !!plan.ability.totem || !!plan.ability.trap || !!plan.ability.earthwork)));
     if (plan.ability && plan.targetTile && stillCan) {
       await this.performAction(enemy, plan.ability, plan.targetTile.x, plan.targetTile.z);
     }
@@ -2382,6 +2427,7 @@ class TacticsGame {
     if (fresh) {
       // The spells' marks on the ground count down (0.50.0)
       this.showGround(tickGround(this.grid.mapData.tiles), 'fade');
+      this.showWorks(tickWorks(this.grid.mapData.tiles)); // barricades count down (0.54.0)
       const obj = this.currentChapter.objective;
       if (obj?.type === 'hold') {
         // A round ended: did the squad hold the marked ground alone? (0.48.0)
@@ -3187,7 +3233,7 @@ class TacticsGame {
       if (key !== this.lastHoveredKey) {
         this.lastHoveredKey = key;
         const tile = this.scene.grid.getTile(x, z);
-        if (tile) this.ui.updateTileInfo(x, z, tile.height, tile.terrain, tile.hazard ? HAZARDS[tile.hazard].name : undefined, tile.zone);
+        if (tile) this.ui.updateTileInfo(x, z, tile.height, tile.terrain, this.groundNote(tile), tile.zone);
         this.workshop?.describeTile(x, z);
       }
     }

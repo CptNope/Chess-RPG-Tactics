@@ -5,7 +5,7 @@
  * goes through `sanitizeScenario`, which rebuilds the scenario field by field, clamps every
  * number, drops unknown ids and trims text, so a hostile file can't break or inject into the game.
  */
-import { HAZARD_KINDS, HazardKind, HOLD_ROUNDS } from './Hazards';
+import { HAZARD_KINDS, HazardKind, HOLD_ROUNDS, markGround } from './Hazards';
 import { TRAP_KINDS, TrapKind } from './Traps';
 import { MapData, MAPS, MapBuilder, spawnsFor } from '../data/maps';
 import { JOBS } from '../data/jobs';
@@ -118,6 +118,7 @@ export function scenarioFromChapter(ch: CampaignChapter): Scenario {
   s.victory = clone(ch.victoryDialogue);
   s.rewardItemIds = [...(ch.rewardItemIds || [])];
   s.objective = ch.objective ? clone(ch.objective) : { type: 'rout' };
+  markGround(s.map.tiles, s.map.width, ch.ground); // the chapter's own ground comes along (0.54.0)
   return s;
 }
 

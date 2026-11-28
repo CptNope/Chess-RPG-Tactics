@@ -125,7 +125,7 @@ export function outline(canvas: HTMLCanvasElement, color = OUTLINE): void {
 // ---------------------------------------------------------------------------
 
 type Body = 'light' | 'armor' | 'robe';
-type Weapon = 'sword' | 'broadsword' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia' | 'fists' | 'dagger' | 'horn' | 'orb' | 'lute' | 'whip' | 'musket';
+type Weapon = 'sword' | 'broadsword' | 'mattock' | 'bow' | 'staff' | 'rod' | 'hourglass' | 'spear' | 'daggers' | 'gaia' | 'fists' | 'dagger' | 'horn' | 'orb' | 'lute' | 'whip' | 'musket';
 
 interface Look {
   body: Body;
@@ -194,6 +194,9 @@ function lookFor(job: string, enemy: boolean): Look {
     case 'necromancer':
       // Violet-black robes with bone trim, a deep hood, a staff (0.52.0)
       return { ...base, body: 'robe', weapon: 'staff', hair: '#1c1917', main: e ? '#2a0f14' : '#241a33', sub: e ? '#5c1a1a' : '#4c1d95', trim: '#e7e5e4', cape: e ? '#1a0a0c' : '#160f20' };
+    case 'sapper':
+      // Soot-brown leathers with an amber tool belt, an iron kettle hat with goggles, a mattock (0.54.0)
+      return { ...base, weapon: 'mattock', hair: '#4a3020', main: e ? '#5a2418' : '#6b5638', sub: e ? '#33140c' : '#3f3a2c', trim: '#d97706', pants: e ? '#2e1a14' : '#4a3f2e', boots: '#241a12', metal: e ? '#4b3f3f' : '#5b6170' };
     case 'ranger':
       // Olive hunting leathers under a hooded cloak, a face scarf, a bow (0.49.0)
       return { ...base, weapon: 'bow', hair: '#5b3a1e', main: e ? '#4a2626' : '#55663a', sub: e ? '#2e1515' : '#7c5a34', trim: '#d6c08a', pants: e ? '#2e1a1a' : '#3b3326', boots: '#2a1e14', cape: e ? '#3a1414' : '#33402a' };
@@ -274,6 +277,21 @@ function headFront(p: Painter, job: string, L: Look, hy: number, pose: Pose, bac
         p.r(x + 1, hy + 3, 10, 1, L.trim);
       }
       p.tri(x + 4, hy - 2, x + 8, hy - 2, x + 6, hy - 6, hood); // the hood's peak
+      break;
+    }
+    case 'sapper': {
+      // An iron kettle hat with a wide brim, goggles pushed up on it, and soot on a cheek (0.54.0)
+      const m = L.metal ?? '#5b6170';
+      p.b(x + 1, hy - 3, 10, 5, m);
+      p.r(x - 3, hy + 1, 18, 2, shade(m, -0.15));
+      if (!back) {
+        p.r(x + 1, hy - 1, 4, 2, L.trim); p.r(x + 7, hy - 1, 4, 2, L.trim);
+        p.r(x + 5, hy, 2, 1, '#2a1f17');
+        p.px(x + 2, hy + 9, shade(L.skin, -0.35)); p.px(x + 3, hy + 10, shade(L.skin, -0.3));
+      } else {
+        p.r(x + 1, hy + 3, 10, 1, '#2a1f17'); // the goggles' strap
+      }
+      p.px(x + 3, hy - 2, shade(m, 0.35));
       break;
     }
     case 'ranger': {
@@ -645,6 +663,23 @@ function weapon(p: Painter, L: Look, hx: number, hy: number, pose: Pose, view: '
       }
       break;
     }
+    case 'mattock': {
+      // A Sapper's mattock: a short haft and an iron head, pick on one side, blade on the other (0.54.0)
+      if (strike) {
+        p.r(hx - 6, hy, 20, 2, wood);
+        p.r(hx + 13, hy - 6, 3, 14, steel);
+        p.r(hx + 13, hy - 6, 1, 14, '#ffffff');
+        p.r(hx + 12, hy - 1, 5, 4, L.trim);
+      } else {
+        p.r(hx, hy - 27, 2, 33, wood);
+        p.r(hx - 4, hy - 30, 10, 3, '#9aa3b0');
+        p.tri(hx - 4, hy - 30, hx - 4, hy - 27, hx - 7, hy - 26, '#9aa3b0');
+        p.r(hx + 6, hy - 31, 2, 5, '#9aa3b0');
+        p.r(hx - 3, hy - 30, 8, 1, '#c9d1dc');
+        p.r(hx - 1, hy - 27, 4, 2, L.trim);
+      }
+      break;
+    }
     case 'bow': {
       const bx = view === 'side' ? hx + 2 : hx;
       if (strike && view === 'side') {
@@ -858,6 +893,13 @@ function drawSide(p: Painter, job: string, L: Look, pose: Pose): void {
       p.b(hx - 1, hy - 2, 14, 8, hood);
       p.r(hx - 1, hy + 4, 5, 9, hood);
       p.r(hx + 6, hy + 9, 7, 3, L.main);
+      break;
+    }
+    case 'sapper': {
+      const m = L.metal ?? '#5b6170';
+      p.b(hx + 1, hy - 3, 11, 5, m);
+      p.r(hx - 2, hy + 1, 17, 2, shade(m, -0.15));
+      p.r(hx + 8, hy - 1, 4, 2, L.trim);
       break;
     }
     case 'shaman':
@@ -1246,6 +1288,18 @@ function drawPortrait(id: string): HTMLCanvasElement {
         p.r(hx - 4, hy + 8, 7, 26, hood); p.r(hx + 25, hy + 8, 7, 26, hood);
         p.r(hx + 2, hy + 6, 24, 2, L.trim);
         p.r(hx + 11, hy + 3, 6, 6, L.trim); p.r(hx + 12, hy + 5, 1, 1, '#1c1917'); p.r(hx + 15, hy + 5, 1, 1, '#1c1917'); p.r(hx + 13, hy + 7, 2, 1, '#1c1917');
+        break;
+      }
+      case 'sapper': {
+        // An iron kettle hat with a wide brim, amber goggles pushed up on it, and a smudge of soot
+        p.b(hx + 2, hy - 10, 24, 12, metal);
+        p.r(hx - 6, hy + 1, 40, 4, shade(metal, -0.15));
+        p.r(hx - 6, hy + 4, 40, 1, shade(metal, -0.35));
+        p.r(hx + 4, hy - 4, 8, 5, L.trim); p.r(hx + 16, hy - 4, 8, 5, L.trim);
+        p.r(hx + 6, hy - 3, 3, 2, shade(L.trim, 0.4)); p.r(hx + 18, hy - 3, 3, 2, shade(L.trim, 0.4));
+        p.r(hx + 12, hy - 3, 4, 2, '#2a1f17');
+        p.r(hx + 6, hy - 9, 6, 2, shade(metal, 0.3));
+        p.r(hx + 3, ey + 7, 5, 2, shade(L.skin, -0.3)); p.r(hx + 5, ey + 9, 3, 1, shade(L.skin, -0.25));
         break;
       }
       case 'ranger': {

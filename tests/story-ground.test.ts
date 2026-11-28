@@ -7,7 +7,7 @@ import { ActionContext, walkInto } from '../src/core/Action';
 import { planTurn } from '../src/core/EnemyAI';
 import { seededRng } from '../src/core/Rng';
 import { CAMPAIGN_RULES } from '../src/core/Rules';
-import { zoneKeys } from '../src/core/Hazards';
+import { markGround, zoneKeys } from '../src/core/Hazards';
 import { layMapTraps } from '../src/core/Traps';
 import { blankScenario, packForShare, sanitizeScenario, unpackShare, validateScenario } from '../src/core/Scenario';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
@@ -20,25 +20,33 @@ const field = (paint: (t: TileData) => void = () => {}): MapData => {
   for (let z = 0; z < 10; z++) for (let x = 0; x < 10; x++) { const t: TileData = { x, z, height: 1, terrain: 'grass', walkable: true }; paint(t); tiles.push(t); }
   return { id: 'test', name: 'Test', theme: 'day', width: 10, depth: 10, tiles };
 };
-const tilesWith = (mapId: string, f: (t: TileData) => boolean) => MAPS[mapId]().tiles.filter(f);
+/** A chapter's battlefield with its own ground laid over the map (0.54.0). */
+const tilesWith = (chapterId: string, f: (t: TileData) => boolean) => {
+  const ch = CAMPAIGN_CHAPTERS[chapterId];
+  const map = MAPS[ch.mapId]();
+  markGround(map.tiles, map.width, ch.ground);
+  return map.tiles.filter(f);
+};
 
 describe('ground in the story (0.53.0)', () => {
   it('the Gloomy Mire has the warlock\'s miasma and a clean spring; the harbor burns', () => {
-    expect(tilesWith('gloomy_swamp', (t) => t.hazard === 'miasma').length).toBeGreaterThanOrEqual(4);
-    expect(tilesWith('gloomy_swamp', (t) => t.hazard === 'spring').length).toBeGreaterThanOrEqual(1);
-    const embers = tilesWith('ember_harbor', (t) => t.hazard === 'embers');
+    expect(tilesWith('chapter_2a', (t) => t.hazard === 'miasma').length).toBeGreaterThanOrEqual(4);
+    expect(tilesWith('chapter_2a', (t) => t.hazard === 'spring').length).toBeGreaterThanOrEqual(1);
+    const embers = tilesWith('chapter_4', (t) => t.hazard === 'embers');
     expect(embers.length).toBeGreaterThanOrEqual(4);
-    for (const t of [...embers, ...tilesWith('gloomy_swamp', (t) => !!t.hazard)]) expect(t.walkable).toBe(true);
+    for (const t of [...embers, ...tilesWith('chapter_2a', (t) => !!t.hazard)]) expect(t.walkable).toBe(true);
   });
 
   it('Chapter II-B asks the squad to hold the gate, where the defenders dug in traps', () => {
     expect(CAMPAIGN_CHAPTERS.chapter_2b.objective).toEqual({ type: 'hold', rounds: 3 });
-    const zone = tilesWith('night_fortress', (t) => !!t.zone);
+    const zone = tilesWith('chapter_2b', (t) => !!t.zone);
     expect(zone.length).toBe(4);
     expect(zone.every((t) => t.walkable)).toBe(true);
-    const traps = tilesWith('night_fortress', (t) => !!t.trap);
+    const traps = tilesWith('chapter_2b', (t) => !!t.trap);
     expect(traps.map((t) => t.trap).sort()).toEqual(['snare', 'spikes']);
     expect(traps.every((t) => t.walkable && !t.zone)).toBe(true);
+    // ... and the maps themselves stay bare, for the side battles, side stories and Trials fought there (0.54.0)
+    for (const id of ['night_fortress', 'gloomy_swamp', 'ember_harbor']) expect(MAPS[id]().tiles.some((t) => t.hazard || t.zone || t.trap)).toBe(false);
     // ... and no other chapter's objective changed
     expect(Object.values(CAMPAIGN_CHAPTERS).filter((c) => c.objective?.type === 'hold').map((c) => c.id)).toEqual(['chapter_2b']);
   });

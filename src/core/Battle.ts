@@ -14,6 +14,7 @@ import type { BattleGrid } from './Grid';
 import { TurnManager } from './TurnManager';
 import { ActionContext, ActionEnd, ActionStep, runAction, walkInto } from './Action';
 import { trapAt } from './Traps';
+import { canBuildAt, canShape, tickWorks, WorkChange } from './Earthworks';
 import { bodyAt, raisableAt, settleFallenThralls } from './Necromancy';
 import { callDue } from './Summons';
 import { sumPulses, TotemPulse } from './Totems';
@@ -122,6 +123,8 @@ export type BattleEvent =
   | { t: 'hold'; round: number; held: number; holder: string | null }
   /** The ground changed: a spell's embers, miasma or dousing, or its mark running out (0.50.0). */
   | { t: 'ground'; tiles: GroundChange[] }
+  /** A Sapper reshaped tiles, or a barricade fell (0.54.0). */
+  | { t: 'works'; tiles: WorkChange[] }
   /** A Necromancer's thrall crumbled: its time ran out, or it fell (0.52.0). */
   | { t: 'crumble'; unit: string }
   | { t: 'call' | 'encore' | 'act'; unit: string; ability: string; x: number; z: number; hits: HitRecord[] }
@@ -206,6 +209,7 @@ export class Battle {
     const { steps, end } = runAction(this.ctx, unit, ability, x, z, opts);
     this.events.push({ t: kind, unit: unit.id, ability: ability.id, x, z, hits: record(steps) });
     if (end.ground) this.events.push({ t: 'ground', tiles: end.ground });
+    if (end.works) this.events.push({ t: 'works', tiles: end.works });
     return end;
   }
 
@@ -227,6 +231,9 @@ export class Battle {
         // A round ended: the spells' marks on the ground count down (0.50.0)
         const ground = tickGround(this.grid.mapData.tiles);
         if (ground.length) this.events.push({ t: 'ground', tiles: ground });
+        // ...and barricades (0.54.0)
+        const works = tickWorks(this.grid.mapData.tiles);
+        if (works.length) this.events.push({ t: 'works', tiles: works });
         // ...and it counts for a hold objective (0.48.0); then see if that won
         if (this.objective?.type === 'hold') {
           const holder = noteHold(this.rounds, this.units, this.objective, this.zone, this.hero);
@@ -264,7 +271,7 @@ export class Battle {
       if (ability.item && !((this.ctx.pouchOf(u) || {})[ability.item] > 0)) return 'None left.';
       if (!target) return 'No target.';
       if (!ability.isSelfOnly && !isCentered(ability) &&
-        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability) || !!ability.totem || !!ability.trap || !!ability.thrall || !!ability.corpseBurst)) return 'Out of range.';
+        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability) || !!ability.totem || !!ability.trap || !!ability.thrall || !!ability.corpseBurst || !!ability.earthwork)) return 'Out of range.';
       // A single trap needs free ground: walkable, nobody on it, no trap there yet (0.49.0)
       // A Necromancer's work needs a body (0.52.0): one it can raise, or any for a burst
       // ...judged from where it will stand: stepping off a body uncovers it
@@ -274,6 +281,18 @@ export class Battle {
         const ok = ability.thrall && !ability.aoe ? !!raisableAt(u, this.units, target.x, target.z) : !!bodyAt(this.units, target.x, target.z);
         u.x = sx; u.z = sz;
         if (!ok && (ability.corpseBurst || !ability.aoe)) return ability.thrall ? 'No body to raise there.' : 'No body there.';
+      }
+      // A Sapper's single tile (0.54.0): a barricade needs free ground (not where the Sapper will
+      // stand), earth needs walkable ground within the height limits
+      if (ability.earthwork && !ability.aoe) {
+        const tile = this.grid.getTile(target.x, target.z);
+        if (ability.earthwork === 'barricade') {
+          const [sx, sz] = [u.x, u.z];
+          u.x = moveTo.x; u.z = moveTo.z;
+          const ok = canBuildAt(tile, this.units);
+          u.x = sx; u.z = sz;
+          if (!ok) return 'No room for a barricade there.';
+        } else if (!canShape(tile, ability.earthwork)) return ability.earthwork === 'raise' ? 'The ground can\'t go higher there.' : 'The ground can\'t go lower there.';
       }
       if (ability.trap && !ability.aoe && (!this.grid.getTile(target.x, target.z)?.walkable || trapAt(this.units, target.x, target.z) ||
         this.units.some((o) => !o.isDead && o !== u && o.x === target.x && o.z === target.z) || (target.x === moveTo.x && target.z === moveTo.z))) return 'No room for a trap there.';

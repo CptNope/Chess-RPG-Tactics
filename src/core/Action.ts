@@ -17,6 +17,7 @@ import { startCall } from './Summons';
 import { plantTotem, pulsesOn, Totem, TotemPulse } from './Totems';
 import { setTrapsAt, springTrap, Trap, trapAt, trapOnPath, TrapSprung } from './Traps';
 import { changeGround, GroundChange } from './Hazards';
+import { doWorks, WorkChange } from './Earthworks';
 import { bodies, canRaise, raiseThrall, spendBody } from './Necromancy';
 import { isAlly } from './Sides';
 import { BattleRules, earnsProgress } from './Rules';
@@ -79,6 +80,8 @@ export interface ActionEnd {
   anyKill: boolean;
   /** Ground the spell changed: embers, miasma, or embers put out (0.50.0). */
   ground?: GroundChange[];
+  /** Tiles a Sapper reshaped: barricades up or down, earth raised or lowered (0.54.0). */
+  works?: WorkChange[];
   /** Units left down by this action. */
   kills: number;
   /** JP the caster earned for its job (0 when none). */
@@ -97,6 +100,7 @@ export function victimsFor(units: readonly Unit[], caster: Unit, ability: Abilit
   if (ability.totem) return []; // a totem lands on the tile, not on anyone (0.47.0)
   if (ability.trap) return []; // so does a trap (0.49.0)
   if (ability.thrall) return []; // a raise works on a body, not on anyone standing (0.52.0)
+  if (ability.earthwork && ability.power <= 0) return []; // a barricade or raised earth hurts nobody (0.54.0)
   if (isCentered(ability)) return unitsInBlast(caster, ability, caster.x, caster.z, units as Unit[]);
   if (ability.aoe > 0) return summonVictims(caster, ability, tx, tz, units as Unit[]).map((v) => v.unit);
   const living = units.find((v) => !v.isDead && v.x === tx && v.z === tz);
@@ -206,7 +210,9 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
   const ground = calling ? [] : isCentered(ability)
     ? changeGround((x, z) => ctx.grid.getTile(x, z), ability, caster.x, caster.z, { x: caster.x, z: caster.z })
     : changeGround((x, z) => ctx.grid.getTile(x, z), ability, tx, tz);
-  const end: ActionEnd = { anyKill: kills > 0, kills, jpGained: 0, levels: 0, summonLevels: 0, ...(ground.length ? { ground } : {}) };
+  // A Sapper's work goes in after the blows land, so Undermine hurts from the old height (0.54.0)
+  const works = calling ? [] : doWorks(caster, ability, (x, z) => ctx.grid.getTile(x, z), ctx.units, tx, tz);
+  const end: ActionEnd = { anyKill: kills > 0, kills, jpGained: 0, levels: 0, summonLevels: 0, ...(ground.length ? { ground } : {}), ...(works.length ? { works } : {}) };
   if (!earnsProgress(ctx.rules, caster) || caster.isDead || caster.thrall) return end; // a thrall learns nothing (0.52.0)
   if (called && end.anyKill) {
     // A grand summon that lands pays out for its kills (the JP came when it was called)
