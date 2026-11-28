@@ -53,7 +53,7 @@ export interface AttackResult {
 }
 
 /** Statuses that help the unit carrying them (cast on allies, never on foes). */
-export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus', 'shell', 'regen', 'encore', 'calling'];
+export const BENEFICIAL_STATUSES: StatusEffectType[] = ['haste', 'protect', 'focus', 'shell', 'regen', 'encore', 'calling', 'thrall'];
 
 /** Ailments: what cleansing removes and what gear can guard against. */
 export const HARMFUL_STATUSES: StatusEffectType[] = ['slow', 'immobilize', 'poison', 'blind', 'silence', 'sleep', 'breach'];
@@ -73,7 +73,8 @@ export const STATUS_DURATION: Record<StatusEffectType, number> = {
   blind: 3,
   silence: 3,
   sleep: 2,
-  breach: 3
+  breach: 3,
+  thrall: 3
 };
 
 /** Gear Steal tries first: the small, valuable pieces before weapons and armor. */
@@ -489,7 +490,7 @@ export class CombatEngine {
       attacker.currentHp = Math.min(attacker.maxHp, attacker.currentHp + drained);
     }
 
-    const reactionTrigger = this.checkReaction(forecast, rng);
+    const reactionTrigger = this.checkReaction(forecast, rng, finalDamage);
 
     // Second strike for Dual Wield
     let secondStrikeResult: AttackResult['secondStrike'];
@@ -523,7 +524,7 @@ export class CombatEngine {
   }
 
   /** Resolves the defender's equipped reaction ability after taking damage. */
-  private static checkReaction(forecast: CombatForecast, rng: () => number): ReactionTrigger | undefined {
+  private static checkReaction(forecast: CombatForecast, rng: () => number, damage = 0): ReactionTrigger | undefined {
     const { attacker, target, ability } = forecast;
     const reaction = target.equippedAbilities.reaction;
     if (!reaction || attacker.id === target.id) return undefined;
@@ -702,6 +703,13 @@ export class CombatEngine {
           damage: shot,
           description: `${target.name} returns fire at ${attacker.name} for ${shot} DMG!`
         };
+      }
+      case 'nc_soul_siphon': {
+        // A Necromancer drinks back a quarter of the harm done to it (0.52.0)
+        if (target.isDead || damage <= 0 || target.currentHp >= target.maxHp) return undefined;
+        const heal = Math.min(target.maxHp - target.currentHp, Math.max(1, Math.round(damage * 0.25)));
+        target.currentHp += heal;
+        return { name: 'Soul Siphon', type: 'divine_grace', target, heal, label: `+${heal}`, description: `${target.name} siphons back ${heal} HP!` };
       }
       case 'sh_spirit_ward': {
         // A Shaman struck within reach of its own totem is mended by the spirits (0.47.0)

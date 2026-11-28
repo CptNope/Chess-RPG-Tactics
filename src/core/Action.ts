@@ -17,6 +17,7 @@ import { startCall } from './Summons';
 import { plantTotem, pulsesOn, Totem, TotemPulse } from './Totems';
 import { setTrapsAt, springTrap, Trap, trapAt, trapOnPath, TrapSprung } from './Traps';
 import { changeGround, GroundChange } from './Hazards';
+import { bodies, canRaise, raiseThrall, spendBody } from './Necromancy';
 import { isAlly } from './Sides';
 import { BattleRules, earnsProgress } from './Rules';
 
@@ -56,6 +57,9 @@ export interface ActionStart {
   pulses?: { unit: Unit; pulses: TotemPulse[] }[];
   /** The traps a Ranger hid (0.49.0). */
   trapsSet?: Trap[];
+  /** Fallen foes a Necromancer raised as thralls; the body a Corpse Burst spent (0.52.0). */
+  raised?: Unit[];
+  burst?: Unit;
 }
 
 export interface ActionHit {
@@ -92,6 +96,7 @@ export function victimsFor(units: readonly Unit[], caster: Unit, ability: Abilit
   if (ability.isSelfOnly) return [caster];
   if (ability.totem) return []; // a totem lands on the tile, not on anyone (0.47.0)
   if (ability.trap) return []; // so does a trap (0.49.0)
+  if (ability.thrall) return []; // a raise works on a body, not on anyone standing (0.52.0)
   if (isCentered(ability)) return unitsInBlast(caster, ability, caster.x, caster.z, units as Unit[]);
   if (ability.aoe > 0) return summonVictims(caster, ability, tx, tz, units as Unit[]).map((v) => v.unit);
   const living = units.find((v) => !v.isDead && v.x === tx && v.z === tz);
@@ -175,7 +180,16 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
     ? setTrapsAt(caster, ability, tx, tz, (x, z) => !!ctx.grid.getTile(x, z)?.walkable && !ctx.units.some((u) => !u.isDead && u.x === x && u.z === z) && !trapAt(ctx.units, x, z))
     : undefined;
 
-  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses, trapsSet };
+  // A Necromancer raises fallen foes as thralls, or bursts a body (0.52.0)
+  let raised: Unit[] | undefined;
+  let burst: Unit | undefined;
+  if (ability.thrall) {
+    raised = bodies(ctx.units).filter((b) => Math.abs(b.x - tx) + Math.abs(b.z - tz) <= ability.aoe && canRaise(caster, b, ctx.units));
+    for (const b of raised) raiseThrall(caster, b);
+  }
+  if (ability.corpseBurst) burst = spendBody(ctx.units, tx, tz);
+
+  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses, trapsSet, raised, burst };
 
   for (const target of calling ? [] : victims) {
     const a = asFor(target);
@@ -193,7 +207,7 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
     ? changeGround((x, z) => ctx.grid.getTile(x, z), ability, caster.x, caster.z, { x: caster.x, z: caster.z })
     : changeGround((x, z) => ctx.grid.getTile(x, z), ability, tx, tz);
   const end: ActionEnd = { anyKill: kills > 0, kills, jpGained: 0, levels: 0, summonLevels: 0, ...(ground.length ? { ground } : {}) };
-  if (!earnsProgress(ctx.rules, caster) || caster.isDead) return end;
+  if (!earnsProgress(ctx.rules, caster) || caster.isDead || caster.thrall) return end; // a thrall learns nothing (0.52.0)
   if (called && end.anyKill) {
     // A grand summon that lands pays out for its kills (the JP came when it was called)
     end.summonLevels = JobSystem.grantExp(caster, 20);

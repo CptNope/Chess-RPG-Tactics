@@ -47,7 +47,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     name: 'Drowned Shrine',
     mapId: 'gloomy_swamp',
     foe: 'Mire Cultists',
-    jobs: [['black_mage', 'Hexer'], ['oracle', 'Augur'], ['summoner', 'Caller'], ['time_mage', 'Seer'], ['white_mage', 'Acolyte'], ['ninja', 'Shade']],
+    jobs: [['black_mage', 'Hexer'], ['oracle', 'Augur'], ['summoner', 'Caller'], ['time_mage', 'Seer'], ['white_mage', 'Acolyte'], ['ninja', 'Shade'], ['necromancer', 'Grave Cultist']], // the necromancer since 0.52.0
     opensAfter: ['chapter_2a', 'chapter_2b', 'chapter_3'], // chapter_3 covers old saves that don't record which road was taken
     intro: 'Robed figures chant among the sunken stones. Break the circle before the rite is done.',
     trophy: 'chanting_censer'

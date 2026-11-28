@@ -1,5 +1,6 @@
 import { pulseFor, standingTotems, Totem, TOTEM_TURNS } from './Totems';
 import { groundFrom, hazardFor } from './Hazards';
+import { bodies, canRaise, worksOnBodies } from './Necromancy';
 import { setTraps, trapAt, trapEffect, trapLimit, TRAP_STATUS } from './Traps';
 import { Ability, FacingDirection, Unit } from './types';
 import { isAlly, isFoe } from './Sides';
@@ -472,6 +473,34 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
       for (const raw of baseAbilities) {
         const ability = performedBy(unit, resolveTerrainAbility(raw, terrain));
         const supportive = CombatEngine.isSupportive(ability);
+
+        // A Necromancer's work (0.52.0) is aimed at a body: raise it (worth the fallen foe's
+        // strength, for a few turns) or burst it among the living
+        if (worksOnBodies(ability)) {
+          for (const b of bodies(units)) {
+            if (!grid.canTarget(tile.x, tile.z, b.x, b.z, ability.range, ability.heightTolerance, true)) continue;
+            let score: number;
+            if (ability.thrall) {
+              const raised = bodies(units).filter((c) => manhattan(c, b) <= ability.aoe && canRaise(unit, c, units));
+              if (!raised.length) continue;
+              score = raised.reduce((s, c) => s + 22 + c.level * 1.5 + (JobSystem.getAttackPower(c) + JobSystem.getMagicPower(c)) / 10, 0);
+            } else {
+              const victims = unitsInBlast(unit, ability, b.x, b.z, units);
+              if (!victims.length) continue;
+              score = scoreAbility(unit, ability, victims, grid, { x: b.x, z: b.z }, units, new Set<string>());
+            }
+            if (score <= 0) continue;
+            if (threat) score -= risk(tile.x, tile.z, unit.currentHp);
+            if (ability.signature) score -= 30;
+            if (holding) score -= 12;
+            score += posScore - ability.mpCost * 0.15;
+            if (!best || score > best.score) {
+              const nearestFoe = foes.reduce((a, c) => manhattan(a, tile) <= manhattan(c, tile) ? a : c);
+              best = { moveTo: { ...tile }, ability, targetTile: { x: b.x, z: b.z }, facing: faceTowards(tile.x, tile.z, nearestFoe.x, nearestFoe.z), score };
+            }
+          }
+          continue;
+        }
 
         // A Ranger's trap (0.49.0) goes on free ground within reach: try each such tile
         if (ability.trap) {

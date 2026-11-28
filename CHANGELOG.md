@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.52.0] - 2026-11-28
+
+### Added
+- **The Necromancer**, a new advanced job (Black Mage Lv 3 and Oracle Lv 2; 24 jobs):
+  - **Grave Bolt** (dark magic) and **Wither** (damage and Slow).
+  - **Raise Thrall:** a fallen foe within 3 tiles stands up and fights for you, with 40% of its HP, for 3 of its turns, then crumbles to dust for good.
+  - **Corpse Burst:** a body explodes, hurting everyone next to it.
+  - **Soul Siphon** (reaction) heals a quarter of the damage you take.
+  - **Dark Pact** (support): thralls rise stronger (60% HP) and last 5 turns.
+  - Signature: **Army of the Dead** raises every fallen foe in an area.
+- While a Necromancer acts, foes' bodies are marked with ☠. Thralls keep their colors with a pale green tint.
+- Enemy Necromancers can raise your fallen against you. They come back to you after the battle.
+- A Grave Cultist (Necromancer) can join the Drowned Shrine cult, and Necromancers can be recruited from the later recruit pool.
+
+### Changed
+- The **Drowned Shrine** has one more kind of cultist.
+
+### Developer
+- `Necromancy.ts` (thralls, bodies, `spent`); the `thrall` status; `Ability.thrall` and `corpseBurst`; the battle's `crumble` event; `checkReaction` gets the damage taken. ADR 0057.
+- 7 new tests (372 total).
+
 ## [0.51.0] - 2026-11-28
 
 ### Added

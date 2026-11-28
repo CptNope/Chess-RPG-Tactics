@@ -844,6 +844,13 @@ body, html {
   pointer-events: none;
 }
 
+/* A fallen foe's body a Necromancer can work (0.52.0) */
+.unit-fallen-marker.body {
+  color: #c4b5fd;
+  border-color: #6d28d9;
+  opacity: 0.85;
+}
+
 .overhead-status {
   position: absolute;
   left: -1px;

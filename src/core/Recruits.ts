@@ -29,7 +29,7 @@ export const HIRED_PREFIX = 'hire-';
 export const RECRUIT_JOBS: { from: number; jobs: string[] }[] = [
   { from: 0, jobs: ['squire', 'knight', 'archer', 'black_mage', 'white_mage', 'monk', 'thief', 'chemist'] },
   { from: 2, jobs: ['dragoon', 'geomancer', 'ninja', 'time_mage', 'oracle', 'summoner', 'tamer'] },
-  { from: 4, jobs: ['paladin', 'spellblade', 'bard', 'dancer', 'gunner', 'dark_knight', 'shaman', 'ranger'] }
+  { from: 4, jobs: ['paladin', 'spellblade', 'bard', 'dancer', 'gunner', 'dark_knight', 'shaman', 'ranger', 'necromancer'] }
 ];
 
 /** Original names for hopefuls (none belongs to a story character). */
@@ -64,7 +64,8 @@ export const RECRUIT_PITCH: Record<string, string> = {
   gunner: 'Keep your heads down and your ears covered. I hit what I point at.',
   dark_knight: 'Every blow costs me something. I promise it costs them more.',
   shaman: 'The land remembers every battle fought on it. I just ask it to take a side.',
-  ranger: 'Pick the ground and the fight is half won. I\'ve already picked it.'
+  ranger: 'Pick the ground and the fight is half won. I\'ve already picked it.',
+  necromancer: 'Every battle leaves the dead behind. I don\'t let them go to waste.'
 };
 
 export interface RecruitOffer {

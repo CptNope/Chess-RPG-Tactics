@@ -381,5 +381,21 @@ export const SIGNATURES: Record<string, Ability> = {
     element: 'physical',
     trap: 'spikes',
     signature: true
+  },
+  necromancer: {
+    id: 'sig_army_of_the_dead',
+    name: 'Army of the Dead',
+    jobId: 'necromancer',
+    type: 'action',
+    description: 'Raises every fallen foe within 2 of the aimed tile as a thrall.',
+    jpCost: 0,
+    mpCost: 0,
+    range: 4,
+    heightTolerance: 3.0,
+    aoe: 2,
+    power: 0,
+    element: 'dark',
+    thrall: true,
+    signature: true
   }
 };
