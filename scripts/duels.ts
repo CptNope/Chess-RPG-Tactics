@@ -6,6 +6,7 @@
  *   npm run duels -- [battles per pair] [level] [jobs] [--matrix]
  *   npm run duels -- 12 10                      every job at Lv 10, 12 battles per pair
  *   npm run duels -- 20 10 sapper,knight,monk   just these
+ *   npm run duels -- 20 10 --only=knight        only the Knight's pairings (0.58.0), with its ranking
  *
  * Each unit knows every action of its job and wears its starting gear; from Lv 4 it has the job's
  * veteran reaction and support, as in the campaign. The sides swap ends every battle, both play
@@ -27,10 +28,13 @@ const SIZE = 12;
 const TEAM = Number(process.env.TEAM || 3);
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+/** --only=<job>: just this job's pairings (0.58.0), for trying a change to one job quickly. */
+const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice('--only='.length);
 const N = Math.max(2, Number(args[0] || 12));
 const LEVEL = Number(args[1] || 10);
 const JOB_IDS = args[2] ? args[2].split(',') : PLAYER_JOB_IDS.filter((id) => id !== 'tamer'); // a Tamer's craft needs beasts to work on
 for (const id of JOB_IDS) if (!JOBS[id]) throw new Error(`No job ${id}`);
+if (ONLY && !JOB_IDS.includes(ONLY)) throw new Error(`--only: ${ONLY} isn't among the jobs`);
 const dice = seededRng(Number(process.env.SEED || 1));
 
 function field(): MapData {
@@ -74,6 +78,7 @@ const started = Date.now();
 for (let i = 0; i < JOB_IDS.length; i++) {
   for (let j = i + 1; j < JOB_IDS.length; j++) {
     const a = JOB_IDS[i], b = JOB_IDS[j];
+    if (ONLY && a !== ONLY && b !== ONLY) continue;
     let s = 0;
     for (let k = 0; k < N; k++) s += duel(a, b, k % 2 === 0);
     score[a][b] = s / N;
@@ -82,7 +87,7 @@ for (let i = 0; i < JOB_IDS.length; i++) {
 }
 
 const pct = (v: number) => `${Math.round(v * 100)}%`.padStart(4);
-const rows = JOB_IDS.map((id) => {
+const rows = (ONLY ? [ONLY] : JOB_IDS).map((id) => {
   const vs = Object.entries(score[id]);
   const mean = vs.reduce((t, [, v]) => t + v, 0) / vs.length;
   const sorted = [...vs].sort((x, y) => x[1] - y[1]);
@@ -94,7 +99,12 @@ console.log('| # | Job | Wins | Best against | Worst against |');
 console.log('| ---: | :--- | ---: | :--- | :--- |');
 rows.forEach((r, i) => console.log(`| ${i + 1} | ${JOBS[r.id].name} | ${pct(r.mean)} | ${JOBS[r.best[0]].name} ${pct(r.best[1])} | ${JOBS[r.worst[0]].name} ${pct(r.worst[1])} |`));
 
-if (process.argv.includes('--matrix')) {
+if (ONLY) {
+  console.log(`\n${JOBS[ONLY].name} against each:`);
+  console.log(Object.entries(score[ONLY]).sort((x, y) => y[1] - x[1]).map(([id, v]) => `${JOBS[id].name} ${Math.round(v * 100)}%`).join(' · '));
+}
+
+if (process.argv.includes('--matrix') && !ONLY) {
   const short = (id: string) => JOBS[id].name.slice(0, 4);
   console.log('\nRow against column (the row side\'s share of wins):\n');
   console.log('      ' + rows.map((r) => short(r.id).padStart(5)).join(''));

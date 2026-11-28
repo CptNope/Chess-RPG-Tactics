@@ -34,7 +34,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     ],
     rewardItemIds: ['power_wrist', 'flame_rod'],
     enemyRoster: [
-      { name: 'Bandit Chief', jobId: 'knight', level: 3, x: 13, z: 2, isBoss: true },
+      { name: 'Bandit Chief', jobId: 'knight', level: 2, x: 13, z: 2, isBoss: true }, // Lv 3 until 0.58.0, when Knights got Move 4
       { name: 'Rogue Warlock', jobId: 'time_mage', level: 3, x: 12, z: 3 },
       { name: 'Brigand Bowman', jobId: 'archer', level: 3, x: 14, z: 3 },
       { name: 'Shadow Shinobi', jobId: 'ninja', level: 3, x: 5, z: 4 },

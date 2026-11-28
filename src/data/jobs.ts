@@ -129,7 +129,7 @@ export const JOBS: Record<string, Job> = {
     description: 'Heavily armored protector proficient in breaking opponent equipment and holding defensive lines.',
     role: 'Vanguard',
     spriteClass: 'knight',
-    baseMove: 3,
+    baseMove: 4,
     baseJump: 2,
     statMultipliers: {
       hp: 1.3,

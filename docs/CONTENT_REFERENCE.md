@@ -13,7 +13,7 @@ Every number here is read straight from the game data, so it always matches what
 | Job | Role | Move | Jump | HP | MP | ATK | MAG | SPD | Abilities |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Squire** `squire` | Vanguard | 4 | 2 | 1.00× | 0.80× | 1.00× | 0.80× | 1.00× | 6 |
-| **Knight** `knight` | Vanguard | 3 | 2 | 1.30× | 0.70× | 1.25× | 0.70× | 0.95× | 5 |
+| **Knight** `knight` | Vanguard | 4 | 2 | 1.30× | 0.70× | 1.25× | 0.70× | 0.95× | 5 |
 | **Archer** `archer` | Marksman | 3 | 3 | 0.95× | 0.80× | 1.10× | 0.80× | 1.05× | 5 |
 | **Black Mage** `black_mage` | Mage | 3 | 2 | 0.80× | 1.40× | 0.70× | 1.35× | 0.95× | 7 |
 | **White Mage** `white_mage` | Healer | 3 | 2 | 0.85× | 1.30× | 0.70× | 1.25× | 1.00× | 8 |
@@ -1003,7 +1003,7 @@ flowchart LR
 
 | Chapter | Map | Goal | Ground (0.53) | Weather (0.55) | Enemies | Boss | Recruit | Win reward | Branch rewards |
 | :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
-| **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | Rout | — | — | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
+| **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | Rout | — | — | 5 | Bandit Chief (Knight L2) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
 | **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | Rout | miasma 6, spring 2 | — | 6 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
 | **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | Hold 3, or rout | hold zone 4, snare trap 1, spikes trap 1 | — | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm, Mirror Shield | Aegis Barrier + Platinum Blade |
 | **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | Rout | — | — | 4 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
@@ -1018,7 +1018,7 @@ flowchart LR
 
 | Enemy | Job | Level | Tile | Boss |
 | :--- | :--- | :---: | :---: | :---: |
-| Bandit Chief | Knight | 3 | (13, 2) | ★ |
+| Bandit Chief | Knight | 2 | (13, 2) | ★ |
 | Rogue Warlock | Time Weaver | 3 | (12, 3) |  |
 | Brigand Bowman | Archer | 3 | (14, 3) |  |
 | Shadow Shinobi | Ninja | 3 | (5, 4) |  |

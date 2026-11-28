@@ -48,11 +48,12 @@ describe('the threat map', () => {
 });
 
 describe('thinking a turn ahead', () => {
-  it('a hurt archer shoots from out of reach instead of walking into the knights', () => {
+  it('a hurt archer shoots from out of reach instead of walking into the paladins', () => {
     const grid = map(14);
     const archer = unit('archer', 'enemy', 6, 2);
     archer.currentHp = Math.round(archer.maxHp * 0.3);
-    const knights = [unit('knight', 'player', 5, 10), unit('knight', 'player', 6, 10), unit('knight', 'player', 7, 10)];
+    // Paladins (Move 3): since 0.58.0 a Knight's Move 4 reaches every tile a bow can shoot it from
+    const knights = [unit('paladin', 'player', 5, 10), unit('paladin', 'player', 6, 10), unit('paladin', 'player', 7, 10)];
     const units = [archer, ...knights];
     const threat = threatMap(archer, units, grid);
     const careful = planTurn(archer, units, grid, { caution: 'full' });

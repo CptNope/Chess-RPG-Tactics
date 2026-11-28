@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.58.0] - 2026-11-28
+
+### Changed
+- **Knights move 4** (was 3). In the mirror duels they lost a stand-up fight to almost anything with reach; now they sit mid-pack. Enemy Knights are faster too.
+- **The Bandit Chief** in Chapter I is level 2 (was 3), so the first battle stays as hard as it was.
+- **AUTO in a Hold battle** heads for the marked ground at the pace of the fight, instead of racing ahead of the squad to it.
+
+### Developer
+- `npm run duels -- … --only=<job>` runs one job's pairings. ADR 0063.
+- 2 new tests (391 total).
+
 ## [0.57.0] - 2026-11-28
 
 ### Fixed
