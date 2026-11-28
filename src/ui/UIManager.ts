@@ -715,9 +715,10 @@ export class UIManager {
   }
 
 
-  public updateTileInfo(x: number, z: number, height: number, terrain: string): void {
+  public updateTileInfo(x: number, z: number, height: number, terrain: string, hazard?: string, zone?: boolean): void {
     this.tileCoordsEl.textContent = `X: ${x}, Z: ${z} | Height: ${height.toFixed(1)}h`;
-    this.tileTerrainEl.textContent = `Terrain: ${terrain.toUpperCase()}`;
+    // The ground's hazard and the hold zone (0.48.0)
+    this.tileTerrainEl.textContent = `Terrain: ${terrain.toUpperCase()}${hazard ? ` · ${hazard.toUpperCase()}` : ''}${zone ? ' · HOLD ZONE' : ''}`;
   }
 
   /** The ITEM list: every consumable the squad carries, with its count. Using one takes the unit's action. */

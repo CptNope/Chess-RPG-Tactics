@@ -49,6 +49,7 @@ import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { inReach, sumPulses, TotemPulse } from './core/Totems';
+import { HAZARDS, HazardPulse, holdGoal, zoneHolder, zoneKeys } from './core/Hazards';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
@@ -149,12 +150,14 @@ class TacticsGame {
   private suspended: {
     grid: BattleGrid; units: Unit[]; turnManager: TurnManager; chapter: CampaignChapter;
     mode: BattleMode; inputMode: InputMode; kills: Record<string, number>;
-    round: number; roundActed: Set<string>; rng: () => number;
+    round: number; roundActed: Set<string>; held: number; rng: () => number;
   } | null = null;
 
   /** Rounds for the "survive" objective: a round ends once every living unit has had a turn. */
   private round = 1;
   private roundActed = new Set<string>();
+  /** Rounds ended holding the zone, for a "hold" objective (0.48.0). */
+  private held = 0;
   private trialsFloor = 0;
   private campaignCleared = false;
   private battleOver = false;
@@ -393,7 +396,7 @@ class TacticsGame {
     this.units = [...enemies];
     this.deploySquad();
     this.units = [...this.deployedUnits(), ...enemies];
-    this.turnManager = new TurnManager(this.units);
+    this.turnManager = new TurnManager(this.units, this.grid);
     this.kills = {};
     this.enemyRaises = 0;
     this.rng = seededRng(newSeed());
@@ -724,7 +727,7 @@ class TacticsGame {
     if (t) {
       SoundFX.playMoveStep();
       const tile = this.scene.grid.getTile(t.x, t.z);
-      if (tile) this.ui.updateTileInfo(t.x, t.z, tile.height, tile.terrain);
+      if (tile) this.ui.updateTileInfo(t.x, t.z, tile.height, tile.terrain, tile.hazard ? HAZARDS[tile.hazard].name : undefined, tile.zone);
       this.workshop.describeTile(t.x, t.z);
       const unit = this.units.find((u) => !u.isDead && u.x === t.x && u.z === t.z);
       if (unit && this.currentMode !== 'targeting') this.ui.updateUnitCard(unit, this.grid.getHeight(unit.x, unit.z));
@@ -1010,9 +1013,11 @@ class TacticsGame {
     if (boss) this.ui.addLogEntry(`[BOSS] ${boss.name} commands the enemy. It will enrage at half HP!`, 'system');
     this.round = 1;
     this.roundActed.clear();
+    this.held = 0;
     const obj = this.currentChapter.objective;
     if (obj?.type === 'boss') this.ui.addLogEntry(`[OBJECTIVE] Defeat ${boss ? boss.name : 'the boss'}.`, 'system');
     else if (obj?.type === 'survive') this.ui.addLogEntry(`[OBJECTIVE] Hold out for ${obj.rounds || 6} rounds. Round 1 begins!`, 'system');
+    else if (obj?.type === 'hold') this.ui.addLogEntry(`[OBJECTIVE] Hold the marked ground: end ${holdGoal(obj)} rounds with your squad on it and no foe on it.`, 'system');
     this.updateTimeline();
     this.advanceTurn();
   }
@@ -1055,6 +1060,7 @@ class TacticsGame {
         this.ui.addLogEntry(`[STATUS] ${u.name} takes ${t.poison} poison damage!`, 'spell');
       }
       if (t.regen) this.ui.addLogEntry(`[STATUS] ${u.name} regenerates ${t.regen} HP.`, 'heal');
+      if (t.hazard) this.showHazard(u, t.hazard);
       if (t.totems) this.showPulses(u, t.totems);
       if (u.isDead && t.poison) this.ui.addLogEntry(`[DEFEAT] ${u.name} succumbs to poison!`, 'defeat');
       else if (t.slept) {
@@ -1075,7 +1081,7 @@ class TacticsGame {
       return;
     }
 
-    const { activeUnit, poisonDamage, regenHeal, totems } = result;
+    const { activeUnit, poisonDamage, regenHeal, totems, hazard } = result;
     this.logSkippedTurns();
     if (this.battleOver || this.checkBattleStatus()) return;
     if (!activeUnit.hasMoved && !activeUnit.hasActed && this.trackRound(activeUnit)) return;
@@ -1100,6 +1106,7 @@ class TacticsGame {
       this.ui.addLogEntry(`[STATUS] ${activeUnit.name} regenerates ${regenHeal} HP.`, 'heal');
       this.scene.updateUnits(this.units);
     }
+    this.showHazard(activeUnit, hazard);
     this.showPulses(activeUnit, totems);
 
     // A grand summon called last turn lands before the unit acts (0.24.0)
@@ -1463,6 +1470,27 @@ class TacticsGame {
   // ---------------------------------------------------------------------------
 
   /** Units an ability aimed at (tx, tz) will affect. Single-target abilities hit whoever is on the tile. */
+  /** Floats and logs what the ground did to a unit starting its turn (0.48.0). */
+  private showHazard(u: Unit, p: HazardPulse | undefined): void {
+    if (!p) return;
+    const h = this.grid.getHeight(u.x, u.z);
+    if (p.damage) {
+      this.scene.spawnFloatingDamage(u.x, h, u.z, `EMBERS -${p.damage}`, 'damage');
+      this.ui.addLogEntry(`[GROUND] ${u.name} is burned by the embers: ${p.damage} damage.`, 'spell');
+      if (u.isDead) this.ui.addLogEntry(`[DEFEAT] ${u.name} falls in the embers!`, 'defeat');
+    }
+    if (p.status === 'poison') {
+      this.fx.status(u, 'poison');
+      this.scene.spawnFloatingDamage(u.x, h + 0.3, u.z, 'MIASMA', 'miss');
+      this.ui.addLogEntry(`[GROUND] ${u.name} breathes the miasma and is Poisoned.`, 'spell');
+    }
+    if (p.heal || p.cured) {
+      this.scene.spawnFloatingDamage(u.x, h, u.z, p.heal ? `SPRING +${p.heal}` : 'CLEANSED', 'heal');
+      this.ui.addLogEntry(`[GROUND] The spring ${p.heal ? `mends ${u.name}: +${p.heal} HP` : `washes ${u.name} clean`}${p.heal && p.cured ? ', and washes off the Poison' : ''}.`, 'heal');
+    }
+    this.scene.updateUnits(this.units);
+  }
+
   /** Floats and logs what totems did to a unit (0.47.0). */
   private showPulses(u: Unit, pulses: TotemPulse[] | undefined): void {
     if (!pulses?.length) return;
@@ -1870,7 +1898,8 @@ class TacticsGame {
       noRevive: foe && this.enemyRaises >= (this.mode === 'custom' ? ENEMY_RAISE_CAP : DIFFICULTIES[this.difficulty].raiseCap),
       caution: foe ? enemyCaution(this.mode === 'custom' ? 'normal' : this.difficulty) : 'full',
       pouch: foe ? enemy.pouch : undefined,
-      holdBack: !foe
+      holdBack: !foe,
+      zone: this.currentChapter.objective?.type === 'hold' ? zoneKeys(this.grid.mapData.tiles) : undefined // a hold objective's ground (0.48.0)
     });
     if ((plan.ability?.revive || plan.ability?.rebirth) && enemy.team === 'enemy') this.enemyRaises++;
 
@@ -2025,7 +2054,7 @@ class TacticsGame {
     // Park the battle in progress so closing the Workshop puts you straight back into it
     this.suspended = this.battleOver ? null : {
       grid: this.grid, units: this.units, turnManager: this.turnManager, chapter: this.currentChapter, mode: this.mode,
-      inputMode: this.currentMode, kills: this.kills, round: this.round, roundActed: this.roundActed, rng: this.rng
+      inputMode: this.currentMode, kills: this.kills, round: this.round, roundActed: this.roundActed, held: this.held, rng: this.rng
     };
     this.ui.hideDialogue();
     this.ui.hideResultModal();
@@ -2055,6 +2084,7 @@ class TacticsGame {
     this.rng = s.rng;
     this.round = s.round;
     this.roundActed = s.roundActed;
+    this.held = s.held;
     this.scene.loadMap(this.grid);
     this.scene.updateUnits(this.units);
     this.currentMode = s.inputMode;
@@ -2203,6 +2233,19 @@ class TacticsGame {
     this.round = state.round;
     if (fresh) {
       const obj = this.currentChapter.objective;
+      if (obj?.type === 'hold') {
+        // A round ended: did the squad hold the marked ground alone? (0.48.0)
+        const zone = zoneKeys(this.grid.mapData.tiles);
+        const holder = zoneHolder(this.units, zone);
+        const goal = holdGoal(obj);
+        if (holder === 'player') this.held++;
+        this.scene.setZoneHeld(holder === 'player' ? 'held' : holder ? 'lost' : 'empty');
+        this.ui.addLogEntry(holder === 'player' ? `[OBJECTIVE] The ground is yours: ${this.held} of ${goal} rounds held.`
+          : holder ? `[OBJECTIVE] The enemy holds the ground. Still ${this.held} of ${goal}.`
+          : `[OBJECTIVE] Nobody holds the ground clear. Still ${this.held} of ${goal}.`, 'system');
+        if (this.held >= goal) return this.checkBattleStatus();
+        if (holder === 'player') this.ui.showBanner(this.held === goal - 1 ? 'ONE MORE ROUND!' : `HELD ${this.held} / ${goal}`);
+      }
       if (obj?.type === 'survive') {
         const goal = obj.rounds || 6;
         if (this.round > goal) return this.checkBattleStatus();
@@ -2217,9 +2260,9 @@ class TacticsGame {
     if (this.battleOver) return true;
     // Who has won is decided in core/Battle.ts (0.44.0): a tamed beast can't win alone, a fallen
     // boss sends the rest fleeing, holding out wins a survive battle
-    const outcome = battleOutcome(this.units, this.currentChapter.objective, this.round);
+    const outcome = battleOutcome(this.units, this.currentChapter.objective, this.round, 'player', this.held);
     if (!outcome) return false;
-    const winText = outcome.reason === 'boss' ? 'VICTORY! THE BOSS HAS FALLEN' : outcome.reason === 'survive' ? 'VICTORY! YOU HELD THE LINE' : 'VICTORY! BATTLEFIELD SECURED';
+    const winText = outcome.reason === 'boss' ? 'VICTORY! THE BOSS HAS FALLEN' : outcome.reason === 'survive' ? 'VICTORY! YOU HELD THE LINE' : outcome.reason === 'hold' ? 'VICTORY! THE GROUND IS YOURS' : 'VICTORY! BATTLEFIELD SECURED';
     if (outcome.reason === 'boss') this.ui.addLogEntry('[OBJECTIVE] Their leader is down. The rest of the enemy flees!', 'system');
 
     if (outcome.winner !== 'player') {
@@ -2242,7 +2285,7 @@ class TacticsGame {
     Music.playTrack('victory');
     SoundFX.playVictoryFanfare();
     this.ui.showBanner(winText);
-    this.ui.addLogEntry('=== VICTORY! All hostiles defeated. ===', 'system');
+    this.ui.addLogEntry(`=== VICTORY! ${outcome.reason === 'hold' ? 'The ground is yours.' : outcome.reason === 'survive' ? 'You held out.' : outcome.reason === 'boss' ? 'Their leader has fallen.' : 'All hostiles defeated.'} ===`, 'system');
     later(() => this.showSpoils(), 1500);
     return true;
   }
@@ -2979,7 +3022,7 @@ class TacticsGame {
       if (key !== this.lastHoveredKey) {
         this.lastHoveredKey = key;
         const tile = this.scene.grid.getTile(x, z);
-        if (tile) this.ui.updateTileInfo(x, z, tile.height, tile.terrain);
+        if (tile) this.ui.updateTileInfo(x, z, tile.height, tile.terrain, tile.hazard ? HAZARDS[tile.hazard].name : undefined, tile.zone);
         this.workshop?.describeTile(x, z);
       }
     }

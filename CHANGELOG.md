@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.48.0] - 2026-11-27
+
+### Added
+- **Hazards on the ground.** A tile can burn, poison or heal whoever starts a turn on it, on either side.
+  - **Embers:** 10% of max HP. **Miasma:** Poison. **Spring:** 12% of max HP back, and Poison washed off.
+  - Each is drawn on the ground (flickering embers, drifting gas, a rippling pool) and named in the tile panel.
+- **A new objective: Hold.** End a number of rounds with your squad on the marked ground and no foe on it. The rounds needn't be in a row, and defeating every enemy still wins. The zone's rim turns green while you hold it and red while the enemy does.
+- **Cinder Spring**, a new side battle after Chapter IV, below Watchfire Ridge.
+  - Ashen Zealots, led by an Ember Shaman, hold a hot spring in a smoking caldera. Take it and hold it for 3 rounds.
+  - Ember fields burn the flanks, and sulphur vents poison two corners.
+  - First win: the **Cinderwalk Charm** (HP +20, MAG +3, Evasion +3), whose wearer walks over embers and through miasma unharmed.
+- **Workshop:** a **Ground** tool paints embers, miasma, springs and the hold zone, and **Hold** is a new objective. Shared links keep it all, and older links still load.
+- Every unit now steps off embers and miasma when it can, heads for a spring when hurt, and goes for the ground in a Hold battle.
+
+### Changed
+- The closing log line says how the battle was won (held the ground, held out, the leader fell, all defeated).
+
+### Developer
+- `src/core/Hazards.ts`: `TileData.hazard` / `zone`, `TurnTick.hazard`, `RoundState.held`, `noteHold`, the `hold` event and outcome; `PlanOptions.zone`; `traits.hazardproof`; `SkirmishDef.deployRows`. ADR 0053.
+- The balance sim runs side battles: `skirmish_<place>[:wins]`.
+- 8 new tests (348 total).
+
 ## [0.47.0] - 2026-11-27
 
 ### Added

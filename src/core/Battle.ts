@@ -15,6 +15,7 @@ import { TurnManager } from './TurnManager';
 import { ActionContext, ActionEnd, ActionStep, runAction } from './Action';
 import { callDue } from './Summons';
 import { sumPulses, TotemPulse } from './Totems';
+import { HazardPulse, holdGoal, zoneHolder, zoneKeys } from './Hazards';
 import { encoreDue, endPerformance, isCentered } from './Performance';
 import { allianceOf, isFoe } from './Sides';
 import { seededRng } from './Rng';
@@ -29,14 +30,14 @@ import { JobSystem } from './JobSystem';
 export interface BattleOutcome {
   /** The side that won, or null if nobody is left. */
   winner: string | null;
-  reason: 'rout' | 'boss' | 'survive' | 'wiped';
+  reason: 'rout' | 'boss' | 'survive' | 'hold' | 'wiped';
 }
 
 /**
  * Who has won, or null while the battle goes on. `hero` is the side the objective is played for
  * (the squad, in the campaign). A tamed beast fights on, but can't win the battle on its own.
  */
-export function battleOutcome(units: readonly Unit[], objective: BattleObjective | undefined, round: number, hero = 'player'): BattleOutcome | null {
+export function battleOutcome(units: readonly Unit[], objective: BattleObjective | undefined, round: number, hero = 'player', held = 0): BattleOutcome | null {
   const standing = new Set(units.filter((u) => !u.isDead && !u.tamed).map(allianceOf));
   if (!standing.has(hero)) {
     const rest = [...standing];
@@ -48,6 +49,7 @@ export function battleOutcome(units: readonly Unit[], objective: BattleObjective
     if (bosses.length && bosses.every((b) => b.isDead)) return { winner: hero, reason: 'boss' };
   }
   if (objective?.type === 'survive' && round > (objective.rounds || 6)) return { winner: hero, reason: 'survive' };
+  if (objective?.type === 'hold' && held >= holdGoal(objective)) return { winner: hero, reason: 'hold' };
   if (standing.size === 1) return { winner: hero, reason: 'rout' };
   return null;
 }
@@ -60,6 +62,19 @@ export interface RoundState {
   round: number;
   /** Units that have had a turn this round. */
   acted: Set<string>;
+  /** Rounds the hero's side has ended holding the zone, for a "hold" objective (0.48.0). */
+  held?: number;
+}
+
+/**
+ * At the end of a round, for a "hold" objective: counts the round when the hero's side alone
+ * stands on the zone. Returns the side holding it (null when empty or contested).
+ */
+export function noteHold(state: RoundState, units: readonly Unit[], objective: BattleObjective | undefined, zone: ReadonlySet<string>, hero = 'player'): string | null {
+  if (objective?.type !== 'hold') return null;
+  const holder = zoneHolder(units, zone);
+  if (holder === hero) state.held = (state.held || 0) + 1;
+  return holder;
 }
 
 /**
@@ -101,7 +116,8 @@ export interface HitRecord {
 
 export type BattleEvent =
   | { t: 'turn'; unit: string; round: number }
-  | { t: 'tick'; unit: string; poison?: number; regen?: number; totem?: { heal: number; damage: number; statuses: string[] }; slept?: boolean; down?: boolean }
+  | { t: 'tick'; unit: string; poison?: number; regen?: number; totem?: { heal: number; damage: number; statuses: string[] }; hazard?: HazardPulse; slept?: boolean; down?: boolean }
+  | { t: 'hold'; round: number; held: number; holder: string | null }
   | { t: 'call' | 'encore' | 'act'; unit: string; ability: string; x: number; z: number; hits: HitRecord[] }
   | { t: 'move'; unit: string; x: number; z: number }
   | { t: 'face'; unit: string; facing: FacingDirection }
@@ -139,13 +155,16 @@ export class Battle {
   readonly events: BattleEvent[] = [];
   readonly rounds: RoundState = { round: 1, acted: new Set() };
   private readonly objective?: BattleObjective;
+  /** The tiles a "hold" objective asks for (0.48.0). */
+  readonly zone: Set<string>;
   private readonly hero: string;
   private over: BattleOutcome | null = null;
 
   constructor(setup: BattleSetup) {
     this.units = setup.units;
     this.grid = setup.grid;
-    this.turns = new TurnManager(this.units);
+    this.turns = new TurnManager(this.units, this.grid);
+    this.zone = zoneKeys(this.grid.mapData.tiles);
     this.objective = setup.objective;
     this.hero = setup.hero || 'player';
     this.ctx = {
@@ -165,7 +184,7 @@ export class Battle {
   /** Checks for a winner, and logs the end once. */
   private settle(): BattleOutcome | null {
     if (this.over) return this.over;
-    const o = battleOutcome(this.units, this.objective, this.rounds.round, this.hero);
+    const o = battleOutcome(this.units, this.objective, this.rounds.round, this.hero, this.rounds.held);
     if (o) {
       this.over = o;
       this.events.push({ t: 'end', outcome: o });
@@ -187,13 +206,20 @@ export class Battle {
     for (let guard = 0; guard < 500; guard++) {
       if (this.settle()) return null;
       const r = this.turns.advanceToNextActiveTurn();
-      for (const t of this.turns.skipped) this.events.push({ t: 'tick', unit: t.unit.id, poison: t.poison, regen: t.regen, totem: totemNote(t.totems), slept: t.slept, down: t.unit.isDead || undefined });
+      for (const t of this.turns.skipped) this.events.push({ t: 'tick', unit: t.unit.id, poison: t.poison, regen: t.regen, totem: totemNote(t.totems), hazard: t.hazard, slept: t.slept, down: t.unit.isDead || undefined });
       this.turns.skipped = [];
       if (!r) { this.settle(); return null; }
       const u = r.activeUnit;
-      if (r.poisonDamage || r.regenHeal || r.totems) this.events.push({ t: 'tick', unit: u.id, poison: r.poisonDamage, regen: r.regenHeal, totem: totemNote(r.totems), down: u.isDead || undefined });
+      if (r.poisonDamage || r.regenHeal || r.totems || r.hazard) this.events.push({ t: 'tick', unit: u.id, poison: r.poisonDamage, regen: r.regenHeal, totem: totemNote(r.totems), hazard: r.hazard, down: u.isDead || undefined });
       if (this.settle()) return null;
-      if (noteTurn(this.rounds, u, this.units) && this.settle()) return null;
+      if (noteTurn(this.rounds, u, this.units)) {
+        // A round ended: count it for a hold objective (0.48.0), then see if that won
+        if (this.objective?.type === 'hold') {
+          const holder = noteHold(this.rounds, this.units, this.objective, this.zone, this.hero);
+          this.events.push({ t: 'hold', round: this.rounds.round - 1, held: this.rounds.held || 0, holder });
+        }
+        if (this.settle()) return null;
+      }
       this.events.push({ t: 'turn', unit: u.id, round: this.rounds.round });
       // A grand summon called last turn lands, then a song or dance plays on (0.22.0, 0.24.0)
       const call = callDue(u);

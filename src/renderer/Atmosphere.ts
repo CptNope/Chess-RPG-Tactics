@@ -82,6 +82,15 @@ export const ATMOSPHERES: Record<string, AtmospherePreset> = {
     rimColor: 0x5fd3c6, rimIntensity: 0.9,
     exposure: 1.05, bloom: 0.75, torchColor: 0x5fd3c6
   },
+  // Cinder Caldera (0.48.0): smoke-red sky, ash haze, the ground's glow carrying the light
+  cinder_caldera: {
+    skyTop: '#1a0704', skyHorizon: '#8a2f12', skyBottom: '#0c0402', stars: 30,
+    fog: 0x3a160c, fogNear: 34, fogFar: 84,
+    hemiSky: 0xffb08a, hemiGround: 0x3a1a10, hemiIntensity: 1.15,
+    sunColor: 0xffc08a, sunIntensity: 1.7, sunDir: [10, 30, 14],
+    rimColor: 0xff7a3a, rimIntensity: 0.9,
+    exposure: 1.05, bloom: 0.8, torchColor: 0xff8a3a
+  },
   // Zodiac Summit: violet aurora above the clouds
   zodiac_summit: {
     skyTop: '#0a0420', skyHorizon: '#5b2a7a', skyBottom: '#120a24', stars: 240,

@@ -704,6 +704,15 @@ export const ITEMS: Record<string, Item> = {
     stats: { attack: 14, speed: 1, jump: 1 },
     range: 2
   },
+  cinderwalk_charm: {
+    id: 'cinderwalk_charm',
+    name: 'Cinderwalk Charm',
+    slot: 'accessory',
+    description: 'A disc of black glass from the Cinder Spring, warm to the touch. Its wearer walks over embers and through sulphur fumes unharmed.',
+    price: 640,
+    stats: { hp: 20, magic: 3, evasion: 3 },
+    traits: { hazardproof: ['embers', 'miasma'] }
+  },
   basilisk_eye: {
     id: 'basilisk_eye',
     name: 'Basilisk Eye',

@@ -1,4 +1,5 @@
-import { Unit } from './types';
+import { TileData, Unit } from './types';
+import { applyHazard, HazardPulse } from './Hazards';
 import { JobSystem } from './JobSystem';
 import { CombatEngine } from './CombatEngine';
 import { pulsesOn, tickTotems, TotemPulse } from './Totems';
@@ -8,6 +9,8 @@ export interface TurnTick {
   unit: Unit;
   poison?: number;
   regen?: number;
+  /** What the ground under it did (0.48.0). */
+  hazard?: HazardPulse;
   /** What the totems standing around it did (0.47.0). */
   totems?: TotemPulse[];
   /** The unit was asleep and lost the turn. */
@@ -18,8 +21,12 @@ export class TurnManager {
   public units: Unit[];
   public activeUnit: Unit | null = null;
 
-  constructor(units: Unit[]) {
+  /** The battlefield's tiles, for hazards (0.48.0). */
+  public grid?: { getTile(x: number, z: number): TileData | undefined };
+
+  constructor(units: Unit[], grid?: { getTile(x: number, z: number): TileData | undefined }) {
     this.units = units;
+    this.grid = grid;
   }
 
   /** Turns that passed without the unit acting (asleep), with their start-of-turn ticks, for the battle log. */
@@ -29,7 +36,7 @@ export class TurnManager {
    * Advances the CT clock until a unit that can act reaches CT >= 100. Start-of-turn effects
    * (Poison, Regen) resolve here. A sleeping unit's turn passes without it acting.
    */
-  public advanceToNextActiveTurn(): { activeUnit: Unit; poisonDamage?: number; regenHeal?: number; totems?: TotemPulse[] } | null {
+  public advanceToNextActiveTurn(): { activeUnit: Unit; poisonDamage?: number; regenHeal?: number; totems?: TotemPulse[]; hazard?: HazardPulse } | null {
     if (this.activeUnit && !this.activeUnit.isDead && (!this.activeUnit.hasMoved || !this.activeUnit.hasActed)) {
       return { activeUnit: this.activeUnit };
     }
@@ -52,7 +59,7 @@ export class TurnManager {
       const next = readyUnits[0];
       next.hasMoved = false;
       next.hasActed = false;
-      const tick = TurnManager.startOfTurn(next, this.units);
+      const tick = TurnManager.startOfTurn(next, this.units, this.grid);
 
       if (next.isDead) {
         this.skipped.push(tick);
@@ -67,19 +74,23 @@ export class TurnManager {
       }
 
       this.activeUnit = next;
-      return { activeUnit: next, poisonDamage: tick.poison, regenHeal: tick.regen, totems: tick.totems };
+      return { activeUnit: next, poisonDamage: tick.poison, regenHeal: tick.regen, totems: tick.totems, hazard: tick.hazard };
     }
 
     return null;
   }
 
-  /** Poison (10% max HP), Regen (8% max HP) and nearby totems at the start of a unit's turn. */
-  public static startOfTurn(unit: Unit, units: readonly Unit[] = []): TurnTick {
+  /** Poison (10% max HP), the ground (0.48.0), Regen (8% max HP) and nearby totems at the start of a unit's turn. */
+  public static startOfTurn(unit: Unit, units: readonly Unit[] = [], grid?: { getTile(x: number, z: number): TileData | undefined }): TurnTick {
     const tick: TurnTick = { unit };
     if (unit.statuses.some((s) => s.type === 'poison')) {
       tick.poison = Math.max(1, Math.round(unit.maxHp * 0.1));
       unit.currentHp = Math.max(0, unit.currentHp - tick.poison);
       if (unit.currentHp === 0) unit.isDead = true;
+    }
+    if (!unit.isDead && grid) {
+      const h = applyHazard(unit, grid.getTile(unit.x, unit.z), (u, s) => CombatEngine.applyStatus(u, s));
+      if (h) tick.hazard = h;
     }
     if (!unit.isDead && unit.statuses.some((s) => s.type === 'regen') && unit.currentHp < unit.maxHp) {
       tick.regen = Math.min(unit.maxHp - unit.currentHp, Math.max(1, Math.round(unit.maxHp * 0.08)));

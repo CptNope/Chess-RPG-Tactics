@@ -47,6 +47,7 @@ export const WORLD_NODES: WorldNode[] = [
   { id: 'ridge', name: SKIRMISHES.ridge.name, kind: 'skirmish', skirmishId: 'ridge', x: 0.88, y: 0.78, blurb: 'An old watch-fort on the cliffs below the summit, its signal fire still kept.' },
   { id: 'hollow', name: SKIRMISHES.hollow.name, kind: 'skirmish', skirmishId: 'hollow', x: 0.7, y: 0.38, blurb: 'A wooded hollow under the high pass, where the howling carries for miles.' },
   { id: 'barrow', name: SKIRMISHES.barrow.name, kind: 'skirmish', skirmishId: 'barrow', x: 0.42, y: 0.52, blurb: 'An old kings\' grave-mound gone to briars, between the ruins and the battlement.' },
+  { id: 'cinder', name: SKIRMISHES.cinder.name, kind: 'skirmish', skirmishId: 'cinder', x: 0.76, y: 0.92, blurb: 'A hot spring in a smoking caldera below the ridge, held by fire-worshipping zealots.' },
   // Recruit side stories (0.43.0): shown once they open
   { id: 'fenhollow', name: 'Fenhollow', kind: 'story', storyId: 'fenhollow', x: 0.42, y: 0.9, blurb: "Bria's village on the edge of the mire, built on stilts around a spring." },
   { id: 'saltmere', name: 'Saltmere', kind: 'story', storyId: 'saltmere', x: 0.1, y: 0.6, blurb: 'A fishing village on the western shore. Half its houses are new timber, built over ash.' },
@@ -79,6 +80,7 @@ export const WORLD_ROADS: [string, string][] = [
   ['battlement', 'hollow'],
   ['ruins', 'barrow'],
   ['barrow', 'battlement'],
+  ['ridge', 'cinder'],
   ['mire', 'fenhollow'],
   ['harbor', 'saltmere'],
   ['market', 'saltmere'],

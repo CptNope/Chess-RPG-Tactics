@@ -142,7 +142,7 @@ flowchart LR
     M --- TF["⚑ Thornwood Ford"] --- B
     TF --- CP["Stormbreak Cape<br/>Chapter VI"]
     G --- DS["⚑ Drowned Shrine"]
-    Z --- WR["⚑ Watchfire Ridge"]
+    Z --- WR["⚑ Watchfire Ridge"] --- CS["⚑ Cinder Spring"]
     B --- HH["⚑ Howling Hollow"]
     R --- BB["⚑ Briar Barrow"] --- B
     G --- FH["✦ Fenhollow<br/>Bria's story"]
@@ -178,8 +178,10 @@ flowchart LR
   | Howling Hollow | After Chapter I | Monsters: wolves, a wyvern, oozes, wisps, a stone brute | Defeat them all | Wolfpelt Mantle (HP +25, Evasion +6, Move +1, no Poison) |
   | Briar Barrow (0.32) | After Chapter III | Monsters: bone knights, a basilisk, thornlings, a wisp | Defeat them all | Basilisk Eye (HP +15, MAG +4, Speed +1, no Immobilize or Slow) |
   | Glasswing Dunes (0.35, Far Shore) | After Chapter VII | Monsters: a wyvern, a basilisk, thornlings, jackals, a golem, a drowned sentry (five of them, not four) | Defeat them all | Glasswing Lance (ATK +14, Speed +1, Jump +1, range 2) |
+  | Cinder Spring (0.48) | After Chapter IV | Ashen Zealots: an Ember Shaman, a pyromancer, monks, knights, archers (five, starting on the spring) | Hold the spring for 3 rounds, or defeat them all | Cinderwalk Charm (HP +20, MAG +3, Evasion +3, unharmed by embers and miasma) |
 
   Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after. The first win also brings the place's **trophy**, a piece of gear found nowhere else (it can't be sold).
+* **Hazards and Hold** (0.48). Some ground works on whoever starts a turn on it, on either side: **embers** burn 10% of max HP, **miasma** poisons, and a **spring** heals 12% and washes Poison off. The tile panel names it. A **Hold** battle marks some ground with a bright rim: end its rounds with your squad on it and no foe on it (they needn't be in a row), or defeat every enemy. The rim turns green while you hold it, red while the enemy does.
 * **Side stories** (0.43) are your story recruits' own chapters, at their home villages. One appears on the map once its recruit is in your squad and the story has moved on far enough. The recruit always fights it, taking a place in the party. It's told once per playthrough: a written battle with its own scenes, enemies at about your squad's level (never below a floor, the boss one level up), the usual bounties, and a **relic** of its own.
 
   | Place | Whose | Opens | Fight | Relic |

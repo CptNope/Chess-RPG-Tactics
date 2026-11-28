@@ -574,7 +574,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 
 ## Items
 
-80 items across five gear slots.
+81 items across five gear slots.
 
 ### Weapon (29)
 
@@ -653,7 +653,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Chain Barding** `chain_barding` | beast | HP +50, ATTACK +2, EVASION -3 | — | 440 | Starting gear of a job | Tamed beasts |
 | **Runed Barding** `runed_barding` | beast | HP +40, MP +15 | guards sleep, silence | 560 | Starting gear of a job | Tamed beasts |
 
-### Accessory (23)
+### Accessory (24)
 
 | Item | Kind | Stats | Traits | Price | How to get | Who |
 | :--- | :--- | :--- | :--- | ---: | :--- | :--- |
@@ -676,6 +676,7 @@ The Geomancer's **Elemental** becomes a different spell depending on the caster'
 | **Fenhollow Spring-Stone** `fenhollow_stone` | light | MAGIC +5, MP +20, HP +10 | guards poison, sleep | 560 | Bria's side story at Fenhollow | Anyone |
 | **Saltmere Coin** `saltmere_coin` | light | ATTACK +4, SPEED +1, EVASION +8 | guards blind | 560 | Sable's side story at Saltmere | Anyone |
 | **Dunehome Whistle** `dunehome_whistle` | light | HP +20, MOVE +1, JUMP +1 | guards immobilize, slow | 560 | Kestrel's side story at Dunehome | Anyone |
+| **Cinderwalk Charm** `cinderwalk_charm` | light | HP +20, MAGIC +3, EVASION +3 | unharmed by embers, miasma | 640 | First win at Cinder Spring | Anyone |
 | **Basilisk Eye** `basilisk_eye` | light | HP +15, MAGIC +4, SPEED +1 | guards immobilize, slow | 600 | First win at Briar Barrow | Anyone |
 | **Leather Collar** `leather_collar` | beast | HP +20, EVASION +4 | — | 160 | Starting gear of a job | Tamed beasts |
 | **Spiked Collar** `spiked_collar` | beast | ATTACK +5 | — | 320 | Starting gear of a job | Tamed beasts |
@@ -707,7 +708,7 @@ A new game starts with **300 gil**. A defeated enemy pays 20 + 10 × its level (
 | Chapter II won | 580 | 57 |
 | Campaign cleared / Trials | none | 64 |
 
-Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye, Tidecrown, Glasswing Lance, Fenhollow Spring-Stone, Saltmere Coin, Dunehome Whistle.
+Never sold (won only): Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail, Fordwarden's Bow, Chanting Censer, Watchfire Helm, Wolfpelt Mantle, Basilisk Eye, Tidecrown, Glasswing Lance, Cinderwalk Charm, Fenhollow Spring-Stone, Saltmere Coin, Dunehome Whistle.
 
 Trading happens at the market on the world map. It buys spare gear and supplies back for half price; gear a unit is wearing and the relics and trophies above can't be sold.
 
@@ -733,6 +734,7 @@ flowchart LR
   ridge["Watchfire Ridge<br/><i>side battle</i>"]
   hollow["Howling Hollow<br/><i>side battle</i>"]
   barrow["Briar Barrow<br/><i>side battle</i>"]
+  cinder["Cinder Spring<br/><i>side battle</i>"]
   fenhollow["Fenhollow<br/><i>Bria's story</i>"]
   saltmere["Saltmere<br/><i>Sable's story</i>"]
   subgraph far_shore["The Far Shore"]
@@ -761,6 +763,7 @@ flowchart LR
   battlement --- hollow
   ruins --- barrow
   barrow --- battlement
+  ridge --- cinder
   mire --- fenhollow
   harbor --- saltmere
   market --- saltmere
@@ -787,9 +790,10 @@ flowchart LR
 | **Stormbreak Cape** | mission | CHAPTER VI: The Drowned Regent | Thornwood Ford |
 | **Thornwood Ford** | skirmish | Side battle: Thornwood Bandits | Larkmoor Market, Night Battlement, Stormbreak Cape |
 | **Drowned Shrine** | skirmish | Side battle: Mire Cultists | Gloomy Mire |
-| **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit |
+| **Watchfire Ridge** | skirmish | Side battle: Night Raiders | Zodiac Summit, Cinder Spring |
 | **Howling Hollow** | skirmish | Side battle: Wild Beasts | Night Battlement |
 | **Briar Barrow** | skirmish | Side battle: Barrow Things | Riverside Ruins, Night Battlement |
+| **Cinder Spring** | skirmish | Side battle: Ashen Zealots | Watchfire Ridge |
 | **Fenhollow** | story | Side story: Bria, "The Spring at Fenhollow" | Gloomy Mire |
 | **Saltmere** | story | Side story: Sable, "What Was Owed" | Emberwick Harbor, Larkmoor Market |
 | **The Anchorage** | port | Take ship back to Emberwick Harbor | Saltglass Shore, Glasswing Dunes, Dunehome |
@@ -838,6 +842,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Howling Hollow** | Wolfpelt Mantle |
 | **Briar Barrow** | Basilisk Eye |
 | **Glasswing Dunes** | Glasswing Lance |
+| **Cinder Spring** | Cinderwalk Charm |
 
 | Place | Battlefield | Enemies | Drawn from | Goal | Opens after |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -847,6 +852,7 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Howling Hollow** | Zodiac Summit | Wild Beasts | Pack Leader (Dire Wolf), Dire Wolf (Dire Wolf), Wyvern (Wyvern), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Stonehide Brute (Stonehide Brute) | Defeat every enemy | CHAPTER I |
 | **Briar Barrow** | Gloomy Mire | Barrow Things | Barrow Guard (Bone Knight), Basilisk (Basilisk), Thornling (Thornling), Bone Knight (Bone Knight), Briar Thornling (Thornling), Barrow Wisp (Marsh Wisp) | Defeat every enemy | CHAPTER III |
 | **Glasswing Dunes** | Saltglass Shore | Dune Beasts | Glasswing Wyvern (Wyvern), Dune Basilisk (Basilisk), Sea Thornling (Thornling), Dune Jackal (Dire Wolf), Glass Golem (Stonehide Brute), Drowned Sentry (Bone Knight) | Defeat every enemy | CHAPTER VII |
+| **Cinder Spring** | Cinder Caldera | Ashen Zealots | Ember Shaman (Shaman), Pyromancer (Black Mage), Cinder Monk (Monk), Ash Guard (Knight), Smoke Archer (Archer), Lava Warden (Geomancer) | Hold the marked ground 3 rounds, or defeat every enemy | CHAPTER IV |
 
 ## Side stories
 
@@ -867,18 +873,19 @@ Each story recruit's own chapter, at their home village on the world map (✦). 
 
 ## Battlefields
 
-| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Squad deploys on |
-| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- |
-| **Riverside Ruins** | `river_ruins` | 16×16 | day | 0.6–3.4 | grass 68%, stone 14%, water 11%, dirt 6%, wood 2% | 7 | (5, 14) (6, 14) (4, 13) (6, 13) (5, 15) (3, 14) |
-| **Night Battlement** | `night_fortress` | 16×16 | night | 0.5–4.5 | stone 61%, parapet 17%, water 12%, dirt 9%, wood 1% | 4 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Gloomy Mire** | `gloomy_swamp` | 16×16 | swamp | 0.4–3 | swamp 41%, grass 36%, wood 14%, dirt 5%, stone 2%, water 2% | 5 | (6, 14) (7, 14) (8, 14) (7, 15) (6, 15) (8, 15) |
-| **Zodiac Summit** | `zodiac_summit` | 16×16 | night | 1–5 | parapet 35%, grass 24%, stone 16%, dirt 12%, water 11%, wood 2% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Emberwick Harbor** | `ember_harbor` | 16×16 | day | 0.4–4 | stone 36%, wood 30%, water 27%, dirt 6% | 72 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Greywatch Isle** | `greywatch_isle` | 16×16 | night | 0.4–7 | water 44%, dirt 21%, stone 15%, grass 15%, parapet 5% | 90 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Stormbreak Cape** | `stormbreak_cape` | 16×16 | night | 0.4–5.4 | grass 27%, stone 23%, dirt 21%, parapet 18%, water 10%, wood 2% | 14 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Saltglass Shore** | `saltglass_shore` | 16×16 | desert | 0.4–5 | sand 57%, stone 21%, water 18%, wood 4% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Frostfang Pass** | `frostfang_pass` | 16×16 | snow | 1–7 | snow 53%, stone 27%, dirt 10%, parapet 6%, wood 3%, water 2% | 55 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **The Drowned City** | `drowned_city` | 16×16 | night | 0.4–5 | stone 51%, water 26%, parapet 9%, swamp 8%, sand 5%, wood 1% | 6 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48) | Squad deploys on |
+| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- | :--- |
+| **Riverside Ruins** | `river_ruins` | 16×16 | day | 0.6–3.4 | grass 68%, stone 14%, water 11%, dirt 6%, wood 2% | 7 | — | (5, 14) (6, 14) (4, 13) (6, 13) (5, 15) (3, 14) |
+| **Night Battlement** | `night_fortress` | 16×16 | night | 0.5–4.5 | stone 61%, parapet 17%, water 12%, dirt 9%, wood 1% | 4 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Gloomy Mire** | `gloomy_swamp` | 16×16 | swamp | 0.4–3 | swamp 41%, grass 36%, wood 14%, dirt 5%, stone 2%, water 2% | 5 | — | (6, 14) (7, 14) (8, 14) (7, 15) (6, 15) (8, 15) |
+| **Zodiac Summit** | `zodiac_summit` | 16×16 | night | 1–5 | parapet 35%, grass 24%, stone 16%, dirt 12%, water 11%, wood 2% | 6 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Emberwick Harbor** | `ember_harbor` | 16×16 | day | 0.4–4 | stone 36%, wood 30%, water 27%, dirt 6% | 72 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Greywatch Isle** | `greywatch_isle` | 16×16 | night | 0.4–7 | water 44%, dirt 21%, stone 15%, grass 15%, parapet 5% | 90 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Stormbreak Cape** | `stormbreak_cape` | 16×16 | night | 0.4–5.4 | grass 27%, stone 23%, dirt 21%, parapet 18%, water 10%, wood 2% | 14 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Saltglass Shore** | `saltglass_shore` | 16×16 | desert | 0.4–5 | sand 57%, stone 21%, water 18%, wood 4% | 6 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Frostfang Pass** | `frostfang_pass` | 16×16 | snow | 1–7 | snow 53%, stone 27%, dirt 10%, parapet 6%, wood 3%, water 2% | 55 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **The Drowned City** | `drowned_city` | 16×16 | night | 0.4–5 | stone 51%, water 26%, parapet 9%, swamp 8%, sand 5%, wood 1% | 6 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Cinder Caldera** | `cinder_caldera` | 16×16 | night | 1–2.6 | stone 65%, dirt 35% | 4 | miasma 6, embers 42, hold zone 16, spring 4 | (7, 14) (8, 14) (6, 14) (9, 14) (7, 15) (8, 15) |
 
 ## Campaign
 

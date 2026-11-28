@@ -8,6 +8,7 @@ export type Team = 'player' | 'enemy';
 export type AbilityType = 'action' | 'reaction' | 'support' | 'movement';
 
 import type { Totem, TotemKind } from './Totems';
+import type { HazardKind } from './Hazards';
 
 export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark' | 'time';
 
@@ -37,6 +38,8 @@ export interface ItemTraits {
   boost?: Element[];
   /** Statuses that can't be inflicted on the wearer. */
   guard?: StatusEffectType[];
+  /** Hazard ground that doesn't touch the wearer (0.48.0). */
+  hazardproof?: HazardKind[];
 }
 
 export interface Item {
@@ -70,6 +73,10 @@ export interface TileData {
   height: number;
   terrain: TerrainType;
   walkable: boolean;
+  /** Ground that works on whoever starts a turn on it (0.48.0). */
+  hazard?: HazardKind;
+  /** Part of the area a "hold" objective asks the squad to hold (0.48.0). */
+  zone?: boolean;
 }
 
 export interface Ability {
@@ -310,9 +317,12 @@ export interface CampaignChapter {
   epilogue?: { title: string; text: string };
 }
 
-/** rout: defeat every enemy · boss: defeat the boss · survive: keep one ally standing for N rounds */
+/**
+ * rout: defeat every enemy · boss: defeat the boss · survive: keep one ally standing for N rounds ·
+ * hold (0.48.0): end N rounds with the squad on the map's zone and no foe on it
+ */
 export interface BattleObjective {
-  type: 'rout' | 'boss' | 'survive';
+  type: 'rout' | 'boss' | 'survive' | 'hold';
   rounds?: number;
 }
 
