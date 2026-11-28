@@ -603,7 +603,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
   };
   // With a hold objective (0.48.0) the walk heads for the zone first, and the foes second
   const towards = (t: { x: number; z: number }) => (opts.zone?.size ? zoneDist(t) + distFrom(t) * 0.25 : distFrom(t));
-  const walkScore = (t: { x: number; z: number }) => towards(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50 + walkRisk(t) - groundScore(t.x, t.z) / 8;
+  const walkScore = (t: { x: number; z: number }) => towards(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50 + walkRisk(t) - groundScore(t.x, t.z) * (unit.currentHp < unit.maxHp / 2 ? 0.6 : 1 / 8); // a hurt unit minds the ground more (0.51.0)
   let moveTo = origin;
   let bestDist = walkScore(origin);
   for (const t of tiles) {

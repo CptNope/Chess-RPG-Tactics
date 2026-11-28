@@ -18,7 +18,7 @@ import { recruitJobs } from '../src/core/Recruits';
 import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { Unit } from '../src/core/types';
 
-const IDS = ['wolf', 'wyvern', 'ooze', 'wisp', 'brute', 'basilisk', 'bone_knight', 'thornling'];
+const IDS = ['wolf', 'wyvern', 'ooze', 'wisp', 'brute', 'basilisk', 'bone_knight', 'thornling', 'salamander', 'frost_sprite', 'bog_lurker'];
 const make = (job: string, team: 'player' | 'enemy', x = 0, z = 0, level = 5): Unit => {
   const u = JobSystem.createUnit(`${team}-${job}-${x}-${z}`, job, team, job, x, z, team === 'player' ? 'N' : 'S', level);
   if (team === 'enemy') { JobSystem.equipVeteranPassives(u); JobSystem.applyGearStatuses(u); }
@@ -128,7 +128,7 @@ describe('where monsters are met', () => {
   it('the Howling Hollow: a side battle of beasts after Chapter I, with a trophy of its own', () => {
     const def = SKIRMISHES.hollow;
     expect(def.jobs.every(([j]) => isMonsterJob(j))).toBe(true);
-    expect(new Set(def.jobs.map(([j]) => j))).toEqual(new Set(IDS.slice(0, 5)));
+    expect(new Set(def.jobs.map(([j]) => j))).toEqual(new Set([...IDS.slice(0, 5), 'bog_lurker'])); // the lurker since 0.51.0
     expect(skirmishOpen('hollow', [])).toBe(false);
     expect(skirmishOpen('hollow', ['chapter_1'])).toBe(true);
     expect(ITEMS[def.trophy]).toBeTruthy();

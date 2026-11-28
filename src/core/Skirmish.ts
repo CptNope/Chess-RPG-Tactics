@@ -69,7 +69,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     name: 'Howling Hollow',
     mapId: 'zodiac_summit',
     foe: 'Wild Beasts',
-    jobs: [['wolf', 'Pack Leader'], ['wolf', 'Dire Wolf'], ['wyvern', 'Wyvern'], ['ooze', 'Bog Ooze'], ['wisp', 'Marsh Wisp'], ['brute', 'Stonehide Brute']],
+    jobs: [['wolf', 'Pack Leader'], ['wolf', 'Dire Wolf'], ['wyvern', 'Wyvern'], ['ooze', 'Bog Ooze'], ['wisp', 'Marsh Wisp'], ['brute', 'Stonehide Brute'], ['bog_lurker', 'Bog Lurker']], // the lurker since 0.51.0
     opensAfter: ['chapter_1'],
     intro: 'Something has driven the beasts down from the high pass. Wolves first, by the sound of it. Stay together.',
     trophy: 'wolfpelt_mantle'
@@ -80,7 +80,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     name: 'Briar Barrow',
     mapId: 'gloomy_swamp',
     foe: 'Barrow Things',
-    jobs: [['bone_knight', 'Barrow Guard'], ['basilisk', 'Basilisk'], ['thornling', 'Thornling'], ['bone_knight', 'Bone Knight'], ['thornling', 'Briar Thornling'], ['wisp', 'Barrow Wisp']],
+    jobs: [['bone_knight', 'Barrow Guard'], ['basilisk', 'Basilisk'], ['thornling', 'Thornling'], ['bone_knight', 'Bone Knight'], ['thornling', 'Briar Thornling'], ['wisp', 'Barrow Wisp'], ['frost_sprite', 'Barrow Rime']], // the sprite since 0.51.0
     opensAfter: ['chapter_3'],
     intro: 'The old kings\' barrow has gone to briars, and something in there is still standing guard. Watch for the lizard: don\'t meet its eyes.',
     trophy: 'basilisk_eye'
@@ -102,10 +102,10 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     id: 'cinder',
     name: 'Cinder Spring',
     mapId: 'cinder_caldera',
-    size: 5,
+    size: 4, // 5 in 0.48; fire now burns the ground (0.50) and the pool grew (0.51)
     deployRows: 9, // they hold the spring when you arrive
     foe: 'Ashen Zealots',
-    jobs: [['shaman', 'Ember Shaman'], ['black_mage', 'Pyromancer'], ['monk', 'Cinder Monk'], ['knight', 'Ash Guard'], ['archer', 'Smoke Archer'], ['geomancer', 'Lava Warden']],
+    jobs: [['shaman', 'Ember Shaman'], ['black_mage', 'Pyromancer'], ['monk', 'Cinder Monk'], ['knight', 'Ash Guard'], ['archer', 'Smoke Archer'], ['geomancer', 'Lava Warden'], ['salamander', 'Emberback']], // the salamander since 0.51.0
     opensAfter: ['chapter_4'],
     objective: { type: 'hold', rounds: 3 },
     intro: 'Zealots have taken the hot spring in the caldera and say the mountain speaks through it. Take the basin and hold it, three rounds with nobody of theirs in it. Stay off the embers.',

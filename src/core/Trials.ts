@@ -21,7 +21,8 @@ const TITLES: Record<string, string> = {
   monk: 'Fist', thief: 'Cutpurse', summoner: 'Caller', oracle: 'Augur', paladin: 'Templar', spellblade: 'Duelist', chemist: 'Alchemist',
   bard: 'Minstrel', dancer: 'Bladedancer', gunner: 'Musketeer', dark_knight: 'Reaver', shaman: 'Spiritcaller', ranger: 'Huntmaster',
   wolf: 'Hound', wyvern: 'Drake', ooze: 'Ooze', wisp: 'Wisp', brute: 'Brute',
-  basilisk: 'Basilisk', bone_knight: 'Bone Knight', thornling: 'Thornling'
+  basilisk: 'Basilisk', bone_knight: 'Bone Knight', thornling: 'Thornling',
+  salamander: 'Emberback', frost_sprite: 'Frost Sprite', bog_lurker: 'Bog Lurker'
 };
 /** Monsters on the Trials' floors (0.26.0), from this floor up. */
 const TRIAL_MONSTERS = ['wolf', 'wyvern', 'ooze', 'wisp', 'brute'];
@@ -29,6 +30,9 @@ export const TRIAL_MONSTERS_FROM = 3;
 /** Deeper down, the Briar Barrow's monsters join them (0.32.0). Shallower floors don't change. */
 const TRIAL_MONSTERS_DEEP = [...TRIAL_MONSTERS, 'basilisk', 'bone_knight', 'thornling'];
 export const TRIAL_DEEP_MONSTERS_FROM = 8;
+/** Deeper still, the creatures of fire, frost and bog (0.51.0). Floors above don't change. */
+const TRIAL_MONSTERS_DEEPER = [...TRIAL_MONSTERS_DEEP, 'salamander', 'frost_sprite', 'bog_lurker'];
+export const TRIAL_DEEPER_MONSTERS_FROM = 13;
 
 /** Bosses appear every fifth floor. */
 export function isBossFloor(floor: number): boolean {
@@ -69,7 +73,7 @@ export function buildTrialFloor(floor: number): CampaignChapter {
     let jobId = TRIAL_JOBS[Math.floor(rng() * TRIAL_JOBS.length)];
     const t = pickTile();
     const isLeader = boss && i === 0;
-    const pool = floor >= TRIAL_DEEP_MONSTERS_FROM ? TRIAL_MONSTERS_DEEP : TRIAL_MONSTERS;
+    const pool = floor >= TRIAL_DEEPER_MONSTERS_FROM ? TRIAL_MONSTERS_DEEPER : floor >= TRIAL_DEEP_MONSTERS_FROM ? TRIAL_MONSTERS_DEEP : TRIAL_MONSTERS;
     if (!isLeader && floor >= TRIAL_MONSTERS_FROM && beasts() < 0.3) jobId = pool[Math.floor(beasts() * pool.length)];
     roster.push({
       name: isLeader ? `${sign} Warden` : `${sign} ${TITLES[jobId]}`,

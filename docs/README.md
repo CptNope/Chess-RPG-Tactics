@@ -99,6 +99,7 @@ timeline
     0.48.0 : 0053 Hazards and hold zones
     0.49.0 : 0054 The Ranger, hidden traps
     0.50.0 : 0055 Spells change the ground
+    0.51.0 : 0056 Creatures of fire, frost and bog
 ```
 
 | # | Decision | Release |
@@ -150,6 +151,7 @@ timeline
 | [0053](adr/0053-hazards-and-hold-zones.md) | Hazards on tiles (embers, miasma, springs) at turn start; hold zones and the Hold objective (`RoundState.held`); the AI weighs the ground; the Cinder Spring; Workshop Ground tool | 0.48.0 |
 | [0054](adr/0054-ranger-and-hidden-traps.md) | The Ranger: traps kept on the setter, hidden from the other side; a move stops at the first foe's trap on its path (`walkInto`); `scoreTrap`; the first hidden state for online versus | 0.49.0 |
 | [0055](adr/0055-spells-change-the-ground.md) | Spells change the ground by rule (fire with an area: embers; ice: douse; Poison: miasma) for a few rounds, remembering the map's own; `ground` events; `groundWorth` | 0.50.0 |
+| [0056](adr/0056-creatures-of-fire-frost-and-bog.md) | Emberback, Frost Sprite, Bog Lurker make ground by the 0.50 rules; `innate.thrives`; hurt units mind the ground on a walk; Cinder Spring back to four zealots | 0.51.0 |
 | [0039](adr/0039-smarter-enemies.md) | A threat map lets the planner think a turn ahead (light on Normal, full on Hard and AUTO); enemies carry item pouches by role; leftovers are salvaged | 0.31.0 |
 | [0038](adr/0038-equipment-rules.md) | Each job has weapon types and armor weights it can use; starting gear complies, so balance holds; job changes swap gear; old saves fixed on load | 0.30.0 |
 | [0034](adr/0034-monsters.md) | Monsters are jobs flagged `monster`, with innate statuses and immunities instead of gear, their own art, and player job lists filtered | 0.26.0 |

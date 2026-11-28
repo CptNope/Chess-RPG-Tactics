@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.51.0] - 2026-11-28
+
+### Added
+- **Three new monsters**, each of which makes its own ground:
+  - **Emberback:** a fire lizard. Flame Spit and Kindle leave the ground burning, and it **basks in embers**: they heal it instead of hurting it.
+  - **Frost Sprite:** a flying shard of ice. Frost Bolt, and Rime Burst Slows. Both Rime Burst and its Hoarfrost Veil (Shell for its allies) **put out burning ground**.
+  - **Bog Lurker:** a wide-jawed swamp thing. Venom Spit poisons and leaves miasma, Drag Under holds you in place, and it **breathes miasma** to heal.
+- Where to meet them: Emberbacks at Cinder Spring, Bog Lurkers at Howling Hollow, Frost Sprites at Briar Barrow, and all three in the Trials of the Zodiac from floor 13. A Beast Tamer can win any of them over.
+- A hurt unit on either side now heads for healing ground and steers clear of burning ground when it has nothing better to do.
+
+### Changed
+- **Cinder Spring** sends four zealots (five once the place is at full heat), down from five. Since 0.50 their fire burns the ground there too.
+
+### Developer
+- `innate.thrives` on monsters (`hazardFor` heals instead); `TRIAL_DEEPER_MONSTERS_FROM` (13). ADR 0056.
+- 4 new tests (365 total).
+
 ## [0.50.0] - 2026-11-28
 
 ### Added

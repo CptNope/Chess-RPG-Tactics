@@ -215,7 +215,7 @@ export class BattleFx {
   private meleeArc(caster: Unit, target: Unit, flip: boolean, speed: number): void {
     const w = caster.equipment.weapon?.weaponType;
     if (caster.jobId === 'brute') return this.play({ id: 'melee/hammer-smash', speed: speed * 1.8, startAt: 0.5, scale: 0.7 }, target, { flip, offsetX: flip ? 20 : -20 });
-    if (['wolf', 'wyvern', 'basilisk', 'thornling', 'ooze'].includes(caster.jobId)) return this.play({ id: 'melee/claw-swipe', speed }, target, { flip, offsetX: flip ? 14 : -14 });
+    if (['wolf', 'wyvern', 'basilisk', 'thornling', 'ooze', 'salamander', 'bog_lurker'].includes(caster.jobId)) return this.play({ id: 'melee/claw-swipe', speed }, target, { flip, offsetX: flip ? 14 : -14 });
     if (caster.jobId === 'monk' || w === 'knuckles') return this.play({ id: 'melee/uppercut', speed }, target, { flip, offsetX: flip ? 12 : -12 });
     if (w === 'spear') return this.play({ id: 'melee/thrust', speed }, target, { flip, offsetX: flip ? 40 : -40, scale: 0.8 });
     if (w === 'whip') return this.play({ id: 'melee/whip-crack', speed }, target, { flip, offsetX: flip ? 44 : -44, scale: 0.8 });

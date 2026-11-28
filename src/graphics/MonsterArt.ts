@@ -5,7 +5,8 @@
  *
  * Monsters aren't people in a job, so each has a body of its own: a wolf on four legs, a wyvern
  * hovering on its wings, an ooze, a wisp of marsh-fire and a hulking brute of stone; from 0.32.0
- * a basilisk, a bone knight and a thornling.
+ * a basilisk, a bone knight and a thornling; from 0.51.0 a salamander, a frost sprite and a bog
+ * lurker.
  */
 import { Painter, makeCanvas, outline, shade, rgb, hex, SPRITE_SIZE, PORTRAIT_SIZE } from './CharacterArt';
 import type { SpriteFrame, SpriteView } from './CharacterArt';
@@ -513,18 +514,184 @@ function thornling(p: Painter, view: SpriteView, P: Pose): void {
 }
 
 // ---------------------------------------------------------------------------
+// Emberback (0.51.0; id 'salamander'): a low fire lizard with a flickering crest, breathing flame in the attack
+// ---------------------------------------------------------------------------
+
+const SAL = { skin: '#d9481f', light: '#f4793b', belly: '#fcd34d', dark: '#7c2d12', crest: '#fde047', crestTip: '#fb923c', eye: '#1c1917', flame: '#fb923c', flameCore: '#fef08a' };
+
+function salamander(p: Painter, view: SpriteView, P: Pose): void {
+  const C = SAL, b = P.bob, st = P.stride;
+  const flick = P.bob ? 1 : 0;
+  if (view === 'E') {
+    const lunge = P.attack ? -3 : P.hurt ? -2 : 0; // rears back to breathe
+    // tail sweeping back
+    p.tri(13, 30 + b, 13, 35 + b, 2, 37 + st, C.skin);
+    p.tri(13, 33 + b, 6, 36 + st, 2, 37 + st, C.dark);
+    // far legs
+    p.b(15 - st, 34 + b, 3, 8 - b, C.dark); p.b(27 + st, 34 + b, 3, 8 - b, C.dark);
+    // body and belly
+    ell(p, 22 + lunge / 2, 32 + b, 11, 5, C.skin);
+    ell(p, 22 + lunge / 2, 35 + b, 9, 2.5, C.belly);
+    // crest flames along the back
+    for (const [x, h] of [[15, 4], [19, 6], [23, 5], [27, 4]] as const) {
+      p.tri(x - 2, 28 + b, x + 2, 28 + b, x + flick, 28 + b - h - flick, C.crest);
+      p.px(x + flick, 27 + b - h + 2, C.crestTip);
+    }
+    // near legs
+    p.b(18 + st, 35 + b, 3, 7 - b, C.skin); p.b(30 - st + lunge, 35 + b, 3, 7 - b, C.skin);
+    p.r(17 + st, 42, 5, 2, C.dark); p.r(29 - st + lunge, 42, 5, 2, C.dark);
+    // head and snout
+    ell(p, 34 + lunge, 30 + b, 5, 4, C.skin);
+    p.tri(36 + lunge, 28 + b, 36 + lunge, 33 + b, 43 + lunge, 31 + b, C.light);
+    p.r(38 + lunge, 32 + b, 4, 1, C.dark);
+    if (P.hurt) p.r(35 + lunge, 29 + b, 2, 1, C.eye); else p.r(35 + lunge, 28 + b, 2, 2, C.eye);
+    if (P.attack) {
+      // a gout of fire from the mouth
+      p.tri(41 + lunge, 31 + b, 48, 23, 48, 40, C.flame);
+      p.tri(41 + lunge, 31 + b, 48, 27, 48, 36, C.crest);
+      p.tri(41 + lunge, 31 + b, 47, 29, 47, 33, C.flameCore);
+    }
+    return;
+  }
+  if (view === 'S') {
+    // body behind the head, legs splayed
+    ell(p, 24, 35 + b, 10, 6, C.skin);
+    p.b(13 + st, 36 + b, 4, 6 - b, C.dark); p.b(31 - st, 36 + b, 4, 6 - b, C.dark);
+    p.r(12 + st, 42, 6, 2, C.dark); p.r(30 - st, 42, 6, 2, C.dark);
+    ell(p, 24, 38 + b, 6, 2.5, C.belly);
+    // crest flames on the head
+    for (const [x, h] of [[20, 4], [24, 6], [28, 4]] as const) p.tri(x - 2, 25 + b, x + 2, 25 + b, x + flick, 25 + b - h - flick, C.crest);
+    ell(p, 24, 29 + b, 7, 5, C.skin);
+    ell(p, 24, 32 + b, 5, 2, C.light);
+    if (P.hurt) { p.r(19, 28 + b, 3, 1, C.eye); p.r(26, 28 + b, 3, 1, C.eye); }
+    else { p.r(19, 27 + b, 3, 3, C.eye); p.r(26, 27 + b, 3, 3, C.eye); p.px(20, 27 + b, C.crest); p.px(27, 27 + b, C.crest); }
+    p.r(21, 33 + b, 6, 1, C.dark);
+    if (P.attack) { p.tri(19, 34 + b, 29, 34 + b, 24, 45, C.flame); p.tri(21, 34 + b, 27, 34 + b, 24, 41, C.flameCore); }
+    return;
+  }
+  // N: from behind, the tail toward the viewer
+  ell(p, 24, 32 + b, 9, 7, C.skin);
+  p.b(13 + st, 35 + b, 4, 7 - b, C.dark); p.b(31 - st, 35 + b, 4, 7 - b, C.dark);
+  p.tri(21, 36 + b, 27, 36 + b, 24 + st * 2, 46, C.skin);
+  p.tri(23, 38 + b, 25, 38 + b, 24 + st * 2, 45, C.dark);
+  for (const [y, h] of [[25, 5], [29, 4], [33, 3]] as const) p.tri(22, y + b, 26, y + b, 24 + flick, y + b - h, C.crest);
+  ell(p, 24, 24 + b, 5, 4, C.skin);
+}
+
+// ---------------------------------------------------------------------------
+// Frost Sprite (0.51.0): a hovering shard of ice with crystal wings and a cold light inside
+// ---------------------------------------------------------------------------
+
+const FROST = { ice: '#7dd3fc', light: '#e0f2fe', deep: '#0369a1', core: '#ffffff', eye: '#0c4a6e', glint: '#bae6fd' };
+
+function frostSprite(p: Painter, view: SpriteView, P: Pose): void {
+  const C = FROST, b = P.bob * 2;
+  const cy = 24 + b;
+  const grow = P.attack ? 2 : P.hurt ? -1 : 0;
+  const wing = P.flap * 3;
+  // crystal wings, beating
+  p.tri(18, cy - 2, 6, cy - 8 - wing, 10, cy + 6 - wing / 2, C.glint);
+  p.tri(30, cy - 2, 42, cy - 8 - wing, 38, cy + 6 - wing / 2, C.glint);
+  p.tri(18, cy, 9, cy - 4 - wing, 12, cy + 4, C.ice);
+  p.tri(30, cy, 39, cy - 4 - wing, 36, cy + 4, C.ice);
+  // the shard body: a long diamond
+  p.tri(16 - grow, cy, 32 + grow, cy, 24, cy - 16 - grow, C.ice);
+  p.tri(16 - grow, cy, 32 + grow, cy, 24, cy + 16 + grow, C.deep);
+  p.tri(19, cy, 29, cy, 24, cy - 11, C.light);
+  p.tri(19, cy, 29, cy, 24, cy + 10, C.ice);
+  // the cold light in its heart
+  ell(p, 24, cy, 3 + grow / 2, 3 + grow / 2, C.core);
+  // a crown of small shards
+  p.tri(20, cy - 12, 22, cy - 12, 19, cy - 19, C.light);
+  p.tri(26, cy - 12, 28, cy - 12, 29, cy - 19, C.light);
+  // drifting snow
+  p.px(10 + P.stride * 2, cy + 10, C.light); p.px(38 - P.stride * 2, cy + 14, C.light); p.px(24, cy + 22, C.glint);
+  if (view === 'N') return;
+  const ex = view === 'E' ? [26] : [21, 26];
+  for (const x of ex) {
+    if (P.hurt) p.r(x, cy - 4, 2, 1, C.eye);
+    else p.r(x, cy - 5, 2, 2, C.eye);
+  }
+  if (P.attack) {
+    // a spray of frost toward the target
+    const dir = view === 'E' ? 1 : 0;
+    if (dir) { p.line(32, cy, 44, cy - 4, C.light); p.line(32, cy + 2, 45, cy + 3, C.glint); p.px(46, cy - 1, C.core); }
+    else { p.line(24, cy + 17, 21, cy + 22, C.light); p.line(24, cy + 17, 27, cy + 22, C.light); }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Bog Lurker (0.51.0): a squat, wide-jawed frog-thing, mottled with mud, eyes bulging on top
+// ---------------------------------------------------------------------------
+
+const LURK = { skin: '#4d6b3a', light: '#7a9a52', dark: '#2a3d1f', belly: '#c2b280', spot: '#3a2a1a', eye: '#facc15', pupil: '#111827', mouth: '#5a1a1a', tongue: '#e11d48' };
+
+function bogLurker(p: Painter, view: SpriteView, P: Pose): void {
+  const C = LURK, b = P.bob, st = P.stride;
+  const sq = P.attack ? -1 : P.hurt ? 1 : 0;
+  if (view === 'E') {
+    const lunge = P.attack ? 2 : P.hurt ? -2 : 0;
+    // hind leg folded under, front leg planted
+    ell(p, 14, 38 + b, 6, 4, C.dark);
+    p.b(28 + st + lunge, 37 + b, 4, 6 - b, C.skin); p.r(27 + st + lunge, 42, 7, 2, C.dark);
+    // body
+    ell(p, 22 + lunge / 2, 33 + b + sq, 13, 8 - sq, C.skin);
+    ell(p, 24 + lunge / 2, 38 + b, 9, 3, C.belly);
+    for (const [x, y] of [[15, 29], [20, 27], [17, 33], [25, 30]] as const) p.r(x, y + b, 2, 2, C.spot);
+    // the head: one with the body, a wide jaw
+    ell(p, 33 + lunge, 32 + b + sq, 7, 5, C.skin);
+    if (P.attack) {
+      p.tri(33 + lunge, 33 + b, 41 + lunge, 30 + b, 41 + lunge, 37 + b, C.mouth);
+      p.line(36 + lunge, 34 + b, 46, 33 + b, C.tongue, 2);
+    } else {
+      p.line(31 + lunge, 34 + b, 40 + lunge, 33 + b, C.dark);
+    }
+    // a bulging eye on top
+    ell(p, 33 + lunge, 26 + b + sq, 3, 3, C.light);
+    if (P.hurt) p.r(32 + lunge, 26 + b, 3, 1, C.pupil); else { p.r(32 + lunge, 25 + b + sq, 3, 3, C.eye); p.px(34 + lunge, 26 + b + sq, C.pupil); }
+    return;
+  }
+  if (view === 'S') {
+    // legs splayed to the sides
+    p.b(9 + st, 37 + b, 5, 6 - b, C.dark); p.b(34 - st, 37 + b, 5, 6 - b, C.dark);
+    p.r(8 + st, 42, 7, 2, C.dark); p.r(33 - st, 42, 7, 2, C.dark);
+    ell(p, 24, 33 + b + sq, 14, 9 - sq, C.skin);
+    ell(p, 24, 38 + b, 10, 3, C.belly);
+    for (const [x, y] of [[13, 30], [33, 31], [19, 27], [29, 27]] as const) p.r(x, y + b, 2, 2, C.spot);
+    // the wide mouth, open in the attack
+    if (P.attack) { p.r(15, 34 + b, 18, 4, C.mouth); p.r(22, 36 + b, 4, 5, C.tongue); }
+    else p.line(15, 35 + b, 33, 35 + b, C.dark);
+    // two bulging eyes on top
+    for (const x of [17, 31]) {
+      ell(p, x, 25 + b + sq, 4, 4, C.light);
+      if (P.hurt) p.r(x - 2, 25 + b, 4, 1, C.pupil);
+      else { p.r(x - 2, 23 + b + sq, 4, 4, C.eye); p.r(x - 1, 24 + b + sq, 2, 2, C.pupil); }
+    }
+    return;
+  }
+  // N: the mottled back and the two eye-bumps
+  p.b(9 + st, 37 + b, 5, 6 - b, C.dark); p.b(34 - st, 37 + b, 5, 6 - b, C.dark);
+  ell(p, 24, 33 + b + sq, 14, 9 - sq, C.skin);
+  ell(p, 24, 31 + b, 10, 5, C.light);
+  for (const [x, y] of [[16, 30], [30, 29], [23, 34], [19, 36], [28, 36], [24, 28]] as const) p.r(x, y + b, 2, 2, C.spot);
+  for (const x of [17, 31]) ell(p, x, 25 + b + sq, 4, 3.5, C.skin);
+}
+
+// ---------------------------------------------------------------------------
 
 const PAINTERS: Record<string, (p: Painter, view: SpriteView, pose: Pose) => void> = {
-  wolf, wyvern, ooze, wisp, brute, basilisk, bone_knight: boneKnight, thornling
+  wolf, wyvern, ooze, wisp, brute, basilisk, bone_knight: boneKnight, thornling,
+  salamander, frost_sprite: frostSprite, bog_lurker: bogLurker
 };
 
 /** Flyers cast a smaller shadow: they hover above it. */
-const HOVERS = new Set(['wyvern', 'wisp']);
+const HOVERS = new Set(['wyvern', 'wisp', 'frost_sprite']);
 
 /** Where each monster's face is in its front sprite: the top-left of a 32×32 crop for its portrait. */
 const FACE_CROP: Record<string, [number, number]> = {
   wolf: [8, 4], wyvern: [8, 0], ooze: [8, 16], wisp: [8, 6], brute: [8, 2],
-  basilisk: [8, 9], bone_knight: [8, 2], thornling: [8, 8]
+  basilisk: [8, 9], bone_knight: [8, 2], thornling: [8, 8],
+  salamander: [8, 14], frost_sprite: [8, 6], bog_lurker: [8, 15]
 };
 
 export function isMonsterArt(job: string): boolean {

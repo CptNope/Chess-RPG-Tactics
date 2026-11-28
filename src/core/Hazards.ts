@@ -5,6 +5,7 @@
  * - Embers: burning ground, 10% of max HP.
  * - Miasma: bog gas, Poisons (gear that guards against Poison keeps it off).
  * - Spring: a healing spring, 12% of max HP, and Poison washed off.
+ * A monster that thrives on a kind (0.51.0) is healed 10% by it instead.
  *
  * Tiles can also be marked as a zone, for the "hold" objective: when a round ends with the hero's
  * side on the zone and no foe on it, the hold counts one round. Hold it for the objective's
@@ -14,6 +15,7 @@
  */
 import { BattleObjective, StatusEffectType, TileData, Unit } from './types';
 import { allianceOf } from './Sides';
+import { JOBS } from '../data/jobs';
 
 export type HazardKind = 'embers' | 'miasma' | 'spring';
 export const HAZARD_KINDS: HazardKind[] = ['embers', 'miasma', 'spring'];
@@ -37,6 +39,8 @@ export interface HazardPulse {
   status?: StatusEffectType;
   /** The spring washed Poison off. */
   cured?: boolean;
+  /** A creature that thrives on this ground was healed by it (0.51.0). */
+  thrives?: boolean;
 }
 
 const has = (u: Unit, s: StatusEffectType) => u.statuses.some((x) => x.type === s);
@@ -45,6 +49,11 @@ const has = (u: Unit, s: StatusEffectType) => u.statuses.some((x) => x.type === 
 export function hazardFor(unit: Unit, tile: TileData | undefined): HazardPulse | null {
   const kind = tile?.hazard;
   if (!kind || unit.isDead) return null;
+  // A creature that thrives on it (0.51.0): an Emberback basks in embers, a Bog Lurker breathes miasma
+  if (JOBS[unit.jobId]?.innate?.thrives?.includes(kind)) {
+    const heal = Math.min(unit.maxHp - unit.currentHp, Math.max(1, Math.round(unit.maxHp * EMBERS_SHARE)));
+    return heal > 0 ? { kind, heal, thrives: true } : null;
+  }
   // Gear that keeps the ground off (the Cinderwalk Charm)
   if (Object.values(unit.equipment).some((it) => it?.traits?.hazardproof?.includes(kind))) return null;
   if (kind === 'embers') return { kind, damage: Math.max(1, Math.round(unit.maxHp * EMBERS_SHARE)) };

@@ -183,7 +183,7 @@ export interface Job {
   /** A monster (0.26.0): an enemy only, never a player's job; see data/monsters.ts. */
   monster?: boolean;
   /** What a monster has instead of gear traits: statuses it starts each battle with, ailments it can't get. */
-  innate?: { startStatus?: StatusEffectType[]; immune?: StatusEffectType[]; stats?: Item['stats'] };
+  innate?: { startStatus?: StatusEffectType[]; immune?: StatusEffectType[]; stats?: Item['stats']; /** Hazards that heal it instead of hurting it (0.51.0). */ thrives?: HazardKind[] };
 }
 
 export interface EquippedAbilities {

@@ -29,7 +29,10 @@ export const BEAST_NAMES: Record<string, string[]> = {
   brute: ['Boulder', 'Crag', 'Rubble', 'Flint', 'Tor'],
   basilisk: ['Glare', 'Moss', 'Scute', 'Sunstone', 'Basil'],
   bone_knight: ['Sir Rattles', 'Marrow', 'Ossian', 'Grimsby', 'Sir Bones'],
-  thornling: ['Bramble', 'Thistle', 'Nettle', 'Rosie', 'Burr']
+  thornling: ['Bramble', 'Thistle', 'Nettle', 'Rosie', 'Burr'],
+  salamander: ['Cinder', 'Ember', 'Smudge', 'Blaze', 'Pip'],
+  frost_sprite: ['Rime', 'Glint', 'Shard', 'Flurry', 'Icicle'],
+  bog_lurker: ['Croak', 'Gulp', 'Murk', 'Wartsworth', 'Toady']
 };
 
 const isMonster = (u: Unit) => !!JOBS[u.jobId]?.monster;

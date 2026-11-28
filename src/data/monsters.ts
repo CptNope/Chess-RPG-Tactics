@@ -5,7 +5,8 @@
  * Workshop treat it like any other enemy, but it never shows up in a player's job list, the
  * recruiting board or the job tree. Monsters wear no gear: their stats come from the job alone,
  * every action is theirs from level 1, and `innate` gives them what gear gives people: stats
- * (fangs, hide, a ghostly glow; 0.27.0), statuses they start with and ailments they shrug off. Their bodies are drawn in graphics/MonsterArt.ts.
+ * (fangs, hide, a ghostly glow; 0.27.0), statuses they start with and ailments they shrug off,
+ * and from 0.51.0 ground they thrive on (it heals them instead of hurting them). Their bodies are drawn in graphics/MonsterArt.ts.
  */
 import { Ability, Job } from '../core/types';
 
@@ -138,6 +139,52 @@ export const MONSTERS: Record<string, Job> = {
       act({ id: 'mon_thorn_lash', name: 'Thorn Lash', description: 'A thorny vine lashes a foe up to 3 tiles away: damage and Poison.', range: 3, power: 1.0, element: 'physical', appliesStatus: 'poison' }),
       act({ id: 'mon_bramble_burst', name: 'Bramble Burst', description: 'Briars burst out at every foe next to it: damage and Immobilize.', range: 0, aoe: 1, power: 0.75, element: 'physical', centered: true, appliesStatus: 'immobilize', mpCost: 6 }),
       act({ id: 'mon_pollen', name: 'Pollen Cloud', description: 'A puff of pollen over a small area up to 3 tiles away: light damage and Blind.', range: 3, heightTolerance: 3, aoe: 1, power: 0.3, element: 'physical', appliesStatus: 'blind', mpCost: 8 })
+    ]
+  }),
+  // 0.51.0: creatures of the new ground. Each makes one kind of it, and two thrive on theirs
+  salamander: monster({
+    id: 'salamander',
+    name: 'Emberback', // not "Salamander": that's the Summoner's fire spirit
+    description: 'A fire lizard from the volcanic vents, a crest of flame down its back. It spits flame that leaves the ground burning, and basks in the embers: they heal it instead of hurting it.',
+    role: 'Beast',
+    baseMove: 4,
+    baseJump: 2,
+    statMultipliers: { hp: 1.05, mp: 0.7, attack: 1.15, magic: 1.0, speed: 1.0 },
+    innate: { thrives: ['embers'], stats: { attack: 4, magic: 6, hp: 10 } },
+    abilities: [
+      act({ id: 'mon_tail_whip', name: 'Tail Whip', description: 'Whips its tail at a foe next to it.', range: 1, power: 1.1, element: 'physical' }),
+      act({ id: 'mon_flame_spit', name: 'Flame Spit', description: 'Spits fire over a small area up to 3 tiles away. The ground there burns for 2 rounds.', range: 3, heightTolerance: 2.5, aoe: 1, power: 0.85, element: 'fire', mpCost: 6 }),
+      act({ id: 'mon_kindle', name: 'Kindle', description: 'Flames burst out at every foe next to it, and the ground around it catches fire.', range: 0, aoe: 1, power: 0.7, element: 'fire', centered: true, mpCost: 8 })
+    ]
+  }),
+  frost_sprite: monster({
+    id: 'frost_sprite',
+    name: 'Frost Sprite',
+    description: 'A shard of living ice on the wind. It flies over anything, freezes from afar, slows what it chills, and its cold puts out burning ground.',
+    role: 'Spirit',
+    baseMove: 4,
+    baseJump: 8,
+    statMultipliers: { hp: 1.05, mp: 1.4, attack: 0.85, magic: 1.3, speed: 1.15 },
+    innate: { immune: ['slow', 'sleep', 'poison'], stats: { magic: 16, mp: 20, evasion: 16 } },
+    abilities: [
+      act({ id: 'mon_frost_bolt', name: 'Frost Bolt', description: 'A dart of ice from up to 4 tiles away.', range: 4, heightTolerance: 3, power: 1.2, element: 'ice', mpCost: 4 }),
+      act({ id: 'mon_rime_burst', name: 'Rime Burst', description: 'Frost bursts over a small area up to 3 tiles away: damage and Slow. It puts out burning ground.', range: 3, heightTolerance: 3, aoe: 1, power: 0.75, element: 'ice', appliesStatus: 'slow', mpCost: 10 }),
+      act({ id: 'mon_hoarfrost', name: 'Hoarfrost Veil', description: 'A veil of frost: Shell for the sprite and every ally within 2 tiles, and the embers around go out.', range: 0, aoe: 2, power: 0, element: 'ice', centered: true, appliesStatus: 'shell', mpCost: 12 })
+    ]
+  }),
+  bog_lurker: monster({
+    id: 'bog_lurker',
+    name: 'Bog Lurker',
+    description: 'A squat, wide-jawed thing that waits under the bog. It spits venom that hangs in the air as miasma, drags its prey down, and breathes the miasma like air: it heals it.',
+    role: 'Beast',
+    baseMove: 3,
+    baseJump: 1,
+    statMultipliers: { hp: 1.4, mp: 0.6, attack: 1.3, magic: 0.7, speed: 0.9 },
+    innate: { immune: ['poison', 'blind'], thrives: ['miasma'], stats: { attack: 6, hp: 35 } },
+    abilities: [
+      act({ id: 'mon_snap', name: 'Snap', description: 'Snaps its jaws on a foe next to it.', range: 1, power: 1.2, element: 'physical' }),
+      act({ id: 'mon_venom_spit', name: 'Venom Spit', description: 'Spits venom over a small area up to 3 tiles away: damage and Poison. It lingers there as miasma for 2 rounds.', range: 3, aoe: 1, power: 0.55, element: 'physical', appliesStatus: 'poison', mpCost: 6 }),
+      act({ id: 'mon_drag_under', name: 'Drag Under', description: 'Grabs a foe next to it and drags at its legs: damage and Immobilize.', range: 1, power: 0.8, element: 'physical', appliesStatus: 'immobilize' })
     ]
   })
 };

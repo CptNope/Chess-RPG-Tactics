@@ -460,18 +460,21 @@ pie showData title Abilities by slot type
 
 ## Monsters
 
-8 monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow and Briar Barrow side battles, on Trials floors from 3 up (the Barrow's from 8), from Chapter II in the story, and in Workshop scenarios.
+11 monsters: enemies, never a job a squad member can take up, though a Beast Tamer can tame one into the squad (0.28). They wear no gear, know all their actions from level 1, and have innate statuses and immunities instead of gear traits. Met at the Howling Hollow, Briar Barrow and Cinder Spring side battles, on Trials floors from 3 up (the Barrow's from 8, the creatures of fire, frost and bog from 13), from Chapter II in the story, and in Workshop scenarios.
 
-| Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |
-| **Dire Wolf** `wolf` | Beast | 5 | 2 | 1.00× | 0.50× | 1.45× | 0.30× | 1.20× | — | — |
-| **Wyvern** `wyvern` | Beast | 4 | 8 | 1.15× | 0.50× | 1.40× | 0.60× | 1.05× | — | immobilize |
-| **Bog Ooze** `ooze` | Ooze | 3 | 1 | 1.45× | 0.40× | 1.15× | 0.50× | 0.80× | regen | poison, blind, sleep |
-| **Marsh Wisp** `wisp` | Spirit | 4 | 8 | 1.05× | 1.40× | 0.85× | 1.30× | 1.15× | — | poison, sleep, immobilize |
-| **Stonehide Brute** `brute` | Brute | 3 | 1 | 1.45× | 0.30× | 1.40× | 0.30× | 0.75× | protect | poison |
-| **Basilisk** `basilisk` | Beast | 4 | 2 | 1.45× | 0.60× | 1.45× | 0.60× | 1.00× | — | immobilize, blind |
-| **Bone Knight** `bone_knight` | Undead | 4 | 3 | 1.30× | 0.60× | 1.50× | 0.50× | 1.20× | — | poison, sleep, blind |
-| **Thornling** `thornling` | Plant | 3 | 1 | 1.35× | 0.70× | 1.35× | 0.90× | 1.00× | regen | sleep, blind |
+| Monster | Kind | Move | Jump | HP | MP | ATK | MAG | SPD | Starts with | Immune to | Thrives on |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Dire Wolf** `wolf` | Beast | 5 | 2 | 1.00× | 0.50× | 1.45× | 0.30× | 1.20× | — | — | — |
+| **Wyvern** `wyvern` | Beast | 4 | 8 | 1.15× | 0.50× | 1.40× | 0.60× | 1.05× | — | immobilize | — |
+| **Bog Ooze** `ooze` | Ooze | 3 | 1 | 1.45× | 0.40× | 1.15× | 0.50× | 0.80× | regen | poison, blind, sleep | — |
+| **Marsh Wisp** `wisp` | Spirit | 4 | 8 | 1.05× | 1.40× | 0.85× | 1.30× | 1.15× | — | poison, sleep, immobilize | — |
+| **Stonehide Brute** `brute` | Brute | 3 | 1 | 1.45× | 0.30× | 1.40× | 0.30× | 0.75× | protect | poison | — |
+| **Basilisk** `basilisk` | Beast | 4 | 2 | 1.45× | 0.60× | 1.45× | 0.60× | 1.00× | — | immobilize, blind | — |
+| **Bone Knight** `bone_knight` | Undead | 4 | 3 | 1.30× | 0.60× | 1.50× | 0.50× | 1.20× | — | poison, sleep, blind | — |
+| **Thornling** `thornling` | Plant | 3 | 1 | 1.35× | 0.70× | 1.35× | 0.90× | 1.00× | regen | sleep, blind | — |
+| **Emberback** `salamander` | Beast | 4 | 2 | 1.05× | 0.70× | 1.15× | 1.00× | 1.00× | — | — | embers |
+| **Frost Sprite** `frost_sprite` | Spirit | 4 | 8 | 1.05× | 1.40× | 0.85× | 1.30× | 1.15× | — | slow, sleep, poison | — |
+| **Bog Lurker** `bog_lurker` | Beast | 3 | 1 | 1.40× | 0.60× | 1.30× | 0.70× | 0.90× | — | poison, blind | miasma |
 
 ### Dire Wolf
 
@@ -552,6 +555,36 @@ pie showData title Abilities by slot type
 | **Thorn Lash** `mon_thorn_lash` | Action | 0 | 0 | 3 | 2 | — | 1 | physical | inflicts **poison** | A thorny vine lashes a foe up to 3 tiles away: damage and Poison. |
 | **Bramble Burst** `mon_bramble_burst` | Action | 0 | 6 | 0 | 2 | 1 | 0.75 | physical | inflicts **immobilize** | Briars burst out at every foe next to it: damage and Immobilize. |
 | **Pollen Cloud** `mon_pollen` | Action | 0 | 8 | 3 | 3 | 1 | 0.3 | physical | inflicts **blind** | A puff of pollen over a small area up to 3 tiles away: light damage and Blind. |
+
+### Emberback
+
+*A fire lizard from the volcanic vents, a crest of flame down its back. It spits flame that leaves the ground burning, and basks in the embers: they heal it instead of hurting it.*
+
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Tail Whip** `mon_tail_whip` | Action | 0 | 0 | 1 | 2 | — | 1.1 | physical | — | Whips its tail at a foe next to it. |
+| **Flame Spit** `mon_flame_spit` | Action | 0 | 6 | 3 | 2.5 | 1 | 0.85 | fire | — | Spits fire over a small area up to 3 tiles away. The ground there burns for 2 rounds. |
+| **Kindle** `mon_kindle` | Action | 0 | 8 | 0 | 2 | 1 | 0.7 | fire | — | Flames burst out at every foe next to it, and the ground around it catches fire. |
+
+### Frost Sprite
+
+*A shard of living ice on the wind. It flies over anything, freezes from afar, slows what it chills, and its cold puts out burning ground.*
+
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Frost Bolt** `mon_frost_bolt` | Action | 0 | 4 | 4 | 3 | — | 1.2 | ice | — | A dart of ice from up to 4 tiles away. |
+| **Rime Burst** `mon_rime_burst` | Action | 0 | 10 | 3 | 3 | 1 | 0.75 | ice | inflicts **slow** | Frost bursts over a small area up to 3 tiles away: damage and Slow. It puts out burning ground. |
+| **Hoarfrost Veil** `mon_hoarfrost` | Action | 0 | 12 | 0 | 2 | 2 | — | ice | inflicts **shell** | A veil of frost: Shell for the sprite and every ally within 2 tiles, and the embers around go out. |
+
+### Bog Lurker
+
+*A squat, wide-jawed thing that waits under the bog. It spits venom that hangs in the air as miasma, drags its prey down, and breathes the miasma like air: it heals it.*
+
+| Ability | Slot | JP | Cost | Range | Height | Area | Power | Element | Effect | Description |
+| :--- | :--- | ---: | ---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
+| **Snap** `mon_snap` | Action | 0 | 0 | 1 | 2 | — | 1.2 | physical | — | Snaps its jaws on a foe next to it. |
+| **Venom Spit** `mon_venom_spit` | Action | 0 | 6 | 3 | 2 | 1 | 0.55 | physical | inflicts **poison** | Spits venom over a small area up to 3 tiles away: damage and Poison. It lingers there as miasma for 2 rounds. |
+| **Drag Under** `mon_drag_under` | Action | 0 | 0 | 1 | 2 | — | 0.8 | physical | inflicts **immobilize** | Grabs a foe next to it and drags at its legs: damage and Immobilize. |
 
 ## Status effects
 
@@ -867,10 +900,10 @@ Optional battles at places on the world map (⚑). They can be fought any number
 | **Thornwood Ford** | Riverside Ruins | Thornwood Bandits | Cutpurse (Thief), Bandit Trapper (Ranger), Poacher (Archer), Footpad (Squire), Bruiser (Monk), Deserter (Knight) | Defeat every enemy | CHAPTER I |
 | **Drowned Shrine** | Gloomy Mire | Mire Cultists | Hexer (Black Mage), Augur (Oracle), Caller (Summoner), Seer (Time Weaver), Acolyte (White Mage), Shade (Ninja) | Defeat every enemy | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
 | **Watchfire Ridge** | Night Battlement | Night Raiders | Raider (Knight), Lancer (Dragoon), Marksman (Archer), Shade (Ninja), Duelist (Spellblade), Warden (Geomancer) | Survive 6 rounds | CHAPTER II-A or CHAPTER II-B or CHAPTER III |
-| **Howling Hollow** | Zodiac Summit | Wild Beasts | Pack Leader (Dire Wolf), Dire Wolf (Dire Wolf), Wyvern (Wyvern), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Stonehide Brute (Stonehide Brute) | Defeat every enemy | CHAPTER I |
-| **Briar Barrow** | Gloomy Mire | Barrow Things | Barrow Guard (Bone Knight), Basilisk (Basilisk), Thornling (Thornling), Bone Knight (Bone Knight), Briar Thornling (Thornling), Barrow Wisp (Marsh Wisp) | Defeat every enemy | CHAPTER III |
+| **Howling Hollow** | Zodiac Summit | Wild Beasts | Pack Leader (Dire Wolf), Dire Wolf (Dire Wolf), Wyvern (Wyvern), Bog Ooze (Bog Ooze), Marsh Wisp (Marsh Wisp), Stonehide Brute (Stonehide Brute), Bog Lurker (Bog Lurker) | Defeat every enemy | CHAPTER I |
+| **Briar Barrow** | Gloomy Mire | Barrow Things | Barrow Guard (Bone Knight), Basilisk (Basilisk), Thornling (Thornling), Bone Knight (Bone Knight), Briar Thornling (Thornling), Barrow Wisp (Marsh Wisp), Barrow Rime (Frost Sprite) | Defeat every enemy | CHAPTER III |
 | **Glasswing Dunes** | Saltglass Shore | Dune Beasts | Glasswing Wyvern (Wyvern), Dune Basilisk (Basilisk), Sea Thornling (Thornling), Dune Jackal (Dire Wolf), Glass Golem (Stonehide Brute), Drowned Sentry (Bone Knight) | Defeat every enemy | CHAPTER VII |
-| **Cinder Spring** | Cinder Caldera | Ashen Zealots | Ember Shaman (Shaman), Pyromancer (Black Mage), Cinder Monk (Monk), Ash Guard (Knight), Smoke Archer (Archer), Lava Warden (Geomancer) | Hold the marked ground 3 rounds, or defeat every enemy | CHAPTER IV |
+| **Cinder Spring** | Cinder Caldera | Ashen Zealots | Ember Shaman (Shaman), Pyromancer (Black Mage), Cinder Monk (Monk), Ash Guard (Knight), Smoke Archer (Archer), Lava Warden (Geomancer), Emberback (Emberback) | Hold the marked ground 3 rounds, or defeat every enemy | CHAPTER IV |
 
 ## Side stories
 
@@ -1092,8 +1125,8 @@ Unlocked after the campaign. Each floor is generated from its number with a seed
 | 10 | Seal of Capricorn: The Warden Wakes | Gloomy Mire | 6 | 13 | ★ | Dragoon, Squire, Paladin, Stonehide Brute, Basilisk, Time Weaver |
 | 11 | Seal of Aquarius | Night Battlement | 6 | 14 |  | Knight, Basilisk, Bone Knight, Time Weaver, Dire Wolf, Bog Ooze |
 | 12 | Seal of Pisces | Zodiac Summit | 6 | 15 |  | Oracle, Bard, Ninja, Archer, Wyvern |
-| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Dancer, Shaman, Dire Wolf, Dragoon, Wyvern, Geomancer |
-| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Thornling, Geomancer, Summoner, Marsh Wisp, Stonehide Brute, Basilisk |
-| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Ranger, Time Weaver, Thief, Chemist, Stonehide Brute |
+| 13 | Seal of Aries | Riverside Ruins | 6 | 16 |  | Dancer, Shaman, Dire Wolf, Dragoon, Bog Ooze, Geomancer |
+| 14 | Seal of Taurus | Gloomy Mire | 6 | 17 |  | Frost Sprite, Geomancer, Summoner, Basilisk, Bone Knight, Thornling |
+| 15 | Seal of Gemini: The Warden Wakes | Night Battlement | 6 | 18 | ★ | Dragoon, Ranger, Time Weaver, Thief, Chemist, Bone Knight |
 
 *Floors continue forever; the table shows the first 15.*

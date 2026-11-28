@@ -129,7 +129,7 @@ describe('Workshop scenarios and the Cinder Spring (0.48.0)', () => {
     expect(map.tiles.filter((t) => t.hazard === 'spring').every((t) => t.zone)).toBe(true);
     expect(map.tiles.some((t) => t.hazard === 'embers') && map.tiles.some((t) => t.hazard === 'miasma')).toBe(true);
     const ch = buildSkirmish('cinder', [7, 7, 7, 7], 0);
-    expect(ch.enemyRoster).toHaveLength(5);
+    expect(ch.enemyRoster).toHaveLength(4); // 5 in 0.48, 4 since 0.51
     expect(ch.enemyRoster[0].jobId).toBe('shaman');
     expect(ch.enemyRoster.every((e) => !map.tiles.find((t) => t.x === e.x && t.z === e.z)!.hazard)).toBe(true);
     expect(WORLD_NODES.some((n) => n.skirmishId === 'cinder')).toBe(true);
