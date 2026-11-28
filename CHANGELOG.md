@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.56.0] - 2026-11-28
+
+### Added
+- **Ground in Acts II and III:**
+  - **Greywatch Isle (V)** is a Hold battle: take the terrace under the lighthouse and hold it for 3 rounds, or rout them.
+  - **Stormbreak Cape (VI):** a clean well runs in the middle of the field in the rain.
+  - **Saltglass Shore (VII):** white-hot saltglass on the sand, and the Herald's wardens buried a snare and a smoke trap on the way up.
+  - **Frostfang Pass (VIII):** a hot spring steams on the road halfway up.
+  - **The Drowned City (IX):** the flooded streets on the flanks breathe foul air (miasma).
+  - Each chapter's dialogue points it out.
+
+### Developer
+- Chapter `ground` and an objective for V–IX. ADR 0061.
+- 1 new test (389 total).
+
 ## [0.55.0] - 2026-11-28
 
 ### Added

@@ -216,11 +216,15 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER V',
     subtitle: 'The Greywatch Light',
     mapId: 'greywatch_isle',
+    // 0.56.0: take the terrace under the light and hold it, or rout them
+    objective: { type: 'hold', rounds: 3 },
+    ground: [[6, 6], [7, 6], [8, 6], [9, 6], [6, 7], [7, 7], [8, 7], [9, 7]].map(([x, z]) => ({ x, z, zone: true })),
     rewardItemIds: ['runeblade'],
     introDialogue: [
       { speaker: 'Tidecaller Maelis', portrait: 'foe_summoner', portraitClass: '🌊', side: 'right', text: 'You are late, little knights. The light has shown me where the Drowned Regent sleeps. Stay, and watch the tide come in.' },
       { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'She holds the high ground the whole way up. Every terrace we take makes the next one easier. Except for that wyvern nesting on the light: walls mean nothing to it. And there is a basilisk sunning itself by the tower. Do not stand where it can see you.' },
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The shallows on either side are slow going, but nobody watches them. Her healer stands by the tower door: get to him, or we will kill the same cultists twice.' },
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The terrace under the light is the key to this rock. Hold it for three rounds and the tower is cut off, or put every one of them down.' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'And watch the ground. When she starts calling and the stones round you begin to glow, move. That is the sea she is calling up, and it does not miss.' }
     ],
     victoryDialogue: [
@@ -251,6 +255,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER VI',
     subtitle: 'The Drowned Regent',
     mapId: 'stormbreak_cape',
+    // 0.56.0: the old chapel's well still runs clean in the rain
+    ground: [{ x: 7, z: 10, hazard: 'spring' }, { x: 8, z: 10, hazard: 'spring' }],
     weather: 'rain', // the storm breaks on the cape (0.55.0)
     rewardItemIds: ['dawn_blade'],
     introDialogue: [
@@ -258,6 +264,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'It stopped being yours when they sealed you under the sea. Squad, with me!' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The chasm splits the climb. Pick a side and go together, or cross the rope bridge and take his guard in the flank.' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'He is still half drowned. Wound him and the old seal will drag at him... but it will make him furious first.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'The rain has put out every fire on the cape. But the old chapel\'s well still runs clean in the middle of the field: stand in it and it will mend you.' },
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'He did not come up alone. Barrow-stone that walks, dead lights off the water, and one of his old knights, still in its helm. Watch the lights: they will put you to sleep if you let them. The knight will not sleep at all.' }
     ],
     victoryDialogue: [
@@ -294,6 +301,12 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER VII',
     subtitle: 'The Saltglass Shore',
     mapId: 'saltglass_shore',
+    // 0.56.0: shards of saltglass, white-hot in the noon sun
+    // ...and the Herald's wardens buried snares in the sand on the way up
+    ground: [
+      ...[[4, 6], [5, 6], [5, 7], [10, 7], [11, 7], [10, 8]].map(([x, z]) => ({ x, z, hazard: 'embers' as const })),
+      { x: 7, z: 9, trap: 'snare' }, { x: 9, z: 10, trap: 'smoke' }
+    ],
     rewardItemIds: ['saltglass_blade'],
     recruit: { id: 'kestrel', name: 'Kestrel', jobId: 'tamer', level: 9 },
     introDialogue: [
@@ -301,6 +314,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'You came off that ship, so you are not with them. Good. They burned my village for a road to the old harbour. I know these dunes, and I know what lives in them.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then fight with us. Who is the Regent\'s daughter?' },
       { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'They call her the Pale Heir. Later. There is a basilisk in the dunes and a briar-thing in the wreck, and they will not wait for introductions.' },
+      { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'Mind where you step. The saltglass out on the sand is white-hot at noon, and the Herald\'s wardens bury snares on the way up. I can see the tracks; you can\'t.' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The channel splits the beach. Take the sandbar ford or the old steps; the Herald holds the high stones of the port.' }
     ],
     victoryDialogue: [
@@ -332,11 +346,14 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER VIII',
     subtitle: 'Frostfang Pass',
     mapId: 'frostfang_pass',
+    // 0.56.0: a hot spring steams in the pass
+    ground: [{ x: 7, z: 9, hazard: 'spring' }, { x: 8, z: 9, hazard: 'spring' }],
     weather: 'snow', // (0.55.0)
     introDialogue: [
       { speaker: 'Marshal Hale', portrait: 'foe_knight', portraitClass: '🛡', side: 'right', text: 'Far enough. Three hundred years my order has kept this pass for the true crown. We will keep it one more day.' },
       { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'Terraces all the way up, and the fort on top. The snow is deep off the road: two steps for one. Stay on the beaten track or take the west ledge.' },
       { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'There is a wyvern over the fort and wolves in the pines. And one of the drowned knights walks with them. The cold does not bother it.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Snow to the knees, and fire will not catch up here. There is a hot spring on the road halfway up: it will thaw you out and close your wounds.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then we climb fast. Squad, up the pass!' }
     ],
     victoryDialogue: [
@@ -369,6 +386,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER IX',
     subtitle: 'The Pale Heir',
     mapId: 'drowned_city',
+    // 0.56.0: the flooded streets on the flanks breathe foul air
+    ground: [[1, 9], [2, 9], [3, 9], [12, 9], [13, 9], [14, 9], [2, 10], [13, 10]].map(([x, z]) => ({ x, z, hazard: 'miasma' as const })),
     rewardItemIds: ['tidecrown'],
     epilogue: {
       title: 'THE SEA IS QUIET',
@@ -379,6 +398,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The chart called her the last of the line. It did not say she could call the sea.' },
       { speaker: 'Kestrel', portrait: 'kestrel', portraitClass: '🐾', side: 'left', text: 'The canals are silted with weed. Wade them and you are slow. The bridge in the east is the only dry way over.' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Her knights hold the stair to the dais. Take the plaza first, then go up together.' },
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'The flooded streets on either side stink of rot. Stay out of them, or the air will do her work for her.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'One more fight, and then everyone goes home. Squad, into the city!' }
     ],
     victoryDialogue: [
