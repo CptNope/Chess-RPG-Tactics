@@ -16,7 +16,7 @@ import { ActionContext, ActionEnd, ActionStep, runAction, walkInto } from './Act
 import { trapAt } from './Traps';
 import { callDue } from './Summons';
 import { sumPulses, TotemPulse } from './Totems';
-import { HazardPulse, holdGoal, zoneHolder, zoneKeys } from './Hazards';
+import { GroundChange, HazardPulse, holdGoal, tickGround, zoneHolder, zoneKeys } from './Hazards';
 import { encoreDue, endPerformance, isCentered } from './Performance';
 import { allianceOf, isFoe } from './Sides';
 import { seededRng } from './Rng';
@@ -119,6 +119,8 @@ export type BattleEvent =
   | { t: 'turn'; unit: string; round: number }
   | { t: 'tick'; unit: string; poison?: number; regen?: number; totem?: { heal: number; damage: number; statuses: string[] }; hazard?: HazardPulse; slept?: boolean; down?: boolean }
   | { t: 'hold'; round: number; held: number; holder: string | null }
+  /** The ground changed: a spell's embers, miasma or dousing, or its mark running out (0.50.0). */
+  | { t: 'ground'; tiles: GroundChange[] }
   | { t: 'call' | 'encore' | 'act'; unit: string; ability: string; x: number; z: number; hits: HitRecord[] }
   | { t: 'move'; unit: string; x: number; z: number }
   /** A foe's trap stopped a walk (0.49.0): who set it, what it did, and the Ranger's Ambush shot. */
@@ -198,6 +200,7 @@ export class Battle {
   private act(kind: 'call' | 'encore' | 'act', unit: Unit, ability: Ability, x: number, z: number, opts = {}): ActionEnd {
     const { steps, end } = runAction(this.ctx, unit, ability, x, z, opts);
     this.events.push({ t: kind, unit: unit.id, ability: ability.id, x, z, hits: record(steps) });
+    if (end.ground) this.events.push({ t: 'ground', tiles: end.ground });
     return end;
   }
 
@@ -216,7 +219,10 @@ export class Battle {
       if (r.poisonDamage || r.regenHeal || r.totems || r.hazard) this.events.push({ t: 'tick', unit: u.id, poison: r.poisonDamage, regen: r.regenHeal, totem: totemNote(r.totems), hazard: r.hazard, down: u.isDead || undefined });
       if (this.settle()) return null;
       if (noteTurn(this.rounds, u, this.units)) {
-        // A round ended: count it for a hold objective (0.48.0), then see if that won
+        // A round ended: the spells' marks on the ground count down (0.50.0)
+        const ground = tickGround(this.grid.mapData.tiles);
+        if (ground.length) this.events.push({ t: 'ground', tiles: ground });
+        // ...and it counts for a hold objective (0.48.0); then see if that won
         if (this.objective?.type === 'hold') {
           const holder = noteHold(this.rounds, this.units, this.objective, this.zone, this.hero);
           this.events.push({ t: 'hold', round: this.rounds.round - 1, held: this.rounds.held || 0, holder });

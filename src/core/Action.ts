@@ -16,6 +16,7 @@ import { endPerformance, isCentered, noFalloff, startPerformance } from './Perfo
 import { startCall } from './Summons';
 import { plantTotem, pulsesOn, Totem, TotemPulse } from './Totems';
 import { setTrapsAt, springTrap, Trap, trapAt, trapOnPath, TrapSprung } from './Traps';
+import { changeGround, GroundChange } from './Hazards';
 import { isAlly } from './Sides';
 import { BattleRules, earnsProgress } from './Rules';
 
@@ -72,6 +73,8 @@ export type ActionStep = ActionStart | ActionHit;
 
 export interface ActionEnd {
   anyKill: boolean;
+  /** Ground the spell changed: embers, miasma, or embers put out (0.50.0). */
+  ground?: GroundChange[];
   /** Units left down by this action. */
   kills: number;
   /** JP the caster earned for its job (0 when none). */
@@ -184,7 +187,12 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
     if (caster.isDead) break; // felled by a counter
   }
 
-  const end: ActionEnd = { anyKill: kills > 0, kills, jpGained: 0, levels: 0, summonLevels: 0 };
+  // Fire leaves embers, ice puts them out, a Poison cloud leaves miasma (0.50.0). A call being
+  // started changes nothing yet: the ground changes when it lands
+  const ground = calling ? [] : isCentered(ability)
+    ? changeGround((x, z) => ctx.grid.getTile(x, z), ability, caster.x, caster.z, { x: caster.x, z: caster.z })
+    : changeGround((x, z) => ctx.grid.getTile(x, z), ability, tx, tz);
+  const end: ActionEnd = { anyKill: kills > 0, kills, jpGained: 0, levels: 0, summonLevels: 0, ...(ground.length ? { ground } : {}) };
   if (!earnsProgress(ctx.rules, caster) || caster.isDead) return end;
   if (called && end.anyKill) {
     // A grand summon that lands pays out for its kills (the JP came when it was called)

@@ -50,7 +50,7 @@ import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { inReach, sumPulses, TotemPulse } from './core/Totems';
 import { trapAt } from './core/Traps';
-import { HAZARDS, HazardPulse, holdGoal, zoneHolder, zoneKeys } from './core/Hazards';
+import { GroundChange, HAZARDS, HazardPulse, holdGoal, SCORCH_ROUNDS, tickGround, zoneHolder, zoneKeys } from './core/Hazards';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
@@ -1191,7 +1191,7 @@ class TacticsGame {
   /** Shows a first-time tip, in story battles only (the Trials and the Workshop are for players who know). */
   private tip(id: TipId): void {
     if (this.battleOver || this.mode === 'trials' || this.mode === 'custom' || this.workshop?.isOpen) return;
-    if (this.turnManager?.activeUnit?.team !== 'player' && id !== 'fallen' && id !== 'enemyCall') return;
+    if (this.turnManager?.activeUnit?.team !== 'player' && id !== 'fallen' && id !== 'enemyCall' && id !== 'ground' && id !== 'trap') return;
     this.tutor.show(id);
   }
 
@@ -1505,6 +1505,7 @@ class TacticsGame {
   private async showTrap(u: Unit, t: TrapStep): Promise<void> {
     const s = t.sprung;
     const h = this.grid.getHeight(u.x, u.z);
+    if (u.team === 'player') this.tip('trap'); // the squad walked into an enemy's trap
     const NAMES: Record<string, string> = { snare: 'snare', spikes: 'spike trap', slumber: 'slumber trap', smoke: 'smoke trap' };
     SoundFX.playSwordSlash();
     this.scene.updateUnits(this.units);
@@ -1533,9 +1534,26 @@ class TacticsGame {
     await wait(450);
   }
 
+  /** Redraws and logs the ground a spell changed, or the spells' marks running out (0.50.0). */
+  private showGround(tiles: GroundChange[], why: 'spell' | 'douse' | 'fade'): void {
+    if (!tiles.length) return;
+    this.scene.refreshGround();
+    if (why === 'spell') this.tip('ground');
+    const embers = tiles.filter((t) => t.hazard === 'embers').length;
+    const miasma = tiles.filter((t) => t.hazard === 'miasma').length;
+    if (why === 'douse') this.ui.addLogEntry(`[GROUND] The cold puts out the embers on ${tiles.length} tile${tiles.length === 1 ? '' : 's'}, for now.`, 'spell');
+    else if (why === 'fade') this.ui.addLogEntry('[GROUND] The spells\' marks on the ground fade.', 'system');
+    else if (embers) this.ui.addLogEntry(`[GROUND] The fire leaves the ground burning (${embers} tile${embers === 1 ? '' : 's'}, ${SCORCH_ROUNDS} rounds).`, 'spell');
+    else if (miasma) this.ui.addLogEntry(`[GROUND] The poison cloud lingers as miasma for ${SCORCH_ROUNDS} rounds.`, 'spell');
+    const ht = this.scene.hoveredTile;
+    const tile = ht ? this.grid.getTile(ht.x, ht.z) : undefined;
+    if (tile) this.ui.updateTileInfo(tile.x, tile.z, tile.height, tile.terrain, tile.hazard ? HAZARDS[tile.hazard].name : undefined, tile.zone);
+  }
+
   /** Floats and logs what the ground did to a unit starting its turn (0.48.0). */
   private showHazard(u: Unit, p: HazardPulse | undefined): void {
     if (!p) return;
+    this.tip('ground');
     const h = this.grid.getHeight(u.x, u.z);
     if (p.damage) {
       this.scene.spawnFloatingDamage(u.x, h, u.z, `EMBERS -${p.damage}`, 'damage');
@@ -1702,6 +1720,7 @@ class TacticsGame {
 
     // Player progression: JP for the current job, EXP for acting and for kills
     const end = step.value;
+    if (end.ground) this.showGround(end.ground, ability.element === 'ice' ? 'douse' : 'spell');
     if (end.summonLevels > 0) this.ui.addLogEntry(`[LEVEL] ${caster.name} reached level ${caster.level}!`, 'system');
     if (end.jp) this.announceJobGain(caster, end.jp);
     if (end.levels > 0) {
@@ -2317,6 +2336,8 @@ class TacticsGame {
     const fresh = noteTurn(state, unit, this.units);
     this.round = state.round;
     if (fresh) {
+      // The spells' marks on the ground count down (0.50.0)
+      this.showGround(tickGround(this.grid.mapData.tiles), 'fade');
       const obj = this.currentChapter.objective;
       if (obj?.type === 'hold') {
         // A round ended: did the squad hold the marked ground alone? (0.48.0)

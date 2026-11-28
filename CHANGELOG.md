@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.50.0] - 2026-11-28
+
+### Added
+- **Spells change the ground.**
+  - **Fire** spells that hit an area (Fire, Firestorm, Dragon Breath, the fire summon, Meteor) leave **embers** burning for 2 rounds: anyone who starts a turn there takes 10% of max HP.
+  - **Ice** spells that hit an area (Blizzard, Undine, Tidewyrm) **put embers out** for 3 rounds, even a map's own (the Cinder Caldera's come back afterwards).
+  - **Poison Cloud** leaves **miasma** for 2 rounds.
+  - **Exceptions:** water and snow don't burn, springs are never covered, and miasma won't settle on fire.
+- Enemies and your AUTO units weigh it: fire under foes is worth a little more, fire under their own side a lot less, and ice gets used to put out fires under allies.
+- First-time tips explain burning ground and hidden traps.
+
+### Developer
+- `groundFrom`, `changeGround`, `tickGround` and `TileData.temp` in `Hazards.ts`; `ActionEnd.ground`; the battle's `ground` event; `groundWorth` in the AI. ADR 0055.
+- 6 new tests (361 total).
+
 ## [0.49.0] - 2026-11-28
 
 ### Added

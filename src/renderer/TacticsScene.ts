@@ -516,6 +516,11 @@ export class TacticsScene {
    * Hazards and the hold zone (0.48.0): flickering embers, drifting miasma, a rippling spring,
    * and a bright rim around the zone (gold, green while the squad holds it, red while a foe does).
    */
+  /** Redraws hazards after a spell changes the ground or its mark runs out (0.50.0). */
+  public refreshGround(): void {
+    this.buildGround();
+  }
+
   private buildGround(): void {
     for (const c of [...this.groundGroup.children]) this.groundGroup.remove(c);
     for (const m of this.groundMats) m.dispose();
