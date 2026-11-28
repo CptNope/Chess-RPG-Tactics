@@ -105,6 +105,7 @@ timeline
     0.54.0 : 0059 The Sapper and earthworks
     0.55.0 : 0060 Weather
     0.56.0 : 0061 Ground in Acts II and III
+    0.57.0 : 0062 Mirror duels
 ```
 
 | # | Decision | Release |
@@ -162,6 +163,7 @@ timeline
 | [0059](adr/0059-sapper-and-earthworks.md) | The Sapper: barricades (`TileData.works`), earth raised and lowered, demolition; `scoreWorks`; chapters carry their own ground (`CampaignChapter.ground`), fixing 0.53's leak onto shared maps | 0.54.0 |
 | [0060](adr/0060-weather.md) | Rain, snow and fog for a whole battle on the map copy (`MapData.weather`): element damage, no embers in rain, Move −1 in snow, −15 to hit from afar in fog; Chapters VI and VIII, two side battles, Trials, Workshop | 0.55.0 |
 | [0061](adr/0061-ground-in-act-ii-and-iii.md) | Chapters V–IX get ground of their own: a hold at Greywatch, springs in VI and VIII, saltglass and traps in VII, miasma in IX; tuned per chapter | 0.56.0 |
+| [0062](adr/0062-mirror-duels.md) | `npm run duels`: every job against every other, 3 v 3 on flat ground; first rankings at Lv 5 and 10; an Undermine bug it found; Knight and Dragoon flagged, no balance change yet | 0.57.0 |
 | [0039](adr/0039-smarter-enemies.md) | A threat map lets the planner think a turn ahead (light on Normal, full on Hard and AUTO); enemies carry item pouches by role; leftovers are salvaged | 0.31.0 |
 | [0038](adr/0038-equipment-rules.md) | Each job has weapon types and armor weights it can use; starting gear complies, so balance holds; job changes swap gear; old saves fixed on load | 0.30.0 |
 | [0034](adr/0034-monsters.md) | Monsters are jobs flagged `monster`, with innate statuses and immunities instead of gear, their own art, and player job lists filtered | 0.26.0 |

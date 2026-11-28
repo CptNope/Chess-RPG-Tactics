@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.57.0] - 2026-11-28
+
+### Fixed
+- A Sapper's **Undermine** can now strike a foe standing on ground that's already as low as it goes (the blow lands; the ground stays put). Before, the tile couldn't be picked, and an enemy Sapper trying it could stall the battle sim.
+
+### Developer
+- **Mirror duels** (`npm run duels`): every job against every other, three of a kind a side, on flat ground. It ranks raw strength with maps and story taken out, and it found the Undermine bug. First results and what they suggest are in ADR 0062. There are no balance changes in this release.
+- One new check in the Sapper tests (389 total).
+
 ## [0.56.0] - 2026-11-28
 
 ### Added

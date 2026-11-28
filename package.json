@@ -1,7 +1,7 @@
 {
   "name": "chess-rpg-tactics",
   "private": true,
-  "version": "0.56.0",
+  "version": "0.57.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,7 @@
     "test:build": "vitest run && node scripts/check-dist.mjs",
     "build:itch": "npm run build && node scripts/package-itch.mjs",
     "balance": "vite-node scripts/balance-sim.ts",
+    "duels": "vite-node scripts/duels.ts",
     "docs:gen": "vite-node scripts/gen-docs.ts",
     "docs:check": "vite-node scripts/gen-docs.ts --check",
     "playtest": "node scripts/playtest.mjs"

@@ -79,6 +79,9 @@ describe('the Sapper (0.54.0)', () => {
     expect(battle.check({ moveTo: { x: 3, z: 4 }, ability: action(sp, 'sp_barricade'), target: { x: 2, z: 4 }, facing: 'N' })).toBe('No room for a barricade there.');
     expect(battle.check({ moveTo: { x: 3, z: 4 }, ability: action(sp, 'sp_barricade'), target: { x: 3, z: 4 }, facing: 'N' })).toBe('No room for a barricade there.');
     expect(battle.check({ moveTo: { x: 3, z: 5 }, ability: action(sp, 'sp_barricade'), target: { x: 3, z: 4 }, facing: 'N' })).toBeNull(); // stepping off frees it
+    // Undermine on ground that can't sink any further still strikes (the mirror duels found it refused, 0.57.0)
+    grid.getTile(2, 4)!.height = 0.5; grid.getTile(3, 4)!.height = 0.5;
+    expect(battle.check({ moveTo: { x: 3, z: 4 }, ability: action(sp, 'sp_undermine'), target: { x: 2, z: 4 }, facing: 'W' })).toBeNull();
   });
 
   it('Fieldworks: barricades stand 5 rounds and earth moves 1.5; Blasting Charge brings walls down and burns', () => {

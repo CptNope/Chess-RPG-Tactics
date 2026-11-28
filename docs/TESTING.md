@@ -149,6 +149,17 @@ It leaves out reactions, gear upgrades and human play, so read it relatively: co
 
 The Final Chapter is near 0% on pure AUTO in 0.9 as well; the campaign bot clears it with the gear it has collected by then, after a few retries.
 
+### Mirror duels (`npm run duels`, 0.57)
+
+`scripts/duels.ts` sets every job against every other, three of a kind a side, on a flat 12×12 field: no map, no story, no squad mix. Each unit knows every action of its job, wears its starting gear and, from Lv 4, has the job's veteran reaction and support. The sides swap ends every battle, both play the same careful AI with no items, and a battle that runs past 400 turns is a draw. It prints a ranking (share of wins, best and worst matchup); `--matrix` adds every pairing.
+
+```bash
+npm run duels -- 20 10              # every job at Lv 10, 20 battles per pair (~10 minutes)
+npm run duels -- 20 5 sapper,monk   # just these, at Lv 5
+```
+
+Read it as raw strength in a stand-up fight. Jobs that win by support, position or the ground (Bard, Dancer, Shaman, Sapper) look weaker here than in a campaign squad, and the chapter sweeps (`SWAP`) remain the test for those. ADR 0062 has the first results.
+
 ---
 
 ## 4. Manual checklist (before a release)
