@@ -50,6 +50,7 @@ import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { inReach, sumPulses, TotemPulse } from './core/Totems';
 import { layMapTraps, trapAt } from './core/Traps';
+import { applyWeather, WEATHER } from './core/Weather';
 import { BARRICADE_ROUNDS, canBuildAt, canShape, FIELDWORKS, FIELDWORKS_ROUNDS, tickWorks, WorkChange } from './core/Earthworks';
 import { bodyAt, raisableAt, settleFallenThralls, worksOnBodies } from './core/Necromancy';
 import { GroundChange, HAZARDS, HazardPulse, holdGoal, markGround, SCORCH_ROUNDS, tickGround, zoneHolder, zoneKeys } from './core/Hazards';
@@ -333,6 +334,26 @@ class TacticsGame {
 
   private applyAtmosphereForMap(): void {
     this.scene.vfx.setWeatherTheme(this.grid.mapData.theme);
+    const md = this.grid.mapData;
+    this.scene.vfx.setWeather(md.weather, md.width, md.depth); // (0.55.0)
+    this.showWeatherBadge();
+  }
+
+  /** A small tag under the turn order naming the battle's weather (0.55.0). */
+  private showWeatherBadge(): void {
+    let el = document.getElementById('weather-badge');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'weather-badge';
+      el.setAttribute('role', 'status');
+      document.body.appendChild(el);
+    }
+    const w = this.grid.mapData.weather;
+    el.classList.toggle('hidden', !w || !!this.workshop?.isOpen);
+    if (!w) return;
+    el.textContent = `${WEATHER[w].icon} ${WEATHER[w].name.toUpperCase()}`;
+    el.title = WEATHER[w].blurb;
+    el.dataset.weather = w;
   }
 
   /** The squad members fighting this battle (0.25.0). */
@@ -388,6 +409,7 @@ class TacticsGame {
     // Workshop chapters carry their own battlefield (a copy, so replays start fresh)
     this.grid = new BattleGrid(chapter.mapData && !mapOverride ? JSON.parse(JSON.stringify(chapter.mapData)) : (MAPS[mapId] || MAPS.river_ruins)());
     if (!mapOverride) markGround(this.grid.mapData.tiles, this.grid.mapData.width, chapter.ground); // the chapter's own ground (0.54.0)
+    applyWeather(this.grid.mapData, mapOverride ? undefined : chapter.weather ?? chapter.mapData?.weather); // (0.55.0)
 
     if (chapter.recruit && !this.squad.some((u) => u.id === chapter.recruit!.id)) {
       const r = chapter.recruit;
@@ -1021,6 +1043,8 @@ class TacticsGame {
     this.round = 1;
     this.roundActed.clear();
     this.held = 0;
+    const wx = this.grid.mapData.weather;
+    if (wx) this.ui.addLogEntry(`[WEATHER] ${WEATHER[wx].name}: ${WEATHER[wx].blurb}`, 'system'); // (0.55.0)
     const obj = this.currentChapter.objective;
     if (obj?.type === 'boss') this.ui.addLogEntry(`[OBJECTIVE] Defeat ${boss ? boss.name : 'the boss'}.`, 'system');
     else if (obj?.type === 'survive') this.ui.addLogEntry(`[OBJECTIVE] Hold out for ${obj.rounds || 6} rounds. Round 1 begins!`, 'system');

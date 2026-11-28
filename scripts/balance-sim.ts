@@ -46,6 +46,7 @@ import { ITEMS as ITEM_DATA } from '../src/data/items';
 import type { Unit } from '../src/core/types';
 import { layMapTraps } from '../src/core/Traps';
 import { markGround } from '../src/core/Hazards';
+import { applyWeather, WeatherKind } from '../src/core/Weather';
 
 function squad(level: number, bria: boolean, sable = false, kestrel = false): Unit[] {
   const s = [
@@ -89,6 +90,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
   if (sk) chId = 'chapter_5'; // the party that is out by then
   const map = MAPS[ch.mapId]();
   markGround(map.tiles, map.width, ch.ground); // the chapter's own ground (0.54.0)
+  applyWeather(map, process.env.WEATHER === 'off' ? undefined : (process.env.WEATHER as WeatherKind | undefined) || ch.weather); // (0.55.0); WEATHER=off|rain|snow|fog to try one
   const grid = new BattleGrid(map);
   const enemies = ch.enemyRoster.map((e, i) => {
     const u = JobSystem.createUnit(`e${i}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', enemyLevel(e.level, DIFF));

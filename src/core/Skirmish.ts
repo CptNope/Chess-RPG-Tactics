@@ -29,6 +29,8 @@ export interface SkirmishDef {
   size?: number;
   /** How far south the enemy deploys, in rows from the north edge (default: the northern quarter). 0.48.0 */
   deployRows?: number;
+  /** The weather it's fought in (0.55.0). */
+  weather?: import('./Weather').WeatherKind;
 }
 
 export const SKIRMISHES: Record<string, SkirmishDef> = {
@@ -60,6 +62,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     jobs: [['knight', 'Raider'], ['dragoon', 'Lancer'], ['archer', 'Marksman'], ['ninja', 'Shade'], ['spellblade', 'Duelist'], ['geomancer', 'Warden'], ['sapper', 'Raider Sapper']], // the sapper since 0.54.0
     opensAfter: ['chapter_2a', 'chapter_2b', 'chapter_3'], // chapter_3 covers old saves that don't record which road was taken
     objective: { type: 'survive', rounds: 6 },
+    weather: 'rain', // (0.55.0)
     intro: 'Raiders come up the ridge in the dark. Hold the watchfire until the garrison arrives.',
     trophy: 'watchfire_helm'
   },
@@ -79,6 +82,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     id: 'barrow',
     name: 'Briar Barrow',
     mapId: 'gloomy_swamp',
+    weather: 'fog', // (0.55.0)
     foe: 'Barrow Things',
     jobs: [['bone_knight', 'Barrow Guard'], ['basilisk', 'Basilisk'], ['thornling', 'Thornling'], ['bone_knight', 'Bone Knight'], ['thornling', 'Briar Thornling'], ['wisp', 'Barrow Wisp'], ['frost_sprite', 'Barrow Rime']], // the sprite since 0.51.0
     opensAfter: ['chapter_3'],
@@ -174,7 +178,8 @@ export function buildSkirmish(id: string, squadLevels: number[], wins: number): 
     introDialogue: [{ speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: def.intro }],
     victoryDialogue: [],
     enemyRoster: roster,
-    objective: def.objective
+    objective: def.objective,
+    ...(def.weather ? { weather: def.weather } : {})
   };
 }
 

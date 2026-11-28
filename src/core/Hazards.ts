@@ -15,6 +15,7 @@
  */
 import { BattleObjective, GroundMark, StatusEffectType, TileData, Unit } from './types';
 import { allianceOf } from './Sides';
+import { canBurn, WeatherKind } from './Weather';
 import { JOBS } from '../data/jobs';
 
 export type HazardKind = 'embers' | 'miasma' | 'spring';
@@ -132,9 +133,10 @@ function setTemp(tile: TileData, hazard: HazardKind | undefined, rounds: number)
  * Embers never take on water or snow, nothing overwrites a spring, and `spare` (the caster, for a
  * burst around itself) is left alone. Returns the tiles changed.
  */
-export function changeGround(getTile: (x: number, z: number) => TileData | undefined, ability: Parameters<typeof groundFrom>[0], cx: number, cz: number, spare?: { x: number; z: number }): GroundChange[] {
+export function changeGround(getTile: (x: number, z: number) => TileData | undefined, ability: Parameters<typeof groundFrom>[0], cx: number, cz: number, spare?: { x: number; z: number }, weather?: WeatherKind): GroundChange[] {
   const effect = groundFrom(ability);
   if (!effect) return [];
+  if (effect === 'embers' && !canBurn(weather)) return []; // nothing burns in the rain (0.55.0)
   const out: GroundChange[] = [];
   for (let dz = -ability.aoe; dz <= ability.aoe; dz++) for (let dx = -ability.aoe; dx <= ability.aoe; dx++) {
     if (Math.abs(dx) + Math.abs(dz) > ability.aoe) continue;

@@ -344,6 +344,8 @@ export interface CampaignChapter {
    * Trials floor fought there had them too.
    */
   ground?: GroundMark[];
+  /** The weather it's fought in (0.55.0): rain, snow or fog. Clear when unset. */
+  weather?: import('./Weather').WeatherKind;
   /** What the closing screen says when this is the last chapter so far (0.34.0). */
   epilogue?: { title: string; text: string };
 }

@@ -103,6 +103,7 @@ timeline
     0.52.0 : 0057 The Necromancer and thralls
     0.53.0 : 0058 Ground in the story
     0.54.0 : 0059 The Sapper and earthworks
+    0.55.0 : 0060 Weather
 ```
 
 | # | Decision | Release |
@@ -158,6 +159,7 @@ timeline
 | [0057](adr/0057-necromancer-and-thralls.md) | The Necromancer raises fallen foes as thralls (40% HP, 3 turns, then spent) and bursts bodies; enemy Necromancers raise your fallen; `crumble` events; Soul Siphon gets the damage taken | 0.52.0 |
 | [0058](adr/0058-ground-in-the-story.md) | Hazards in II-A and IV; Chapter II-B is a Hold battle with traps on the approach (`TileData.trap`, `layMapTraps`); the enemy guards a zone (`guardZone`); Workshop trap painting and `^` link cells | 0.53.0 |
 | [0059](adr/0059-sapper-and-earthworks.md) | The Sapper: barricades (`TileData.works`), earth raised and lowered, demolition; `scoreWorks`; chapters carry their own ground (`CampaignChapter.ground`), fixing 0.53's leak onto shared maps | 0.54.0 |
+| [0060](adr/0060-weather.md) | Rain, snow and fog for a whole battle on the map copy (`MapData.weather`): element damage, no embers in rain, Move −1 in snow, −15 to hit from afar in fog; Chapters VI and VIII, two side battles, Trials, Workshop | 0.55.0 |
 | [0039](adr/0039-smarter-enemies.md) | A threat map lets the planner think a turn ahead (light on Normal, full on Hard and AUTO); enemies carry item pouches by role; leftovers are salvaged | 0.31.0 |
 | [0038](adr/0038-equipment-rules.md) | Each job has weapon types and armor weights it can use; starting gear complies, so balance holds; job changes swap gear; old saves fixed on load | 0.30.0 |
 | [0034](adr/0034-monsters.md) | Monsters are jobs flagged `monster`, with innate statuses and immunities instead of gear, their own art, and player job lists filtered | 0.26.0 |

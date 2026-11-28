@@ -2,6 +2,7 @@ import { EnemySpawn, CampaignChapter } from './types';
 import { MAPS } from '../data/maps';
 import { RARE_DROP_POOL } from '../data/items';
 import { seededRng } from './Rng';
+import type { WeatherKind } from './Weather';
 
 /** Moved to Rng.ts in 0.41.0; re-exported for older imports. */
 export { seededRng } from './Rng';
@@ -37,6 +38,13 @@ export const TRIAL_DEEPER_MONSTERS_FROM = 13;
 /** Bosses appear every fifth floor. */
 export function isBossFloor(floor: number): boolean {
   return floor % 5 === 0;
+}
+
+/** From floor 5, half the floors have weather (0.55.0): rain, fog and snow in turn. */
+export const TRIAL_WEATHER_FROM = 5;
+export function trialWeather(floor: number): WeatherKind | undefined {
+  if (floor < TRIAL_WEATHER_FROM) return undefined;
+  return ([undefined, 'rain', undefined, 'fog', undefined, 'snow'] as const)[floor % 6];
 }
 
 /** Builds the chapter definition for a Trials floor (floor >= 1). */
@@ -92,7 +100,8 @@ export function buildTrialFloor(floor: number): CampaignChapter {
     mapId,
     introDialogue: [],
     victoryDialogue: [],
-    enemyRoster: roster
+    enemyRoster: roster,
+    ...(trialWeather(floor) ? { weather: trialWeather(floor) } : {})
   };
 }
 

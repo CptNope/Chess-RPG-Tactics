@@ -26,6 +26,7 @@ import { SIDE_STORIES } from '../src/core/SideStory';
 import { STARTING_GIL, SHOP_PRICE_CAP, UNIQUE_ITEMS, shopStock, ShopProgress, resaleValue } from '../src/core/Economy';
 import { CONSUMABLES, MAX_STACK, STARTING_INVENTORY, consumableStock } from '../src/data/consumables';
 import { SEA_PORTS, WORLD_NODES, WORLD_ROADS, worldNode } from '../src/core/World';
+import { WEATHER } from '../src/core/Weather';
 
 const OUT = path.resolve('docs/CONTENT_REFERENCE.md');
 const lines: string[] = [];
@@ -403,15 +404,15 @@ for (const c of chapters) {
 }
 w('```');
 w();
-w('| Chapter | Map | Goal | Ground (0.53) | Enemies | Boss | Recruit | Win reward | Branch rewards |');
-w('| :--- | :--- | :--- | :--- | :---: | :--- | :--- | :--- | :--- |');
+w('| Chapter | Map | Goal | Ground (0.53) | Weather (0.55) | Enemies | Boss | Recruit | Win reward | Branch rewards |');
+w('| :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- | :--- | :--- |');
 for (const c of chapters) {
   const boss = c.enemyRoster.find((e) => e.isBoss);
   const branch = (c.choices || []).map((o) => `${o.rewardItemIds?.map(itemName).join(' + ')}`).join(' / ') || '—';
   const marks: Record<string, number> = {};
   for (const m of c.ground ?? []) for (const k of [m.hazard, m.zone ? 'hold zone' : '', m.trap ? `${m.trap} trap` : '']) if (k) marks[k] = (marks[k] || 0) + 1;
   const goal = !c.objective || c.objective.type === 'rout' ? 'Rout' : c.objective.type === 'boss' ? 'Boss' : c.objective.type === 'survive' ? `Survive ${c.objective.rounds || 6}` : `Hold ${c.objective.rounds || 3}, or rout`;
-  w(`| **${c.title}**: ${c.subtitle} | ${MAPS[c.mapId]().name} | ${goal} | ${Object.entries(marks).map(([k, n]) => `${k} ${n}`).join(', ') || '—'} | ${c.enemyRoster.length} | ${boss ? `${boss.name} (${jobName(boss.jobId)} L${boss.level})` : '—'} | ${c.recruit ? `${c.recruit.name} (${jobName(c.recruit.jobId)})` : '—'} | ${(c.rewardItemIds || []).map(itemName).join(', ') || '—'} | ${branch} |`);
+  w(`| **${c.title}**: ${c.subtitle} | ${MAPS[c.mapId]().name} | ${goal} | ${Object.entries(marks).map(([k, n]) => `${k} ${n}`).join(', ') || '—'} | ${c.weather ? WEATHER[c.weather].name : '—'} | ${c.enemyRoster.length} | ${boss ? `${boss.name} (${jobName(boss.jobId)} L${boss.level})` : '—'} | ${c.recruit ? `${c.recruit.name} (${jobName(c.recruit.jobId)})` : '—'} | ${(c.rewardItemIds || []).map(itemName).join(', ') || '—'} | ${branch} |`);
 }
 w();
 for (const c of chapters) {

@@ -305,6 +305,12 @@ export class TacticsScene {
     const extra = Math.max(0, Math.hypot(md.width, md.depth) / 2 - 8);
     this.scene.fog = new THREE.Fog(p.fog, p.fogNear + extra, p.fogFar + extra * 1.5);
     this.renderer.toneMappingExposure = p.exposure;
+    // Weather (0.55.0): fog closes in, rain dims the light
+    if (md.weather === 'fog') this.scene.fog = new THREE.Fog(new THREE.Color(p.fog).lerp(new THREE.Color(0xb8c2cc), 0.6), 24 + extra, 58 + extra * 1.5);
+    if (md.weather === 'rain') {
+      this.scene.fog = new THREE.Fog(new THREE.Color(p.fog).lerp(new THREE.Color(0x4b5563), 0.5), p.fogNear - 6 + extra, p.fogFar - 10 + extra * 1.5);
+      this.renderer.toneMappingExposure = p.exposure * 0.82;
+    }
 
     this.hemiLight.color.setHex(p.hemiSky);
     this.hemiLight.groundColor.setHex(p.hemiGround);

@@ -7,6 +7,7 @@
  */
 import { HAZARD_KINDS, HazardKind, HOLD_ROUNDS, markGround } from './Hazards';
 import { TRAP_KINDS, TrapKind } from './Traps';
+import { WEATHER_KINDS, WeatherKind } from './Weather';
 import { MapData, MAPS, MapBuilder, spawnsFor } from '../data/maps';
 import { JOBS } from '../data/jobs';
 import { ITEMS } from '../data/items';
@@ -119,6 +120,7 @@ export function scenarioFromChapter(ch: CampaignChapter): Scenario {
   s.rewardItemIds = [...(ch.rewardItemIds || [])];
   s.objective = ch.objective ? clone(ch.objective) : { type: 'rout' };
   markGround(s.map.tiles, s.map.width, ch.ground); // the chapter's own ground comes along (0.54.0)
+  if (ch.weather) s.map.weather = ch.weather; // ...and its weather (0.55.0)
   return s;
 }
 
@@ -300,7 +302,9 @@ export function sanitizeScenario(raw: unknown): Scenario {
     width,
     depth,
     tiles,
-    playerSpawns
+    playerSpawns,
+    // The battle's weather (0.55.0)
+    ...(WEATHER_KINDS.includes(rawMap.weather as WeatherKind) ? { weather: rawMap.weather as WeatherKind } : {})
   };
 
   const enemySeen = new Set<string>();

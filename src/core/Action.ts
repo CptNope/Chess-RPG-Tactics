@@ -122,7 +122,8 @@ export function forecastFor(grid: BattleGrid, attacker: Unit, target: Unit, abil
     grid.getHeight(attacker.x, attacker.z),
     grid.getHeight(target.x, target.z),
     grid.getTile(target.x, target.z)?.terrain,
-    isSplash
+    isSplash,
+    grid.mapData.weather
   );
 }
 
@@ -208,8 +209,8 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
   // Fire leaves embers, ice puts them out, a Poison cloud leaves miasma (0.50.0). A call being
   // started changes nothing yet: the ground changes when it lands
   const ground = calling ? [] : isCentered(ability)
-    ? changeGround((x, z) => ctx.grid.getTile(x, z), ability, caster.x, caster.z, { x: caster.x, z: caster.z })
-    : changeGround((x, z) => ctx.grid.getTile(x, z), ability, tx, tz);
+    ? changeGround((x, z) => ctx.grid.getTile(x, z), ability, caster.x, caster.z, { x: caster.x, z: caster.z }, ctx.grid.mapData.weather)
+    : changeGround((x, z) => ctx.grid.getTile(x, z), ability, tx, tz, undefined, ctx.grid.mapData.weather);
   // A Sapper's work goes in after the blows land, so Undermine hurts from the old height (0.54.0)
   const works = calling ? [] : doWorks(caster, ability, (x, z) => ctx.grid.getTile(x, z), ctx.units, tx, tz);
   const end: ActionEnd = { anyKill: kills > 0, kills, jpGained: 0, levels: 0, summonLevels: 0, ...(ground.length ? { ground } : {}), ...(works.length ? { works } : {}) };
@@ -266,7 +267,7 @@ export function walkInto(ctx: ActionContext, mover: Unit, to: { x: number; z: nu
   if (!mover.isDead && !o.isDead && awake && o.equippedAbilities.reaction === 'rg_ambush') {
     const shot = JobSystem.getCombatActionAbilities(o).find((a) => a.id === 'basic_attack');
     if (shot && ctx.grid.canTarget(o.x, o.z, mover.x, mover.z, shot.range, shot.heightTolerance, false)) {
-      const f = CombatEngine.getForecast(o, mover, shot, ctx.grid.getHeight(o.x, o.z), ctx.grid.getHeight(mover.x, mover.z), ctx.grid.getTile(mover.x, mover.z)?.terrain);
+      const f = CombatEngine.getForecast(o, mover, shot, ctx.grid.getHeight(o.x, o.z), ctx.grid.getHeight(mover.x, mover.z), ctx.grid.getTile(mover.x, mover.z)?.terrain, false, ctx.grid.mapData.weather);
       ambush = CombatEngine.executeAttack(f, ctx.rng);
     }
   }

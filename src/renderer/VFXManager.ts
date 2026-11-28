@@ -11,6 +11,11 @@ export class VFXManager {
   private ambientCount: number = 200;
   public currentTheme: MapData['theme'] = 'day';
 
+  // Weather (0.55.0): rain streaks or falling snow over the battlefield
+  private weatherParticles: THREE.Points | null = null;
+  private weatherKind: 'rain' | 'snow' | null = null;
+  private weatherBounds = { w: 16, d: 16 };
+
   // Camera Trauma / Shake
   public cameraTrauma: number = 0;
   public cameraShakeOffset: THREE.Vector3 = new THREE.Vector3();
@@ -29,6 +34,39 @@ export class VFXManager {
       this.ambientParticles = null;
     }
     this.initAmbientParticles(theme);
+  }
+
+  /** Rain or snow falling over a w×d battlefield; anything else clears it (0.55.0). */
+  public setWeather(kind: string | undefined, w: number, d: number): void {
+    if (this.weatherParticles) {
+      this.scene.remove(this.weatherParticles);
+      this.weatherParticles.geometry.dispose();
+      (this.weatherParticles.material as THREE.Material).dispose();
+      this.weatherParticles = null;
+    }
+    this.weatherKind = kind === 'rain' || kind === 'snow' ? kind : null;
+    if (!this.weatherKind) return;
+    this.weatherBounds = { w, d };
+    const rain = this.weatherKind === 'rain';
+    const count = this.reduceMotion ? 120 : rain ? 700 : 420;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = Math.random() * (w + 4) - 2;
+      positions[i * 3 + 1] = Math.random() * 12;
+      positions[i * 3 + 2] = Math.random() * (d + 4) - 2;
+    }
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      size: rain ? 0.13 : 0.2,
+      color: rain ? 0xa5c8f0 : 0xffffff,
+      transparent: true,
+      opacity: rain ? 0.75 : 0.9,
+      depthWrite: false
+    });
+    this.weatherParticles = new THREE.Points(geom, mat);
+    this.weatherParticles.renderOrder = 20;
+    this.scene.add(this.weatherParticles);
   }
 
   private initAmbientParticles(theme: MapData['theme']): void {
@@ -101,6 +139,25 @@ export class VFXManager {
         posAttr.setXYZ(i, x, y, z);
       }
       posAttr.needsUpdate = true;
+    }
+
+    // 1b. Rain falls fast and slanted, snow drifts down (0.55.0)
+    if (this.weatherParticles && this.weatherKind) {
+      const pos = this.weatherParticles.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const rain = this.weatherKind === 'rain';
+      const t = Date.now() * 0.001;
+      for (let i = 0; i < pos.count; i++) {
+        let y = pos.getY(i) - delta * (rain ? 14 : 1.1);
+        let x = pos.getX(i) + delta * (rain ? 2.2 : Math.sin(t * 0.7 + i) * 0.4);
+        let z = pos.getZ(i) + (rain ? 0 : delta * Math.cos(t * 0.5 + i * 1.3) * 0.3);
+        if (y < 0) {
+          y = 12;
+          x = Math.random() * (this.weatherBounds.w + 4) - 2;
+          z = Math.random() * (this.weatherBounds.d + 4) - 2;
+        }
+        pos.setXYZ(i, x, y, z);
+      }
+      pos.needsUpdate = true;
     }
 
     // 2. Update Camera Shake / Trauma Decay
