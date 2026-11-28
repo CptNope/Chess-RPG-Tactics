@@ -151,6 +151,11 @@ export function createFortressNightMap(): MapData {
   // Barracks rubble
   b.set(2, 5, 2.4, 'stone', false).set(11, 6, 2.4, 'stone', false);
 
+  // 0.53.0: the gate and the yard just inside are the ground Chapter II-B asks the squad to
+  // hold, and the defenders hid traps on the approach
+  b.each((t) => { if (t.x >= 7 && t.x <= 8 && t.z >= 8 && t.z <= 9) t.zone = true; });
+  for (const [x, z, kind] of [[7, 11, 'snare'], [9, 10, 'spikes']] as const) b.get(x, z)!.trap = kind;
+
   return b.build('night_fortress', 'Night Battlement', 'night', SOUTH_SPAWNS);
 }
 
@@ -181,6 +186,11 @@ export function createSwampMap(): MapData {
   // Dead-tree stumps and a pond
   for (const [x, z] of [[4, 8], [10, 7], [13, 6], [2, 13], [9, 13]]) b.set(x, z, 2.2, 'dirt', false);
   b.rect(11, 8, 13, 9, 0.4, 'water');
+
+  // 0.53.0: the warlock's poison pools by his shrine, and a clean spring Bria knows still runs on
+  // the middle island
+  for (const [x, z] of [[5, 0], [5, 1], [6, 1], [9, 0], [10, 0], [10, 1]]) b.get(x, z)!.hazard = 'miasma';
+  for (const [x, z] of [[6, 7], [5, 7]]) b.get(x, z)!.hazard = 'spring';
 
   return b.build('gloomy_swamp', 'Gloomy Mire', 'swamp', [
     { x: 6, z: 14 }, { x: 7, z: 14 }, { x: 8, z: 14 }, { x: 7, z: 15 }, { x: 6, z: 15 }, { x: 8, z: 15 }
@@ -251,6 +261,12 @@ export function createHarborMap(): MapData {
   b.set(10, 10, 1.5, 'stone', true);
   b.rect(0, 10, 2, 11, 3.2, 'stone', false);
   for (const [x, z] of [[5, 10], [6, 13], [9, 13], [4, 5], [11, 4]]) b.set(x, z, 1.9, 'wood', false);
+
+  // 0.53.0: fire on the water. The end of the west pier and a warehouse on the quay are burning
+  for (const [x, z] of [[2, 6], [3, 6], [2, 7], [3, 7], [12, 13], [13, 13], [13, 14]]) {
+    const t = b.get(x, z)!;
+    t.hazard = 'embers';
+  }
 
   return b.build('ember_harbor', 'Emberwick Harbor', 'day', SOUTH_SPAWNS);
 }

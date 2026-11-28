@@ -44,6 +44,7 @@ import { CAMPAIGN_CHAPTERS } from '../src/data/campaign';
 import { JOBS } from '../src/data/jobs';
 import { ITEMS as ITEM_DATA } from '../src/data/items';
 import type { Unit } from '../src/core/types';
+import { layMapTraps } from '../src/core/Traps';
 
 function squad(level: number, bria: boolean, sable = false, kestrel = false): Unit[] {
   const s = [
@@ -94,6 +95,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
     if (!OLD_AI && ITEMS) u.pouch = enemyPouch(u, i, DIFF);
     return u;
   });
+  layMapTraps(enemies, map.tiles); // traps laid with the map (0.53.0)
   const sq = squad(level, chId !== 'chapter_1', /chapter_[456]/.test(chId) || (/chapter_[789]/.test(chId) && process.env.KESTREL === '0'), /chapter_[789]/.test(chId) && process.env.KESTREL !== '0'); // a party of six: Kestrel takes Sable's place in Act III
   const spawns = spawnsFor(map);
   sq.forEach((m, i) => JobSystem.resetForBattle(m, spawns[i % spawns.length].x, spawns[i % spawns.length].z));
@@ -113,7 +115,8 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
       caution: OLD_AI ? false : foe ? (CAUTION === 'both' || CAUTION === 'enemy' ? enemyCaution(DIFF) : false) : (CAUTION === 'both' || CAUTION === 'player' ? 'full' : false),
       pouch: foe ? u.pouch : undefined,
       holdBack: !foe, // the squad on AUTO, as in the game
-      zone: ch.objective?.type === 'hold' ? b.zone : undefined // both sides go for a hold objective's ground (0.48.0)
+      zone: ch.objective?.type === 'hold' ? b.zone : undefined, // both sides want a hold objective's ground (0.48.0)
+      guardZone: foe // the enemy guards it, the squad rushes it (0.53.0)
     });
     if ((plan.ability?.revive || plan.ability?.rebirth) && foe) enemyRaises++;
     return { moveTo: plan.moveTo, ability: plan.ability, target: plan.targetTile, facing: plan.facing };

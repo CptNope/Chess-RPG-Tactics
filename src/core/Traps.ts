@@ -34,6 +34,9 @@ export interface TrapSprung {
   status?: StatusEffectType;
 }
 
+/** Every kind, in the order the Workshop lists them (0.53.0). */
+export const TRAP_KINDS: TrapKind[] = ['snare', 'spikes', 'slumber', 'smoke'];
+
 export const MAX_TRAPS = 3;
 /** Trapsmith (support) keeps this many. */
 export const TRAPSMITH = 'rg_trapsmith';
@@ -113,4 +116,21 @@ export function springTrap(owner: Unit, trap: Trap, victim: Unit, attackPower: n
   }
   const landed = e.status && !victim.isDead ? applyStatus(victim, e.status) : false;
   return { owner, x: trap.x, z: trap.z, kind: e.kind, ...(e.damage ? { damage: e.damage } : {}), ...(landed ? { status: e.status } : {}) };
+}
+
+// ---------------------------------------------------------------------------
+// Traps laid with the map (0.53.0)
+// ---------------------------------------------------------------------------
+
+/**
+ * Hands the traps drawn on a map's tiles to the enemy side at the start of a battle: the boss
+ * keeps them (else the first enemy), so spikes hit with its attack, and they stay when it falls.
+ * The battle's grid is a copy, so the tiles' own marks are left alone. Returns how many were laid.
+ */
+export function layMapTraps(enemies: readonly Unit[], tiles: readonly { x: number; z: number; trap?: TrapKind; walkable: boolean }[]): number {
+  const owner = enemies.find((u) => u.isBoss && !u.isDead) ?? enemies.find((u) => !u.isDead);
+  if (!owner) return 0;
+  const laid = tiles.filter((t) => t.trap && t.walkable && TRAP_KINDS.includes(t.trap)).map((t) => ({ kind: t.trap!, x: t.x, z: t.z }));
+  if (laid.length) owner.traps = [...(owner.traps ?? []), ...laid];
+  return laid.length;
 }

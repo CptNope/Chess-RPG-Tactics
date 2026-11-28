@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.53.0] - 2026-11-28
+
+### Added
+- **Ground in the story:**
+  - **Chapter II-B is now a Hold battle:** take Night Battlement's gate and hold it for 3 rounds, or defeat them all. The defenders dug **hidden traps** on the approach.
+  - **The Gloomy Mire (II-A):** the warlock's poison pools by his shrine, and a clean spring on the middle island heals and washes Poison off.
+  - **Emberwick Harbor (IV):** the end of the west pier and a warehouse on the quay are burning.
+  - The chapters' dialogue points them out.
+- **Workshop:** the Ground tool paints **traps** (Snare, Spikes, Slumber, Smoke) for the enemy side. They're hidden from your squad in battle and kept in files and share links.
+- A first-time tip for Hold battles.
+
+### Changed
+- In a Hold battle the enemy no longer rushes the marked ground. It fights as usual, and you clear whoever stands there.
+
+### Developer
+- `TileData.trap` and `layMapTraps` (the boss keeps them); `PlanOptions.guardZone`; share-link cells take `^` and a trap letter; the content reference lists traps per map. ADR 0058.
+- 5 new tests (377 total).
+
 ## [0.52.0] - 2026-11-28
 
 ### Added

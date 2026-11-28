@@ -54,6 +54,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'You will drown out here without a guide, knight. I am Bria. This mire is my home, and that warlock has poisoned it. I fight with you.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'A Geomancer! Your earth-magic changes with the ground you stand on, yes? Then this bog is your weapon. Welcome, Bria.' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'Then hear this first. The lights in the fog are wisps: they lull you to sleep and feed on you. And the mud moves on its own here. Do not let it get hold of your legs.' },
+      { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'His poison pools by the shrine: do not stand in it. But the spring on the middle island still runs clean. It will heal you and wash the venom out.' },
       { speaker: 'Rogue Warlock', portrait: 'foe_time_mage', portraitClass: '⚡', side: 'right', text: 'You foolhardy whelps! You walked straight into my temporal web!' },
       { speaker: 'Shadow Shinobi', portrait: 'foe_ninja', portraitClass: '🗡', side: 'right', text: 'No knight leaves this bog alive. Disperse into the mist!' }
     ],
@@ -87,12 +88,15 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     mapId: 'night_fortress',
     recruit: { id: 'p5', name: 'Bria', jobId: 'geomancer', level: 4 },
     rewardItemIds: ['crystal_helm', 'mirror_shield'],
+    // 0.53.0: hold the gate (the map marks it, and hides the defenders' traps on the approach)
+    objective: { type: 'hold', rounds: 3 },
     introDialogue: [
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'We arrived in time! The fortress drawbridge has been breached, but the ramparts hold!' },
       { speaker: 'Bria', portraitClass: '🌿', side: 'left', text: 'The garrison sent for anyone who could hold a staff. I am Bria, a Geomancer. Stone walls answer to me. Point me at the enemy.' },
       { speaker: 'Dragoon Commander', portrait: 'foe_dragoon', portraitClass: '🐉', side: 'right', text: 'Knights of the realm! Test your steel against the spears of the sky!' },
       { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'He brought a wyvern. It will come over the walls, not through the gate. Keep a spear pointed at the sky, and Remedies for its sting.' },
-      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Take the parapets! Drive them from the towers!' }
+      { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'The gate is ours to take. Hold it and the yard behind it for three rounds, and the garrison can bar it again. Or drive every one of them off the walls.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'And watch the ground on the way in. They had all day to dig.' }
     ],
     victoryDialogue: [
       { speaker: 'Dragoon Commander', portrait: 'foe_dragoon', portraitClass: '🐉', side: 'right', text: 'A magnificent duel... You fight with genuine honor, Rowan...' },
@@ -170,7 +174,8 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
       { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'Knights! Over here. I know that ship, I used to crew her. Get me aboard and I will show you where Varrow keeps the charts.' },
       { speaker: 'Rowan', portraitClass: '⚔', side: 'left', text: 'Then you fight with us. The sea is too deep to wade: we take the piers. Watch the cross-pier, they will try to get behind us.' },
       { speaker: 'Maren', portraitClass: '⚜', side: 'left', text: 'Three piers, one ship. Split them up and meet on the deck.' },
-      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'One more thing. Varrow feeds something in the bilge. It eats through armor, and it is out on the piers tonight.' }
+      { speaker: 'Sable', portrait: 'thief', portraitClass: '🗡', side: 'left', text: 'One more thing. Varrow feeds something in the bilge. It eats through armor, and it is out on the piers tonight.' },
+      { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'And the west pier is burning, and a warehouse on the quay. Do not stop on the embers.' }
     ],
     victoryDialogue: [
       { speaker: 'Captain Varrow', portrait: 'foe_ninja', portraitClass: '☠', side: 'right', text: 'Keep the ship... The charts are already gone. She sailed for Greywatch on the morning tide.' },

@@ -6,6 +6,7 @@
  * number, drops unknown ids and trims text, so a hostile file can't break or inject into the game.
  */
 import { HAZARD_KINDS, HazardKind, HOLD_ROUNDS } from './Hazards';
+import { TRAP_KINDS, TrapKind } from './Traps';
 import { MapData, MAPS, MapBuilder, spawnsFor } from '../data/maps';
 import { JOBS } from '../data/jobs';
 import { ITEMS } from '../data/items';
@@ -166,6 +167,11 @@ export function validateScenario(s: Scenario): Issue[] {
     if (zone.length === 0) issues.push({ level: 'error', text: 'The "Hold" objective needs a hold zone (Terrain → Ground → Hold zone).' });
     else if (!zone.some((t) => t.walkable)) issues.push({ level: 'error', text: 'Every hold-zone tile is blocked: nobody can stand on it.' });
   }
+  // Traps (0.53.0): the enemy side keeps them, and a unit never springs the one it starts on
+  const traps = s.map.tiles.filter((t) => t.trap);
+  if (traps.length && s.enemies.length === 0) issues.push({ level: 'warning', text: 'Traps need an enemy to lay them: with no enemies they are left out.' });
+  for (const t of traps) if (spawnKeys.has(`${t.x},${t.z}`)) issues.push({ level: 'warning', text: `A trap sits on deploy tile (${t.x}, ${t.z}): whoever starts there won't spring it.` });
+
   if (s.objective.type === 'boss' && !s.enemies.some((e) => e.isBoss)) {
     issues.push({ level: 'error', text: 'The "Defeat the boss" objective needs an enemy marked as boss.' });
   }
@@ -270,6 +276,8 @@ export function sanitizeScenario(raw: unknown): Scenario {
     // Hazards and the hold zone (0.48.0)
     if (HAZARD_KINDS.includes(t.hazard as HazardKind)) tile.hazard = t.hazard as HazardKind;
     if (t.zone === true) tile.zone = true;
+    // Traps the enemy laid (0.53.0), only where someone can walk
+    if (tile.walkable && TRAP_KINDS.includes(t.trap as TrapKind)) tile.trap = t.trap as TrapKind;
     tiles[z * width + x] = tile;
   }
 
@@ -353,10 +361,13 @@ export function parseScenario(json: string): Scenario {
 
 /**
  * Compact form for links: tiles become one string per row (height*10, terrain letter, ! for
- * blocked, then since 0.48.0 a hazard letter e/v/r and * for the hold zone).
+ * blocked, then since 0.48.0 a hazard letter e/v/r and * for the hold zone, and since 0.53.0
+ * ^ and a trap letter: n snare, k spikes, z slumber, s smoke).
  */
 const HAZARD_LETTER: Record<HazardKind, string> = { embers: 'e', miasma: 'v', spring: 'r' };
 const HAZARD_BY_LETTER: Record<string, HazardKind> = { e: 'embers', v: 'miasma', r: 'spring' };
+const TRAP_LETTER: Record<TrapKind, string> = { snare: 'n', spikes: 'k', slumber: 'z', smoke: 's' };
+const TRAP_BY_LETTER: Record<string, TrapKind> = { n: 'snare', k: 'spikes', z: 'slumber', s: 'smoke' };
 
 export function packForShare(s: Scenario): unknown {
   const letter: Record<TerrainType, string> = { grass: 'g', stone: 's', dirt: 'd', water: 'w', wood: 'o', swamp: 'm', parapet: 'p', sand: 'a', snow: 'n' };
@@ -365,7 +376,7 @@ export function packForShare(s: Scenario): unknown {
     const row: string[] = [];
     for (let x = 0; x < s.map.width; x++) {
       const t = s.map.tiles[z * s.map.width + x];
-      row.push(`${Math.round(t.height * 10)}${letter[t.terrain]}${t.walkable ? '' : '!'}${t.hazard ? HAZARD_LETTER[t.hazard] : ''}${t.zone ? '*' : ''}`);
+      row.push(`${Math.round(t.height * 10)}${letter[t.terrain]}${t.walkable ? '' : '!'}${t.hazard ? HAZARD_LETTER[t.hazard] : ''}${t.zone ? '*' : ''}${t.trap ? '^' + TRAP_LETTER[t.trap] : ''}`);
     }
     rows.push(row.join(','));
   }
@@ -379,10 +390,10 @@ export function unpackShare(raw: unknown): unknown {
   raw.map.rows.slice(0, MAX_SIZE).forEach((row, z) => {
     if (typeof row !== 'string') return;
     row.split(',').slice(0, MAX_SIZE).forEach((cell, x) => {
-      const m = /^(\d{1,3})([a-z])(!?)([evr]?)(\*?)$/.exec(cell);
+      const m = /^(\d{1,3})([a-z])(!?)([evr]?)(\*?)(?:\^([nkzs]))?$/.exec(cell);
       if (m) tiles.push({
         x, z, height: Number(m[1]) / 10, terrain: byLetter[m[2]] || 'grass', walkable: m[3] !== '!',
-        ...(m[4] ? { hazard: HAZARD_BY_LETTER[m[4]] } : {}), ...(m[5] ? { zone: true } : {})
+        ...(m[4] ? { hazard: HAZARD_BY_LETTER[m[4]] } : {}), ...(m[5] ? { zone: true } : {}), ...(m[6] ? { trap: TRAP_BY_LETTER[m[6]] } : {})
       });
     });
   });

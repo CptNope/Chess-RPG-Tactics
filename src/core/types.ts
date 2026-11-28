@@ -82,6 +82,8 @@ export interface TileData {
   zone?: boolean;
   /** A spell's mark on the ground for a few rounds, and the map's own hazard to put back (0.50.0). */
   temp?: { rounds: number; was?: HazardKind };
+  /** A trap the map's defenders laid before the battle (0.53.0): the enemy side's, hidden from the squad. */
+  trap?: import('./Traps').TrapKind;
 }
 
 export interface Ability {
