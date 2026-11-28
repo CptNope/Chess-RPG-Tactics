@@ -84,6 +84,8 @@ export interface TileData {
   temp?: { rounds: number; was?: HazardKind };
   /** A trap the map's defenders laid before the battle (0.53.0): the enemy side's, hidden from the squad. */
   trap?: import('./Traps').TrapKind;
+  /** A Sapper's barricade standing here (0.54.0): rounds left, and the tile as it was. */
+  works?: { rounds: number; height: number; terrain: TerrainType };
 }
 
 export interface Ability {
@@ -123,6 +125,10 @@ export interface Ability {
   thrall?: boolean;
   /** Aimed at a body: it bursts, hurting those within `aoe` of it, and is spent (0.52.0). */
   corpseBurst?: boolean;
+  /** A Sapper's work on the aimed tile (and within `aoe`): a barricade, or earth raised or lowered (0.54.0). */
+  earthwork?: 'barricade' | 'raise' | 'lower';
+  /** Brings down any barricade in its area (0.54.0). */
+  demolish?: boolean;
   /** Thief: takes one piece of the target's gear instead of dealing damage. */
   steal?: boolean;
   /** Set on the action for using a consumable: the id of the item it spends (see data/consumables.ts). */
@@ -173,7 +179,7 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Bruiser' | 'Warden' | 'Trapper' | 'Necromancer' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
+    | 'Brawler' | 'Bruiser' | 'Warden' | 'Trapper' | 'Necromancer' | 'Sapper' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
     // Monsters (0.26.0)
     | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer' | 'Undead' | 'Plant';
   spriteClass: string;
@@ -332,6 +338,12 @@ export interface CampaignChapter {
   mapData?: import('../data/maps').MapData;
   /** How the battle is won. Defaults to routing every enemy. */
   objective?: BattleObjective;
+  /**
+   * Ground this chapter lays over its map (0.54.0): hazards, the hold zone and the defenders'
+   * traps. In 0.53.0 these were drawn on the maps themselves, so every side battle, side story and
+   * Trials floor fought there had them too.
+   */
+  ground?: GroundMark[];
   /** What the closing screen says when this is the last chapter so far (0.34.0). */
   epilogue?: { title: string; text: string };
 }
@@ -340,6 +352,15 @@ export interface CampaignChapter {
  * rout: defeat every enemy · boss: defeat the boss · survive: keep one ally standing for N rounds ·
  * hold (0.48.0): end N rounds with the squad on the map's zone and no foe on it
  */
+/** One tile's worth of a chapter's own ground (0.54.0). */
+export interface GroundMark {
+  x: number;
+  z: number;
+  hazard?: HazardKind;
+  zone?: boolean;
+  trap?: import('./Traps').TrapKind;
+}
+
 export interface BattleObjective {
   type: 'rout' | 'boss' | 'survive' | 'hold';
   rounds?: number;

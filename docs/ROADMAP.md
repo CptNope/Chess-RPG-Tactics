@@ -72,6 +72,7 @@ timeline
         0.51.0 : Emberback, Frost Sprite, Bog Lurker
         0.52.0 : The Necromancer and thralls (24 jobs)
         0.53.0 : Ground in the story
+        0.54.0 : The Sapper and earthworks (25 jobs)
 ```
 
 | Version | Theme | Highlights |
@@ -84,6 +85,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.54 | The Sapper | A new advanced job (Chemist 3 + Geomancer 2; 25 jobs) that reshapes the map: barricades, earth raised or dug out, demolition charges; a Raider Sapper at Watchfire Ridge; chapters carry their own ground, so 0.53's no longer leaks into other battles |
 | 0.53 | Ground in the story | Chapter II-B is a Hold battle at the gate, with traps the defenders laid; miasma and a clean spring in the Gloomy Mire; Emberwick Harbor burns; the enemy guards a zone instead of rushing it; the Workshop paints traps |
 | 0.52 | The Necromancer | A new advanced job (Black Mage 3 + Oracle 2; 24 jobs) who raises fallen foes as thralls for 3 turns (then they crumble for good) and bursts bodies; enemy Necromancers can raise your fallen; a Grave Cultist at the Drowned Shrine |
 | 0.51 | Creatures of fire, frost and bog | Emberback, Frost Sprite and Bog Lurker: each makes its own ground, and two thrive on it (healed, not hurt); in three side battles and the deep Trials; tameable |
@@ -134,7 +136,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.53.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.54.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -169,13 +171,13 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.54 –): new jobs and ground
+### Next (0.55 –): new jobs and ground
 
-The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) and the Shaman (0.47) came next, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for the back line). Totems (0.47) let tiles carry effects, 0.48 put hazards and hold zones on maps, 0.49 added traps hidden from the other side, 0.50 let spells burn, douse and poison the ground, 0.51 brought monsters that make it and thrive on it, the Necromancer (0.52) put the fallen back to work, and 0.53 brought hazards, a hold and traps into the story.
+The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) and the Shaman (0.47) came next, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for the back line). Totems (0.47) let tiles carry effects, 0.48 put hazards and hold zones on maps, 0.49 added traps hidden from the other side, 0.50 let spells burn, douse and poison the ground, 0.51 brought monsters that make it and thrive on it, the Necromancer (0.52) put the fallen back to work, 0.53 brought hazards, a hold and traps into the story, and the Sapper (0.54) changes the map's shape.
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
-| **More new jobs** | The Dark Knight (0.46) added HP costs, the Shaman (0.47) totems on the field, the Necromancer (0.52) thralls | M |
+| **More new jobs** | The Dark Knight (0.46) added HP costs, the Shaman (0.47) totems on the field, the Necromancer (0.52) thralls, the Sapper (0.54) earthworks | M |
 | **More ground in the story** | 0.53 put hazards in II-A and IV, and a hold and traps in II-B. Act II and III chapters could use them too, tuned one at a time in the sim | M |
 | **Mirror duels** | `SWAP` (0.46) compares jobs like for like, but each chapter rewards different things (ADR 0051). Duels on flat ground would rank raw strength | S |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |

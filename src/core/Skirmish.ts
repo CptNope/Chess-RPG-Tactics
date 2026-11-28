@@ -57,7 +57,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     name: 'Watchfire Ridge',
     mapId: 'night_fortress',
     foe: 'Night Raiders',
-    jobs: [['knight', 'Raider'], ['dragoon', 'Lancer'], ['archer', 'Marksman'], ['ninja', 'Shade'], ['spellblade', 'Duelist'], ['geomancer', 'Warden']],
+    jobs: [['knight', 'Raider'], ['dragoon', 'Lancer'], ['archer', 'Marksman'], ['ninja', 'Shade'], ['spellblade', 'Duelist'], ['geomancer', 'Warden'], ['sapper', 'Raider Sapper']], // the sapper since 0.54.0
     opensAfter: ['chapter_2a', 'chapter_2b', 'chapter_3'], // chapter_3 covers old saves that don't record which road was taken
     objective: { type: 'survive', rounds: 6 },
     intro: 'Raiders come up the ridge in the dark. Hold the watchfire until the garrison arrives.',

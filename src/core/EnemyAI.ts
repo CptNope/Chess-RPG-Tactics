@@ -2,6 +2,7 @@ import { pulseFor, standingTotems, Totem, TOTEM_TURNS } from './Totems';
 import { groundFrom, hazardFor } from './Hazards';
 import { bodies, canRaise, worksOnBodies } from './Necromancy';
 import { setTraps, trapAt, trapEffect, trapLimit, TRAP_STATUS } from './Traps';
+import { canBuildAt, canShape } from './Earthworks';
 import { Ability, FacingDirection, Unit } from './types';
 import { isAlly, isFoe } from './Sides';
 import { BattleGrid } from './Grid';
@@ -317,6 +318,52 @@ export function scoreTotem(caster: Unit, ability: Ability, ax: number, az: numbe
  * way" counts, the best one fully and the rest a little; the whole is discounted because foes
  * take other roads. A trap that pulls up an older one costs a little.
  */
+/**
+ * What a Sapper's barricade or raised earth on (x, z) is worth (0.54.0).
+ * - Barricade, beside an ally a foe could reach next turn: the extra steps it costs that foe to get
+ *   to the ally (4 when it seals the ally off), more for a hurt or frail ally.
+ * - Raise, under an ally who shoots or casts from 3 or more and has a foe in reach: high ground,
+ *   unless the tile already looks down on its neighbours.
+ * Never raises a foe's tile. `standAt` is where the Sapper will stand.
+ */
+export function scoreWorks(caster: Unit, ability: Ability, x: number, z: number, units: Unit[], grid: BattleGrid, standAt: { x: number; z: number }): number {
+  const tile = grid.getTile(x, z);
+  if (!tile) return 0;
+  const at = (u: Unit) => (u === caster ? standAt : u);
+  const here = units.find((u) => !u.isDead && at(u).x === x && at(u).z === z);
+  if (ability.earthwork === 'raise') {
+    if (!canShape(tile, 'raise') || !here || !isAlly(here, caster)) return 0;
+    // Only a shooter already in the fight is likely to stay and use the height: anyone else walks off
+    // it next turn (in the sim the Sapper spent most turns raising ground, and Chapter IV fell to 25%)
+    const reach = Math.max(0, ...JobSystem.getCombatActionAbilities(here).filter((a) => a.power > 0).map((a) => a.range));
+    if (reach < 3) return 0;
+    const engaged = units.some((u) => !u.isDead && isFoe(u, caster) && Math.abs(u.x - x) + Math.abs(u.z - z) <= reach + 1);
+    if (!engaged) return 0;
+    const around = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dz]) => grid.getTile(x + dx, z + dz)?.height ?? 0);
+    return tile.height >= Math.max(...around) + 1 ? 0 : 10;
+  }
+  if (ability.earthwork !== 'barricade') return 0;
+  if ((x === standAt.x && z === standAt.z) || !canBuildAt(tile, units.filter((u) => u !== caster))) return 0;
+  const allies = units.filter((u) => !u.isDead && isAlly(u, caster) && Math.abs(at(u).x - x) + Math.abs(at(u).z - z) === 1);
+  if (!allies.length) return 0;
+  const foes = units.filter((u) => !u.isDead && isFoe(u, caster) && !u.tamed);
+  let score = 0;
+  for (const ally of allies) {
+    const a = at(ally);
+    const frail = ally.currentHp < ally.maxHp / 2 || JobSystem.getCombatActionAbilities(ally).some((ab) => ab.scalesWith === 'magic' && ab.power > 0) ? 1.5 : 1;
+    for (const f of foes) {
+      if (Math.abs(f.x - a.x) + Math.abs(f.z - a.z) > f.move + 2) continue;
+      const before = walkingDistances(grid, f, f).get(`${a.x},${a.z}`);
+      if (before === undefined || before > f.move + 1) continue;
+      tile.walkable = false;
+      const after = walkingDistances(grid, f, f).get(`${a.x},${a.z}`);
+      tile.walkable = true;
+      score += Math.min(4, after === undefined ? 4 : after - before) * 5 * frail;
+    }
+  }
+  return Math.min(24, score);
+}
+
 export function scoreTrap(caster: Unit, ability: Ability, x: number, z: number, units: Unit[], grid: BattleGrid): number {
   const free = (tx: number, tz: number) => !!grid.getTile(tx, tz)?.walkable && !units.some((u) => !u.isDead && u.x === tx && u.z === tz) && !trapAt(units, tx, tz);
   const tiles: { x: number; z: number }[] = [];
@@ -504,6 +551,29 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
             if (!best || score > best.score) {
               const nearestFoe = foes.reduce((a, c) => manhattan(a, tile) <= manhattan(c, tile) ? a : c);
               best = { moveTo: { ...tile }, ability, targetTile: { x: b.x, z: b.z }, facing: faceTowards(tile.x, tile.z, nearestFoe.x, nearestFoe.z), score };
+            }
+          }
+          continue;
+        }
+
+        // A Sapper's barricade or raised earth (0.54.0) goes on ground within reach: try each tile
+        if (ability.earthwork && ability.power <= 0) {
+          for (let dz = -ability.range; dz <= ability.range; dz++) for (let dx = -ability.range; dx <= ability.range; dx++) {
+            const ax = tile.x + dx, az = tile.z + dz;
+            if (!grid.canTarget(tile.x, tile.z, ax, az, ability.range, ability.heightTolerance, true)) continue;
+            let score = ability.aoe
+              ? [...Array(2 * ability.aoe + 1)].flatMap((_, i) => [...Array(2 * ability.aoe + 1)].map((__, j) => [ax + i - ability.aoe, az + j - ability.aoe]))
+                .filter(([cx, cz]) => Math.abs(cx - ax) + Math.abs(cz - az) <= ability.aoe)
+                .reduce((s, [cx, cz]) => s + scoreWorks(unit, ability, cx, cz, units, grid, tile), 0)
+              : scoreWorks(unit, ability, ax, az, units, grid, tile);
+            if (score <= 8) continue;
+            if (threat) score -= risk(tile.x, tile.z, unit.currentHp);
+            if (ability.signature) score -= 30;
+            if (holding) score -= 12;
+            score += posScore - ability.mpCost * 0.15;
+            if (!best || score > best.score) {
+              const nearestFoe = foes.reduce((a, c) => manhattan(a, tile) <= manhattan(c, tile) ? a : c);
+              best = { moveTo: { ...tile }, ability, targetTile: { x: ax, z: az }, facing: faceTowards(tile.x, tile.z, nearestFoe.x, nearestFoe.z), score };
             }
           }
           continue;

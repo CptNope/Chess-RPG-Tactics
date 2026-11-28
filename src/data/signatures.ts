@@ -382,6 +382,22 @@ export const SIGNATURES: Record<string, Ability> = {
     trap: 'spikes',
     signature: true
   },
+  sapper: {
+    id: 'sig_siege_works',
+    name: 'Siege Works',
+    jobId: 'sapper',
+    type: 'action',
+    description: 'Raises the ground a step on every walkable tile within 1 of the aimed one: a hill for your squad, built in a moment.',
+    jpCost: 0,
+    mpCost: 0,
+    range: 3,
+    heightTolerance: 3.0,
+    aoe: 1,
+    power: 0,
+    element: 'physical',
+    earthwork: 'raise',
+    signature: true
+  },
   necromancer: {
     id: 'sig_army_of_the_dead',
     name: 'Army of the Dead',

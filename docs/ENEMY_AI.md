@@ -119,6 +119,10 @@ The squad's AUTO plans with `holdBack`:
 
 Enemies don't use `holdBack`: their caution stays as the difficulty sets it, and they keep pressing forward.
 
+### Earthworks (0.54)
+
+`scoreWorks` values a Sapper's barricade by the extra walking steps it costs each foe that could reach the ally beside it next turn (4 when it seals the ally off; ×1.5 for a hurt or spell-casting ally; at most 24). Raised ground is worth 10 under an ally who shoots or casts from 3 or more with a foe in reach, and nothing elsewhere: at first it scored under any ally, and the Sapper spent most turns raising ground that its allies walked off (ADR 0059). Undermine and Blasting Charge are scored as attacks.
+
 ### Hold zones: the squad rushes, the enemy guards (0.53)
 
 With a Hold objective (`zone`, 0.48) a unit's walk heads for the zone first and the foes second, and it likes ending a turn on the zone (+20). Since 0.53 the enemy plans with `guardZone`: neither applies to it, so it fights as it would in any battle and the squad has to clear whoever happens to stand there. When both sides wanted the zone, every defender at Chapter II-B's gate walked off the walls and into it, and the chapter fell from 51% to 20% in the sim (19% when only units already on the zone stayed). Cinder Spring didn't move either way, and its 24 timeouts at Lv 6 went away.
@@ -146,6 +150,7 @@ With a Hold objective (`zone`, 0.48) a unit's walk heads for the zone first and 
 | Drinks a Potion when hurt with nothing to hit, keeps it when healthy; a Phoenix Feather respects the raise cap; salvage stops at the stack limit | `tests/smarter-enemies.test.ts` |
 | AUTO (`holdBack`) won't walk a healthy unit into a deadly spot with nothing to hit; without it, it walks on | `tests/hold-back.test.ts` |
 | With `guardZone`, a unit walks as if there were no zone; without it, it heads for the zone | `tests/story-ground.test.ts` |
+| A Sapper walls off a foe from a hurt ally in a corridor, raises ground under an engaged archer, never under a foe | `tests/sapper.test.ts` |
 
 ---
 

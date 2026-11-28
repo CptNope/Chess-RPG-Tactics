@@ -45,6 +45,7 @@ import { JOBS } from '../src/data/jobs';
 import { ITEMS as ITEM_DATA } from '../src/data/items';
 import type { Unit } from '../src/core/types';
 import { layMapTraps } from '../src/core/Traps';
+import { markGround } from '../src/core/Hazards';
 
 function squad(level: number, bria: boolean, sable = false, kestrel = false): Unit[] {
   const s = [
@@ -87,6 +88,7 @@ function battle(chId: string, level: number): 'win' | 'loss' | 'timeout' {
   const ch = sk ? buildSkirmish(sk[0], [level, level, level, level], Number(sk[1] || 0)) : CAMPAIGN_CHAPTERS[chId];
   if (sk) chId = 'chapter_5'; // the party that is out by then
   const map = MAPS[ch.mapId]();
+  markGround(map.tiles, map.width, ch.ground); // the chapter's own ground (0.54.0)
   const grid = new BattleGrid(map);
   const enemies = ch.enemyRoster.map((e, i) => {
     const u = JobSystem.createUnit(`e${i}`, e.name, 'enemy', e.jobId, e.x, e.z, e.facing || 'S', enemyLevel(e.level, DIFF));

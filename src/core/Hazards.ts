@@ -13,7 +13,7 @@
  *
  * Pure rules on units and tiles; the battle screen, the balance sim, the AI and a server call them.
  */
-import { BattleObjective, StatusEffectType, TileData, Unit } from './types';
+import { BattleObjective, GroundMark, StatusEffectType, TileData, Unit } from './types';
 import { allianceOf } from './Sides';
 import { JOBS } from '../data/jobs';
 
@@ -169,4 +169,19 @@ export function tickGround(tiles: readonly TileData[]): GroundChange[] {
     out.push({ x: t.x, z: t.z, ...(t.hazard ? { hazard: t.hazard } : {}) });
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// A chapter's own ground (0.54.0)
+// ---------------------------------------------------------------------------
+
+/** Lays a chapter's hazards, hold zone and traps over a copy of its map's tiles. */
+export function markGround(tiles: TileData[], width: number, marks: readonly GroundMark[] | undefined): void {
+  for (const m of marks ?? []) {
+    const t = tiles[m.z * width + m.x];
+    if (!t || t.x !== m.x || t.z !== m.z) continue;
+    if (m.hazard) t.hazard = m.hazard;
+    if (m.zone) t.zone = true;
+    if (m.trap && t.walkable) t.trap = m.trap;
+  }
 }

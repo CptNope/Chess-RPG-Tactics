@@ -374,7 +374,7 @@ w();
 // ---------------------------------------------------------------- Maps
 w('## Battlefields');
 w();
-w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48; traps 0.53) | Squad deploys on |');
+w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48) | Squad deploys on |');
 w('| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- | :--- |');
 for (const [id, make] of Object.entries(MAPS)) {
   const m = make();
@@ -403,12 +403,15 @@ for (const c of chapters) {
 }
 w('```');
 w();
-w('| Chapter | Map | Enemies | Boss | Recruit | Win reward | Branch rewards |');
-w('| :--- | :--- | :---: | :--- | :--- | :--- | :--- |');
+w('| Chapter | Map | Goal | Ground (0.53) | Enemies | Boss | Recruit | Win reward | Branch rewards |');
+w('| :--- | :--- | :--- | :--- | :---: | :--- | :--- | :--- | :--- |');
 for (const c of chapters) {
   const boss = c.enemyRoster.find((e) => e.isBoss);
   const branch = (c.choices || []).map((o) => `${o.rewardItemIds?.map(itemName).join(' + ')}`).join(' / ') || '—';
-  w(`| **${c.title}**: ${c.subtitle} | ${MAPS[c.mapId]().name} | ${c.enemyRoster.length} | ${boss ? `${boss.name} (${jobName(boss.jobId)} L${boss.level})` : '—'} | ${c.recruit ? `${c.recruit.name} (${jobName(c.recruit.jobId)})` : '—'} | ${(c.rewardItemIds || []).map(itemName).join(', ') || '—'} | ${branch} |`);
+  const marks: Record<string, number> = {};
+  for (const m of c.ground ?? []) for (const k of [m.hazard, m.zone ? 'hold zone' : '', m.trap ? `${m.trap} trap` : '']) if (k) marks[k] = (marks[k] || 0) + 1;
+  const goal = !c.objective || c.objective.type === 'rout' ? 'Rout' : c.objective.type === 'boss' ? 'Boss' : c.objective.type === 'survive' ? `Survive ${c.objective.rounds || 6}` : `Hold ${c.objective.rounds || 3}, or rout`;
+  w(`| **${c.title}**: ${c.subtitle} | ${MAPS[c.mapId]().name} | ${goal} | ${Object.entries(marks).map(([k, n]) => `${k} ${n}`).join(', ') || '—'} | ${c.enemyRoster.length} | ${boss ? `${boss.name} (${jobName(boss.jobId)} L${boss.level})` : '—'} | ${c.recruit ? `${c.recruit.name} (${jobName(c.recruit.jobId)})` : '—'} | ${(c.rewardItemIds || []).map(itemName).join(', ') || '—'} | ${branch} |`);
 }
 w();
 for (const c of chapters) {
