@@ -129,6 +129,9 @@ The AI reads the weather through the forecast, which takes it from the grid: in 
 
 ### Hold zones: the squad rushes, the enemy guards (0.53)
 
+Since 0.58 the squad's walk weighs the zone and the foes alike (`zoneDist × 0.5 + distance × 0.5`; it was the zone first, `zoneDist + distance × 0.25`). Once Knights moved 4, the old pull sent Maren onto Greywatch's terrace ahead of everyone else (ADR 0063).
+
+
 With a Hold objective (`zone`, 0.48) a unit's walk heads for the zone first and the foes second, and it likes ending a turn on the zone (+20). Since 0.53 the enemy plans with `guardZone`: neither applies to it, so it fights as it would in any battle and the squad has to clear whoever happens to stand there. When both sides wanted the zone, every defender at Chapter II-B's gate walked off the walls and into it, and the chapter fell from 51% to 20% in the sim (19% when only units already on the zone stayed). Cinder Spring didn't move either way, and its 24 timeouts at Lv 6 went away.
 
 
@@ -154,6 +157,7 @@ With a Hold objective (`zone`, 0.48) a unit's walk heads for the zone first and 
 | Drinks a Potion when hurt with nothing to hit, keeps it when healthy; a Phoenix Feather respects the raise cap; salvage stops at the stack limit | `tests/smarter-enemies.test.ts` |
 | AUTO (`holdBack`) won't walk a healthy unit into a deadly spot with nothing to hit; without it, it walks on | `tests/hold-back.test.ts` |
 | With `guardZone`, a unit walks as if there were no zone; without it, it heads for the zone | `tests/story-ground.test.ts` |
+| Toward a hold zone, the squad leans that way but doesn't race straight at it | `tests/mirror-duels.test.ts` |
 | A Sapper walls off a foe from a hurt ally in a corridor, raises ground under an engaged archer, never under a foe | `tests/sapper.test.ts` |
 
 ---

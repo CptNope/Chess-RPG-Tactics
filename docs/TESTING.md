@@ -10,7 +10,7 @@ What is tested, how to run it, and what still needs a human.
 flowchart TB
     subgraph Auto["Automated in CI (every push and PR)"]
         T1["Type check<br/>tsc"]
-        T2["Unit tests<br/>vitest · 389 tests"]
+        T2["Unit tests<br/>vitest · 391 tests"]
         T3["Build smoke test<br/>check-dist.mjs"]
         T4["Docs check<br/>CONTENT_REFERENCE.md current"]
         T5["Browser play-tests<br/>npm run playtest · 8 checks"]
@@ -43,7 +43,7 @@ flowchart TB
 
 ## 2. Unit tests (`tests/core.test.ts`, `tests/scenario.test.ts`, `tests/jobs-gear.test.ts`, `tests/progression.test.ts`, `tests/items-world.test.ts`, `tests/side-mastery.test.ts`, `tests/slots-difficulty.test.ts`, `tests/chemist.test.ts`, `tests/engine.test.ts`, `tests/chain.test.ts`, `tests/side-story.test.ts`, `tests/battle.test.ts`, `tests/hold-back.test.ts`, …)
 
-All 389 tests import `src/core` and `src/data` directly in Node. No browser is needed.
+All 391 tests import `src/core` and `src/data` directly in Node. No browser is needed.
 
 | Group | Tests | Guards against |
 | :--- | :---: | :--- |
@@ -156,6 +156,7 @@ The Final Chapter is near 0% on pure AUTO in 0.9 as well; the campaign bot clear
 ```bash
 npm run duels -- 20 10              # every job at Lv 10, 20 battles per pair (~10 minutes)
 npm run duels -- 20 5 sapper,monk   # just these, at Lv 5
+npm run duels -- 20 10 --only=knight # one job's pairings, in seconds (0.58)
 ```
 
 Read it as raw strength in a stand-up fight. Jobs that win by support, position or the ground (Bard, Dancer, Shaman, Sapper) look weaker here than in a campaign squad, and the chapter sweeps (`SWAP`) remain the test for those. ADR 0062 has the first results.

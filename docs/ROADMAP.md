@@ -76,6 +76,7 @@ timeline
         0.55.0 : Weather
         0.56.0 : Ground in Acts II and III
         0.57.0 : Mirror duels
+        0.58.0 : Knights move 4
 ```
 
 | Version | Theme | Highlights |
@@ -88,6 +89,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.58 | Knights move 4 | The weakest front-line job (28%) now moves 4 and sits mid-pack (47%); the Bandit Chief down a level; AUTO paces itself toward a hold zone |
 | 0.57 | Mirror duels | `npm run duels` ranks every job in three-of-a-kind fights on flat ground; it found an Undermine bug (fixed); the Knight and the Dragoon stand out (ADR 0062) |
 | 0.56 | Ground in Acts II and III | Greywatch Isle is a Hold battle; a well in the rain on Stormbreak Cape, saltglass and buried traps on the Saltglass Shore, a hot spring in Frostfang Pass, foul air in the Drowned City |
 | 0.55 | Weather | Rain (fire weaker, lightning stronger, nothing burns), snow (ice stronger, Move −1) and fog (blows from afar miss more) in Chapters VI and VIII, two side battles, deep Trials floors and the Workshop |
@@ -142,7 +144,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.57.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.58.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -177,14 +179,14 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.58 –): new jobs and balance
+### Next (0.59 –): new jobs and balance
 
 The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) and the Shaman (0.47) came next, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for the back line). Totems (0.47) let tiles carry effects, 0.48 put hazards and hold zones on maps, 0.49 added traps hidden from the other side, 0.50 let spells burn, douse and poison the ground, 0.51 brought monsters that make it and thrive on it, the Necromancer (0.52) put the fallen back to work, 0.53 brought hazards, a hold and traps into the story, the Sapper (0.54) changes the map's shape, weather (0.55) changes the elements and the ground, and 0.56 gave every later chapter ground of its own.
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
 | **More new jobs** | The Dark Knight (0.46) added HP costs, the Shaman (0.47) totems on the field, the Necromancer (0.52) thralls, the Sapper (0.54) earthworks | M |
-| **Balance from the duels** | The duels (0.57) put the Knight below every other front-line job (28–31%) and the Dragoon on top (91–96%), which also leads the chapter sweep. Changes to either touch every chapter (Maren and Corvin), so they need the sweeps too (ADR 0062) | M |
+| **Balance from the duels** | The Knight was fixed in 0.58. The Dragoon still tops both the duels (91–96%) and the chapter sweep; a change touches every chapter (Corvin), so it needs the sweeps too. The Summoner's AI could aim grand summons where foes will still be (ADR 0062) | M |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |
 
 ### Later (1.0+): breadth

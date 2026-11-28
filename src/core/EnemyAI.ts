@@ -707,8 +707,10 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
     if (r >= 30 && opts.holdBack) return r;
     return r * (unit.currentHp < unit.maxHp * 0.4 ? 0.4 : 0.1);
   };
-  // With a hold objective (0.48.0) the walk heads for the zone first, and the foes second
-  const towards = (t: { x: number; z: number }) => (opts.zone?.size && !opts.guardZone ? zoneDist(t) + distFrom(t) * 0.25 : distFrom(t));
+  // With a hold objective (0.48.0) the walk heads for the zone and the foes alike (0.58.0; it used to
+  // be the zone first): once Knights moved 4, AUTO sent Maren to Greywatch's terrace ahead of the
+  // squad, and Chapter V fell from 51% to 28% at Lv 8 in the sim
+  const towards = (t: { x: number; z: number }) => (opts.zone?.size && !opts.guardZone ? zoneDist(t) * 0.5 + distFrom(t) * 0.5 : distFrom(t));
   const walkScore = (t: { x: number; z: number }) => towards(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50 + walkRisk(t) - groundScore(t.x, t.z) * (unit.currentHp < unit.maxHp / 2 ? 0.6 : 1 / 8); // a hurt unit minds the ground more (0.51.0)
   let moveTo = origin;
   let bestDist = walkScore(origin);
