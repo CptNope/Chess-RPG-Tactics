@@ -68,6 +68,7 @@ timeline
         0.47.0 : The Shaman and totems (22 jobs)
         0.48.0 : Hazards, hold zones, Cinder Spring
         0.49.0 : The Ranger and hidden traps (23 jobs)
+        0.50.0 : Spells change the ground
 ```
 
 | Version | Theme | Highlights |
@@ -80,6 +81,7 @@ timeline
 | 0.8 | Play anywhere | Responsive HUD; mouse, keyboard, touch, pen and controller |
 | 0.8.1 | Documentation | Rewritten guides, roadmap, generated content reference, docs check in CI |
 | 0.9 | Own it, polish it | Original names, MIT license, lighting/sky/water/torches/bloom, quality tiers, merged terrain |
+| 0.50 | Spells change the ground | Fire area spells leave embers for 2 rounds, ice puts embers out (even a map's own, for a while), Poison Cloud leaves miasma; the AI weighs it; first-time tips for burning ground and traps |
 | 0.49 | The Ranger | A new advanced job (Archer 3 + Thief 2; 23 jobs) who hides traps the other side can't see: the first foe to walk into one stops there and is snared, spiked, smoked or put to sleep; a Bandit Trapper at Thornwood Ford |
 | 0.48 | Hazards and hold zones | Embers, miasma and healing springs on the ground; a Hold objective; the Cinder Spring side battle on a new caldera map; a Ground tool and Hold objective in the Workshop |
 | 0.47 | The Shaman | A new advanced job (White Mage 3 + Geomancer 2; 22 jobs) that plants totems: the first effects that stay on the field, pulsing on whoever starts a turn near them (Mending, Warding, Binding, Storm, the Ancestral signature); the AI plants them and steps around them |
@@ -126,7 +128,7 @@ timeline
 
 ## 2. Now / Next / Later
 
-*Reviewed for 0.49.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
+*Reviewed for 0.50.0. The game now has a three-act campaign across two world maps, side battles, a market, items, mastery, difficulty, save slots and an installable offline build; most of what's left is depth for players who stay, and checks only a person can make.*
 
 ```mermaid
 flowchart LR
@@ -161,14 +163,14 @@ flowchart LR
 | **Install the app and play offline** | 0.19's offline build was tested in headless Chrome only | S | Android Chrome (Install app), iPhone Safari (Share → Add to Home Screen), desktop Chrome/Edge |
 | **Devlog and store update** | Devlogs for 0.13 to 0.23 are posted; 0.24's summons need one, with a clip | S | A short GIF of a grand summon would show the job best |
 
-### Next (0.50 –): new jobs and ground
+### Next (0.51 –): new jobs and ground
 
-The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) and the Shaman (0.47) came next, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for the back line). Totems (0.47) let tiles carry effects, 0.48 put hazards and hold zones on maps, and 0.49 added traps hidden from the other side.
+The engine groundwork is done (0.41, 0.44) and the chapters had a balance pass on it (0.45). The Dark Knight (0.46) and the Shaman (0.47) came next, tuned with a like-for-like sweep (`SWAP=p1:<job>` for melee, `p3` for the back line). Totems (0.47) let tiles carry effects, 0.48 put hazards and hold zones on maps, 0.49 added traps hidden from the other side, and 0.50 let spells burn, douse and poison the ground.
 
 | Item | Why | Size |
 | :--- | :--- | :---: |
 | **More new jobs** | The Dark Knight (0.46) added HP costs, the Shaman (0.47) totems on the field | M |
-| **More ground in the story** | Hazards and hold zones (0.48) are only in Cinder Spring and the Workshop, traps (0.49) only with Rangers. A story chapter could use a Hold objective; spells could leave burning ground; the Workshop could place traps | M |
+| **More ground in the story** | Map hazards and hold zones (0.48) are only in Cinder Spring and the Workshop, traps (0.49) only with Rangers. A story chapter could use a Hold objective; the Workshop could place traps | M |
 | **Mirror duels** | `SWAP` (0.46) compares jobs like for like, but each chapter rewards different things (ADR 0051). Duels on flat ground would rank raw strength | S |
 | **AI: a real second ply** | Since 0.31 enemies avoid likely KOs and use items. Scoring terms for combos with allies were tried in 0.38 and changed nothing in the sim; simulating the squad's real replies is the remaining idea, if hand play shows Hard is too easy ([details](ENEMY_AI.md#5-known-limits)) | L |
 

@@ -7,7 +7,7 @@
  * playthrough isn't taught again. "Show tips again" in Controls resets it.
  */
 export type TipId =
-  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap' | 'enemyCall' | 'tamed';
+  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap' | 'enemyCall' | 'tamed' | 'ground' | 'trap';
 
 export const TIPS: Record<TipId, { title: string; text: string }> = {
   firstTurn: {
@@ -53,6 +53,14 @@ export const TIPS: Record<TipId, { title: string; text: string }> = {
   tamed: {
     title: 'A BEAST ON YOUR SIDE',
     text: 'The tamed monster takes orders from you now. Keep it standing: if it lives to see the victory, it joins your squad. Beasts never change jobs, and wear only beast gear: barding and a collar.'
+  },
+  ground: {
+    title: 'THE GROUND IS BURNING',
+    text: 'Embers burn whoever starts a turn on them, on either side, and miasma poisons. A spring heals. Fire spells leave embers for 2 rounds; an ice spell puts them out. Point at a tile to see what\'s on it.'
+  },
+  trap: {
+    title: 'A HIDDEN TRAP',
+    text: 'A Ranger hid it. You can\'t see the other side\'s traps until someone walks into one: the walk stops there. When the log says a foe hid something, keep away from where it was standing, or send a sturdy unit first.'
   },
   worldMap: {
     title: 'THE WORLD MAP',

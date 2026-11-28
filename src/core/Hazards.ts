@@ -81,3 +81,83 @@ export function zoneHolder(units: readonly Unit[], zone: ReadonlySet<string>): s
 
 /** Rounds a hold objective needs. */
 export const holdGoal = (objective: BattleObjective | undefined): number => objective?.rounds || HOLD_ROUNDS;
+
+// ---------------------------------------------------------------------------
+// Spells that change the ground (0.50.0)
+// ---------------------------------------------------------------------------
+
+/** Rounds a spell's embers or miasma last; rounds embers stay out once doused. */
+export const SCORCH_ROUNDS = 2;
+export const DOUSE_ROUNDS = 3;
+
+/** A tile's ground after a change: its hazard now (none when undefined). */
+export interface GroundChange {
+  x: number;
+  z: number;
+  hazard?: HazardKind;
+}
+
+/**
+ * What an ability does to the ground it lands on, by rule so new spells join in:
+ * a fire spell with an area leaves embers, an ice spell with an area douses embers, and a
+ * Poison cloud leaves miasma. Totems, traps, heals and items leave the ground alone.
+ */
+export function groundFrom(ability: { element: string; aoe: number; power: number; appliesStatus?: string; totem?: unknown; trap?: unknown; item?: unknown }): 'embers' | 'miasma' | 'douse' | null {
+  if (ability.totem || ability.trap || ability.item || ability.power < 0) return null;
+  if (ability.element === 'fire' && ability.aoe >= 1 && ability.power > 0) return 'embers';
+  if (ability.element === 'ice' && ability.aoe >= 1) return 'douse';
+  if (ability.appliesStatus === 'poison') return 'miasma';
+  return null;
+}
+
+/** Sets a lasting-for-now hazard on a tile, remembering what the map had there. */
+function setTemp(tile: TileData, hazard: HazardKind | undefined, rounds: number): void {
+  if (!tile.temp) tile.temp = { rounds, ...(tile.hazard ? { was: tile.hazard } : {}) };
+  else tile.temp.rounds = rounds;
+  if (hazard) tile.hazard = hazard;
+  else delete tile.hazard;
+}
+
+/**
+ * Applies an ability's ground effect over its area: every tile within `aoe` steps of (cx, cz).
+ * Embers never take on water or snow, nothing overwrites a spring, and `spare` (the caster, for a
+ * burst around itself) is left alone. Returns the tiles changed.
+ */
+export function changeGround(getTile: (x: number, z: number) => TileData | undefined, ability: Parameters<typeof groundFrom>[0], cx: number, cz: number, spare?: { x: number; z: number }): GroundChange[] {
+  const effect = groundFrom(ability);
+  if (!effect) return [];
+  const out: GroundChange[] = [];
+  for (let dz = -ability.aoe; dz <= ability.aoe; dz++) for (let dx = -ability.aoe; dx <= ability.aoe; dx++) {
+    if (Math.abs(dx) + Math.abs(dz) > ability.aoe) continue;
+    const t = getTile(cx + dx, cz + dz);
+    if (!t || !t.walkable || t.hazard === 'spring') continue;
+    if (spare && t.x === spare.x && t.z === spare.z) continue; // a burst around its caster spares the caster's tile
+    if (effect === 'embers') {
+      if (t.terrain === 'water' || t.terrain === 'snow') continue;
+      setTemp(t, 'embers', SCORCH_ROUNDS);
+    } else if (effect === 'miasma') {
+      if (t.hazard === 'embers') continue; // the gas burns off over fire
+      setTemp(t, 'miasma', SCORCH_ROUNDS);
+    } else {
+      if (t.hazard !== 'embers') continue;
+      setTemp(t, undefined, DOUSE_ROUNDS);
+    }
+    out.push({ x: t.x, z: t.z, ...(t.hazard ? { hazard: t.hazard } : {}) });
+  }
+  return out;
+}
+
+/** At the end of a round: counts the spells' ground down, and puts the map's own back when it runs out. */
+export function tickGround(tiles: readonly TileData[]): GroundChange[] {
+  const out: GroundChange[] = [];
+  for (const t of tiles) {
+    if (!t.temp) continue;
+    t.temp.rounds--;
+    if (t.temp.rounds > 0) continue;
+    if (t.temp.was) t.hazard = t.temp.was;
+    else delete t.hazard;
+    delete t.temp;
+    out.push({ x: t.x, z: t.z, ...(t.hazard ? { hazard: t.hazard } : {}) });
+  }
+  return out;
+}

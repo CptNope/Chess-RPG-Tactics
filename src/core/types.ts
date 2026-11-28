@@ -78,6 +78,8 @@ export interface TileData {
   hazard?: HazardKind;
   /** Part of the area a "hold" objective asks the squad to hold (0.48.0). */
   zone?: boolean;
+  /** A spell's mark on the ground for a few rounds, and the map's own hazard to put back (0.50.0). */
+  temp?: { rounds: number; was?: HazardKind };
 }
 
 export interface Ability {

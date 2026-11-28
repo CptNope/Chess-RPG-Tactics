@@ -1,5 +1,5 @@
 import { pulseFor, standingTotems, Totem, TOTEM_TURNS } from './Totems';
-import { hazardFor } from './Hazards';
+import { groundFrom, hazardFor } from './Hazards';
 import { setTraps, trapAt, trapEffect, trapLimit, TRAP_STATUS } from './Traps';
 import { Ability, FacingDirection, Unit } from './types';
 import { isAlly, isFoe } from './Sides';
@@ -350,6 +350,27 @@ export function scoreTrap(caster: Unit, ability: Ability, x: number, z: number, 
   return total * 0.55 - (mineSet >= trapLimit(caster) && !ability.signature ? 6 : 0);
 }
 
+/**
+ * What a spell's mark on the ground is worth (0.50.0): embers or miasma left under foes a little
+ * (they may step off), under allies a cost; putting out embers under allies a little.
+ */
+export function groundWorth(caster: Unit, ability: Ability, cx: number, cz: number, units: Unit[], grid: BattleGrid): number {
+  const effect = groundFrom(ability);
+  if (!effect) return 0;
+  let s = 0;
+  for (const u of units) {
+    if (u.isDead || Math.abs(u.x - cx) + Math.abs(u.z - cz) > ability.aoe) continue;
+    if (isCentered(ability) && u === caster) continue; // spared
+    const t = grid.getTile(u.x, u.z);
+    if (!t?.walkable || t.hazard === 'spring') continue;
+    const foe = isFoe(caster, u);
+    if (effect === 'douse') { if (t.hazard === 'embers' && !foe) s += 6; continue; }
+    if (effect === 'embers' && (t.terrain === 'water' || t.terrain === 'snow')) continue;
+    s += foe ? 4 : -8;
+  }
+  return s;
+}
+
 export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: PlanOptions = {}): AiPlan {
   const foes = foesOf(unit, units);
   const origin = { x: unit.x, z: unit.z };
@@ -508,7 +529,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
           if (victims.length === 0 && fallen.length === 0) continue;
 
           const kills = new Set<string>();
-          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units, kills)
+          let score = scoreAbility(unit, ability, victims, grid, { x: ax, z: az }, units, kills) + groundWorth(unit, ability, isCentered(ability) ? tile.x : ax, isCentered(ability) ? tile.z : az, units, grid)
             + (raise && fallen.length ? scoreAbility(unit, raise, fallen, grid, { x: ax, z: az }, units) : 0);
           if (score <= 0) continue;
           // Items are few: keep them for when they matter
