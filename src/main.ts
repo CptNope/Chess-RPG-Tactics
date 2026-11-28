@@ -1555,6 +1555,13 @@ class TacticsGame {
     if (!p) return;
     this.tip('ground');
     const h = this.grid.getHeight(u.x, u.z);
+    if (p.thrives) {
+      // A creature that thrives on this ground: an Emberback basks, a Bog Lurker breathes deep (0.51.0)
+      this.scene.spawnFloatingDamage(u.x, h, u.z, `${p.kind === 'embers' ? 'BASKS' : 'THRIVES'} +${p.heal}`, 'heal');
+      this.ui.addLogEntry(`[GROUND] ${u.name} ${p.kind === 'embers' ? 'basks in the embers' : 'breathes in the miasma'}: +${p.heal} HP.`, 'heal');
+      this.scene.updateUnits(this.units);
+      return;
+    }
     if (p.damage) {
       this.scene.spawnFloatingDamage(u.x, h, u.z, `EMBERS -${p.damage}`, 'damage');
       this.ui.addLogEntry(`[GROUND] ${u.name} is burned by the embers: ${p.damage} damage.`, 'spell');

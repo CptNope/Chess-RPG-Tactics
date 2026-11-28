@@ -71,7 +71,7 @@ export class SaveManager {
     if (!validSlot(slot)) return false;
     try {
       const saveData: GameSaveData = {
-        version: '0.50.0',
+        version: '0.51.0',
         timestamp: Date.now(),
         currentChapterId: chapterId,
         units: playerUnits,
