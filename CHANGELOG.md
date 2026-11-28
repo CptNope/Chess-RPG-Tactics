@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.49.0] - 2026-11-28
+
+### Added
+- **The Ranger**, a new advanced job (Archer Lv 3 and Thief Lv 2), who hides **traps** on the field. Foes can't see them.
+  - **How traps work:** the first foe to walk into one stops on it, and it springs. Your own side walks over them safely.
+  - **Snare Trap:** Immobilize. **Spike Trap:** heavy damage from the Ranger's attack. **Smoke Trap:** Blind. **Slumber Trap:** Sleep.
+  - **Pinning Shot:** a shot from 5 tiles that Immobilizes.
+  - **Ambush** (reaction): when a foe springs your trap within reach of your weapon, you shoot it at once. **Trapsmith** (support): keep 5 traps instead of 3.
+  - Master signature: **Killing Field**, spike traps on every free tile around a point.
+  - Bow or dagger. A Ranger may turn up among the recruits from Chapter IV on, and it has a Trial.
+- **Enemy traps:** a **Bandit Trapper** now leads the bandits at Thornwood Ford. You only learn where its traps are when someone walks into one; the log says when it hides something.
+- Aiming a trap: free tiles light up amber; select one, then select it again to hide the trap. Your own traps show on the ground as small icons.
+
+### Developer
+- `src/core/Traps.ts`: `Ability.trap`, `unit.traps`, `walkInto` (a move stops at the first foe's trap on its path), the battle's `trap` event; `scoreTrap` in the AI. ADR 0054.
+- 7 new tests (355 total).
+
 ## [0.48.0] - 2026-11-27
 
 ### Added

@@ -15,6 +15,7 @@ import { faceTowards, summonVictims, unitsInBlast } from './EnemyAI';
 import { endPerformance, isCentered, noFalloff, startPerformance } from './Performance';
 import { startCall } from './Summons';
 import { plantTotem, pulsesOn, Totem, TotemPulse } from './Totems';
+import { setTrapsAt, springTrap, Trap, trapAt, trapOnPath, TrapSprung } from './Traps';
 import { isAlly } from './Sides';
 import { BattleRules, earnsProgress } from './Rules';
 
@@ -52,6 +53,8 @@ export interface ActionStart {
   /** The totem a Shaman planted, and what it did at once to those in reach (0.47.0). */
   totem?: Totem;
   pulses?: { unit: Unit; pulses: TotemPulse[] }[];
+  /** The traps a Ranger hid (0.49.0). */
+  trapsSet?: Trap[];
 }
 
 export interface ActionHit {
@@ -85,6 +88,7 @@ export interface ActionEnd {
 export function victimsFor(units: readonly Unit[], caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
   if (ability.isSelfOnly) return [caster];
   if (ability.totem) return []; // a totem lands on the tile, not on anyone (0.47.0)
+  if (ability.trap) return []; // so does a trap (0.49.0)
   if (isCentered(ability)) return unitsInBlast(caster, ability, caster.x, caster.z, units as Unit[]);
   if (ability.aoe > 0) return summonVictims(caster, ability, tx, tz, units as Unit[]).map((v) => v.unit);
   const living = units.find((v) => !v.isDead && v.x === tx && v.z === tz);
@@ -163,7 +167,12 @@ export function* resolveAction(ctx: ActionContext, caster: Unit, ability: Abilit
     if (pulses.some((p) => p.unit.isDead)) kills += pulses.filter((p) => p.unit.isDead).length;
   }
 
-  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses };
+  // A Ranger hides traps on free ground (0.49.0)
+  const trapsSet = ability.trap
+    ? setTrapsAt(caster, ability, tx, tz, (x, z) => !!ctx.grid.getTile(x, z)?.walkable && !ctx.units.some((u) => !u.isDead && u.x === x && u.z === z) && !trapAt(ctx.units, x, z))
+    : undefined;
+
+  yield { kind: 'start', victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses, trapsSet };
 
   for (const target of calling ? [] : victims) {
     const a = asFor(target);
@@ -198,4 +207,40 @@ export function runAction(ctx: ActionContext, caster: Unit, ability: Ability, tx
     if (step.done) return { steps, end: step.value };
     steps.push(step.value);
   }
+}
+
+/** A walk cut short by a foe's trap (0.49.0). */
+export interface TrapStep {
+  sprung: TrapSprung;
+  /** Where the walker stopped: on the trap. */
+  stopAt: { x: number; z: number };
+  /** The Ranger's Ambush shot, when it had one. */
+  ambush?: AttackResult;
+}
+
+/**
+ * Walks a unit towards `to` and springs the first foe's trap on the way (0.49.0). The walker stops
+ * on the trap; when it isn't on a trap's path nothing happens and it isn't moved (the caller moves
+ * it). A Ranger with Ambush who can reach the walker with its weapon takes a shot at once.
+ */
+export function walkInto(ctx: ActionContext, mover: Unit, to: { x: number; z: number }): TrapStep | null {
+  const path = ctx.grid.findPath(mover, ctx.units, to.x, to.z) ?? [{ x: mover.x, z: mover.z }, to]; // Teleport: only where it lands
+  const hit = trapOnPath(mover, path, ctx.units);
+  if (!hit) return null;
+  const stopAt = { ...path[hit.index] };
+  mover.x = stopAt.x;
+  mover.z = stopAt.z;
+  const sprung = springTrap(hit.owner, hit.trap, mover, JobSystem.getAttackPower(hit.owner), (u, s) => CombatEngine.applyStatus(u, s));
+  JobSystem.recalculateDerivedStats(mover);
+  const o = hit.owner;
+  let ambush: AttackResult | undefined;
+  const awake = !o.statuses.some((s) => s.type === 'sleep');
+  if (!mover.isDead && !o.isDead && awake && o.equippedAbilities.reaction === 'rg_ambush') {
+    const shot = JobSystem.getCombatActionAbilities(o).find((a) => a.id === 'basic_attack');
+    if (shot && ctx.grid.canTarget(o.x, o.z, mover.x, mover.z, shot.range, shot.heightTolerance, false)) {
+      const f = CombatEngine.getForecast(o, mover, shot, ctx.grid.getHeight(o.x, o.z), ctx.grid.getHeight(mover.x, mover.z), ctx.grid.getTile(mover.x, mover.z)?.terrain);
+      ambush = CombatEngine.executeAttack(f, ctx.rng);
+    }
+  }
+  return { sprung, stopAt, ambush };
 }

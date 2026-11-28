@@ -27,7 +27,8 @@ export const VETERAN_PASSIVES: Record<string, { reaction?: string; support?: str
   tamer: { reaction: 'ta_snarl' },
   gunner: { reaction: 'gu_return_fire' },
   dark_knight: { reaction: 'dk_vengeance', support: 'dk_blood_pact' },
-  shaman: { reaction: 'sh_spirit_ward', support: 'sh_deep_roots' }
+  shaman: { reaction: 'sh_spirit_ward', support: 'sh_deep_roots' },
+  ranger: { reaction: 'rg_ambush', support: 'rg_trapsmith' }
 };
 
 /** Lifetime JP needed for each job level (index 0 = level 1). The last level is "Master". */
@@ -63,7 +64,8 @@ export const JOB_MASTERY: Record<string, { stat: MasteryStat; veteran: number; m
   tamer: { stat: 'hp', veteran: 10, master: 25 },
   gunner: { stat: 'attack', veteran: 1, master: 2 },
   dark_knight: { stat: 'hp', veteran: 12, master: 30 },
-  shaman: { stat: 'mp', veteran: 8, master: 20 }
+  shaman: { stat: 'mp', veteran: 8, master: 20 },
+  ranger: { stat: 'attack', veteran: 1, master: 2 }
 };
 const MASTERY_NAMES: Record<MasteryStat, string> = { hp: 'HP', mp: 'MP', attack: 'ATK', magic: 'MAG', speed: 'Speed', evasion: 'Evasion', jump: 'Jump' };
 /** "+10 HP", "+1 ATK"… */
@@ -172,6 +174,11 @@ export class JobSystem {
       initialGear.shield = ITEMS.buckler;
       initialGear.head = ITEMS.iron_helm;
       initialGear.body = ITEMS.chainmail;
+    } else if (jobId === 'ranger') {
+      initialGear.weapon = ITEMS.hunting_bow;
+      initialGear.head = ITEMS.leather_cap;
+      initialGear.body = ITEMS.leather_vest;
+      initialGear.accessory = ITEMS.feather_boots;
     } else if (jobId === 'shaman') {
       initialGear.weapon = ITEMS.gaia_staff;
       initialGear.body = ITEMS.silk_robe;
@@ -609,6 +616,7 @@ export class JobSystem {
     unit.performing = undefined;
     unit.calling = undefined;
     unit.totems = undefined;
+    unit.traps = undefined;
     unit.usedSignatures = [];
     unit.ct = 0;
     unit.hasMoved = false;

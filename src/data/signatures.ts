@@ -365,5 +365,21 @@ export const SIGNATURES: Record<string, Ability> = {
     element: 'holy',
     totem: 'ancestral',
     signature: true
+  },
+  ranger: {
+    id: 'sig_killing_field',
+    name: 'Killing Field',
+    jobId: 'ranger',
+    type: 'action',
+    description: 'Seeds the ground with spikes: hides a Spike Trap on every free tile within 1 of the aimed one, past the usual limit.',
+    jpCost: 0,
+    mpCost: 0,
+    range: 4,
+    heightTolerance: 3.0,
+    aoe: 1,
+    power: 0,
+    element: 'physical',
+    trap: 'spikes',
+    signature: true
   }
 };

@@ -23,7 +23,7 @@ import { FIRST_ACT_FINALE, Mission, clearedAfterStory, nodeForChapter, sanitizeC
 import { CONSUMABLES, STARTING_INVENTORY, MAX_STACK, sanitizeInventory, consumableStock } from './data/consumables';
 import { STARTING_GIL, shopProgress, shopStock, nextShopCap, victoryGil, resaleValue, gearSaleBlock , BattleMode } from './core/Economy';
 import { CombatEngine, AttackResult } from './core/CombatEngine';
-import { ActionContext, ActionHit, forecastFor, resolveAction, victimsFor } from './core/Action';
+import { ActionContext, TrapStep, walkInto, ActionHit, forecastFor, resolveAction, victimsFor } from './core/Action';
 import { newSeed, seededRng } from './core/Rng';
 import { battleOutcome, noteTurn } from './core/Battle';
 import { CAMPAIGN_RULES } from './core/Rules';
@@ -49,6 +49,7 @@ import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { inReach, sumPulses, TotemPulse } from './core/Totems';
+import { trapAt } from './core/Traps';
 import { HAZARDS, HazardPulse, holdGoal, zoneHolder, zoneKeys } from './core/Hazards';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
 import '@fontsource/press-start-2p/latin-400.css';
@@ -1259,8 +1260,10 @@ class TacticsGame {
     const supportive = CombatEngine.isSupportive(ability);
     this.totemAim = null;
     let tiles = this.grid.mapData.tiles.filter((t) =>
-      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive || !!ability.totem)
+      this.grid.canTarget(active.x, active.z, t.x, t.z, ability.range, ability.heightTolerance, supportive || !!ability.totem || !!ability.trap)
     );
+    // A trap goes on free ground (0.49.0)
+    if (ability.trap && !ability.aoe) tiles = tiles.filter((t) => this.trapFree(t.x, t.z));
     if (ability.revive) {
       // Only the tiles where a fallen ally can be raised
       tiles = tiles.filter((t) => this.victimsFor(active, ability, t.x, t.z).length > 0);
@@ -1273,7 +1276,12 @@ class TacticsGame {
     this.currentMode = 'targeting';
     this.tip('targeting');
     (document.activeElement as HTMLElement | null)?.blur();
-    this.scene.setHighlights(tiles, supportive || this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+    this.scene.setHighlights(tiles, ability.trap ? 0xf59e0b : supportive || this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+  }
+
+  /** Free ground for a trap: walkable, nobody on it, no trap there yet (0.49.0). */
+  private trapFree(x: number, z: number): boolean {
+    return !!this.grid.getTile(x, z)?.walkable && !this.units.some((u) => !u.isDead && u.x === x && u.z === z) && !trapAt(this.units, x, z);
   }
 
   /** True for a totem that works for its Shaman's side: Mending, Warding, Ancestral (0.47.0). */
@@ -1337,9 +1345,14 @@ class TacticsGame {
       // Until the unit acts, the move can be taken back (UNDO): remember where it stood and what it had
       const encore = active.statuses.find((st) => st.type === 'encore')?.duration;
       this.moveUndo = active.hasActed ? null : { unitId: active.id, x: active.x, z: active.z, facing: active.facing, hp: active.currentHp, mp: active.currentMp, performing: active.performing, encore };
-      this.scene.walkPath(active.id, this.grid.findPath(active, this.units, tile.x, tile.z));
-      active.x = tile.x;
-      active.z = tile.z;
+      // A foe's trap on the way stops the walk on it (0.49.0)
+      const path = this.grid.findPath(active, this.units, tile.x, tile.z);
+      const trapped = walkInto(this.actionContext(), active, { x: tile.x, z: tile.z });
+      this.scene.walkPath(active.id, trapped && path ? path.slice(0, path.findIndex((p) => p.x === trapped.stopAt.x && p.z === trapped.stopAt.z) + 1) : path);
+      if (!trapped) {
+        active.x = tile.x;
+        active.z = tile.z;
+      }
       active.hasMoved = true;
       // Walking off ends a song or dance (UNDO brings it back)
       if (endPerformance(active)) this.ui.addLogEntry(`[PERFORMANCE] ${active.name} stops performing to move.`, 'system');
@@ -1353,14 +1366,33 @@ class TacticsGame {
       // Terrain-driven spells change with the ground: refresh the action list
       this.ui.populateActionSubMenu(active, this.grid.getTile(active.x, active.z)?.terrain);
 
+      if (trapped) {
+        // There's no taking back a sprung trap
+        this.moveUndo = null;
+        void this.showTrap(active, trapped).then(() => {
+          if (this.battleOver || this.checkBattleStatus()) return;
+          if (active.isDead || active.statuses.some((s) => s.type === 'sleep')) {
+            this.turnManager.endTurn(active);
+            this.updateTimeline();
+            this.currentMode = 'busy';
+            later(() => this.advanceTurn(), 600);
+          } else if (active.hasActed) this.handleWaitCommand();
+        });
+        return;
+      }
       if (active.hasActed) this.handleWaitCommand();
     } else if (this.currentMode === 'targeting' && this.selectedAbility && active.team === 'player') {
       const ability = this.selectedAbility;
       const supportive = CombatEngine.isSupportive(ability);
-      if (ability.totem) {
-        // A totem goes on ground, not on someone: the first click shows its reach, the second plants it (0.47.0)
+      if (ability.totem || ability.trap) {
+        // A totem (0.47.0) or a trap (0.49.0) goes on ground, not on someone: the first click shows
+        // where it lands, the second sets it
         if (!this.grid.canTarget(active.x, active.z, tile.x, tile.z, ability.range, ability.heightTolerance, true)) {
           this.ui.showBanner('OUT OF RANGE');
+          return;
+        }
+        if (ability.trap && !ability.aoe && !this.trapFree(tile.x, tile.z)) {
+          this.ui.showBanner('NO ROOM FOR A TRAP THERE');
           return;
         }
         if (this.totemAim && this.totemAim.x === tile.x && this.totemAim.z === tile.z) {
@@ -1371,11 +1403,11 @@ class TacticsGame {
         }
         this.totemAim = { x: tile.x, z: tile.z };
         SoundFX.playMenuBlip();
-        const totem = { kind: ability.totem, x: tile.x, z: tile.z, radius: ability.aoe, turns: 0 };
-        const reach = this.grid.mapData.tiles.filter((t) => t.walkable && inReach(totem, t.x, t.z));
-        this.scene.setHighlights(reach, this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
+        const area = { x: tile.x, z: tile.z, radius: ability.aoe };
+        const reach = this.grid.mapData.tiles.filter((t) => t.walkable && inReach({ kind: 'mending', turns: 0, ...area }, t.x, t.z) && (!ability.trap || this.trapFree(t.x, t.z)));
+        this.scene.setHighlights(reach, ability.trap ? 0xf59e0b : this.totemHelps(ability) ? 0x22c55e : 0xdc2626);
         this.scene.setCursor(tile.x, tile.z);
-        this.ui.showBanner('ITS REACH · SELECT AGAIN TO PLANT');
+        this.ui.showBanner(ability.trap ? 'SELECT AGAIN TO HIDE IT HERE' : 'ITS REACH · SELECT AGAIN TO PLANT');
         return;
       }
       if (isCentered(ability)) {
@@ -1469,7 +1501,38 @@ class TacticsGame {
   // Shared action resolution (player + enemy)
   // ---------------------------------------------------------------------------
 
-  /** Units an ability aimed at (tx, tz) will affect. Single-target abilities hit whoever is on the tile. */
+  /** Shows a sprung trap: the snap, what it did, and the Ranger's Ambush shot (0.49.0). */
+  private async showTrap(u: Unit, t: TrapStep): Promise<void> {
+    const s = t.sprung;
+    const h = this.grid.getHeight(u.x, u.z);
+    const NAMES: Record<string, string> = { snare: 'snare', spikes: 'spike trap', slumber: 'slumber trap', smoke: 'smoke trap' };
+    SoundFX.playSwordSlash();
+    this.scene.updateUnits(this.units);
+    this.scene.focusOn(u.x, h, u.z);
+    this.scene.spawnFloatingDamage(u.x, h + 0.5, u.z, 'TRAP!', 'damage');
+    this.ui.addLogEntry(`[TRAP] ${u.name} walks into ${s.owner.name}'s ${NAMES[s.kind]}!`, 'spell');
+    await wait(350);
+    if (s.damage) {
+      this.scene.spawnFloatingDamage(u.x, h, u.z, `-${s.damage}`, 'damage');
+      this.ui.addLogEntry(`[TRAP] The spikes deal ${s.damage} damage.`, 'attack');
+    }
+    if (s.status) {
+      this.fx.status(u, s.status);
+      this.scene.spawnFloatingDamage(u.x, h + 0.3, u.z, s.status.toUpperCase(), 'miss');
+      this.ui.addLogEntry(`[TRAP] ${u.name} is ${s.status === 'immobilize' ? 'caught fast' : s.status === 'sleep' ? 'put to sleep' : 'Blinded by smoke'}.`, 'spell');
+    }
+    if (t.ambush) {
+      await wait(300);
+      const a = t.ambush;
+      this.scene.spawnFloatingDamage(u.x, h + 0.15, u.z, a.hit ? `AMBUSH -${a.damageDealt}` : 'MISS', a.hit ? 'damage' : 'miss');
+      this.ui.addLogEntry(a.hit ? `[REACTION] Ambush! ${s.owner.name} shoots ${u.name} for ${a.damageDealt}.` : `[REACTION] ${s.owner.name}'s Ambush shot misses.`, a.hit ? 'reaction' : 'system');
+    }
+    if (u.isDead) this.ui.addLogEntry(`[DEFEAT] ${u.name} has fallen!`, 'defeat');
+    this.scene.updateUnits(this.units);
+    this.ui.updateUnitCard(u, h);
+    await wait(450);
+  }
+
   /** Floats and logs what the ground did to a unit starting its turn (0.48.0). */
   private showHazard(u: Unit, p: HazardPulse | undefined): void {
     if (!p) return;
@@ -1513,6 +1576,7 @@ class TacticsGame {
     this.scene.updateUnits(this.units);
   }
 
+  /** Units an ability aimed at (tx, tz) will affect. Single-target abilities hit whoever is on the tile. */
   private victimsFor(caster: Unit, ability: Ability, tx: number, tz: number): Unit[] {
     return victimsFor(this.units, caster, ability, tx, tz);
   }
@@ -1545,7 +1609,7 @@ class TacticsGame {
     const run = resolveAction(this.actionContext(), caster, ability, tx, tz, opts);
     const first = run.next();
     if (first.done || first.value.kind !== 'start') return;
-    const { victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses } = first.value;
+    const { victims, calling, summoning, faced, performanceEnded, hpPaid, totem, pulses, trapsSet } = first.value;
     if (performanceEnded) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} stops performing.`, 'system');
     if (hpPaid > 0) {
       // A Dark Knight's price, paid in blood (0.46.0)
@@ -1558,6 +1622,15 @@ class TacticsGame {
       this.scene.spawnFloatingDamage(totem.x, this.grid.getHeight(totem.x, totem.z) + 0.6, totem.z, `✦ ${ability.name.toUpperCase()}`, 'heal');
       this.ui.addLogEntry(`[TOTEM] ${caster.name} plants a ${ability.name}. It stands for ${totem.turns} of ${caster.name}'s turns.`, 'spell');
       for (const p of pulses ?? []) this.showPulses(p.unit, p.pulses);
+    }
+    if (trapsSet) {
+      // A Ranger hides traps (0.49.0). The other side sees only that something was hidden
+      SoundFX.playMoveStep();
+      const ours = caster.team === 'player';
+      if (ours) for (const t of trapsSet) this.scene.spawnFloatingDamage(t.x, this.grid.getHeight(t.x, t.z) + 0.4, t.z, 'TRAP SET', 'heal');
+      this.ui.addLogEntry(ours ? `[TRAP] ${caster.name} hides ${trapsSet.length === 1 ? `a ${ability.name.toLowerCase()}` : `${trapsSet.length} traps`}. Foes won't see ${trapsSet.length === 1 ? 'it' : 'them'}.`
+        : `[TRAP] ${caster.name} hides something on the ground...`, 'spell');
+      this.scene.updateUnits(this.units);
     }
 
     if (faced && !called) this.scene.triggerUnitLunge(caster.id, tx, tz);
@@ -1575,7 +1648,7 @@ class TacticsGame {
 
     const verb = caster.team === 'player' ? 'executes' : 'uses';
     const targetText = ability.isSelfOnly ? 'self' : victims.length > 1 ? `${victims.length} units` : victims[0]?.name || (isCentered(ability) ? 'nobody in reach' : 'empty ground');
-    if (calling || totem) {
+    if (calling || totem || trapsSet) {
       // logged above
     } else if (called) {
       this.ui.addLogEntry(`[SUMMON] ${ability.name} falls on ${targetText}.`, 'spell');
@@ -1903,10 +1976,15 @@ class TacticsGame {
     });
     if ((plan.ability?.revive || plan.ability?.rebirth) && enemy.team === 'enemy') this.enemyRaises++;
 
+    let trapped: TrapStep | null = null;
     if (plan.moveTo.x !== enemy.x || plan.moveTo.z !== enemy.z) {
-      const walkMs = this.scene.walkPath(enemy.id, this.grid.findPath(enemy, this.units, plan.moveTo.x, plan.moveTo.z));
-      enemy.x = plan.moveTo.x;
-      enemy.z = plan.moveTo.z;
+      const path = this.grid.findPath(enemy, this.units, plan.moveTo.x, plan.moveTo.z);
+      trapped = walkInto(this.actionContext(), enemy, plan.moveTo); // a foe's trap stops it short (0.49.0)
+      const walkMs = this.scene.walkPath(enemy.id, trapped && path ? path.slice(0, path.findIndex((p) => p.x === trapped!.stopAt.x && p.z === trapped!.stopAt.z) + 1) : path);
+      if (!trapped) {
+        enemy.x = plan.moveTo.x;
+        enemy.z = plan.moveTo.z;
+      }
       enemy.hasMoved = true;
       endPerformance(enemy);
       SoundFX.playMoveStep();
@@ -1917,7 +1995,14 @@ class TacticsGame {
       if (walkMs > 550 * SPEED) await new Promise((r) => setTimeout(r, walkMs - 550 * SPEED));
     }
 
-    if (plan.ability && plan.targetTile) {
+    if (trapped) {
+      await this.showTrap(enemy, trapped);
+      if (this.battleOver || this.checkBattleStatus()) return;
+    }
+    // Stopped short by a trap, it acts only if it still can from where it stands
+    const stillCan = !trapped || (!enemy.isDead && !enemy.statuses.some((s) => s.type === 'sleep') && !!plan.ability && !!plan.targetTile &&
+      (!!plan.ability.isSelfOnly || isCentered(plan.ability) || this.grid.canTarget(enemy.x, enemy.z, plan.targetTile.x, plan.targetTile.z, plan.ability.range, plan.ability.heightTolerance, CombatEngine.isSupportive(plan.ability) || !!plan.ability.totem || !!plan.ability.trap)));
+    if (plan.ability && plan.targetTile && stillCan) {
       await this.performAction(enemy, plan.ability, plan.targetTile.x, plan.targetTile.z);
     }
 

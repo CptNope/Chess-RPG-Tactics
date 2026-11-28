@@ -37,7 +37,7 @@ export const SKIRMISHES: Record<string, SkirmishDef> = {
     name: 'Thornwood Ford',
     mapId: 'river_ruins',
     foe: 'Thornwood Bandits',
-    jobs: [['thief', 'Cutpurse'], ['archer', 'Poacher'], ['squire', 'Footpad'], ['monk', 'Bruiser'], ['knight', 'Deserter']],
+    jobs: [['thief', 'Cutpurse'], ['ranger', 'Bandit Trapper'], ['archer', 'Poacher'], ['squire', 'Footpad'], ['monk', 'Bruiser'], ['knight', 'Deserter']], // the trapper since 0.49.0
     opensAfter: ['chapter_1'],
     intro: 'Bandits hold the ford and rob everyone who crosses. Clear them out.',
     trophy: 'fordwarden_bow'

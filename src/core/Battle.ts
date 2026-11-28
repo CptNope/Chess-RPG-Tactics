@@ -12,7 +12,8 @@
 import type { Ability, BattleObjective, FacingDirection, Unit } from './types';
 import type { BattleGrid } from './Grid';
 import { TurnManager } from './TurnManager';
-import { ActionContext, ActionEnd, ActionStep, runAction } from './Action';
+import { ActionContext, ActionEnd, ActionStep, runAction, walkInto } from './Action';
+import { trapAt } from './Traps';
 import { callDue } from './Summons';
 import { sumPulses, TotemPulse } from './Totems';
 import { HazardPulse, holdGoal, zoneHolder, zoneKeys } from './Hazards';
@@ -120,6 +121,8 @@ export type BattleEvent =
   | { t: 'hold'; round: number; held: number; holder: string | null }
   | { t: 'call' | 'encore' | 'act'; unit: string; ability: string; x: number; z: number; hits: HitRecord[] }
   | { t: 'move'; unit: string; x: number; z: number }
+  /** A foe's trap stopped a walk (0.49.0): who set it, what it did, and the Ranger's Ambush shot. */
+  | { t: 'trap'; unit: string; owner: string; kind: string; x: number; z: number; damage?: number; status?: string; ambush?: number; down?: boolean }
   | { t: 'face'; unit: string; facing: FacingDirection }
   | { t: 'end'; outcome: BattleOutcome };
 
@@ -250,7 +253,10 @@ export class Battle {
       if (ability.item && !((this.ctx.pouchOf(u) || {})[ability.item] > 0)) return 'None left.';
       if (!target) return 'No target.';
       if (!ability.isSelfOnly && !isCentered(ability) &&
-        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability) || !!ability.totem)) return 'Out of range.';
+        !this.grid.canTarget(moveTo.x, moveTo.z, target.x, target.z, ability.range, ability.heightTolerance, CombatEngine.isSupportive(ability) || !!ability.totem || !!ability.trap)) return 'Out of range.';
+      // A single trap needs free ground: walkable, nobody on it, no trap there yet (0.49.0)
+      if (ability.trap && !ability.aoe && (!this.grid.getTile(target.x, target.z)?.walkable || trapAt(this.units, target.x, target.z) ||
+        this.units.some((o) => !o.isDead && o !== u && o.x === target.x && o.z === target.z) || (target.x === moveTo.x && target.z === moveTo.z))) return 'No room for a trap there.';
     }
     return null;
   }
@@ -264,14 +270,27 @@ export class Battle {
     if (problem) throw new Error(problem);
     const u = this.active!;
     const from = this.events.length;
+    let trapped = false;
     if (intent.moveTo.x !== u.x || intent.moveTo.z !== u.z) {
-      u.x = intent.moveTo.x;
-      u.z = intent.moveTo.z;
+      // A foe's trap on the way stops the walk there (0.49.0)
+      const t = walkInto(this.ctx, u, intent.moveTo);
+      if (!t) {
+        u.x = intent.moveTo.x;
+        u.z = intent.moveTo.z;
+      }
       u.hasMoved = true;
       endPerformance(u); // walking off ends a song or dance
       this.events.push({ t: 'move', unit: u.id, x: u.x, z: u.z });
+      if (t) {
+        trapped = true;
+        const s = t.sprung;
+        this.events.push({ t: 'trap', unit: u.id, owner: s.owner.id, kind: s.kind, x: s.x, z: s.z, damage: s.damage, status: s.status, ambush: t.ambush?.hit ? t.ambush.damageDealt : undefined, down: u.isDead || undefined });
+      }
     }
-    if (intent.ability && intent.target) this.act('act', u, intent.ability, intent.target.x, intent.target.z);
+    // Stopped short by a trap, the unit acts only if it still can from where it stands
+    const canStill = !trapped || (!u.isDead && !u.statuses.some((s) => s.type === 'sleep') && intent.ability && intent.target &&
+      this.check({ ...intent, moveTo: { x: u.x, z: u.z } }) === null);
+    if (intent.ability && intent.target && canStill) this.act('act', u, intent.ability, intent.target.x, intent.target.z);
     if (!this.settle()) {
       if (!u.isDead) {
         u.facing = intent.facing;

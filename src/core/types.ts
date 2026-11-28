@@ -9,6 +9,7 @@ export type AbilityType = 'action' | 'reaction' | 'support' | 'movement';
 
 import type { Totem, TotemKind } from './Totems';
 import type { HazardKind } from './Hazards';
+import type { Trap, TrapKind } from './Traps';
 
 export type Element = 'physical' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark' | 'time';
 
@@ -110,6 +111,8 @@ export interface Ability {
   hpCost?: number;
   /** Plants a totem of this kind on the aimed tile, reaching `aoe` steps (0.47.0). */
   totem?: TotemKind;
+  /** Hides a trap of this kind on the aimed tile, or on every free tile within `aoe` (0.49.0). */
+  trap?: TrapKind;
   /** Thief: takes one piece of the target's gear instead of dealing damage. */
   steal?: boolean;
   /** Set on the action for using a consumable: the id of the item it spends (see data/consumables.ts). */
@@ -160,7 +163,7 @@ export interface Job {
   name: string;
   description: string;
   role: 'Vanguard' | 'Marksman' | 'Mage' | 'Healer' | 'Skirmisher' | 'Lancer' | 'Chronomancer' | 'Terramancer'
-    | 'Brawler' | 'Bruiser' | 'Warden' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
+    | 'Brawler' | 'Bruiser' | 'Warden' | 'Trapper' | 'Rogue' | 'Summoner' | 'Hexer' | 'Templar' | 'Battlemage' | 'Alchemist' | 'Troubadour' | 'Performer'
     // Monsters (0.26.0)
     | 'Beast' | 'Ooze' | 'Spirit' | 'Brute' | 'Tamer' | 'Undead' | 'Plant';
   spriteClass: string;
@@ -257,6 +260,8 @@ export interface Unit {
   calling?: { abilityId: string; x: number; z: number };
   /** A Shaman's standing totems (0.47.0). */
   totems?: Totem[];
+  /** A Ranger's hidden traps (0.49.0). */
+  traps?: Trap[];
   /** Iron Will can fire only once per battle. */
   usedIronWill?: boolean;
   /** A monster a Beast Tamer won over this battle (0.28.0): it fights for the squad and may join it. */
