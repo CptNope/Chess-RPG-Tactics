@@ -1329,7 +1329,10 @@ class TacticsGame {
   /** Where a Sapper's single-tile work can go (0.54.0). */
   private canWork(ability: Ability, x: number, z: number): boolean {
     const tile = this.grid.getTile(x, z);
-    return ability.earthwork === 'barricade' ? canBuildAt(tile, this.units) : ability.earthwork ? canShape(tile, ability.earthwork) : false;
+    if (ability.earthwork === 'barricade') return canBuildAt(tile, this.units);
+    if (!ability.earthwork) return false;
+    // Undermine still strikes whoever stands there when the ground can't sink further (0.57.0)
+    return canShape(tile, ability.earthwork) || (ability.power > 0 && this.units.some((u) => !u.isDead && u.x === x && u.z === z));
   }
 
   /** Redraws tiles a Sapper reshaped, or barricades that fell, and logs it (0.54.0). */

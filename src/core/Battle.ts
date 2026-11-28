@@ -283,7 +283,8 @@ export class Battle {
         if (!ok && (ability.corpseBurst || !ability.aoe)) return ability.thrall ? 'No body to raise there.' : 'No body there.';
       }
       // A Sapper's single tile (0.54.0): a barricade needs free ground (not where the Sapper will
-      // stand), earth needs walkable ground within the height limits
+      // stand), earth needs walkable ground within the height limits. Undermine's blow lands even
+      // where the ground can't sink any further (0.57.0: the mirror duels found it refused)
       if (ability.earthwork && !ability.aoe) {
         const tile = this.grid.getTile(target.x, target.z);
         if (ability.earthwork === 'barricade') {
@@ -292,7 +293,7 @@ export class Battle {
           const ok = canBuildAt(tile, this.units);
           u.x = sx; u.z = sz;
           if (!ok) return 'No room for a barricade there.';
-        } else if (!canShape(tile, ability.earthwork)) return ability.earthwork === 'raise' ? 'The ground can\'t go higher there.' : 'The ground can\'t go lower there.';
+        } else if (ability.power <= 0 && !canShape(tile, ability.earthwork)) return ability.earthwork === 'raise' ? 'The ground can\'t go higher there.' : 'The ground can\'t go lower there.';
       }
       if (ability.trap && !ability.aoe && (!this.grid.getTile(target.x, target.z)?.walkable || trapAt(this.units, target.x, target.z) ||
         this.units.some((o) => !o.isDead && o !== u && o.x === target.x && o.z === target.z) || (target.x === moveTo.x && target.z === moveTo.z))) return 'No room for a trap there.';
