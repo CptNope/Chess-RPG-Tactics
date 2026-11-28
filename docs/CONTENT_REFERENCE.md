@@ -942,13 +942,13 @@ Each story recruit's own chapter, at their home village on the world map (✦). 
 
 ## Battlefields
 
-| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48) | Squad deploys on |
+| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48; traps 0.53) | Squad deploys on |
 | :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- | :--- |
 | **Riverside Ruins** | `river_ruins` | 16×16 | day | 0.6–3.4 | grass 68%, stone 14%, water 11%, dirt 6%, wood 2% | 7 | — | (5, 14) (6, 14) (4, 13) (6, 13) (5, 15) (3, 14) |
-| **Night Battlement** | `night_fortress` | 16×16 | night | 0.5–4.5 | stone 61%, parapet 17%, water 12%, dirt 9%, wood 1% | 4 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Gloomy Mire** | `gloomy_swamp` | 16×16 | swamp | 0.4–3 | swamp 41%, grass 36%, wood 14%, dirt 5%, stone 2%, water 2% | 5 | — | (6, 14) (7, 14) (8, 14) (7, 15) (6, 15) (8, 15) |
+| **Night Battlement** | `night_fortress` | 16×16 | night | 0.5–4.5 | stone 61%, parapet 17%, water 12%, dirt 9%, wood 1% | 4 | hold zone 4, spikes trap 1, snare trap 1 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Gloomy Mire** | `gloomy_swamp` | 16×16 | swamp | 0.4–3 | swamp 41%, grass 36%, wood 14%, dirt 5%, stone 2%, water 2% | 5 | miasma 6, spring 2 | (6, 14) (7, 14) (8, 14) (7, 15) (6, 15) (8, 15) |
 | **Zodiac Summit** | `zodiac_summit` | 16×16 | night | 1–5 | parapet 35%, grass 24%, stone 16%, dirt 12%, water 11%, wood 2% | 6 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
-| **Emberwick Harbor** | `ember_harbor` | 16×16 | day | 0.4–4 | stone 36%, wood 30%, water 27%, dirt 6% | 72 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
+| **Emberwick Harbor** | `ember_harbor` | 16×16 | day | 0.4–4 | stone 36%, wood 30%, water 27%, dirt 6% | 72 | embers 7 | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Greywatch Isle** | `greywatch_isle` | 16×16 | night | 0.4–7 | water 44%, dirt 21%, stone 15%, grass 15%, parapet 5% | 90 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Stormbreak Cape** | `stormbreak_cape` | 16×16 | night | 0.4–5.4 | grass 27%, stone 23%, dirt 21%, parapet 18%, water 10%, wood 2% | 14 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |
 | **Saltglass Shore** | `saltglass_shore` | 16×16 | desert | 0.4–5 | sand 57%, stone 21%, water 18%, wood 4% | 6 | — | (6, 14) (8, 14) (7, 15) (5, 15) (9, 15) (7, 13) |

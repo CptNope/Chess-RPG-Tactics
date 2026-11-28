@@ -36,6 +36,13 @@ export interface PlanOptions {
    * it: the squad to hold it, the enemy to contest it.
    */
   zone?: ReadonlySet<string>;
+  /**
+   * The side defending a hold zone (0.53.0) fights as it would anyway: it doesn't rush the zone or
+   * cling to it, and the squad has to clear whoever stands there. Both sides wanting it pulled
+   * every defender into Chapter II-B's gate (51% → 20% in the sim; 19% when only those already on
+   * it stayed); this way the hold is a second road to victory, and Cinder Spring didn't move.
+   */
+  guardZone?: boolean;
 }
 
 export interface AiPlan {
@@ -420,7 +427,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
     if (p?.status === 'poison') s -= 10;
     if (p?.heal) s += (p.heal / unit.maxHp) * 100 * 0.7;
     if (p?.cured) s += 8;
-    if (opts.zone?.has(key(x, z))) s += 20;
+    if (opts.zone?.has(key(x, z)) && !opts.guardZone) s += 20;
     return s;
   };
   const zoneDist = (t: { x: number; z: number }): number => {
@@ -631,7 +638,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
     return r * (unit.currentHp < unit.maxHp * 0.4 ? 0.4 : 0.1);
   };
   // With a hold objective (0.48.0) the walk heads for the zone first, and the foes second
-  const towards = (t: { x: number; z: number }) => (opts.zone?.size ? zoneDist(t) + distFrom(t) * 0.25 : distFrom(t));
+  const towards = (t: { x: number; z: number }) => (opts.zone?.size && !opts.guardZone ? zoneDist(t) + distFrom(t) * 0.25 : distFrom(t));
   const walkScore = (t: { x: number; z: number }) => towards(t) - grid.getHeight(t.x, t.z) * 0.05 + callsLandingOn(unit, t.x, t.z, units) * 50 + walkRisk(t) - groundScore(t.x, t.z) * (unit.currentHp < unit.maxHp / 2 ? 0.6 : 1 / 8); // a hurt unit minds the ground more (0.51.0)
   let moveTo = origin;
   let bestDist = walkScore(origin);

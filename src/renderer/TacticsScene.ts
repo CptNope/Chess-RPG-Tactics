@@ -94,6 +94,8 @@ export class TacticsScene {
   /** The squad's own traps (0.49.0); the other side's are never drawn. */
   private trapGroup: THREE.Group = new THREE.Group();
   private trapKey = '';
+  /** The Workshop shows the traps drawn on the map too (0.53.0); a battle never does. */
+  private mapTraps = false;
   /** Hazard tiles and the hold zone painted on the ground (0.48.0). */
   private groundGroup: THREE.Group = new THREE.Group();
   private groundMats: THREE.ShaderMaterial[] = [];
@@ -965,9 +967,16 @@ export class TacticsScene {
     }
   }
 
+  /** Shows (in the Workshop) or hides the traps drawn on the map's tiles (0.53.0). */
+  public setMapTraps(on: boolean): void {
+    this.mapTraps = on;
+    this.trapKey = '\u0000';
+  }
+
   /** Draws the squad's own hidden traps, flat on their tiles (0.49.0). */
   private syncTraps(units: Unit[]): void {
     const list = units.filter((o) => o.team === 'player').flatMap((o) => o.traps ?? []);
+    if (this.mapTraps && this.grid) for (const t of this.grid.mapData.tiles) if (t.trap) list.push({ kind: t.trap, x: t.x, z: t.z });
     const key = list.map((t) => `${t.kind}@${t.x},${t.z}`).join('|');
     if (key === this.trapKey) return;
     this.trapKey = key;

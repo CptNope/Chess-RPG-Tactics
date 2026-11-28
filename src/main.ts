@@ -49,7 +49,7 @@ import { BattleFx } from './renderer/BattleFx';
 import { Scenario, scenarioToChapter, decodeShare } from './core/Scenario';
 import { Chain, ChainLibrary, ChainProgress, chainStep, decodeChainShare } from './core/Chain';
 import { inReach, sumPulses, TotemPulse } from './core/Totems';
-import { trapAt } from './core/Traps';
+import { layMapTraps, trapAt } from './core/Traps';
 import { bodyAt, raisableAt, settleFallenThralls, worksOnBodies } from './core/Necromancy';
 import { GroundChange, HAZARDS, HazardPulse, holdGoal, SCORCH_ROUNDS, tickGround, zoneHolder, zoneKeys } from './core/Hazards';
 import { ITCH_URL, SOURCE_URL, AUTHOR_URL, canFullscreen, isFullscreen, toggleFullscreen, guardPageScroll, setupInstall } from './platform';
@@ -397,6 +397,7 @@ class TacticsGame {
     // recruit joining in this battle always in it (0.25.0)
     this.deployed = chooseParty(this.squad, this.party, chapter.recruit ? [chapter.recruit.id] : []);
     const enemies = this.spawnEnemies(chapter);
+    layMapTraps(enemies, this.grid.mapData.tiles); // traps the defenders laid (0.53.0)
     this.units = [...enemies];
     this.deploySquad();
     this.units = [...this.deployedUnits(), ...enemies];
@@ -1021,7 +1022,9 @@ class TacticsGame {
     const obj = this.currentChapter.objective;
     if (obj?.type === 'boss') this.ui.addLogEntry(`[OBJECTIVE] Defeat ${boss ? boss.name : 'the boss'}.`, 'system');
     else if (obj?.type === 'survive') this.ui.addLogEntry(`[OBJECTIVE] Hold out for ${obj.rounds || 6} rounds. Round 1 begins!`, 'system');
-    else if (obj?.type === 'hold') this.ui.addLogEntry(`[OBJECTIVE] Hold the marked ground: end ${holdGoal(obj)} rounds with your squad on it and no foe on it.`, 'system');
+    else if (obj?.type === 'hold') {
+      this.ui.addLogEntry(`[OBJECTIVE] Hold the marked ground: end ${holdGoal(obj)} rounds with your squad on it and no foe on it.`, 'system');
+    }
     this.updateTimeline();
     this.advanceTurn();
   }
@@ -1170,7 +1173,9 @@ class TacticsGame {
 
     if (activeUnit.team === 'player') {
       SoundFX.playTurnChime();
-      this.tip('firstTurn');
+      // One tip at a time: the hold tip (0.53.0) waits until the first-turn tip has been seen
+      if (this.tutor.wants('firstTurn')) this.tip('firstTurn');
+      else if (this.currentChapter.objective?.type === 'hold') this.tip('hold');
     } else {
       this.currentMode = 'busy';
       later(() => this.runAiTurn(activeUnit), 800);
@@ -2029,7 +2034,8 @@ class TacticsGame {
       caution: foe ? enemyCaution(this.mode === 'custom' ? 'normal' : this.difficulty) : 'full',
       pouch: foe ? enemy.pouch : undefined,
       holdBack: !foe,
-      zone: this.currentChapter.objective?.type === 'hold' ? zoneKeys(this.grid.mapData.tiles) : undefined // a hold objective's ground (0.48.0)
+      zone: this.currentChapter.objective?.type === 'hold' ? zoneKeys(this.grid.mapData.tiles) : undefined, // a hold objective's ground (0.48.0)
+      guardZone: foe // the enemy guards it rather than rushing it (0.53.0)
     });
     if ((plan.ability?.revive || plan.ability?.rebirth) && enemy.team === 'enemy') this.enemyRaises++;
 

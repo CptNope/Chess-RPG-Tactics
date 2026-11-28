@@ -374,7 +374,7 @@ w();
 // ---------------------------------------------------------------- Maps
 w('## Battlefields');
 w();
-w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48) | Squad deploys on |');
+w('| Map | Id | Size | Theme | Height range | Terrain mix | Impassable tiles | Ground (0.48; traps 0.53) | Squad deploys on |');
 w('| :--- | :--- | :---: | :--- | :---: | :--- | :---: | :--- | :--- |');
 for (const [id, make] of Object.entries(MAPS)) {
   const m = make();
@@ -383,7 +383,7 @@ for (const [id, make] of Object.entries(MAPS)) {
   for (const t of m.tiles) mix[t.terrain] = (mix[t.terrain] || 0) + 1;
   const mixText = Object.entries(mix).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${Math.round((n / m.tiles.length) * 100)}%`).join(', ');
   const ground: Record<string, number> = {};
-  for (const t of m.tiles) { if (t.hazard) ground[t.hazard] = (ground[t.hazard] || 0) + 1; if (t.zone) ground['hold zone'] = (ground['hold zone'] || 0) + 1; }
+  for (const t of m.tiles) { if (t.hazard) ground[t.hazard] = (ground[t.hazard] || 0) + 1; if (t.zone) ground['hold zone'] = (ground['hold zone'] || 0) + 1; if (t.trap) ground[`${t.trap} trap`] = (ground[`${t.trap} trap`] || 0) + 1; }
   const groundText = Object.entries(ground).map(([k, n]) => `${k} ${n}`).join(', ') || '—';
   w(`| **${m.name}** | \`${id}\` | ${m.width}×${m.depth} | ${m.theme} | ${Math.min(...hs)}–${Math.max(...hs)} | ${mixText} | ${m.tiles.filter((t) => !t.walkable).length} | ${groundText} | ${spawnsFor(m).map((p) => `(${p.x}, ${p.z})`).join(' ')} |`);
 }

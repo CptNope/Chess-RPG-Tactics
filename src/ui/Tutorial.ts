@@ -7,7 +7,7 @@
  * playthrough isn't taught again. "Show tips again" in Controls resets it.
  */
 export type TipId =
-  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap' | 'enemyCall' | 'tamed' | 'ground' | 'trap';
+  | 'firstTurn' | 'moveMode' | 'moved' | 'actMenu' | 'targeting' | 'forecast' | 'facing' | 'item' | 'fallen' | 'worldMap' | 'enemyCall' | 'tamed' | 'ground' | 'trap' | 'hold';
 
 export const TIPS: Record<TipId, { title: string; text: string }> = {
   firstTurn: {
@@ -60,7 +60,11 @@ export const TIPS: Record<TipId, { title: string; text: string }> = {
   },
   trap: {
     title: 'A HIDDEN TRAP',
-    text: 'A Ranger hid it. You can\'t see the other side\'s traps until someone walks into one: the walk stops there. When the log says a foe hid something, keep away from where it was standing, or send a sturdy unit first.'
+    text: 'A Ranger hid it, or the defenders dug it in before the battle. You can\'t see the other side\'s traps until someone walks into one: the walk stops there. Where foes had time to prepare, or the log says one hid something, send a sturdy unit first.'
+  },
+  hold: {
+    title: 'HOLD THE GROUND',
+    text: 'The marked tiles are the ground to hold. End rounds with your squad on them and no foe on them; the count is in the log. Defeating every foe wins too.'
   },
   worldMap: {
     title: 'THE WORLD MAP',

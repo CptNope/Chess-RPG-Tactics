@@ -9,6 +9,7 @@
  * Steppers (◀ value ▶) replace number inputs and dropdowns so nothing needs a text cursor.
  */
 import { HAZARDS, HazardKind, HAZARD_KINDS, HOLD_ROUNDS } from '../core/Hazards';
+import type { TrapKind } from '../core/Traps';
 import { BattleGrid } from '../core/Grid';
 import { JobSystem } from '../core/JobSystem';
 import { CampaignChapter, DialogueLine, EnemySpawn, FacingDirection, TerrainType, TileData, Unit } from '../core/types';
@@ -43,8 +44,14 @@ export interface WorkshopHost {
 
 type Tab = 'terrain' | 'units' | 'story' | 'rules' | 'file' | 'chains';
 type Tool = 'raise' | 'lower' | 'level' | 'paint' | 'block' | 'ground' | 'fill' | 'spawn' | 'enemy' | 'erase';
-/** What the Ground tool paints (0.48.0): a hazard, no hazard, or the hold zone on or off. */
-type Ground = HazardKind | 'clear' | 'zone' | 'unzone';
+/** What the Ground tool paints (0.48.0): a hazard, no hazard, the hold zone on or off, or (0.53.0) an enemy trap or none. */
+type Ground = HazardKind | 'clear' | 'zone' | 'unzone' | `trap_${TrapKind}` | 'untrap';
+const TRAP_BLURB: Record<TrapKind, string> = {
+  snare: 'An enemy snare: the first of the squad to walk in stops there, held in place.',
+  spikes: 'Enemy spikes: the first of the squad to walk in stops there and is hurt.',
+  slumber: 'An enemy slumber trap: the first of the squad to walk in falls asleep.',
+  smoke: 'An enemy smoke trap: the first of the squad to walk in is blinded.'
+};
 
 const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
   raise: { label: 'Raise', icon: '▲', hint: 'Raise tiles by half a step.' },
@@ -52,7 +59,7 @@ const TOOL_INFO: Record<Tool, { label: string; icon: string; hint: string }> = {
   level: { label: 'Level', icon: '═', hint: 'Set tiles to the chosen height.' },
   paint: { label: 'Paint', icon: '🖌', hint: 'Paint the chosen terrain.' },
   block: { label: 'Block', icon: '⛔', hint: 'Toggle whether units can stand here.' },
-  ground: { label: 'Ground', icon: '🔥', hint: 'Paint hazards (embers, miasma, a spring) or the area a Hold objective asks for.' },
+  ground: { label: 'Ground', icon: '🔥', hint: 'Paint hazards (embers, miasma, a spring), the area a Hold objective asks for, or traps the enemy laid (hidden in battle).' },
   fill: { label: 'Fill', icon: '🪣', hint: 'Repaint a whole connected area of the same terrain and height.' },
   spawn: { label: 'Squad', icon: '🛡', hint: `Toggle a squad deploy tile (up to ${MAX_SPAWNS}, in squad order).` },
   enemy: { label: 'Enemy', icon: '☠', hint: 'Place an enemy, or tap one to select and edit it.' },
@@ -67,7 +74,12 @@ const GROUND_INFO: Record<Ground, { label: string; color: string }> = {
   spring: { label: 'Spring', color: '#38bdf8' },
   clear: { label: 'No hazard', color: '#64748b' },
   zone: { label: 'Hold zone', color: '#facc15' },
-  unzone: { label: 'Not zone', color: '#334155' }
+  unzone: { label: 'Not zone', color: '#334155' },
+  trap_snare: { label: 'Snare', color: '#a16207' },
+  trap_spikes: { label: 'Spikes', color: '#b91c1c' },
+  trap_slumber: { label: 'Slumber', color: '#6366f1' },
+  trap_smoke: { label: 'Smoke', color: '#9ca3af' },
+  untrap: { label: 'No trap', color: '#475569' }
 };
 
 const TERRAIN_COLORS: Record<TerrainType, string> = {
@@ -244,6 +256,7 @@ export class Workshop {
     this.root.classList.add('hidden');
     document.body.classList.remove('workshop-open');
     this.fitCamera();
+    this.host.scene.setMapTraps(false);
     this.host.scene.clearHighlights();
     this.host.closed();
   }
@@ -377,14 +390,14 @@ export class Workshop {
       if (st.visited.has(k)) continue;
       st.visited.add(k);
       const t = this.grid.getTile(p.x, p.z)!;
-      const before = `${t.height}|${t.terrain}|${t.walkable}|${t.hazard}|${t.zone}`;
+      const before = `${t.height}|${t.terrain}|${t.walkable}|${t.hazard}|${t.zone}|${t.trap}`;
       if (this.tool === 'raise') t.height = Math.min(MAX_HEIGHT, Math.round((t.height + 0.5) * 10) / 10);
       else if (this.tool === 'lower') t.height = Math.max(0, Math.round((t.height - 0.5) * 10) / 10);
       else if (this.tool === 'level') t.height = this.levelHeight;
       else if (this.tool === 'paint') t.terrain = this.paintTerrain;
-      else if (this.tool === 'block') t.walkable = st.block;
+      else if (this.tool === 'block') { t.walkable = st.block; if (!t.walkable) delete t.trap; }
       else if (this.tool === 'ground') this.groundOn(t);
-      if (`${t.height}|${t.terrain}|${t.walkable}|${t.hazard}|${t.zone}` !== before) any = true;
+      if (`${t.height}|${t.terrain}|${t.walkable}|${t.hazard}|${t.zone}|${t.trap}` !== before) any = true;
     }
     if (!any) return;
     st.changed = true;
@@ -406,7 +419,9 @@ export class Workshop {
     if (g === 'zone') t.zone = true;
     else if (g === 'unzone') delete t.zone;
     else if (g === 'clear') delete t.hazard;
-    else t.hazard = g;
+    else if (g === 'untrap') delete t.trap;
+    else if (g.startsWith('trap_')) { if (t.walkable) t.trap = g.slice(5) as TrapKind; }
+    else t.hazard = g as HazardKind;
   }
 
   private floodFill(x: number, z: number): number {
@@ -442,6 +457,7 @@ export class Workshop {
   /** Shows deploy tiles (blue), enemies (as real sprites) and the selected enemy (gold). */
   private refreshMarkers(): void {
     const scene = this.host.scene;
+    scene.setMapTraps(true); // the author sees the traps; the squad won't (0.53.0)
     const s = this.scenario;
     const squad = this.host.squad();
     const units: Unit[] = [];
@@ -545,6 +561,7 @@ export class Workshop {
     this.root.classList.add('hidden');
     document.body.classList.remove('workshop-open');
     this.fitCamera();
+    this.host.scene.setMapTraps(false);
     this.host.scene.clearHighlights();
   }
 
@@ -674,10 +691,10 @@ export class Workshop {
         h('div', { class: 'ws-swatches', role: 'group', 'aria-label': 'Ground' }, ...(Object.keys(GROUND_INFO) as Ground[]).map((g) =>
           h('button', {
             class: 'ws-swatch' + (this.paintGround === g ? ' active' : ''), 'data-k': `gnd-${g}`, 'aria-pressed': String(this.paintGround === g),
-            title: HAZARD_KINDS.includes(g as HazardKind) ? HAZARDS[g as HazardKind].blurb : g === 'zone' ? 'Mark the area a Hold objective asks the squad to hold.' : undefined,
+            title: HAZARD_KINDS.includes(g as HazardKind) ? HAZARDS[g as HazardKind].blurb : g === 'zone' ? 'Mark the area a Hold objective asks the squad to hold.' : g.startsWith('trap_') ? TRAP_BLURB[g.slice(5) as TrapKind] : undefined,
             onclick: () => { this.paintGround = g; SoundFX.playMenuBlip(); this.render(); }
           }, h('span', { class: 'ws-chip', style: `background:${GROUND_INFO[g].color}` }), GROUND_INFO[g].label)))) : null,
-      this.tool === 'ground' ? h('p', { class: 'ws-note' }, 'Hazards work on whoever starts a turn on them, on either side. The hold zone matters when the Rules tab sets the objective to Hold.') : null,
+      this.tool === 'ground' ? h('p', { class: 'ws-note' }, 'Hazards work on whoever starts a turn on them, on either side. The hold zone matters when the Rules tab sets the objective to Hold. Traps belong to the enemy (its boss, else its first unit): hidden from the squad until someone walks into one.') : null,
       h('p', { class: 'ws-note' }, this.dragMode === 'paint' ? 'Drag across tiles to paint a stroke (one undo step). Pan with two fingers, the right mouse button, WASD or the camera buttons.' : 'Tap tiles to edit them one at a time; dragging moves the camera.'),
       h('p', { class: 'ws-note' }, 'Water, swamp and snow cost 2 movement. Height differences above a unit\'s Jump block the step. Wood is a bridge or boardwalk; parapet is battlement stone.')
     ].filter(Boolean) as Node[];
@@ -1074,7 +1091,7 @@ export class Workshop {
     const e = this.scenario.enemies.find((en) => en.x === x && en.z === z);
     const sp = (this.scenario.map.playerSpawns || []).findIndex((p) => p.x === x && p.z === z);
     const what = e ? ` · ${e.isBoss ? '★ ' : ''}${e.name}` : sp >= 0 ? ` · Squad deploy #${sp + 1}` : '';
-    const ground = `${t.hazard ? ` · ${HAZARDS[t.hazard].name}` : ''}${t.zone ? ' · hold zone' : ''}`;
+    const ground = `${t.hazard ? ` · ${HAZARDS[t.hazard].name}` : ''}${t.zone ? ' · hold zone' : ''}${t.trap ? ` · enemy ${t.trap} trap` : ''}`;
     this.say(`(${x}, ${z}) ${t.terrain} h${t.height}${t.walkable ? '' : ' · blocked'}${ground}${what} — ${TOOL_INFO[this.tool].label}`);
   }
 }

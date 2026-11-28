@@ -1,6 +1,6 @@
 # Enemy AI (and AUTO)
 
-`planTurn(unit, units, grid, opts)` in `src/core/EnemyAI.ts` decides a whole turn (options: `noRevive`, `caution`, `pouch`, see 0.31 below, and `holdBack`, 0.45): where to stand, what to use, what to aim at, and which way to face. It's team-agnostic, so the same planner plays enemy turns and the player's **AUTO** command.
+`planTurn(unit, units, grid, opts)` in `src/core/EnemyAI.ts` decides a whole turn (options: `noRevive`, `caution`, `pouch`, see 0.31 below, `holdBack`, 0.45, and `zone` / `guardZone`, 0.48 and 0.53): where to stand, what to use, what to aim at, and which way to face. It's team-agnostic, so the same planner plays enemy turns and the player's **AUTO** command.
 
 ---
 
@@ -119,6 +119,10 @@ The squad's AUTO plans with `holdBack`:
 
 Enemies don't use `holdBack`: their caution stays as the difficulty sets it, and they keep pressing forward.
 
+### Hold zones: the squad rushes, the enemy guards (0.53)
+
+With a Hold objective (`zone`, 0.48) a unit's walk heads for the zone first and the foes second, and it likes ending a turn on the zone (+20). Since 0.53 the enemy plans with `guardZone`: neither applies to it, so it fights as it would in any battle and the squad has to clear whoever happens to stand there. When both sides wanted the zone, every defender at Chapter II-B's gate walked off the walls and into it, and the chapter fell from 51% to 20% in the sim (19% when only units already on the zone stayed). Cinder Spring didn't move either way, and its 24 timeouts at Lv 6 went away.
+
 
 ---
 
@@ -141,6 +145,7 @@ Enemies don't use `holdBack`: their caution stays as the difficulty sets it, and
 | Threat map: marks a foe's reach, ignores sleepers, spares foes about to fall; a hurt archer shoots from out of reach (light and full caution); light caution leaves a healthy unit's plan unchanged | `tests/smarter-enemies.test.ts` |
 | Drinks a Potion when hurt with nothing to hit, keeps it when healthy; a Phoenix Feather respects the raise cap; salvage stops at the stack limit | `tests/smarter-enemies.test.ts` |
 | AUTO (`holdBack`) won't walk a healthy unit into a deadly spot with nothing to hit; without it, it walks on | `tests/hold-back.test.ts` |
+| With `guardZone`, a unit walks as if there were no zone; without it, it heads for the zone | `tests/story-ground.test.ts` |
 
 ---
 
