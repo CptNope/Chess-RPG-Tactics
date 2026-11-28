@@ -127,7 +127,7 @@ const SUPPORT_BUFFS = ['haste', 'protect', 'shell', 'regen'];
  */
 export function isSupportCaster(u: Unit): boolean {
   if (u.statuses.some((s) => s.type === 'silence')) return false;
-  return JobSystem.getCombatActionAbilities(u).some((a) => !a.item && !a.isSelfOnly && a.mpCost <= u.currentMp
+  return JobSystem.getCombatActionAbilities(u).some((a) => !a.item && !a.isSelfOnly && JobSystem.canAfford(u, a)
     && (a.power < 0 || !!a.revive || (!!a.appliesStatus && SUPPORT_BUFFS.includes(a.appliesStatus))));
 }
 
@@ -154,7 +154,7 @@ export function threatMap(unit: Unit, units: Unit[], grid: BattleGrid): (x: numb
     const silenced = foe.statuses.some((s) => s.type === 'silence');
     let best: { dmg: number; reach: number } | null = null;
     for (const a of JobSystem.getCombatActionAbilities(foe)) {
-      if (a.item || a.isSelfOnly || a.charge || a.mpCost > foe.currentMp || (silenced && a.mpCost > 0)) continue;
+      if (a.item || a.isSelfOnly || a.charge || !JobSystem.canAfford(foe, a) || (silenced && a.mpCost > 0)) continue;
       if (CombatEngine.isSupportive(a) || !(a.power > 0 || a.fixedDamage)) continue;
       const fc = CombatEngine.getForecast(foe, unit, a, uh, uh);
       const dmg = Math.max(0, fc.expectedDamage) * (fc.willDualWield ? 1.9 : 1) * (fc.hitChance / 100);
@@ -284,7 +284,7 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
 
   const tiles: { x: number; z: number }[] = unit.hasMoved ? [origin] : [origin, ...grid.getReachableTiles(unit, units)];
   const baseAbilities = [
-    ...JobSystem.getCombatActionAbilities(unit).filter((a) => a.mpCost <= unit.currentMp && !(opts.noRevive && (a.revive || a.rebirth))),
+    ...JobSystem.getCombatActionAbilities(unit).filter((a) => JobSystem.canAfford(unit, a) && !(opts.noRevive && (a.revive || a.rebirth))),
     ...pouchAbilities(opts.pouch, !!opts.noRevive)
   ];
   // One turn ahead (0.31.0): what the foes could do to this unit, tile by tile
@@ -359,9 +359,12 @@ export function planTurn(unit: Unit, units: Unit[], grid: BattleGrid, opts: Plan
           if (score <= 0) continue;
           // Items are few: keep them for when they matter
           if (ability.item) score -= 6;
+          // A Dark Knight's technique costs HP (0.46.0): worth it for a real blow, dearer when hurt
+          const paid = ability.hpCost ? JobSystem.hpCostFor(unit, ability) : 0;
+          if (paid) score -= (paid / unit.maxHp) * 100 * (unit.currentHp < unit.maxHp / 2 ? 0.9 : 0.45);
           if (threat) {
-            // A heal on itself raises the HP it will face the next turn with
-            let hpAfter = unit.currentHp;
+            // A heal on itself raises the HP it will face the next turn with; a price in HP lowers it
+            let hpAfter = unit.currentHp - paid;
             if (victims.includes(unit) && (ability.power < 0 || ability.fixedHeal)) {
               const fc = CombatEngine.getForecast(unit, unit, ability, tileH, tileH);
               hpAfter = Math.min(unit.maxHp, hpAfter + Math.abs(Math.min(0, fc.expectedDamage)));

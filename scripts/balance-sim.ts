@@ -14,7 +14,9 @@
  *
  * The dice are seeded (SEED=n, default 1), so the same command gives the same numbers.
  *
- * Comparing jobs (0.45.0): TOBIN_JOB=<job> FULLKIT=1 puts Tobin in that job, knowing all its actions.
+ * Comparing jobs: SWAP=<id>:<job> (0.46.0) puts a job, knowing all its actions, in a slot that
+ * does the same work (p1, Rowan: melee; p3, Tobin: ranged). TOBIN_JOB=<job> FULLKIT=1 (0.45.0)
+ * puts any job in Tobin's ranged slot, which mostly measures whether the squad has a ranged unit.
  */
 import { BattleGrid } from '../src/core/Grid';
 import { JobSystem } from '../src/core/JobSystem';
@@ -59,6 +61,16 @@ function squad(level: number, bria: boolean, sable = false, kestrel = false): Un
   if (bria) s.push(JobSystem.createUnit('bria', 'Bria', 'player', 'geomancer', 0, 0, 'N', Math.max(4, level)));
   if (sable) s.push(JobSystem.createUnit('sable', 'Sable', 'player', 'thief', 0, 0, 'N', Math.max(6, level)));
   if (kestrel) s.push(JobSystem.createUnit('kestrel', 'Kestrel', 'player', 'tamer', 0, 0, 'N', Math.max(9, level)));
+  // SWAP=<id>:<job> (0.46.0): put a job in a slot that does the same work, knowing all its
+  // actions: p1 is Rowan's melee slot, p3 Tobin's ranged one. Compare melee jobs with melee jobs
+  const swap = process.env.SWAP?.split(':');
+  if (swap) {
+    const i = s.findIndex((u) => u.id === swap[0]);
+    if (i < 0 || !JOBS[swap[1]]) throw new Error(`SWAP: no slot ${swap[0]} or job ${swap[1]}`);
+    const u = JobSystem.createUnit(s[i].id, s[i].name, 'player', swap[1], 0, 0, 'N', level);
+    for (const a of JOBS[swap[1]].abilities) if (a.type === 'action') u.unlockedAbilities[a.id] = true;
+    s[i] = u;
+  }
   return s;
 }
 

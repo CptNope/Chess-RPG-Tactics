@@ -2189,6 +2189,139 @@ export const JOBS: Record<string, Job> = {
         element: 'physical'
       }
     ]
+  },
+  // ---------------------------------------------------------------------------
+  // Dark Knight (0.46.0): techniques paid for in HP instead of MP
+  // ---------------------------------------------------------------------------
+  dark_knight: {
+    id: 'dark_knight',
+    name: 'Dark Knight',
+    description: 'An advanced job. A knight who took up the black arts and pays for them in blood: its techniques cost HP, not MP, so silence can\'t stop them. Strikes hard with dark steel, drinks life back, and is most dangerous when hurt.',
+    role: 'Bruiser',
+    spriteClass: 'dark_knight',
+    baseMove: 3,
+    baseJump: 2,
+    statMultipliers: {
+      hp: 1.15,
+      mp: 0.6,
+      attack: 1.2,
+      magic: 0.85,
+      speed: 0.95
+    },
+    prerequisites: [{ jobId: 'knight', level: 3 }, { jobId: 'black_mage', level: 2 }],
+    abilities: [
+      {
+        id: 'dk_shadow_blade',
+        name: 'Shadow Blade',
+        jobId: 'dark_knight',
+        type: 'action',
+        description: 'Pays 6% of max HP: a blow wreathed in darkness, heavy dark damage (ATK).',
+        jpCost: 80,
+        mpCost: 0,
+        hpCost: 0.06,
+        range: 1,
+        heightTolerance: 1.5,
+        aoe: 0,
+        power: 1.5,
+        element: 'dark',
+        scalesWith: 'attack'
+      },
+      {
+        id: 'dk_soul_rend',
+        name: 'Soul Rend',
+        jobId: 'dark_knight',
+        type: 'action',
+        description: 'Pays 5% of max HP: tears at the target\'s spirit for dark damage (ATK), and drinks back 60% of it.',
+        jpCost: 140,
+        mpCost: 0,
+        hpCost: 0.05,
+        range: 1,
+        heightTolerance: 1.5,
+        aoe: 0,
+        power: 1.0,
+        element: 'dark',
+        scalesWith: 'attack',
+        drain: 0.6
+      },
+      {
+        id: 'dk_dread',
+        name: 'Dread',
+        jobId: 'dark_knight',
+        type: 'action',
+        description: 'Pays 5% of max HP: a stare full of the dark, up to 3 tiles away. The target is rooted to the spot (Immobilize).',
+        jpCost: 180,
+        mpCost: 0,
+        hpCost: 0.05,
+        range: 3,
+        heightTolerance: 3.0,
+        aoe: 0,
+        power: 0,
+        element: 'dark',
+        appliesStatus: 'immobilize'
+      },
+      {
+        id: 'dk_night_ring',
+        name: 'Night Ring',
+        jobId: 'dark_knight',
+        type: 'action',
+        description: 'Pays 10% of max HP: darkness bursts out from the knight, dealing dark damage (ATK) to every foe within 1 tile.',
+        jpCost: 240,
+        mpCost: 0,
+        hpCost: 0.1,
+        range: 0,
+        heightTolerance: 1.5,
+        aoe: 1,
+        power: 1.1,
+        element: 'dark',
+        scalesWith: 'attack',
+        centered: true
+      },
+      {
+        id: 'dk_black_oath',
+        name: 'Black Oath',
+        jobId: 'dark_knight',
+        type: 'action',
+        description: 'Pays 12% of max HP to swear on the dark: Haste.',
+        jpCost: 300,
+        mpCost: 0,
+        hpCost: 0.12,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'dark',
+        appliesStatus: 'haste',
+        isSelfOnly: true
+      },
+      {
+        id: 'dk_vengeance',
+        name: 'Vengeance',
+        jobId: 'dark_knight',
+        type: 'reaction',
+        description: 'Below half HP, strikes back at any adjacent attacker with a dark blow (ATK).',
+        jpCost: 240,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'dark'
+      },
+      {
+        id: 'dk_blood_pact',
+        name: 'Blood Pact',
+        jobId: 'dark_knight',
+        type: 'support',
+        description: 'Techniques that cost HP cost half as much.',
+        jpCost: 280,
+        mpCost: 0,
+        range: 0,
+        heightTolerance: 0,
+        aoe: 0,
+        power: 0,
+        element: 'dark'
+      }
+    ]
   }
 
 };

@@ -1220,7 +1220,7 @@ class TacticsGame {
   private handleAbilityCommand(raw: Ability): void {
     const active = this.turnManager.activeUnit;
     if (!active || active.hasActed || active.team !== 'player' || this.currentMode === 'busy') return;
-    if (active.currentMp < raw.mpCost) return;
+    if (!JobSystem.canAfford(active, raw)) return;
 
     let ability = resolveTerrainAbility(raw, this.grid.getTile(active.x, active.z)?.terrain);
     // Pharmacology: items reach a tile further in a Chemist-trained hand
@@ -1463,8 +1463,13 @@ class TacticsGame {
     const run = resolveAction(this.actionContext(), caster, ability, tx, tz, opts);
     const first = run.next();
     if (first.done || first.value.kind !== 'start') return;
-    const { victims, calling, summoning, faced, performanceEnded } = first.value;
+    const { victims, calling, summoning, faced, performanceEnded, hpPaid } = first.value;
     if (performanceEnded) this.ui.addLogEntry(`[PERFORMANCE] ${caster.name} stops performing.`, 'system');
+    if (hpPaid > 0) {
+      // A Dark Knight's price, paid in blood (0.46.0)
+      this.scene.spawnFloatingDamage(caster.x, this.grid.getHeight(caster.x, caster.z) + 0.3, caster.z, `-${hpPaid} HP`, 'damage');
+      this.ui.addLogEntry(`[BLOOD] ${caster.name} pays ${hpPaid} HP.`, 'system');
+    }
 
     if (faced && !called) this.scene.triggerUnitLunge(caster.id, tx, tz);
     this.scene.updateUnits(this.units);

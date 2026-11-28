@@ -332,5 +332,22 @@ export const SIGNATURES: Record<string, Ability> = {
     scalesWith: 'attack',
     ignoresHeight: true,
     signature: true
+  },
+  dark_knight: {
+    id: 'sig_eclipse',
+    name: 'Eclipse',
+    jobId: 'dark_knight',
+    type: 'action',
+    description: 'Tears a hole in the light, up to 4 tiles away: heavy dark damage (ATK) to every foe within 2 tiles of the aim, and the knight drinks back a quarter of it. Costs no HP.',
+    jpCost: 0,
+    mpCost: 0,
+    range: 4,
+    heightTolerance: 3.0,
+    aoe: 2,
+    power: 1.2,
+    element: 'dark',
+    scalesWith: 'attack',
+    drain: 0.25,
+    signature: true
   }
 };

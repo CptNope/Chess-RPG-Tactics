@@ -701,6 +701,19 @@ export class CombatEngine {
           description: `${target.name} returns fire at ${attacker.name} for ${shot} DMG!`
         };
       }
+      case 'dk_vengeance': {
+        // A Dark Knight below half HP strikes back at whoever hit it from next to it (0.46.0)
+        if (dist > 1 || attacker.isDead || target.currentHp >= target.maxHp / 2) return undefined;
+        const blow = Math.max(1, Math.round(JobSystem.getAttackPower(target) * 3));
+        this.damage(attacker, blow);
+        return {
+          name: 'Vengeance',
+          type: 'counter_attack',
+          target: attacker,
+          damage: blow,
+          description: `${target.name} answers in kind: Vengeance on ${attacker.name} for ${blow} DMG!`
+        };
+      }
       case 'ta_snarl': {
         // A beast-taught snarl: 35% chance a melee attacker is Slowed (0.28.0)
         if (dist > 1 || rng() * 100 > 35 || attacker.isDead || has(attacker, 'slow')) return undefined;
