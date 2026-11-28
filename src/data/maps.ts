@@ -11,6 +11,8 @@ export interface MapData {
   playerSpawns?: { x: number; z: number }[];
   /** Atmosphere preset id when it differs from the map id (custom maps pick a look). */
   look?: string;
+  /** This battle's weather (0.55.0), set on the battle's copy. */
+  weather?: import('../core/Weather').WeatherKind;
 }
 
 /**

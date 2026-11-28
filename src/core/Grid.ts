@@ -1,6 +1,7 @@
 import { TileData, Unit } from './types';
 import { isFoe } from './Sides';
 import { MapData } from '../data/maps';
+import { weatherMove } from './Weather';
 
 export interface PathNode {
   x: number;
@@ -55,7 +56,8 @@ export class BattleGrid {
    */
   public getReachableTiles(unit: Unit, allUnits: Unit[]): PathNode[] {
     const startTile = this.getTile(unit.x, unit.z);
-    if (!startTile || unit.move <= 0) return [];
+    const move = weatherMove(this.mapData.weather, unit.move); // snow (0.55.0)
+    if (!startTile || move <= 0) return [];
 
     const occupiedMap = new Map<string, Unit>();
     for (const u of allUnits) {
@@ -63,7 +65,7 @@ export class BattleGrid {
     }
 
     if (unit.equippedAbilities.movement === 'tm_teleport') {
-      const range = unit.move + 1;
+      const range = move + 1;
       const out: PathNode[] = [];
       for (const tile of this.mapData.tiles) {
         const dist = Math.abs(tile.x - unit.x) + Math.abs(tile.z - unit.z);
@@ -108,6 +110,7 @@ export class BattleGrid {
   /** Dijkstra over walkable tiles within the unit's Move, respecting Jump and enemy blocking. */
   private flood(unit: Unit, occupiedMap: Map<string, Unit>): { best: Map<string, PathNode>; parent: Map<string, string>; startKey: string } {
     const startTile = this.getTile(unit.x, unit.z)!;
+    const move = weatherMove(this.mapData.weather, unit.move); // snow (0.55.0)
     const parent = new Map<string, string>();
     const best = new Map<string, PathNode>();
     const startKey = this.key(unit.x, unit.z);
@@ -141,7 +144,7 @@ export class BattleGrid {
         if (nextOccupant && isFoe(nextOccupant, unit)) continue; // Enemies block movement
 
         const newCost = current.cost + this.enterCost(unit, nextTile);
-        if (newCost > unit.move) continue;
+        if (newCost > move) continue;
 
         const key = this.key(nx, nz);
         const prev = best.get(key);

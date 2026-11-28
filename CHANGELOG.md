@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.55.0] - 2026-11-28
+
+### Added
+- **Weather.** Some battles are fought in:
+  - **Rain:** fire is weaker and lightning stronger, and nothing burns.
+  - **Snow:** ice is stronger, fire weaker, and everyone moves 1 less.
+  - **Fog:** blows from more than 2 tiles away land less often.
+- Where it falls:
+  - Stormbreak Cape (Chapter VI) is fought in the rain, Frostfang Pass (Chapter VIII) in the snow.
+  - Watchfire Ridge has rain, and Briar Barrow fog.
+  - From floor 5 of the Trials, half the floors bring weather.
+- A badge under the turn order names the weather (hover it for what it does), and the log says so at the start. Rain falls and dims the light, snow drifts, and fog closes in.
+- **Workshop:** a Weather choice on the Rules tab, kept in files and share links.
+
+### Developer
+- `Weather.ts` (`applyWeather`, `weatherPower`, `weatherHit`, `weatherMove`, `canBurn`); `MapData.weather`; `getForecast` takes the weather; `CampaignChapter.weather`, skirmish `weather`, `trialWeather`; `WEATHER=` in the balance sim; a Weather column in the content reference. ADR 0060.
+- 5 new tests (388 total).
+
 ## [0.54.0] - 2026-11-28
 
 ### Added

@@ -5,6 +5,7 @@ import { Unit, Ability, CombatForecast, ActiveStatus, StatusEffectType, TerrainT
 import { JobSystem } from './JobSystem';
 import { BEAST_LORE, canTame, tame, tameChance } from './Taming';
 import { JOBS } from '../data/jobs';
+import { WeatherKind, weatherHit, weatherPower } from './Weather';
 
 export interface ReactionTrigger {
   name: string;
@@ -149,7 +150,9 @@ export class CombatEngine {
     targetHeight: number,
     targetTerrain?: TerrainType,
     /** True when the target is on the edge of an area spell rather than the aimed tile (60% damage). */
-    isSplash: boolean = false
+    isSplash: boolean = false,
+    /** The battle's weather (0.55.0). */
+    weather?: WeatherKind
   ): CombatForecast {
     const isSelf = attacker.id === target.id;
     const facingType = isSelf ? 'front' : this.getFacingType(attacker.x, attacker.z, target);
@@ -185,6 +188,8 @@ export class CombatEngine {
     // ... and a grand summon, waited a whole turn for, lands just as surely (0.24.0)
     if (ability.charge) hitChance += 30;
     if (ability.accuracy) hitChance += ability.accuracy;
+    // Fog: blows from afar land less often (0.55.0)
+    if (!supportive && !ability.item) hitChance += weatherHit(weather, Math.abs(attacker.x - target.x) + Math.abs(attacker.z - target.z));
     // A Beast Tamer's craft works best on beasts (0.28.0)
     if (ability.beasts?.hit && isMonster(target)) hitChance += ability.beasts.hit;
 
@@ -271,6 +276,8 @@ export class CombatEngine {
     }
 
     if (isSplash && ability.power > 0) baseDamage *= 0.6;
+    // Rain and snow strengthen or soften an element (0.55.0)
+    if (ability.power > 0 && !ability.item) baseDamage *= weatherPower(weather, ability.element);
 
     const willDualWield = attacker.equippedAbilities.support === 'ni_dual_wield' && ability.id === 'basic_attack';
 

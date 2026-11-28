@@ -1001,18 +1001,18 @@ flowchart LR
   chapter_9 --> epilogue
 ```
 
-| Chapter | Map | Goal | Ground (0.53) | Enemies | Boss | Recruit | Win reward | Branch rewards |
-| :--- | :--- | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
-| **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | Rout | — | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
-| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | Rout | miasma 6, spring 2 | 6 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
-| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | Hold 3, or rout | hold zone 4, snare trap 1, spikes trap 1 | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm, Mirror Shield | Aegis Barrier + Platinum Blade |
-| **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | Rout | — | 4 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
-| **CHAPTER IV**: Fire on the Water | Emberwick Harbor | Rout | embers 7 | 6 | Captain Varrow (Ninja L7) | Sable (Thief) | Oathkeeper | Warding Amulet |
-| **CHAPTER V**: The Greywatch Light | Greywatch Isle | Rout | — | 6 | Tidecaller Maelis (Summoner L7) | — | Runeblade | Templar Mail |
-| **CHAPTER VI**: The Drowned Regent | Stormbreak Cape | Rout | — | 7 | The Drowned Regent (Paladin L9) | — | Dawnbringer | undefined |
-| **CHAPTER VII**: The Saltglass Shore | Saltglass Shore | Rout | — | 7 | Herald Isaine (Spellblade L10) | Kestrel (Beast Tamer) | Saltglass Blade | Frostfang Mail |
-| **CHAPTER VIII**: Frostfang Pass | Frostfang Pass | Rout | — | 6 | Marshal Hale (Knight L11) | — | — | Pale Pearl |
-| **CHAPTER IX**: The Pale Heir | The Drowned City | Rout | — | 6 | The Pale Heir (Summoner L12) | — | Tidecrown | — |
+| Chapter | Map | Goal | Ground (0.53) | Weather (0.55) | Enemies | Boss | Recruit | Win reward | Branch rewards |
+| :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
+| **CHAPTER I**: Ambush at Riverside Ruins | Riverside Ruins | Rout | — | — | 5 | Bandit Chief (Knight L3) | — | Gauntlet of Might, Flame Rod | Ring of Arcana + Twin Shadow Daggers / Platinum Plate Mail + Kite Shield |
+| **CHAPTER II-A**: The Sunken Crypts (Gloomy Mire) | Gloomy Mire | Rout | miasma 6, spring 2 | — | 6 | Arch-Warlock (Time Weaver L4) | Bria (Geomancer) | Gaia Staff, Verdant Charm | Hermes Slippers + Windslayer Bow |
+| **CHAPTER II-B**: The Siege of Night Battlement | Night Battlement | Hold 3, or rout | hold zone 4, snare trap 1, spikes trap 1 | — | 5 | Dragoon Commander (Dragoon L3) | Bria (Geomancer) | Crystal Helm, Mirror Shield | Aegis Barrier + Platinum Blade |
+| **CHAPTER III**: The Awakening at the Summit | Zodiac Summit | Rout | — | — | 4 | Zodiac Champion (Dragoon L5) | — | Zodiac Blade, Zodiac Ribbon, Wyrmscale Mail | Moonfang |
+| **CHAPTER IV**: Fire on the Water | Emberwick Harbor | Rout | embers 7 | — | 6 | Captain Varrow (Ninja L7) | Sable (Thief) | Oathkeeper | Warding Amulet |
+| **CHAPTER V**: The Greywatch Light | Greywatch Isle | Rout | — | — | 6 | Tidecaller Maelis (Summoner L7) | — | Runeblade | Templar Mail |
+| **CHAPTER VI**: The Drowned Regent | Stormbreak Cape | Rout | — | Rain | 7 | The Drowned Regent (Paladin L9) | — | Dawnbringer | undefined |
+| **CHAPTER VII**: The Saltglass Shore | Saltglass Shore | Rout | — | — | 7 | Herald Isaine (Spellblade L10) | Kestrel (Beast Tamer) | Saltglass Blade | Frostfang Mail |
+| **CHAPTER VIII**: Frostfang Pass | Frostfang Pass | Rout | — | Snow | 6 | Marshal Hale (Knight L11) | — | — | Pale Pearl |
+| **CHAPTER IX**: The Pale Heir | The Drowned City | Rout | — | — | 6 | The Pale Heir (Summoner L12) | — | Tidecrown | — |
 
 <details><summary><b>CHAPTER I</b> enemy roster</summary>
 

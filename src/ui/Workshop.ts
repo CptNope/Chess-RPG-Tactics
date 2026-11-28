@@ -10,6 +10,7 @@
  */
 import { HAZARDS, HazardKind, HAZARD_KINDS, HOLD_ROUNDS } from '../core/Hazards';
 import type { TrapKind } from '../core/Traps';
+import { WEATHER, WeatherKind } from '../core/Weather';
 import { BattleGrid } from '../core/Grid';
 import { JobSystem } from '../core/JobSystem';
 import { CampaignChapter, DialogueLine, EnemySpawn, FacingDirection, TerrainType, TileData, Unit } from '../core/types';
@@ -819,6 +820,17 @@ export class Workshop {
         this.refreshMarkers();
         this.scheduleSave();
       }),
+      // Weather (0.55.0)
+      this.segmented('weather', 'Weather', [['clear', 'Clear'], ['rain', 'Rain'], ['snow', 'Snow'], ['fog', 'Fog']], s.map.weather ?? 'clear', (v) => {
+        this.checkpoint();
+        if (v === 'clear') delete s.map.weather;
+        else s.map.weather = v as WeatherKind;
+        this.grid.mapData.weather = s.map.weather;
+        this.host.scene.loadMap(this.grid);
+        this.refreshMarkers();
+        this.scheduleSave();
+      }),
+      s.map.weather ? h('p', { class: 'ws-note' }, `${WEATHER[s.map.weather].name}: ${WEATHER[s.map.weather].blurb}`) : null,
       this.textField('mapname', 'Battlefield name', s.map.name, 40, (v) => (s.map.name = v || 'Custom field')),
       h('fieldset', { class: 'ws-group' },
         h('legend', {}, `Victory rewards (${s.rewardItemIds.length}/6)`),

@@ -251,6 +251,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER VI',
     subtitle: 'The Drowned Regent',
     mapId: 'stormbreak_cape',
+    weather: 'rain', // the storm breaks on the cape (0.55.0)
     rewardItemIds: ['dawn_blade'],
     introDialogue: [
       { speaker: 'The Drowned Regent', portrait: 'foe_paladin', portraitClass: '👑', side: 'right', text: 'Three hundred years beneath the tide, and still they send children with swords. Kneel. Your kingdom was mine before it had a name.' },
@@ -331,6 +332,7 @@ export const CAMPAIGN_CHAPTERS: Record<string, CampaignChapter> = {
     title: 'CHAPTER VIII',
     subtitle: 'Frostfang Pass',
     mapId: 'frostfang_pass',
+    weather: 'snow', // (0.55.0)
     introDialogue: [
       { speaker: 'Marshal Hale', portrait: 'foe_knight', portraitClass: '🛡', side: 'right', text: 'Far enough. Three hundred years my order has kept this pass for the true crown. We will keep it one more day.' },
       { speaker: 'Corvin', portraitClass: '✦', side: 'left', text: 'Terraces all the way up, and the fort on top. The snow is deep off the road: two steps for one. Stay on the beaten track or take the west ledge.' },

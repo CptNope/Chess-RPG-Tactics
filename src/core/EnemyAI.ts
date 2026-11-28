@@ -173,7 +173,7 @@ export function threatMap(unit: Unit, units: Unit[], grid: BattleGrid): (x: numb
     for (const a of JobSystem.getCombatActionAbilities(foe)) {
       if (a.item || a.isSelfOnly || a.charge || !JobSystem.canAfford(foe, a) || (silenced && a.mpCost > 0)) continue;
       if (CombatEngine.isSupportive(a) || !(a.power > 0 || a.fixedDamage)) continue;
-      const fc = CombatEngine.getForecast(foe, unit, a, uh, uh);
+      const fc = CombatEngine.getForecast(foe, unit, a, uh, uh, undefined, false, grid.mapData.weather);
       const dmg = Math.max(0, fc.expectedDamage) * (fc.willDualWield ? 1.9 : 1) * (fc.hitChance / 100);
       if (!best || dmg > best.dmg) best = { dmg, reach: a.range + a.aoe };
     }
@@ -211,7 +211,7 @@ function scoreAbility(caster: Unit, ability: Ability, victims: Unit[], grid: Bat
     const vH = grid.getHeight(v.x, v.z);
     // A performance has no centre target: everyone in it takes the full effect
     const isSplash = ability.aoe > 0 && !noFalloff(ability) && (v.x !== aim.x || v.z !== aim.z);
-    const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash);
+    const fc = CombatEngine.getForecast(caster, v, ability, casterH, vH, grid.getTile(v.x, v.z)?.terrain, isSplash, grid.mapData.weather);
     let p = fc.hitChance / 100;
     // A knight with Weapon Guard parries 30% of frontal physical blows: hit them from the side
     if (v.equippedAbilities.reaction === 'kn_parry' && ability.element === 'physical' && ability.power > 0 && fc.facingType === 'front' && v.id !== caster.id) p *= 0.7;

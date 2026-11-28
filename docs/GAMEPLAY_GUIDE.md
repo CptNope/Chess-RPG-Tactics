@@ -174,15 +174,16 @@ flowchart LR
   | :--- | :--- | :--- | :--- | :--- |
   | Thornwood Ford | After Chapter I | Bandits: a trapper who hides snares (0.49), thieves, archers, brawlers | Defeat them all | Fordwarden's Bow (ATK +8, Speed +1, range 5) |
   | Drowned Shrine | After Chapter II | Cultists: mages, oracles, summoners, a necromancer (0.52) | Defeat them all | Chanting Censer (MAG +4, MP +20, no Silence) |
-  | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja, a sapper (0.54) | Hold out for 6 rounds | Watchfire Helm (HP +40, no Sleep or Blind) |
+  | Watchfire Ridge | After Chapter II | Raiders: knights, dragoons, ninja, a sapper (0.54); in the rain (0.55) | Hold out for 6 rounds | Watchfire Helm (HP +40, no Sleep or Blind) |
   | Howling Hollow | After Chapter I | Monsters: wolves, a wyvern, oozes, wisps, a stone brute, a bog lurker (0.51) | Defeat them all | Wolfpelt Mantle (HP +25, Evasion +6, Move +1, no Poison) |
-  | Briar Barrow (0.32) | After Chapter III | Monsters: bone knights, a basilisk, thornlings, a wisp, a frost sprite (0.51) | Defeat them all | Basilisk Eye (HP +15, MAG +4, Speed +1, no Immobilize or Slow) |
+  | Briar Barrow (0.32) | After Chapter III | Monsters: bone knights, a basilisk, thornlings, a wisp, a frost sprite (0.51); in fog (0.55) | Defeat them all | Basilisk Eye (HP +15, MAG +4, Speed +1, no Immobilize or Slow) |
   | Glasswing Dunes (0.35, Far Shore) | After Chapter VII | Monsters: a wyvern, a basilisk, thornlings, jackals, a golem, a drowned sentry (five of them, not four) | Defeat them all | Glasswing Lance (ATK +14, Speed +1, Jump +1, range 2) |
   | Cinder Spring (0.48) | After Chapter IV | Ashen Zealots: an Ember Shaman, a pyromancer, monks, knights, archers, an emberback (0.51) (four, starting on the spring) | Hold the spring for 3 rounds, or defeat them all | Cinderwalk Charm (HP +20, MAG +3, Evasion +3, unharmed by embers and miasma) |
 
   Enemies are about your squad's level the first time and one level stronger after each win (up to two). Each win pays bounties plus 160 gil the first time and 80 after. The first win also brings the place's **trophy**, a piece of gear found nowhere else (it can't be sold).
 * **Hazards and Hold** (0.48). Some ground works on whoever starts a turn on it, on either side: **embers** burn 10% of max HP, **miasma** poisons, and a **spring** heals 12% and washes Poison off. The tile panel names it. **Spells change it too** (0.50): a fire spell that hits an area leaves embers for 2 rounds, an ice spell that hits an area puts embers out for 3 (even a map's own), and Poison Cloud leaves miasma for 2. A **Hold** battle marks some ground with a bright rim: end its rounds with your squad on it and no foe on it (they needn't be in a row), or defeat every enemy. The rim turns green while you hold it, red while the enemy does. Enemies don't rush the ground: they fight as usual, so clear whoever stands on it.
 * **Ground in the story** (0.53). The Gloomy Mire (II-A) has the warlock's miasma by his shrine, and a clean spring on the middle island. At Emberwick Harbor (IV) the end of the west pier and a warehouse on the quay are burning. **Chapter II-B is a Hold battle:** take Night Battlement's gate and hold it, with the ground just outside, for 3 rounds, or defeat them all. Its defenders dug **traps** on the approach: like a Ranger's, you won't see them until someone walks into one.
+* **Weather** (0.55). A badge under the turn order names it; hover it for what it does. **Rain:** fire hits 25% softer and lightning 25% harder, and nothing burns. **Snow:** ice hits 25% harder and fire 15% softer, and everyone moves 1 less. **Fog:** a blow from more than 2 tiles away is 15 points less likely to land. Stormbreak Cape (VI) is fought in the rain and Frostfang Pass (VIII) in the snow; Watchfire Ridge has rain and Briar Barrow fog; Trials floors bring weather from floor 5; the Workshop's Rules tab sets it for your own battles. Bring lightning to the rain and ice to the snow, and close in when it's foggy.
 * **Side stories** (0.43) are your story recruits' own chapters, at their home villages. One appears on the map once its recruit is in your squad and the story has moved on far enough. The recruit always fights it, taking a place in the party. It's told once per playthrough: a written battle with its own scenes, enemies at about your squad's level (never below a floor, the boss one level up), the usual bounties, and a **relic** of its own.
 
   | Place | Whose | Opens | Fight | Relic |
@@ -309,6 +310,7 @@ Unlocked once Chapter III is won. Enter at the **Gate of Trials** on the world m
 | Enemy level | 3 + floor |
 | Enemies | 4, rising to 6 |
 | Boss | A **Warden** every 5th floor |
+| Weather (0.55) | From floor 5, half the floors: rain, fog and snow in turn |
 | Reward | One armory item you don't own yet, per floor |
 | Record | Best floor saved on this browser |
 

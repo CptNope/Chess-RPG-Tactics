@@ -119,6 +119,10 @@ The squad's AUTO plans with `holdBack`:
 
 Enemies don't use `holdBack`: their caution stays as the difficulty sets it, and they keep pressing forward.
 
+### Weather (0.55)
+
+The AI reads the weather through the forecast, which takes it from the grid: in the rain its fire scores lower and its lightning higher, in fog its shots from afar count their lower odds, and in snow its reach (`getReachableTiles`) is a step shorter. Nothing else in the planner knows about weather.
+
 ### Earthworks (0.54)
 
 `scoreWorks` values a Sapper's barricade by the extra walking steps it costs each foe that could reach the ally beside it next turn (4 when it seals the ally off; ×1.5 for a hurt or spell-casting ally; at most 24). Raised ground is worth 10 under an ally who shoots or casts from 3 or more with a foe in reach, and nothing elsewhere: at first it scored under any ally, and the Sapper spent most turns raising ground that its allies walked off (ADR 0059). Undermine and Blasting Charge are scored as attacks.
